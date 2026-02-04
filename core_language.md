@@ -77,122 +77,122 @@ Quick reference to all Eagle commands with links to their detailed documentation
 
 | Command | Description | Section |
 |---------|-------------|---------|
-| [`after`](#event-management) | Execute script after delay | [Event Management](#event-management) |
-| [`alias`](#delegates-and-aliases) | Create command alias | [Delegates and Aliases](#delegates-and-aliases) |
-| [`append`](#variables) | Append values to variable | [Variables](#variables) |
-| [`apply`](#procedures) | Apply lambda expression | [Procedures](#procedures) |
-| [`array`](#arrays) | Array operations | [Arrays](#arrays) |
-| [`automatic`](#core-and-miscellaneous) | Automatic command delegation | [Core and Miscellaneous](#core-and-miscellaneous) |
-| [`bgerror`](#core-and-miscellaneous) | Background error handler | [Core and Miscellaneous](#core-and-miscellaneous) |
-| [`break`](#control-flow) | Break out of loop | [Control Flow](#control-flow) |
-| [`callback`](#event-management) | Callback management | [Event Management](#event-management) |
-| [`catch`](#control-flow) | Catch exceptions and errors | [Control Flow](#control-flow) |
-| [`cd`](#file-system) | Change directory | [File System](#file-system) |
-| [`clock`](#time-and-clock) | Clock and time operations | [Time and Clock](#time-and-clock) |
-| [`close`](#io-and-channels) | Close channel | [I/O and Channels](#io-and-channels) |
-| [`concat`](#strings) | Concatenate arguments | [Strings](#strings) |
-| [`continue`](#control-flow) | Continue to next loop iteration | [Control Flow](#control-flow) |
-| [`core`](#core-and-miscellaneous) | Core operations | [Core and Miscellaneous](#core-and-miscellaneous) |
-| [`debug`](#debugging) | Debugging operations | [Debugging](#debugging) |
-| [`default`](#core-and-miscellaneous) | Default operations | [Core and Miscellaneous](#core-and-miscellaneous) |
-| [`delegate`](#delegates-and-aliases) | Delegate operations | [Delegates and Aliases](#delegates-and-aliases) |
-| [`do`](#control-flow) | Do-while loop | [Control Flow](#control-flow) |
-| [`downlevel`](#control-flow) | Execute script at lower call stack level | [Control Flow](#control-flow) |
-| [`encoding`](#strings) | Character encoding operations | [Strings](#strings) |
-| [`eof`](#io-and-channels) | Check for end-of-file | [I/O and Channels](#io-and-channels) |
-| [`error`](#control-flow) | Generate an error | [Control Flow](#control-flow) |
-| [`eval`](#engine-operations) | Evaluate script | [Engine Operations](#engine-operations) |
-| [`exec`](#native-environment) | Execute external program | [Native Environment](#native-environment) |
-| [`exit`](#native-environment) | Exit interpreter | [Native Environment](#native-environment) |
-| [`expr`](#expression-evaluation) | Evaluate expression | [Expression Evaluation](#expression-evaluation) |
-| [`fblocked`](#io-and-channels) | Check if channel is blocked | [I/O and Channels](#io-and-channels) |
-| [`fconfigure`](#io-and-channels) | Configure channel options | [I/O and Channels](#io-and-channels) |
-| [`fcopy`](#io-and-channels) | Copy data between channels | [I/O and Channels](#io-and-channels) |
-| [`file`](#file-system) | File operations | [File System](#file-system) |
-| [`flush`](#io-and-channels) | Flush channel buffer | [I/O and Channels](#io-and-channels) |
-| [`for`](#control-flow) | C-style for loop | [Control Flow](#control-flow) |
-| [`foreach`](#control-flow) | Iterate over lists | [Control Flow](#control-flow) |
-| [`format`](#strings) | Format string (like sprintf) | [Strings](#strings) |
-| [`fpclassify`](#expression-evaluation) | Classify floating point number | [Expression Evaluation](#expression-evaluation) |
-| [`getf`](#variables) | Get variable with flags | [Variables](#variables) |
-| [`gets`](#io-and-channels) | Read line from channel | [I/O and Channels](#io-and-channels) |
-| [`glob`](#file-system) | Glob for files | [File System](#file-system) |
-| [`global`](#variables) | Declare global variables | [Variables](#variables) |
-| [`guid`](#strings) | GUID/UUID operations | [Strings](#strings) |
-| [`hash`](#strings) | Hashing operations | [Strings](#strings) |
-| [`host`](#managed-environment) | Host operations | [Managed Environment](#managed-environment) |
-| [`if`](#control-flow) | Conditional execution | [Control Flow](#control-flow) |
-| [`incr`](#variables) | Increment variable value | [Variables](#variables) |
-| [`info`](#introspection) | Introspection operations | [Introspection](#introspection) |
-| [`interp`](#interpreter-management) | Interpreter management | [Interpreter Management](#interpreter-management) |
-| [`invoke`](#engine-operations) | Invoke command | [Engine Operations](#engine-operations) |
-| [`join`](#strings) | Join list elements with separator | [Strings](#strings) |
-| [`kill`](#native-environment) | Kill process | [Native Environment](#native-environment) |
-| [`lappend`](#lists) | Append elements to list variable | [Lists](#lists) |
-| [`lassign`](#lists) | Assign list elements to variables | [Lists](#lists) |
-| [`lget`](#lists) | Get element from list variable | [Lists](#lists) |
-| [`library`](#native-environment) | Native library operations | [Native Environment](#native-environment) |
-| [`lindex`](#lists) | Get list element by index | [Lists](#lists) |
-| [`linsert`](#lists) | Insert elements into list | [Lists](#lists) |
-| [`list`](#lists) | Create a list | [Lists](#lists) |
-| [`llength`](#lists) | Get list length | [Lists](#lists) |
-| [`lmap`](#lists) | List mapping (transform list) | [Lists](#lists) |
-| [`load`](#managed-environment) | Load binary plugin/extension | [Managed Environment](#managed-environment) |
-| [`lrange`](#lists) | Get range of list elements | [Lists](#lists) |
-| [`lremove`](#lists) | Remove list elements by index | [Lists](#lists) |
-| [`lrepeat`](#lists) | Create list by repeating values | [Lists](#lists) |
-| [`lreplace`](#lists) | Replace list elements | [Lists](#lists) |
-| [`lreverse`](#lists) | Reverse a list | [Lists](#lists) |
-| [`lsearch`](#lists) | Search for element in list | [Lists](#lists) |
-| [`lset`](#lists) | Set list element | [Lists](#lists) |
-| [`lsort`](#lists) | Sort a list | [Lists](#lists) |
-| [`namespace`](#namespaces) | Namespace operations | [Namespaces](#namespaces) |
-| [`napply`](#procedures) | Apply lambda with named arguments | [Procedures](#procedures) |
-| [`nop`](#core-and-miscellaneous) | No operation | [Core and Miscellaneous](#core-and-miscellaneous) |
-| [`nproc`](#procedures) | Create procedure with named arguments | [Procedures](#procedures) |
-| [`object`](#objects-net-interop) | .NET object operations | [Objects (.NET Interop)](#objects-net-interop) |
-| [`open`](#io-and-channels) | Open file or channel | [I/O and Channels](#io-and-channels) |
-| [`package`](#packages) | Package management | [Packages](#packages) |
-| [`parse`](#strings) | Parse scripts and expressions | [Strings](#strings) |
-| [`pid`](#native-environment) | Get process ID | [Native Environment](#native-environment) |
-| [`proc`](#procedures) | Create procedure | [Procedures](#procedures) |
-| [`puts`](#io-and-channels) | Write to channel | [I/O and Channels](#io-and-channels) |
-| [`pwd`](#file-system) | Print working directory | [File System](#file-system) |
-| [`read`](#io-and-channels) | Read from channel | [I/O and Channels](#io-and-channels) |
-| [`regexp`](#strings) | Regular expression matching | [Strings](#strings) |
-| [`regsub`](#strings) | Regular expression substitution | [Strings](#strings) |
-| [`rename`](#core-and-miscellaneous) | Rename command | [Core and Miscellaneous](#core-and-miscellaneous) |
-| [`return`](#control-flow) | Return from procedure or script | [Control Flow](#control-flow) |
-| [`scope`](#variables) | Variable scope operations | [Variables](#variables) |
-| [`seek`](#io-and-channels) | Set channel position | [I/O and Channels](#io-and-channels) |
-| [`set`](#variables) | Set variable value | [Variables](#variables) |
-| [`setf`](#variables) | Set variable with flags | [Variables](#variables) |
-| [`socket`](#network-and-uri) | Socket operations | [Network and URI](#network-and-uri) |
-| [`source`](#engine-operations) | Source script file | [Engine Operations](#engine-operations) |
-| [`split`](#strings) | Split string into list | [Strings](#strings) |
-| [`sql`](#database-sql) | Database operations | [Database (SQL)](#database-sql) |
-| [`string`](#strings) | String operations | [Strings](#strings) |
-| [`subdelegate`](#core-and-miscellaneous) | Sub-delegate operations | [Core and Miscellaneous](#core-and-miscellaneous) |
-| [`subst`](#engine-operations) | Perform substitutions | [Engine Operations](#engine-operations) |
-| [`switch`](#control-flow) | Pattern matching and branching | [Control Flow](#control-flow) |
-| [`tcl`](#tcl-integration) | Tcl integration | [Tcl Integration](#tcl-integration) |
-| [`tell`](#io-and-channels) | Get channel position | [I/O and Channels](#io-and-channels) |
-| [`throw`](#control-flow) | Throw an exception | [Control Flow](#control-flow) |
-| [`time`](#time-and-clock) | Time script execution | [Time and Clock](#time-and-clock) |
-| [`truncate`](#io-and-channels) | Truncate channel | [I/O and Channels](#io-and-channels) |
-| [`try`](#control-flow) | Try/finally exception handling | [Control Flow](#control-flow) |
-| [`unload`](#managed-environment) | Unload binary plugin/extension | [Managed Environment](#managed-environment) |
-| [`unset`](#variables) | Unset variables | [Variables](#variables) |
-| [`unsetf`](#variables) | Unset variable with flags | [Variables](#variables) |
-| [`update`](#event-management) | Process events | [Event Management](#event-management) |
-| [`uplevel`](#control-flow) | Execute script at higher call stack level | [Control Flow](#control-flow) |
-| [`upvar`](#variables) | Link variable to upper scope | [Variables](#variables) |
-| [`uri`](#network-and-uri) | URI operations | [Network and URI](#network-and-uri) |
-| [`variable`](#variables) | Declare namespace variables | [Variables](#variables) |
-| [`version`](#introspection) | Get Eagle version | [Introspection](#introspection) |
-| [`vwait`](#event-management) | Wait for variable change | [Event Management](#event-management) |
-| [`while`](#control-flow) | While loop | [Control Flow](#control-flow) |
-| [`xml`](#xml) | XML operations | [XML](#xml) |
+| [`after`](#cmd-after) | Execute script after delay | [Event Management](#event-management) |
+| [`alias`](#cmd-alias) | Create command alias | [Delegates and Aliases](#delegates-and-aliases) |
+| [`append`](#cmd-append) | Append values to variable | [Variables](#variables) |
+| [`apply`](#cmd-apply) | Apply lambda expression | [Procedures](#procedures) |
+| [`array`](#cmd-array) | Array operations | [Arrays](#arrays) |
+| [`automatic`](#cmd-automatic) | Automatic command delegation | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`bgerror`](#cmd-bgerror) | Background error handler | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`break`](#cmd-break) | Break out of loop | [Control Flow](#control-flow) |
+| [`callback`](#cmd-callback) | Callback management | [Event Management](#event-management) |
+| [`catch`](#cmd-catch) | Catch exceptions and errors | [Control Flow](#control-flow) |
+| [`cd`](#cmd-cd) | Change directory | [File System](#file-system) |
+| [`clock`](#cmd-clock) | Clock and time operations | [Time and Clock](#time-and-clock) |
+| [`close`](#cmd-close) | Close channel | [I/O and Channels](#io-and-channels) |
+| [`concat`](#cmd-concat) | Concatenate arguments | [Strings](#strings) |
+| [`continue`](#cmd-continue) | Continue to next loop iteration | [Control Flow](#control-flow) |
+| [`core`](#cmd-core) | Core operations | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`debug`](#cmd-debug) | Debugging operations | [Debugging](#debugging) |
+| [`default`](#cmd-default) | Default operations | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`delegate`](#cmd-delegate) | Delegate operations | [Delegates and Aliases](#delegates-and-aliases) |
+| [`do`](#cmd-do) | Do-while loop | [Control Flow](#control-flow) |
+| [`downlevel`](#cmd-downlevel) | Execute script at lower call stack level | [Control Flow](#control-flow) |
+| [`encoding`](#cmd-encoding) | Character encoding operations | [Strings](#strings) |
+| [`eof`](#cmd-eof) | Check for end-of-file | [I/O and Channels](#io-and-channels) |
+| [`error`](#cmd-error) | Generate an error | [Control Flow](#control-flow) |
+| [`eval`](#cmd-eval) | Evaluate script | [Engine Operations](#engine-operations) |
+| [`exec`](#cmd-exec) | Execute external program | [Native Environment](#native-environment) |
+| [`exit`](#cmd-exit) | Exit interpreter | [Native Environment](#native-environment) |
+| [`expr`](#cmd-expr) | Evaluate expression | [Expression Evaluation](#expression-evaluation) |
+| [`fblocked`](#cmd-fblocked) | Check if channel is blocked | [I/O and Channels](#io-and-channels) |
+| [`fconfigure`](#cmd-fconfigure) | Configure channel options | [I/O and Channels](#io-and-channels) |
+| [`fcopy`](#cmd-fcopy) | Copy data between channels | [I/O and Channels](#io-and-channels) |
+| [`file`](#cmd-file) | File operations | [File System](#file-system) |
+| [`flush`](#cmd-flush) | Flush channel buffer | [I/O and Channels](#io-and-channels) |
+| [`for`](#cmd-for) | C-style for loop | [Control Flow](#control-flow) |
+| [`foreach`](#cmd-foreach) | Iterate over lists | [Control Flow](#control-flow) |
+| [`format`](#cmd-format) | Format string (like sprintf) | [Strings](#strings) |
+| [`fpclassify`](#cmd-fpclassify) | Classify floating point number | [Expression Evaluation](#expression-evaluation) |
+| [`getf`](#cmd-getf) | Get variable with flags | [Variables](#variables) |
+| [`gets`](#cmd-gets) | Read line from channel | [I/O and Channels](#io-and-channels) |
+| [`glob`](#cmd-glob) | Glob for files | [File System](#file-system) |
+| [`global`](#cmd-global) | Declare global variables | [Variables](#variables) |
+| [`guid`](#cmd-guid) | GUID/UUID operations | [Strings](#strings) |
+| [`hash`](#cmd-hash) | Hashing operations | [Strings](#strings) |
+| [`host`](#cmd-host) | Host operations | [Managed Environment](#managed-environment) |
+| [`if`](#cmd-if) | Conditional execution | [Control Flow](#control-flow) |
+| [`incr`](#cmd-incr) | Increment variable value | [Variables](#variables) |
+| [`info`](#cmd-info) | Introspection operations | [Introspection](#introspection) |
+| [`interp`](#cmd-interp) | Interpreter management | [Interpreter Management](#interpreter-management) |
+| [`invoke`](#cmd-invoke) | Invoke command | [Engine Operations](#engine-operations) |
+| [`join`](#cmd-join) | Join list elements with separator | [Strings](#strings) |
+| [`kill`](#cmd-kill) | Kill process | [Native Environment](#native-environment) |
+| [`lappend`](#cmd-lappend) | Append elements to list variable | [Lists](#lists) |
+| [`lassign`](#cmd-lassign) | Assign list elements to variables | [Lists](#lists) |
+| [`lget`](#cmd-lget) | Get element from list variable | [Lists](#lists) |
+| [`library`](#cmd-library) | Native library operations | [Native Environment](#native-environment) |
+| [`lindex`](#cmd-lindex) | Get list element by index | [Lists](#lists) |
+| [`linsert`](#cmd-linsert) | Insert elements into list | [Lists](#lists) |
+| [`list`](#cmd-list) | Create a list | [Lists](#lists) |
+| [`llength`](#cmd-llength) | Get list length | [Lists](#lists) |
+| [`lmap`](#cmd-lmap) | List mapping (transform list) | [Lists](#lists) |
+| [`load`](#cmd-load) | Load binary plugin/extension | [Managed Environment](#managed-environment) |
+| [`lrange`](#cmd-lrange) | Get range of list elements | [Lists](#lists) |
+| [`lremove`](#cmd-lremove) | Remove list elements by index | [Lists](#lists) |
+| [`lrepeat`](#cmd-lrepeat) | Create list by repeating values | [Lists](#lists) |
+| [`lreplace`](#cmd-lreplace) | Replace list elements | [Lists](#lists) |
+| [`lreverse`](#cmd-lreverse) | Reverse a list | [Lists](#lists) |
+| [`lsearch`](#cmd-lsearch) | Search for element in list | [Lists](#lists) |
+| [`lset`](#cmd-lset) | Set list element | [Lists](#lists) |
+| [`lsort`](#cmd-lsort) | Sort a list | [Lists](#lists) |
+| [`namespace`](#cmd-namespace) | Namespace operations | [Namespaces](#namespaces) |
+| [`napply`](#cmd-napply) | Apply lambda with named arguments | [Procedures](#procedures) |
+| [`nop`](#cmd-nop) | No operation | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`nproc`](#cmd-nproc) | Create procedure with named arguments | [Procedures](#procedures) |
+| [`object`](#cmd-object) | .NET object operations | [Objects (.NET Interop)](#objects-net-interop) |
+| [`open`](#cmd-open) | Open file or channel | [I/O and Channels](#io-and-channels) |
+| [`package`](#cmd-package) | Package management | [Packages](#packages) |
+| [`parse`](#cmd-parse) | Parse scripts and expressions | [Strings](#strings) |
+| [`pid`](#cmd-pid) | Get process ID | [Native Environment](#native-environment) |
+| [`proc`](#cmd-proc) | Create procedure | [Procedures](#procedures) |
+| [`puts`](#cmd-puts) | Write to channel | [I/O and Channels](#io-and-channels) |
+| [`pwd`](#cmd-pwd) | Print working directory | [File System](#file-system) |
+| [`read`](#cmd-read) | Read from channel | [I/O and Channels](#io-and-channels) |
+| [`regexp`](#cmd-regexp) | Regular expression matching | [Strings](#strings) |
+| [`regsub`](#cmd-regsub) | Regular expression substitution | [Strings](#strings) |
+| [`rename`](#cmd-rename) | Rename command | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`return`](#cmd-return) | Return from procedure or script | [Control Flow](#control-flow) |
+| [`scope`](#cmd-scope) | Variable scope operations | [Variables](#variables) |
+| [`seek`](#cmd-seek) | Set channel position | [I/O and Channels](#io-and-channels) |
+| [`set`](#cmd-set) | Set variable value | [Variables](#variables) |
+| [`setf`](#cmd-setf) | Set variable with flags | [Variables](#variables) |
+| [`socket`](#cmd-socket) | Socket operations | [Network and URI](#network-and-uri) |
+| [`source`](#cmd-source) | Source script file | [Engine Operations](#engine-operations) |
+| [`split`](#cmd-split) | Split string into list | [Strings](#strings) |
+| [`sql`](#cmd-sql) | Database operations | [Database (SQL)](#database-sql) |
+| [`string`](#cmd-string) | String operations | [Strings](#strings) |
+| [`subdelegate`](#cmd-subdelegate) | Sub-delegate operations | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`subst`](#cmd-subst) | Perform substitutions | [Engine Operations](#engine-operations) |
+| [`switch`](#cmd-switch) | Pattern matching and branching | [Control Flow](#control-flow) |
+| [`tcl`](#cmd-tcl) | Tcl integration | [Tcl Integration](#tcl-integration) |
+| [`tell`](#cmd-tell) | Get channel position | [I/O and Channels](#io-and-channels) |
+| [`throw`](#cmd-throw) | Throw an exception | [Control Flow](#control-flow) |
+| [`time`](#cmd-time) | Time script execution | [Time and Clock](#time-and-clock) |
+| [`truncate`](#cmd-truncate) | Truncate channel | [I/O and Channels](#io-and-channels) |
+| [`try`](#cmd-try) | Try/finally exception handling | [Control Flow](#control-flow) |
+| [`unload`](#cmd-unload) | Unload binary plugin/extension | [Managed Environment](#managed-environment) |
+| [`unset`](#cmd-unset) | Unset variables | [Variables](#variables) |
+| [`unsetf`](#cmd-unsetf) | Unset variable with flags | [Variables](#variables) |
+| [`update`](#cmd-update) | Process events | [Event Management](#event-management) |
+| [`uplevel`](#cmd-uplevel) | Execute script at higher call stack level | [Control Flow](#control-flow) |
+| [`upvar`](#cmd-upvar) | Link variable to upper scope | [Variables](#variables) |
+| [`uri`](#cmd-uri) | URI operations | [Network and URI](#network-and-uri) |
+| [`variable`](#cmd-variable) | Declare namespace variables | [Variables](#variables) |
+| [`version`](#cmd-version) | Get Eagle version | [Introspection](#introspection) |
+| [`vwait`](#cmd-vwait) | Wait for variable change | [Event Management](#event-management) |
+| [`while`](#cmd-while) | While loop | [Control Flow](#control-flow) |
+| [`xml`](#cmd-xml) | XML operations | [XML](#xml) |
 
 ---
 
@@ -202,6 +202,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 
 #### Conditional Commands (ObjectGroup: "conditional")
 
+<a id="cmd-if"></a>
 - **if** - Conditional execution
   - `if expr1 ?then? body1 elseif expr2 ?then? body2 elseif ... ?else? ?bodyN?`
   - Evaluates *expr1* as a boolean expression. If true, executes *body1* and returns its result. Otherwise, evaluates subsequent `elseif` expressions in order until one is true. If no expression is true and an `else` clause exists, executes its body. The `then` and `else` keywords are optional but improve readability.
@@ -217,6 +218,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
     }
     ```
 
+<a id="cmd-switch"></a>
 - **switch** - Pattern matching and branching
   - `switch ?switches? string {pattern body ... ?default body?}`
   - `switch ?switches? string pattern body ... ?default body?`
@@ -240,11 +242,13 @@ Quick reference to all Eagle commands with links to their detailed documentation
 
 #### Control Commands (ObjectGroup: "control")
 
+<a id="cmd-break"></a>
 - **break** - Break out of loop
   - `break ?string?`
   - Terminates the innermost enclosing loop (`for`, `foreach`, `while`, `do`). Control continues with the statement following the loop. If *string* is provided, it becomes the result of the loop command.
   - **Returns**: The optional *string* value, or an empty string.
 
+<a id="cmd-catch"></a>
 - **catch** - Catch exceptions and errors
   - `catch script ?resultVarName? ?optionsVarName?`
   - Executes *script* and catches any errors or exceptions that occur. This prevents errors from propagating up the call stack.
@@ -268,17 +272,20 @@ Quick reference to all Eagle commands with links to their detailed documentation
     }
     ```
 
+<a id="cmd-continue"></a>
 - **continue** - Continue to next loop iteration
   - `continue ?string?`
   - Skips the remainder of the current loop iteration and continues with the next iteration of the innermost enclosing loop. In a `for` loop, the *next* script is still executed.
   - **Returns**: The optional *string* value (rarely used).
 
+<a id="cmd-downlevel"></a>
 - **downlevel** - Execute script at lower call stack level
   - `downlevel arg ?arg ...?`
   - Executes the concatenated arguments as a script in the context of a lower (more nested) call frame. This is the inverse of `uplevel` and is an Eagle extension.
   - **Level specification**: Same as `uplevel` - a number indicates how many levels down, `#n` specifies an absolute level.
   - **Returns**: The result of the executed script.
 
+<a id="cmd-error"></a>
 - **error** - Generate an error
   - `error ?message? ?errorInfo? ?errorCode? ?returnCode?`
   - Raises an error with the specified *message*. The error propagates up the call stack until caught by `catch` or `try`.
@@ -295,6 +302,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
     }
     ```
 
+<a id="cmd-return"></a>
 - **return** - Return from procedure or script
   - `return ?options? ?string?`
   - Returns from the current procedure or sourced script with the specified value.
@@ -314,6 +322,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
     }
     ```
 
+<a id="cmd-throw"></a>
 - **throw** - Throw an exception
   - `throw message ?returnCode? ?innerException?`
   - Throws an exception with the specified message. This is an Eagle extension that provides .NET-style exception handling.
@@ -323,6 +332,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
     - *innerException* - An inner exception object for exception chaining
   - **Returns**: Does not return normally; throws an exception.
 
+<a id="cmd-try"></a>
 - **try** - Try/finally exception handling
   - `try script ?finally script?`
   - Executes the try *script*. If a `finally` clause is provided, its script is always executed, whether or not an error occurred in the try script. The finally script runs even if the try script executes `return`, `break`, or `continue`.
@@ -337,6 +347,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
     }
     ```
 
+<a id="cmd-uplevel"></a>
 - **uplevel** - Execute script at higher call stack level
   - `uplevel ?level? arg ?arg ...?`
   - Executes the concatenated arguments as a script in the context of an enclosing call frame. This allows procedures to modify variables in the caller's scope.
@@ -353,6 +364,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 
 #### Loop Commands (ObjectGroup: "loop")
 
+<a id="cmd-do"></a>
 - **do** - Do-while loop
   - `do script clause test`
   - Executes *script* at least once, then repeatedly while *test* evaluates to true. The *clause* must be the literal word `while` or `until`.
@@ -369,6 +381,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
     } while {$i < 5}
     ```
 
+<a id="cmd-for"></a>
 - **for** - C-style for loop
   - `for start test next script ?end?`
   - Executes *start* once, then repeatedly executes *script* followed by *next* while *test* evaluates to true. The optional *end* script (Eagle extension) is executed when the loop terminates normally.
@@ -386,6 +399,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
     }
     ```
 
+<a id="cmd-foreach"></a>
 - **foreach** - Iterate over lists
   - `foreach varList list ?varList list ...? script`
   - Iterates over one or more lists, assigning elements to variables and executing *script* for each iteration.
@@ -406,6 +420,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
     }
     ```
 
+<a id="cmd-lmap"></a>
 - **lmap** - List mapping (transform list with script)
   - `lmap varList list ?varList list ...? script`
   - Like `foreach`, but collects the results of each *script* evaluation into a new list.
@@ -424,6 +439,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
     # Result: {2 4}
     ```
 
+<a id="cmd-while"></a>
 - **while** - While loop
   - `while test script`
   - Repeatedly executes *script* while *test* evaluates to true. The *test* is evaluated before each iteration, so if it is initially false, *script* is never executed.
@@ -443,6 +459,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 
 All variable commands belong to ObjectGroup: "variable"
 
+<a id="cmd-append"></a>
 - **append** - Append values to variable
   - `append varName ?value ...?`
   - Appends all *value* arguments to the current value of variable *varName*. If the variable does not exist, it is created with an initial empty value before appending. This is more efficient than `set varName "$varName$value"` because it avoids creating intermediate string copies.
@@ -454,13 +471,16 @@ All variable commands belong to ObjectGroup: "variable"
     # msg is now "Hello, World!"
     ```
 
+<a id="cmd-array"></a>
 - **array** - Array operations (see Arrays section for sub-commands)
 
+<a id="cmd-getf"></a>
 - **getf** - Get variable with flags (obsolete, diagnostic)
   - `getf varName`
   - Retrieves a variable's value along with internal flag information. This is an obsolete diagnostic command primarily used for interpreter debugging.
   - **Returns**: The variable value with associated flags.
 
+<a id="cmd-global"></a>
 - **global** - Declare global variables
   - `global varName ?varName ...?`
   - Declares that the specified variables refer to global variables (in the `::` namespace) rather than local variables. This command is typically used inside procedures to access or modify global state.
@@ -475,6 +495,7 @@ All variable commands belong to ObjectGroup: "variable"
     }
     ```
 
+<a id="cmd-incr"></a>
 - **incr** - Increment variable value
   - `incr varName ?increment?`
   - Increments the integer value stored in *varName* by *increment* (default is 1). The variable must contain a valid integer value, or an error is raised.
@@ -490,6 +511,7 @@ All variable commands belong to ObjectGroup: "variable"
     incr x -3   ;# x is now 13
     ```
 
+<a id="cmd-scope"></a>
 - **scope** - Variable scope operations (Eagle extension)
   - `scope subcommand ?options? ?args?`
   - Provides fine-grained control over variable scopes (call frames), enabling creation of isolated variable environments that persist across procedure calls. Scopes allow variables to be preserved and shared across multiple invocations of procedures, making them useful for implementing stateful operations, coroutine-like patterns, and persistent local state.
@@ -748,6 +770,7 @@ All variable commands belong to ObjectGroup: "variable"
     scope destroy testScope
     ```
 
+<a id="cmd-set"></a>
 - **set** - Set variable value
   - `set varName ?newValue?`
   - If *newValue* is provided, sets the variable *varName* to that value. If *newValue* is omitted, returns the current value of the variable (raises an error if the variable doesn't exist).
@@ -763,11 +786,13 @@ All variable commands belong to ObjectGroup: "variable"
     set data(key2) "value2"
     ```
 
+<a id="cmd-setf"></a>
 - **setf** - Set variable with flags (obsolete, diagnostic)
   - `setf varFlags varName ?newValue?`
   - Sets a variable with specific internal flags. This is an obsolete diagnostic command used for interpreter debugging.
   - **Returns**: The value of the variable.
 
+<a id="cmd-unset"></a>
 - **unset** - Unset variables
   - `unset ?options? ?varName varName ...?`
   - Removes the specified variables from the current scope. After unsetting, the variable no longer exists (reading it will raise an error).
@@ -783,11 +808,13 @@ All variable commands belong to ObjectGroup: "variable"
     unset -nocomplain x y z  ;# No error even if y, z don't exist
     ```
 
+<a id="cmd-unsetf"></a>
 - **unsetf** - Unset variable with flags
   - `unsetf varFlags ?varName varName ...?`
   - Unsets variables with specific internal flags. This is a diagnostic command for advanced interpreter manipulation.
   - **Returns**: An empty string.
 
+<a id="cmd-upvar"></a>
 - **upvar** - Link variable to upper scope
   - `upvar ?level? otherVar localVar ?otherVar localVar ...?`
   - Creates a link between *localVar* in the current scope and *otherVar* in an enclosing scope. Any access to *localVar* actually accesses *otherVar*. This enables procedures to modify variables passed "by reference."
@@ -810,6 +837,7 @@ All variable commands belong to ObjectGroup: "variable"
     # Now x=2, y=1
     ```
 
+<a id="cmd-variable"></a>
 - **variable** - Declare namespace variables
   - `variable ?name value...? name ?value?`
   - Declares variables within the current namespace. If called inside a procedure within a namespace, creates a link to the namespace variable (similar to `global` but for namespace variables).
@@ -846,6 +874,7 @@ Many list commands accept index arguments. Valid index formats include:
 - `end-n` - The nth element from the end (e.g., `end-1` is second-to-last)
 - `n+m` or `n-m` - Arithmetic on indices
 
+<a id="cmd-lappend"></a>
 - **lappend** - Append elements to list variable
   - `lappend varName ?value ...?`
   - Appends each *value* as a new element to the list stored in *varName*. If the variable doesn't exist, it is created as an empty list before appending. This is the preferred way to build lists incrementally as it's more efficient than `set varName [concat $varName [list $value]]`.
@@ -857,6 +886,7 @@ Many list commands accept index arguments. Valid index formats include:
     # fruits is now: {apple banana cherry {dragon fruit}}
     ```
 
+<a id="cmd-lassign"></a>
 - **lassign** - Assign list elements to variables
   - `lassign list varName ?varName ...?`
   - Assigns successive elements of *list* to the specified variables. If there are more variables than list elements, the excess variables are set to empty strings. If there are more elements than variables, the excess elements are returned.
@@ -871,6 +901,7 @@ Many list commands accept index arguments. Valid index formats include:
     # a="1", b="2", c=""
     ```
 
+<a id="cmd-lget"></a>
 - **lget** - Get element from list variable (Eagle extension)
   - `lget varName ?index ...?`
   - Retrieves an element from a list stored in a variable. This combines variable lookup with list indexing in a single operation, which can be more efficient than `lindex [set varName] index`.
@@ -882,6 +913,7 @@ Many list commands accept index arguments. Valid index formats include:
     lget data 1 0    ;# Returns: "c"
     ```
 
+<a id="cmd-lindex"></a>
 - **lindex** - Get list element by index
   - `lindex list ?index ...?`
   - Returns the element at the specified *index* in *list*. If multiple indices are provided, each successive index navigates into nested lists.
@@ -898,6 +930,7 @@ Many list commands accept index arguments. Valid index formats include:
     lindex $nested 1 0     ;# Returns: "3"
     ```
 
+<a id="cmd-linsert"></a>
 - **linsert** - Insert elements into list
   - `linsert list index value ?value ...?`
   - Returns a new list with the *value* arguments inserted into *list* before the element at *index*. The original list is not modified.
@@ -915,6 +948,7 @@ Many list commands accept index arguments. Valid index formats include:
     # Returns: {a b X c}
     ```
 
+<a id="cmd-list"></a>
 - **list** - Create a list
   - `list ?arg arg ...?`
   - Creates a properly formatted list from the given arguments. Each argument becomes one element of the list, with proper quoting applied automatically. This is the safe way to construct lists—never use string concatenation.
@@ -929,6 +963,7 @@ Many list commands accept index arguments. Valid index formats include:
     set cmd [list puts $message]  ;# Properly quotes $message
     ```
 
+<a id="cmd-llength"></a>
 - **llength** - Get list length
   - `llength list`
   - Returns the number of elements in *list*.
@@ -943,6 +978,7 @@ Many list commands accept index arguments. Valid index formats include:
 - **lmap** - List mapping (see Loop section)
   - Creates a new list by applying a script to each element of the input list(s).
 
+<a id="cmd-lrange"></a>
 - **lrange** - Get range of list elements
   - `lrange list first last`
   - Returns a list containing the elements of *list* from index *first* through index *last*, inclusive.
@@ -955,6 +991,7 @@ Many list commands accept index arguments. Valid index formats include:
     lrange {a b c} 0 end-1     ;# Returns: {a b}
     ```
 
+<a id="cmd-lremove"></a>
 - **lremove** - Remove list elements by index (Eagle extension)
   - `lremove list index ?index...?`
   - Returns a new list with the elements at the specified indices removed. Multiple indices can be specified; they are processed in a way that accounts for shifting positions.
@@ -964,6 +1001,7 @@ Many list commands accept index arguments. Valid index formats include:
     lremove {a b c d e} 1 3    ;# Returns: {a c e}
     ```
 
+<a id="cmd-lrepeat"></a>
 - **lrepeat** - Create list by repeating values
   - `lrepeat count value ?value ...?`
   - Creates a list by repeating the sequence of *value* arguments *count* times.
@@ -975,6 +1013,7 @@ Many list commands accept index arguments. Valid index formats include:
     lrepeat 0 a b         ;# Returns: {}
     ```
 
+<a id="cmd-lreplace"></a>
 - **lreplace** - Replace list elements
   - `lreplace list first last ?value ...?`
   - Returns a new list with elements from *first* to *last* (inclusive) replaced by the *value* arguments. If no values are provided, the elements are simply deleted.
@@ -987,6 +1026,7 @@ Many list commands accept index arguments. Valid index formats include:
     lreplace {a b c} 1 0 X           ;# Returns: {a X b c} (insertion)
     ```
 
+<a id="cmd-lreverse"></a>
 - **lreverse** - Reverse a list
   - `lreverse list`
   - Returns a list with the elements in reverse order.
@@ -996,6 +1036,7 @@ Many list commands accept index arguments. Valid index formats include:
     lreverse {a b c d}    ;# Returns: {d c b a}
     ```
 
+<a id="cmd-lsearch"></a>
 - **lsearch** - Search for element in list
   - `lsearch ?options? list pattern`
   - Searches *list* for an element matching *pattern* and returns the index of the first match, or -1 if no match is found.
@@ -1028,6 +1069,7 @@ Many list commands accept index arguments. Valid index formats include:
     lsearch -regexp {cat dog bird} {^d}    ;# Returns: 1
     ```
 
+<a id="cmd-lset"></a>
 - **lset** - Set list element
   - `lset varName index ?index...? value`
   - Modifies the list stored in *varName* by replacing the element at the specified index with *value*. Multiple indices navigate into nested lists. The variable is modified in place.
@@ -1041,6 +1083,7 @@ Many list commands accept index arguments. Valid index formats include:
     lset nested 0 1 9         ;# nested is now: {{1 9} {3 4}}
     ```
 
+<a id="cmd-lsort"></a>
 - **lsort** - Sort a list
   - `lsort ?options? list`
   - Returns a sorted copy of *list*. The original list is not modified.
@@ -1093,6 +1136,7 @@ String commands belong to ObjectGroup: "string"
     base64 decode "SGVsbG8="        ;# Returns: Hello
     ```
 
+<a id="cmd-concat"></a>
 - **concat** - Concatenate arguments
   - `concat ?arg arg ...?`
   - Concatenates the arguments with spaces, treating each as a list and merging them into a single list. Leading/trailing whitespace is trimmed from each argument.
@@ -1104,6 +1148,7 @@ String commands belong to ObjectGroup: "string"
     concat "  a  " "  b  "  ;# Returns: {a b}
     ```
 
+<a id="cmd-encoding"></a>
 - **encoding** - Character encoding operations
   - `encoding convertfrom ?encoding? data` - Convert from external encoding to Unicode
   - `encoding convertto ?encoding? data` - Convert from Unicode to external encoding
@@ -1119,6 +1164,7 @@ String commands belong to ObjectGroup: "string"
     encoding system              ;# Get current system encoding
     ```
 
+<a id="cmd-format"></a>
 - **format** - Format string (like sprintf)
   - `format formatString ?arg ...?`
   - Generates a formatted string using C-style printf format specifiers. Each `%` conversion specifier in *formatString* consumes one argument.
@@ -1146,6 +1192,7 @@ String commands belong to ObjectGroup: "string"
     format "%-10s|" "Hi"                      ;# Returns: "Hi        |"
     ```
 
+<a id="cmd-guid"></a>
 - **guid** - GUID/UUID operations (Eagle extension)
   - `guid compare guid1 guid2` - Compare two GUIDs (-1, 0, or 1)
   - `guid isnull guid` - Check if GUID is the null/empty GUID
@@ -1160,6 +1207,7 @@ String commands belong to ObjectGroup: "string"
     guid isnull [guid null]     ;# Returns: 1 (true)
     ```
 
+<a id="cmd-hash"></a>
 - **hash** - Hashing operations (Eagle extension)
   - `hash normal ?options? algorithm string` - Compute a hash of the string
   - `hash keyed ?options? algorithm string ?key?` - Compute a keyed hash
@@ -1179,6 +1227,7 @@ String commands belong to ObjectGroup: "string"
     hash list  ;# List available algorithms
     ```
 
+<a id="cmd-join"></a>
 - **join** - Join list elements with separator
   - `join list ?joinString?`
   - Concatenates the elements of *list* into a single string, with each element separated by *joinString* (default is a single space).
@@ -1191,6 +1240,7 @@ String commands belong to ObjectGroup: "string"
     join {1 2 3} "\n"      ;# Returns: "1\n2\n3" (multi-line)
     ```
 
+<a id="cmd-parse"></a>
 - **parse** - Parse scripts and expressions (Eagle extension)
   - `parse command ?options? text` - Parse text as a single command
   - `parse expression ?options? text` - Parse text as an expression
@@ -1199,20 +1249,34 @@ String commands belong to ObjectGroup: "string"
   - **Use cases**: Syntax analysis, building tools, validating scripts
   - **Returns**: Parsed structure information (varies by sub-command).
 
+<a id="cmd-regexp"></a>
 - **regexp** - Regular expression matching
   - `regexp ?switches? exp string ?matchVar? ?subMatchVar subMatchVar ...?`
   - Tests whether the regular expression *exp* matches part or all of *string*. Optionally stores matches in variables.
-  - **Switches**:
+  - **Standard Switches** (Tcl-compatible):
     - `-nocase` - Case-insensitive matching
-    - `-indices` - Store indices (start, end) instead of matched text
-    - `-line` - Newline-sensitive matching (^ and $ match line boundaries)
-    - `-lineanchor` - ^ and $ match line boundaries
-    - `-linestop` - . doesn't match newlines
-    - `-all` - Find all matches (return count)
+    - `-indices` / `-indexes` - Store indices (start, end) instead of matched text
+    - `-line` - Newline-sensitive matching (combines `-lineanchor` and `-linestop`)
+    - `-lineanchor` - `^` and `$` match line boundaries (enables Multiline mode)
+    - `-linestop` - `.` doesn't match newlines (disables Singleline mode)
+    - `-all` - Find all matches (return count instead of 0/1)
     - `-inline` - Return matches as a list instead of storing in variables
-    - `-start index` - Start matching at specified index
-    - `-expanded` - Allow whitespace and comments in pattern
+    - `-start index` - Start matching at specified index (supports `end-n` notation)
+    - `-expanded` - Allow whitespace and comments in pattern (IgnorePatternWhitespace)
     - `--` - End of switches
+  - **Eagle Extension Switches**:
+    - `-options value` - Direct .NET `RegexOptions` enum value for fine-grained control
+    - `-debug` - Enable debug output showing match attempts and results
+    - `-ecma` - Use ECMAScript-compliant regex behavior
+    - `-compiled` - Compile the regex for better performance on repeated use
+    - `-explicit` - Use explicit capture mode (only named groups capture)
+    - `-reverse` - Match right-to-left (RightToLeft mode)
+    - `-global` - Global mode: don't reset variable index between matches
+    - `-skip n` - Skip the first *n* capture groups when storing results
+    - `-limit n` - Limit the number of matches returned
+    - `-length n` - Limit the input string length to consider
+    - `-noempty` - Skip empty matches when storing results
+    - `-noculture` - Use culture-invariant matching
   - **Returns**: 1 if match found, 0 otherwise (or count with `-all`, or list with `-inline`).
   - **Example**:
     ```tcl
@@ -1220,8 +1284,11 @@ String commands belong to ObjectGroup: "string"
     regexp {(\d+)-(\d+)} "123-456" all a b     ;# all="123-456", a="123", b="456"
     regexp -all {\d+} "a1b2c3"                 ;# Returns: 3
     regexp -inline -all {\d+} "a1b2c3"         ;# Returns: {1 2 3}
+    regexp -debug -all {\w+} "hello world"     ;# Shows debug output during matching
+    regexp -compiled -nocase {pattern} $text   ;# Compiled, case-insensitive match
     ```
 
+<a id="cmd-regsub"></a>
 - **regsub** - Regular expression substitution
   - `regsub ?switches? exp string subSpec ?varName?`
   - Replaces matches of regular expression *exp* in *string* with *subSpec*. If *varName* is provided, stores the result there and returns the number of replacements; otherwise returns the modified string.
@@ -1229,11 +1296,30 @@ String commands belong to ObjectGroup: "string"
     - `&` or `\0` - The entire matched string
     - `\1` through `\9` - Captured subexpressions
     - `\\` - Literal backslash
-  - **Switches**:
+  - **Standard Switches** (Tcl-compatible):
     - `-all` - Replace all matches (not just the first)
     - `-nocase` - Case-insensitive matching
-    - `-start index` - Start at specified index
+    - `-start index` - Start at specified index (supports `end-n` notation)
+    - `-line` - Newline-sensitive matching (combines `-lineanchor` and `-linestop`)
+    - `-lineanchor` - `^` and `$` match line boundaries
+    - `-linestop` - `.` doesn't match newlines
+    - `-expanded` - Allow whitespace and comments in pattern
     - `--` - End of switches
+  - **Eagle Extension Switches**:
+    - `-options value` - Direct .NET `RegexOptions` enum value for fine-grained control
+    - `-count n` - Maximum number of replacements to make (default: 1 without `-all`)
+    - `-ecma` - Use ECMAScript-compliant regex behavior
+    - `-compiled` - Compile the regex for better performance on repeated use
+    - `-explicit` - Use explicit capture mode (only named groups capture)
+    - `-reverse` - Match right-to-left (RightToLeft mode)
+    - `-quote` - Quote the replacement string (escape special characters)
+    - `-nostrict` - Disable strict substitution syntax checking
+    - `-extra` - Enable extra substitution syntax for Tcl compatibility
+    - `-literal` - Treat *subSpec* as a literal string (no substitution processing)
+    - `-verbatim` - Verbatim replacement mode
+    - `-noculture` - Use culture-invariant matching
+    - `-eval script` - Evaluate *script* for each match to compute the replacement; the match is available via special variables
+    - `-command` - Command mode (TIP #463): treat *subSpec* as a command prefix; the matched text is appended as an argument and the result becomes the replacement. Cannot be used with `-eval`.
   - **Returns**: Modified string (or count if *varName* provided).
   - **Example**:
     ```tcl
@@ -1243,8 +1329,16 @@ String commands belong to ObjectGroup: "string"
 
     regsub -all {\d} "a1b2c3" "X" result
     # result = "aXbXcX", returns: 3
+
+    # Using -command (TIP #463): transform each match via a command
+    regsub -all -command {\d+} "a1b22c333" {string length}
+    # Returns: "a1b2c3" (each number replaced by its length)
+
+    # Using -literal: no substitution processing
+    regsub -literal {.} "a.b" {$1}             ;# Returns: "a$1b"
     ```
 
+<a id="cmd-split"></a>
 - **split** - Split string into list
   - `split string ?splitChars? ?options?`
   - Splits *string* into a list of elements. By default, splits on any whitespace and removes empty elements.
@@ -1261,6 +1355,7 @@ String commands belong to ObjectGroup: "string"
     split "a.b,c" ".,"       ;# Returns: {a b c} (multiple separators)
     ```
 
+<a id="cmd-string"></a>
 - **string** - String operations (extensive sub-commands)
 
   The `string` command provides comprehensive string manipulation capabilities through numerous sub-commands.
@@ -1536,38 +1631,48 @@ Channel commands belong to ObjectGroup: "channel"
 
 Channels are Eagle's abstraction for I/O streams. Standard channels include `stdin`, `stdout`, and `stderr`. Additional channels are created by `open`, `socket`, and other commands.
 
+<a id="cmd-close"></a>
 - **close** - Close channel
   - `close channelId`
   - Closes the specified channel and releases associated resources. For files, buffers are flushed and the file handle is released. For sockets, the connection is terminated.
   - **Returns**: An empty string.
 
+<a id="cmd-eof"></a>
 - **eof** - Check for end-of-file
   - `eof channelId`
   - Returns 1 if an end-of-file condition has occurred on *channelId*, 0 otherwise. This is typically checked after a read operation returns less data than expected.
   - **Returns**: Boolean (0 or 1).
 
+<a id="cmd-fblocked"></a>
 - **fblocked** - Check if channel is blocked
   - `fblocked channelId`
   - Returns 1 if the last input operation on *channelId* would have blocked (in non-blocking mode). Used for asynchronous I/O.
   - **Returns**: Boolean (0 or 1).
 
+<a id="cmd-fconfigure"></a>
 - **fconfigure** - Configure channel options
   - `fconfigure channelId ?optionName? ?value? ?optionName value ...?`
   - Gets or sets configuration options for a channel. Without arguments after *channelId*, returns all options. With just *optionName*, returns that option's value.
-  - **Common options**:
-    - `-blocking boolean` - Blocking (1) or non-blocking (0) mode
-    - `-buffering full|line|none` - Buffering mode
-    - `-buffersize size` - Buffer size in bytes
-    - `-encoding name` - Character encoding (e.g., utf-8, ascii)
-    - `-eofchar char` - End-of-file character
-    - `-translation mode` - Line ending translation: `auto`, `binary`, `cr`, `crlf`, `lf`
+  - **Options**:
+    - `-blocking boolean` - Blocking (true) or non-blocking (false) mode. Non-blocking mode allows `gets` and `read` with `-noblock` to return immediately with available data.
+    - `-encoding name` - Character encoding (e.g., `utf-8`, `ascii`, `unicode`). Use `binary` or set to null for raw binary I/O.
+    - `-translation mode` - Line ending translation mode. Can be a single value for both input and output, or a two-element list `{inputMode outputMode}`:
+      - `auto` - Accept any line ending on input; use platform-native on output
+      - `binary` - No translation (raw bytes)
+      - `cr` - Carriage return only
+      - `crlf` - Carriage return + line feed (Windows)
+      - `lf` - Line feed only (Unix)
+    - `-buffer boolean` - Enable (true) or disable (false) buffering (Eagle extension).
   - **Returns**: Option value(s) or empty string when setting.
   - **Example**:
     ```tcl
     fconfigure $fh -encoding utf-8 -translation lf
-    fconfigure $fh -buffering line
+    fconfigure $sock -blocking 0           ;# Non-blocking socket I/O
+    fconfigure $fh -translation {auto lf}  ;# Accept any input, output LF
+    puts [fconfigure $fh -encoding]        ;# Query encoding
     ```
 
+<a id="cmd-fcopy"></a>
 - **fcopy** - Copy data between channels
   - `fcopy input output ?-size size? ?-command callback?`
   - Copies data from *input* channel to *output* channel efficiently.
@@ -1576,24 +1681,49 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
     - `-command callback` - Asynchronous mode; *callback* is invoked when copy completes
   - **Returns**: Number of bytes copied (synchronous) or empty string (asynchronous).
 
+<a id="cmd-flush"></a>
 - **flush** - Flush channel buffer
   - `flush channelId`
   - Forces any buffered output data to be written to *channelId*. Normally, data is buffered and written in larger chunks for efficiency. `flush` ensures all pending data is actually sent.
   - **Returns**: An empty string.
 
+<a id="cmd-gets"></a>
 - **gets** - Read line from channel
   - `gets ?options? channelId ?varName?`
-  - Reads a single line from *channelId* (up to but not including the newline).
+  - Reads a single line from *channelId* (up to but not including the newline by default).
   - **Without varName**: Returns the line read, or an empty string at EOF.
   - **With varName**: Stores the line in *varName* and returns the number of characters read (-1 at EOF).
+  - **Standard Options**:
+    - `--` - End of options
+  - **Eagle Extension Options**:
+    - `-noblock` - Non-blocking read: returns immediately with whatever data is currently available in the channel's internal buffer, rather than waiting for a complete line or EOF. **Important**: If no data is available in the buffer, the command will raise an error; wrap in `catch` to handle this case. This is useful for responsive I/O on sockets, pipes, or other streaming channels.
+    - `-keepeol boolean` - When true, keep end-of-line characters in the result instead of stripping them.
+    - `-count n` - Read exactly *n* bytes/characters instead of reading until end-of-line.
+    - `-encoding value` - Override the channel's encoding for this read operation (unsafe).
+    - `-usecount` - Read a count-prefixed value: first reads a size prefix, then reads that many bytes (unsafe).
   - **Returns**: Line content (or character count with *varName*).
   - **Example**:
     ```tcl
     while {[gets $fh line] >= 0} {
         puts "Read: $line"
     }
+
+    # Non-blocking read pattern for sockets (use catch to handle no-data case)
+    fconfigure $sock -translation crlf
+    while {![eof $sock]} {
+        if {[catch {gets -noblock $sock} line] == 0} then {
+            append result $line
+        } else {
+            # No data available yet, continue polling
+            after 10
+        }
+    }
+
+    # Keep the end-of-line characters
+    gets -keepeol true $fh line
     ```
 
+<a id="cmd-open"></a>
 - **open** - Open file or channel
   - `open fileName ?access? ?permissions? ?type? ?options?`
   - Opens a file or other resource and returns a channel identifier.
@@ -1604,8 +1734,21 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
     - `w+` - Read and write; create or truncate
     - `a` - Write only; append; create if needed
     - `a+` - Read and write; append; create if needed
-  - **Access flags** (alternative POSIX-style): `RDONLY`, `WRONLY`, `RDWR`, `APPEND`, `CREAT`, `EXCL`, `TRUNC`
-  - **Permissions**: Unix-style permission bits (default: 0666, modified by umask)
+  - **Access flags** (alternative POSIX-style): `RDONLY`, `WRONLY`, `RDWR`, `APPEND`, `CREAT`, `EXCL`, `TRUNC`, `SeekToEof`
+  - **Permissions**: Unix-style permission bits (default: 0666, modified by umask). Parsed but not used for file creation in Eagle.
+  - **Type**: Channel type; currently only `file` (default) is supported.
+  - **Eagle Extension Options**:
+    - `-channelid value` - Specify a custom channel identifier instead of auto-generated
+    - `-buffersize n` - Set the buffer size in bytes
+    - `-share mode` - File sharing mode: `None`, `Read` (default), `Write`, `ReadWrite`, `Delete`
+    - `-options flags` - .NET `FileOptions` flags: `None`, `WriteThrough`, `Asynchronous`, `RandomAccess`, `DeleteOnClose`, `SequentialScan`, `Encrypted`
+    - `-streamflags flags` - `HostStreamFlags` for stream behavior control
+    - `-nullencoding` - Allow null encoding (raw binary mode)
+    - `-autoflush` - Automatically flush after each write operation
+    - `-rawendofstream` - Use raw end-of-stream detection
+    - `-stdin` - Open standard input stream (console only, ignores *fileName*)
+    - `-stdout` - Open standard output stream (console only, ignores *fileName*)
+    - `-stderr` - Open standard error stream (console only, ignores *fileName*)
   - **Returns**: A channel identifier (e.g., `file3`).
   - **Example**:
     ```tcl
@@ -1616,26 +1759,52 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
     set fh [open "output.txt" w]
     puts $fh "Hello, World!"
     close $fh
+
+    # Open with exclusive access and auto-flush
+    set fh [open "log.txt" a -share None -autoflush]
+
+    # Open with custom channel ID
+    set fh [open "data.bin" r -channelid mydata -nullencoding]
     ```
 
+<a id="cmd-puts"></a>
 - **puts** - Write to channel
-  - `puts ?-nonewline? ?channelId? string`
+  - `puts ?options? ?channelId? string`
   - Writes *string* to *channelId* (default: `stdout`), followed by a newline unless `-nonewline` is specified.
+  - **Standard Options**:
+    - `-nonewline` - Don't append a newline after the string
+  - **Eagle Extension Options**:
+    - `-encoding value` - Override the channel's encoding for this write operation (unsafe).
+    - `-usecount` - Prepend a count prefix to the output, allowing the receiver to know exactly how many bytes to expect (unsafe). Useful for binary protocols.
+    - `-useobject` - Write from an opaque object handle (byte array) instead of a string (unsafe). Useful for binary data.
   - **Returns**: An empty string.
   - **Example**:
     ```tcl
     puts "Hello"                    ;# To stdout with newline
     puts -nonewline "Enter name: "  ;# No newline (prompt)
     puts $fh "Line to file"         ;# To file channel
+
+    # Write with specific encoding
+    puts -encoding utf-8 $fh "Unicode: \u00e9"
+
+    # Write binary data from object handle
+    puts -useobject $fh $byteArrayHandle
     ```
 
+<a id="cmd-read"></a>
 - **read** - Read from channel
   - `read ?options? channelId ?numChars?`
   - Reads data from *channelId*.
   - **Without numChars**: Reads all remaining data until EOF.
   - **With numChars**: Reads at most *numChars* characters.
-  - **Options**: `-nonewline` - Strip trailing newline from result
-  - **Returns**: The data read as a string.
+  - **Standard Options**:
+    - `-nonewline` - Strip trailing newline from result
+    - `--` - End of options
+  - **Eagle Extension Options**:
+    - `-noblock` - Non-blocking read: returns immediately with whatever data is currently available in the channel's internal buffer, rather than waiting for *numChars* characters or EOF. **Important**: If no data is available in the buffer, the command will raise an error; wrap in `catch` to handle this case. Essential for responsive I/O on sockets, pipes, or other streaming channels.
+    - `-encoding value` - Override the channel's encoding for this read operation (unsafe).
+    - `-useobject` - Return result as an opaque object handle (byte array) instead of a string (unsafe). Useful for binary data that shouldn't be encoded/decoded.
+  - **Returns**: The data read as a string (or object handle with `-useobject`).
   - **Example**:
     ```tcl
     set fh [open "data.txt" r]
@@ -1643,8 +1812,23 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
     close $fh
 
     set chunk [read $fh 1024]       ;# Read up to 1024 chars
+
+    # Non-blocking read pattern for sockets (use catch to handle no-data case)
+    fconfigure $sock -translation binary
+    while {![eof $sock]} {
+        if {[catch {read -noblock $sock} chunk] == 0} then {
+            append data $chunk
+        } else {
+            # No data available yet, continue polling
+            after 10
+        }
+    }
+
+    # Read without trailing newline
+    set data [read -nonewline $fh]
     ```
 
+<a id="cmd-seek"></a>
 - **seek** - Set channel position
   - `seek channelId offset ?origin?`
   - Moves the read/write position in *channelId*. Only works on seekable channels (files, not pipes or sockets).
@@ -1660,11 +1844,13 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
     seek $fh -10 current  ;# Back 10 characters
     ```
 
+<a id="cmd-tell"></a>
 - **tell** - Get channel position
   - `tell channelId`
   - Returns the current read/write position in *channelId* as a byte offset from the beginning.
   - **Returns**: Integer offset, or -1 if position cannot be determined.
 
+<a id="cmd-truncate"></a>
 - **truncate** - Truncate channel (Eagle extension)
   - `truncate channelId ?length?`
   - Truncates the file associated with *channelId* to *length* bytes. If *length* is omitted, truncates at the current position.
@@ -1676,11 +1862,13 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
 
 File system commands belong to ObjectGroup: "fileSystem"
 
+<a id="cmd-cd"></a>
 - **cd** - Change directory
   - `cd ?dirName?`
   - Changes the current working directory to *dirName*. If *dirName* is omitted, changes to the user's home directory.
   - **Returns**: An empty string.
 
+<a id="cmd-file"></a>
 - **file** - File operations (extensive sub-commands)
 
   The `file` command provides comprehensive file system operations. Sub-commands are organized by category below.
@@ -1775,6 +1963,7 @@ File system commands belong to ObjectGroup: "fileSystem"
   - `file rights name` - Returns file access rights.
   - `file trusted path` / `file verified path` - Checks code signing/trust status.
 
+<a id="cmd-glob"></a>
 - **glob** - Glob for files
   - `glob ?options? pattern ?pattern ...?`
   - Returns a list of file names matching the glob pattern(s).
@@ -1795,6 +1984,7 @@ File system commands belong to ObjectGroup: "fileSystem"
     glob {*.c *.h}                        ;# .c and .h files
     ```
 
+<a id="cmd-pwd"></a>
 - **pwd** - Print working directory
   - `pwd`
   - Returns the absolute path of the current working directory.
@@ -1808,6 +1998,7 @@ Procedure commands belong to ObjectGroup: "procedure"
 
 Procedures are Eagle's primary mechanism for code reuse and abstraction.
 
+<a id="cmd-proc"></a>
 - **proc** - Create procedure
   - `proc name args body`
   - Creates a new procedure named *name*. When called, the procedure executes *body* with arguments bound to variables as specified by *args*.
@@ -1836,6 +2027,7 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
     }
     ```
 
+<a id="cmd-nproc"></a>
 - **nproc** - Create procedure with named arguments (Eagle extension)
   - `nproc name args body`
   - Creates a procedure that accepts named arguments (keyword arguments). Arguments are passed as `-name value` pairs.
@@ -1848,6 +2040,7 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
     connect -host localhost -port 8080 -timeout 60
     ```
 
+<a id="cmd-apply"></a>
 - **apply** - Apply lambda expression
   - `apply lambdaExpr ?arg1 arg2 ...?`
   - Applies an anonymous procedure (lambda) to the given arguments. A lambda expression is a two or three element list: `{args body}` or `{args body namespace}`.
@@ -1867,6 +2060,7 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
     apply {{} {variable counter; incr counter}} {} ::myns
     ```
 
+<a id="cmd-napply"></a>
 - **napply** - Apply lambda with named arguments (Eagle extension)
   - `napply lambdaExpr ?arg1 arg2 ...?`
   - Like `apply`, but accepts named arguments using `-name value` syntax.
@@ -1883,6 +2077,7 @@ Namespace commands belong to ObjectGroup: "scriptEnvironment"
 
 Namespaces provide hierarchical organization of commands and variables, preventing name collisions and enabling modular code organization. The global namespace is `::`, and all other namespaces are nested within it.
 
+<a id="cmd-namespace"></a>
 - **namespace** - Namespace operations
 
   #### Creating and Managing Namespaces
@@ -1970,6 +2165,7 @@ Namespaces provide hierarchical organization of commands and variables, preventi
 
 Object commands belong to ObjectGroup: "managedEnvironment"
 
+<a id="cmd-object"></a>
 - **object** - .NET object operations (comprehensive .NET interop)
 
   The `object` command provides Eagle's powerful .NET interoperability, allowing scripts to create, manipulate, and invoke methods on .NET objects.
@@ -2121,6 +2317,7 @@ Debug command belongs to ObjectGroup: "debug"
 
 The `debug` command provides comprehensive debugging capabilities for Eagle scripts and the interpreter itself. It includes breakpoint management, execution control, memory analysis, and script bundling.
 
+<a id="cmd-debug"></a>
 - **debug** - Debugging operations
 
   #### Debugger Control
@@ -2308,6 +2505,7 @@ Interpreter commands belong to ObjectGroup: "scriptEnvironment"
 
 The `interp` command manages child interpreters, providing sandboxing, isolation, and communication between interpreters. Child interpreters can be "safe" (restricted) or full-featured.
 
+<a id="cmd-interp"></a>
 - **interp** - Interpreter management
 
   #### Creating and Deleting Interpreters
@@ -2483,6 +2681,7 @@ Package commands belong to ObjectGroup: "scriptEnvironment"
 
 The `package` command manages Eagle packages - reusable collections of procedures and commands. It handles versioning, dependencies, and lazy loading of packages.
 
+<a id="cmd-package"></a>
 - **package** - Package management
 
   #### Loading and Requiring Packages
@@ -2674,6 +2873,7 @@ SQL commands belong to ObjectGroup: "managedEnvironment"
 
 The `sql` command provides database connectivity using ADO.NET, supporting any database with a .NET provider (SQL Server, SQLite, MySQL, PostgreSQL, etc.).
 
+<a id="cmd-sql"></a>
 - **sql** - Database operations
 
   #### Connection Management
@@ -2758,6 +2958,7 @@ The `sql` command provides database connectivity using ADO.NET, supporting any d
 
 Network commands belong to ObjectGroup: "network"
 
+<a id="cmd-socket"></a>
 - **socket** - Socket operations
 
   Creates TCP socket connections for network communication.
@@ -2792,6 +2993,7 @@ Network commands belong to ObjectGroup: "network"
   vwait forever
   ```
 
+<a id="cmd-uri"></a>
 - **uri** - URI operations (Eagle extension)
 
   Comprehensive URI handling and HTTP client functionality.
@@ -2857,6 +3059,7 @@ XML commands belong to ObjectGroup: "managedEnvironment"
 
 The `xml` command provides XML processing capabilities using the .NET XML infrastructure.
 
+<a id="cmd-xml"></a>
 - **xml** - XML operations
 
   #### Serialization
@@ -2917,6 +3120,7 @@ Tcl commands belong to ObjectGroup: "nativeEnvironment"
 
 Eagle can interoperate with native Tcl interpreters, allowing scripts to leverage both Eagle's .NET integration and Tcl's extensive library ecosystem. This requires Tcl to be installed and the Eagle Tcl integration to be enabled at build time.
 
+<a id="cmd-tcl"></a>
 - **tcl** - Tcl integration
 
   #### Library and Interpreter Management
@@ -3030,9 +3234,11 @@ Eagle can interoperate with native Tcl interpreters, allowing scripts to leverag
 
 Expression commands belong to ObjectGroup: "expression"
 
+<a id="cmd-expr"></a>
 - **expr** - Evaluate expression
   - `expr arg ?arg ...?`
 
+<a id="cmd-fpclassify"></a>
 - **fpclassify** - Classify floating point number
   - `fpclassify value`
 
@@ -3343,6 +3549,7 @@ Operators are used within expressions to perform calculations, comparisons, and 
 
 Time commands belong to ObjectGroup: "time"
 
+<a id="cmd-clock"></a>
 - **clock** - Clock and time operations
 
   The `clock` command provides comprehensive date/time functionality including formatting, parsing, and high-resolution timing.
@@ -3421,6 +3628,7 @@ Time commands belong to ObjectGroup: "time"
 
   - `clock filetime fileTimeValue ?options?` - Converts Windows FILETIME values to/from clock values (Eagle extension).
 
+<a id="cmd-time"></a>
 - **time** - Time script execution
   - `time script ?count? ?options?`
   - Executes *script* multiple times and returns timing information. This is the standard way to benchmark code.
@@ -3443,6 +3651,7 @@ Event commands belong to ObjectGroup: "event"
 
 Eagle's event loop allows asynchronous operations, timed callbacks, and idle processing.
 
+<a id="cmd-after"></a>
 - **after** - Execute script after delay
 
   #### Scheduling Delayed Execution
@@ -3486,6 +3695,7 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
   - `after enable ?enabled?` - Enables or disables after event processing.
   - `after flags ?flags?` - Gets or sets event processing flags.
 
+<a id="cmd-callback"></a>
 - **callback** - Callback management (Eagle extension)
 
   Provides a callback queue system for managing asynchronous operations.
@@ -3497,6 +3707,7 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
   - `callback count` - Returns the number of queued callbacks.
   - `callback clear` - Clears all queued callbacks.
 
+<a id="cmd-update"></a>
 - **update** - Process events
   - `update ?mask?`
   - Processes pending events (after callbacks, idle handlers, etc.) and returns. Without this, scheduled events won't fire until the script completes or enters `vwait`.
@@ -3509,6 +3720,7 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
   puts $done            ;# Prints: 1
   ```
 
+<a id="cmd-vwait"></a>
 - **vwait** - Wait for variable change
   - `vwait ?options? varName`
   - Enters the event loop and waits until variable *varName* is modified (set or unset). This is the standard way to wait for asynchronous operations.
@@ -3532,6 +3744,7 @@ Introspection commands belong to ObjectGroup: "introspection"
 
 The `info` command is the primary means for querying the state of the interpreter, examining procedures, variables, commands, and system information. It has over 80 sub-commands organized by category.
 
+<a id="cmd-info"></a>
 - **info** - Introspection operations
 
   #### Procedure Introspection
@@ -3731,6 +3944,7 @@ The `info` command is the primary means for querying the state of the interprete
 
   - `info active ?pattern?` - Returns a list of active operations matching *pattern*.
 
+<a id="cmd-version"></a>
 - **version** - Get Eagle version
   - `version ?flags?`
   - Returns the Eagle version string. With *flags*, can control the format:
@@ -3748,6 +3962,7 @@ The `info` command is the primary means for querying the state of the interprete
 
 Aliases and delegates provide mechanisms to create command shortcuts and manage callable objects.
 
+<a id="cmd-alias"></a>
 - **alias** - Create command alias (ObjectGroup: "alias")
   - `alias name` - Returns the definition of alias *name*.
   - `alias name {}` - Deletes alias *name*.
@@ -3770,6 +3985,7 @@ Aliases and delegates provide mechanisms to create command shortcuts and manage 
   alias greet {}
   ```
 
+<a id="cmd-delegate"></a>
 - **delegate** - Delegate operations (ObjectGroup: "delegate")
   - `delegate create ?options? typeName` - Creates a delegate of the specified .NET type.
   - `delegate delete delegateName` - Deletes a delegate.
@@ -3802,6 +4018,7 @@ Engine commands belong to ObjectGroup: "engine"
 
 These commands control script evaluation and substitution at the core level.
 
+<a id="cmd-eval"></a>
 - **eval** - Evaluate script
   - `eval arg ?arg ...?`
   - Concatenates all arguments with spaces and evaluates the result as a script.
@@ -3825,6 +4042,7 @@ These commands control script evaluation and substitution at the core level.
 
   **Note**: Eagle does NOT support the Tcl 8.5+ argument expansion operator `{*}`. Use `[eval]` with `[list]` for dynamic command construction to properly handle quoting.
 
+<a id="cmd-invoke"></a>
 - **invoke** - Invoke command
   - `invoke ?level? cmd ?arg ...?`
   - Invokes *cmd* with the given arguments at the specified stack *level*.
@@ -3837,6 +4055,7 @@ These commands control script evaluation and substitution at the core level.
   invoke 1 puts "Message"          ;# Invoke at caller's level
   ```
 
+<a id="cmd-source"></a>
 - **source** - Source script file
   - `source ?options? fileName`
   - Reads and evaluates the contents of *fileName* as a script.
@@ -3850,6 +4069,7 @@ These commands control script evaluation and substitution at the core level.
   source -encoding utf-8 "unicode_script.tcl"
   ```
 
+<a id="cmd-subst"></a>
 - **subst** - Perform substitutions
   - `subst ?-nobackslashes? ?-nocommands? ?-novariables? string`
   - Performs variable, command, and backslash substitutions on *string* without evaluating it as a script.
@@ -3876,6 +4096,7 @@ Native environment commands belong to ObjectGroup: "nativeEnvironment"
 
 These commands interact with the operating system and native code.
 
+<a id="cmd-exec"></a>
 - **exec** - Execute external program
   - `exec ?options? arg ?arg ...? ?&?`
   - Executes an external program with the given arguments. Unlike Tcl's exec, Eagle's exec provides extensive options for process control, I/O handling, and .NET integration.
@@ -4073,6 +4294,7 @@ These commands interact with the operating system and native code.
   - Use `-shell` to open documents/URLs with associated applications
   - The `-timeout` option kills the process if it doesn't exit in time
 
+<a id="cmd-exit"></a>
 - **exit** - Exit interpreter
   - `exit ?options? ?returnCode?`
   - Terminates the interpreter with the specified return code (default 0).
@@ -4087,6 +4309,7 @@ These commands interact with the operating system and native code.
   exit -force 2     ;# Force immediate exit
   ```
 
+<a id="cmd-kill"></a>
 - **kill** - Kill process (Eagle extension)
   - `kill ?options? process`
   - Terminates the specified process or processes matching a pattern.
@@ -4111,6 +4334,7 @@ These commands interact with the operating system and native code.
   kill -whatIf -all chrome*    ;# Show what would be killed (dry run)
   ```
 
+<a id="cmd-library"></a>
 - **library** - Native library operations (Eagle extension)
   - `library subcommand ?options? ?args?`
   - Provides P/Invoke-style access to native (unmanaged) libraries, enabling Eagle scripts to load native DLLs, declare native function signatures, and call native functions directly. This is an unsafe command that requires native code execution capability.
@@ -4396,6 +4620,7 @@ These commands interact with the operating system and native code.
     - `[info modules]` - List all loaded native modules
     - `[info delegates]` - List all declared delegates
 
+<a id="cmd-pid"></a>
 - **pid** - Get process ID
   - `pid ?channelId?`
   - Without arguments, returns the process ID of the current interpreter.
@@ -4418,6 +4643,7 @@ Managed environment commands belong to ObjectGroup: "managedEnvironment"
 
 These commands interact with the .NET runtime and the interactive host environment.
 
+<a id="cmd-host"></a>
 - **host** - Host operations (interactive console host)
 
   The `host` command provides control over the interactive console/terminal interface.
@@ -4511,6 +4737,7 @@ These commands interact with the .NET runtime and the interactive host environme
   - `host sleep milliseconds` - Sleeps for the specified duration.
   - `host font ?options?` - Gets or sets the console font.
 
+<a id="cmd-load"></a>
 - **load** - Load binary package/extension
   - `load ?options? fileName ?packageName? ?interp?`
   - Loads a compiled extension (DLL) into the interpreter.
@@ -4530,6 +4757,7 @@ These commands interact with the .NET runtime and the interactive host environme
 
 - **sql** - SQL operations (see Database section)
 
+<a id="cmd-unload"></a>
 - **unload** - Unload binary package/extension
   - `unload ?options? fileName ?packageName? ?interp?`
   - Unloads a previously loaded extension.
@@ -4550,10 +4778,12 @@ These commands interact with the .NET runtime and the interactive host environme
 
 These commands provide fundamental interpreter operations and utility functions.
 
+<a id="cmd-automatic"></a>
 - **automatic** - Automatic command delegation (ObjectGroup: "delegate")
   - Manages automatic delegation of commands to other implementations.
   - Used internally for command dispatch optimization.
 
+<a id="cmd-bgerror"></a>
 - **bgerror** - Background error handler (ObjectGroup: "scriptEnvironment")
   - `bgerror message`
   - Called automatically when an error occurs in a background event handler (e.g., after callbacks).
@@ -4568,14 +4798,17 @@ These commands provide fundamental interpreter operations and utility functions.
   }
   ```
 
+<a id="cmd-core"></a>
 - **core** - Core operations (ObjectGroup: "core")
   - Provides access to core interpreter functionality.
   - Used for advanced interpreter manipulation and debugging.
 
+<a id="cmd-default"></a>
 - **default** - Default operations (ObjectGroup: "default")
   - Provides default behavior for various operations.
   - Used internally by the interpreter.
 
+<a id="cmd-nop"></a>
 - **nop** - No operation (ObjectGroup: "nop")
   - `nop`
   - Does nothing and returns an empty string.
@@ -4587,6 +4820,7 @@ These commands provide fundamental interpreter operations and utility functions.
   time {nop} 1000000     ;# Measure interpreter overhead
   ```
 
+<a id="cmd-rename"></a>
 - **rename** - Rename command (ObjectGroup: "scriptEnvironment")
   - `rename ?options? oldName newName`
   - Renames command *oldName* to *newName*.
@@ -4609,6 +4843,7 @@ These commands provide fundamental interpreter operations and utility functions.
   rename myproc {}
   ```
 
+<a id="cmd-subdelegate"></a>
 - **subdelegate** - Sub-delegate operations (ObjectGroup: "delegate")
   - Manages sub-delegation of commands within ensemble structures.
   - Used for advanced command routing.
