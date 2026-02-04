@@ -1,4 +1,4 @@
-# Eagle Script Library Catalog
+# Eagle Script Library
 
 This document provides comprehensive documentation for all script procedures in the Eagle scripting language libraries, organized by package and functional category.
 

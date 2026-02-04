@@ -1,4 +1,4 @@
-# Eagle Scripting Language Catalog
+# Eagle Scripting Language
 
 This document provides a comprehensive catalog the Eagle scripting language, organized by functional category based on their ObjectGroup attributes.
 
@@ -7153,3 +7153,631 @@ if {[catch {load /path/to/Plugin.dll} err]} {
 5. **Test Infrastructure**: The test commands (test1, test2) and test functions provide comprehensive testing capabilities, essential for ensuring Eagle interpreter reliability.
 
 6. **Tcl Compatibility**: Many commands maintain compatibility with Tcl while extending functionality for .NET integration.
+
+---
+
+## Advanced: Interpreter Customization Hooks
+
+Eagle provides extensive mechanisms for customizing interpreter behavior at runtime. This section documents the advanced customization APIs available for modifying commands, sub-commands, and name resolution.
+
+### Sub-Command Manipulation
+
+Eagle ensemble commands (like `string`, `file`, `info`, etc.) use an `EnsembleDictionary` to map sub-command names to their implementations. These dictionaries can be accessed and modified at runtime.
+
+#### Command Properties
+
+Each ensemble command object exposes three key properties for sub-command management:
+
+| Property | Description |
+|----------|-------------|
+| `SubCommands` | Dictionary of available sub-commands (name → ISubCommand or null) |
+| `AllowedSubCommands` | Whitelist of sub-commands (if set, only these are allowed) |
+| `DisallowedSubCommands` | Blacklist of sub-commands (these are explicitly denied) |
+
+#### Accessing Sub-Commands via Object System
+
+```tcl
+# Get interpreter reference
+set interpreter [object invoke Interpreter.GetActive]
+
+# Get a command object (e.g., "string")
+set command null; set error null
+set code [$interpreter GetIdentifier Command string null Default command error]
+
+# Access the sub-commands dictionary
+object flags $command +NoDispose  ;# Command is not owned by us
+set subCommands [$command -alias SubCommands]
+
+# List all sub-command names
+$subCommands Keys
+
+# Remove a sub-command
+$subCommands Remove length
+
+# Add a sub-command back (with null = use core implementation)
+$subCommands Add length null
+```
+
+#### The `interp subcommand` Command
+
+The `interp subcommand` command provides a simpler interface for sub-command manipulation:
+
+```
+interp subcommand ?options? path cmdName subCmdName ?command?
+```
+
+**Arguments:**
+- `path` - Interpreter path ("" for current interpreter)
+- `cmdName` - Name of the ensemble command (e.g., "string")
+- `subCmdName` - Name of the sub-command (e.g., "length")
+- `command` - (Optional) Script command to execute for this sub-command
+
+**Options (`-flags`):**
+
+| Flag | Description |
+|------|-------------|
+| `ForceQuery` | Query sub-command even if arguments suggest modification |
+| `ForceNew` | Sub-command must be added new, not modified |
+| `ForceReset` | Re-add sub-command during reset if it doesn't exist |
+| `ForceDelete` | Remove sub-command instead of reset (with empty command) |
+| `NoComplain` | Don't error if sub-command exists/doesn't exist |
+| `StrictNoArguments` | Error if arguments present (script won't process them) |
+| `UseExecuteArguments` | Append execution arguments to script command |
+| `SkipNameArguments` | Omit command/sub-command names from passed arguments |
+
+**Examples:**
+
+```tcl
+# Query a sub-command
+interp subcommand {} string length
+
+# Remove a sub-command
+interp subcommand -flags ForceDelete {} string length {}
+
+# Add a custom sub-command that calls a procedure
+interp subcommand {} string myLength {string_myLength}
+
+# Add with argument passing
+interp subcommand -flags UseExecuteArguments {} string upper {myUpperProc}
+```
+
+### Creating Custom Sub-Commands
+
+For more control, you can create custom `ISubCommand` implementations. The test infrastructure provides an example class `Eagle._Tests.Default+SubCommand`:
+
+```tcl
+# Create a script command list
+set list [object create -alias StringList]
+$list Add return
+$list Add "custom result"
+
+# Create a custom sub-command
+set subCommand [object create -alias Eagle._Tests.Default+SubCommand \
+    mySubCmd           ;# name
+    $command           ;# parent command
+    null               ;# callback
+    null               ;# clientData
+    None               ;# commandFlags
+    $list              ;# scriptCommand
+    null               ;# execute (IExecute)
+    1                  ;# nameIndex
+    false              ;# useIExecute
+    false              ;# strictNoArguments
+    false              ;# useExecuteArguments
+    false]             ;# skipNameArguments
+
+# Add to the sub-commands dictionary
+$subCommands Add mySubCmd $subCommand
+```
+
+#### SubCommand Constructor Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `name` | Sub-command name |
+| `command` | Parent ICommand reference |
+| `callback` | ExecuteCallback delegate (optional) |
+| `clientData` | Custom client data (optional) |
+| `commandFlags` | CommandFlags for the sub-command |
+| `scriptCommand` | StringList of script to evaluate |
+| `execute` | IExecute to dispatch to (if useIExecute is true) |
+| `nameIndex` | Index of sub-command name in arguments |
+| `useIExecute` | Use IExecute instead of scriptCommand |
+| `strictNoArguments` | Error if extra arguments provided |
+| `useExecuteArguments` | Pass execution arguments to script |
+| `skipNameArguments` | Skip command/sub-command name args |
+
+#### Wrapping Existing Sub-Commands
+
+You can wrap an existing sub-command to intercept or modify its behavior:
+
+```tcl
+# Get the existing sub-command
+set oldSubCommand [$subCommands Item length]
+object flags $oldSubCommand +NoDispose
+
+# Create a wrapper that calls the original
+set wrapperScript [object create -alias StringList]
+$wrapperScript Add puts
+$wrapperScript Add "Calling string length..."
+
+set newSubCommand [object create -alias Eagle._Tests.Default+SubCommand \
+    length $command null null None $wrapperScript $oldSubCommand true false false false]
+
+# Replace in dictionary
+$subCommands Item length $newSubCommand
+```
+
+### Custom Name Resolution (IResolve Interface)
+
+Eagle allows installing custom resolvers that intercept name lookup for variables, commands, namespaces, and call frames. This is useful for:
+
+- Creating virtual variables that map to external data sources
+- Redirecting command execution to different interpreters
+- Implementing custom namespace resolution logic
+- Cross-interpreter variable/command sharing
+
+#### IResolve Interface Methods
+
+| Method | Description |
+|--------|-------------|
+| `GetVariableFrame` | Resolve the call frame for variable lookup |
+| `GetCurrentNamespace` | Resolve the current namespace |
+| `GetIExecute` | Resolve command name to IExecute instance |
+| `GetVariable` | Resolve variable name to IVariable instance |
+
+#### Creating and Installing a Resolver
+
+```tcl
+# Create resolver with a decision script
+set script {
+    if {[isNonNullObjectHandle varName]} then {
+        if {[getStringFromObjectHandle varName] eq "special"} then {
+            return true  ;# Use our custom resolution
+        }
+    }
+    return false  ;# Use default resolution
+}
+
+# Create resolver instance
+# Arguments: sourceInterp, targetInterp, script, frame, namespace, execute, variable, flags
+set resolve [object create -alias Eagle._Tests.Default+Resolve \
+    $interp1 $interp2 $script $frame null null null Default]
+
+# Install the resolver
+set result null
+$targetInterpreter AddResolver $resolve null Default result
+```
+
+#### Resolver Use Cases
+
+**Cross-Interpreter Variable Access:**
+```tcl
+# In interp1
+set sharedVar "Hello from interp1"
+
+# Create resolver that redirects "sharedVar" lookups to interp1
+set frame [getScopeFrame $interp1 global]
+set resolve [object create -alias Eagle._Tests.Default+Resolve \
+    $interp1 $interp2 $script $frame null null null Default]
+
+# Install in interp2 - now $sharedVar in interp2 reads from interp1
+```
+
+**Command Redirection:**
+```tcl
+# Redirect unknown commands to another interpreter
+set execute [getIExecute $interp1 myProc]
+set resolve [object create -alias Eagle._Tests.Default+Resolve \
+    $interp1 $interp2 $script null null $execute null Default]
+```
+
+#### TestResolveFlags
+
+Resolvers can be configured with flags that modify their behavior:
+
+| Flag | Description |
+|------|-------------|
+| `Default` | No special handling |
+| `HandleGlobalOnly` | Handle global-only variable lookups |
+| `HandleAbsolute` | Handle absolute namespace names |
+| `HandleQualified` | Handle qualified names |
+| `EnableLogging` | Enable debug trace logging |
+| `AlwaysUseNamespaceFrame` | Always use namespace's frame |
+| `NextUseNamespaceFrame` | Use namespace frame on next call |
+
+### Command Object Manipulation
+
+Beyond sub-commands, you can modify command objects directly:
+
+```tcl
+# Get command object
+set command [getCommand "" myCommand false]
+
+# Modify description
+$command Description "New description string"
+
+# Check/modify command flags
+set flags [$command CommandFlags]
+
+# Access the underlying .NET object
+set obj [$command -create -alias Object]
+```
+
+### Best Practices
+
+1. **Use `object flags +NoDispose`** when accessing interpreter-owned objects to prevent premature disposal.
+
+2. **Isolated interpreters** provide a safer environment for customization experiments:
+   ```tcl
+   set interp [interp create -isolated]
+   # Customizations in $interp won't affect the parent
+   ```
+
+3. **Test customizations thoroughly** - modifying core commands can break scripts in subtle ways.
+
+4. **Consider using `AllowedSubCommands`** instead of removing sub-commands for security restrictions:
+   ```tcl
+   set allowed [object create -alias EnsembleDictionary]
+   $allowed Add length null
+   $allowed Add index null
+   $command AllowedSubCommands $allowed
+   # Now only "length" and "index" sub-commands are available
+   ```
+
+5. **Restore modified commands** using `debug restore` if needed:
+   ```tcl
+   debug restore  ;# Restores all core commands to original state
+   ```
+
+### See Also
+
+- `Eagle/Library/Tests/redefine.eagle` - Comprehensive test suite for customization features
+- `Eagle/Library/Tests/Default.cs` - Test support classes including SubCommand and Resolve
+- `Eagle/Library/Commands/Interp.cs` - Implementation of `interp subcommand`
+
+---
+
+## Advanced: Automatic Command Mapping Subsystem
+
+Eagle provides a powerful mechanism for automatically exposing .NET type methods as script commands through the **Automatic Command Mapping** subsystem. This feature dynamically maps .NET methods to script sub-commands, providing direct access to .NET functionality without writing custom command classes.
+
+### Overview
+
+The automatic command system creates ensemble commands where each sub-command corresponds to a method on a .NET type. Method overloads are automatically resolved based on parameter count, and delegates are dynamically created for efficient invocation.
+
+**Key components:**
+
+| Component | Description |
+|-----------|-------------|
+| `Automatic` command class | The ensemble command that dispatches to mapped methods |
+| `DelegateMapper` | Maps .NET types/methods to delegates organized by name and parameter count |
+| `TypedInstance` | Wraps a type and optional object instance for method invocation |
+| `AddAutomaticCommands` | Interpreter method to register automatic commands |
+
+### Creating Automatic Commands
+
+Automatic commands are created using the `Interpreter.AddAutomaticCommands` method:
+
+```tcl
+# Get interpreter reference
+set interpreter null; set error null
+set code [object invoke -alias Value GetInterpreter "" "" Default interpreter error]
+
+# Create a TypedInstance for the target type
+set typeName "System.Int64"
+set instance [object invoke -create $typeName Parse 12345]
+
+set typedInstance [object create -alias TypedInstance \
+    $typeName None $instance myInt64 null null]
+
+# Create a list of TypedInstances
+set typedInstances [object create -alias \
+    [appendArgs System.Collections.Generic.List`1 \
+    \[Eagle._Components.Public.TypedInstance\]]]
+
+$typedInstances Add $typedInstance
+
+# Add automatic commands
+set bindingFlags {Public NonPublic Instance Static}
+set delegateFlags null
+set count 0
+set tokens null
+set result null
+
+set code [$interpreter AddAutomaticCommands \
+    null null $typedInstances null $bindingFlags \
+    null $delegateFlags false count tokens result]
+
+# Now "myInt64" is a command with sub-commands for Int64 methods:
+# myInt64 ToString
+# myInt64 GetHashCode
+# myInt64 GetType
+# myInt64 CompareTo <value>
+# etc.
+```
+
+### TypedInstance
+
+A `TypedInstance` encapsulates the information needed for automatic command creation:
+
+```tcl
+set typedInstance [object create -alias TypedInstance \
+    $typeName       ;# Type - the .NET type containing methods
+    $objectFlags    ;# ObjectFlags - flags controlling object handling
+    $instance       ;# Object - instance for instance methods (or null for static-only)
+    $objectName     ;# ObjectName - short command name
+    $fullObjectName ;# FullObjectName - optional full name (fallback)
+    $extraParts]    ;# ExtraParts - additional name parts (optional)
+```
+
+**Constructor parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `type` | The .NET `Type` whose methods will be mapped |
+| `objectFlags` | `ObjectFlags` controlling object handling behavior |
+| `object` | Object instance for instance method invocation (null = static only) |
+| `objectName` | Short name used as the command name |
+| `fullObjectName` | Optional fallback name if `objectName` is null |
+| `extraParts` | Additional name components (rarely used) |
+
+### Command Syntax
+
+Once created, automatic commands follow this syntax:
+
+```
+commandName ?options? methodName ?arg ...?
+```
+
+**Example:**
+```tcl
+# Call ToString with no arguments
+myInt64 ToString
+
+# Call instance method with arguments
+myObject SomeMethod arg1 arg2
+
+# Use options for advanced control
+myObject -flags +NonPublic GetPrivateData
+```
+
+### Command Options
+
+Automatic commands support extensive options (shared with `[library call]` and `[object invoke]`):
+
+#### Method Selection Options
+
+| Option | Description |
+|--------|-------------|
+| `-flags <bindingFlags>` | .NET BindingFlags for method lookup (e.g., `+NonPublic`) |
+| `-bindingflags <flags>` | Alias for `-flags` |
+| `-autolimit <n>` | Limit number of method overloads considered |
+| `-autoindex <n>` | Select specific overload by index (0-based) |
+| `-limit <n>` | Limit overloads (used during method resolution) |
+| `-index <n>` | Select specific overload (used during invocation) |
+
+#### Object Handling Options
+
+| Option | Description |
+|--------|-------------|
+| `-create` | Create an opaque object handle for the return value |
+| `-alias` | Create an aliased object handle (command alias) |
+| `-aliasraw` | Create raw alias without extra processing |
+| `-aliasall` | Alias all returned objects |
+| `-aliasreference` | Create reference alias |
+| `-nodispose` | Prevent automatic disposal of returned object |
+| `-objectname <name>` | Specify name for created object handle |
+| `-objectflags <flags>` | Flags for object handle creation |
+| `-byrefobjectflags <flags>` | Flags for by-reference parameters |
+
+#### Type Conversion Options
+
+| Option | Description |
+|--------|-------------|
+| `-type <typeName>` | Specify expected return type |
+| `-marshalflags <flags>` | Flags controlling value marshaling |
+| `-argumentflags <flags>` | Flags for by-reference argument handling |
+| `-datetimekind <kind>` | DateTimeKind for date conversions |
+| `-datetimestyles <styles>` | DateTimeStyles for date parsing |
+| `-datetimeformat <format>` | Custom date/time format string |
+
+#### Invocation Control Options
+
+| Option | Description |
+|--------|-------------|
+| `-noinvoke` | Don't invoke, just resolve the method |
+| `-noargs` | Don't pass arguments to the method |
+| `-nocase` | Case-insensitive method name matching |
+| `-strictmember` | Require exact method match |
+| `-strictargs` | Strict argument type matching |
+| `-nobyref` | Disable by-reference parameter handling |
+| `-default` | Use default parameter values |
+| `-verbose` | Enable verbose error messages |
+| `-debug` | Enable debug output |
+| `-trace` | Enable trace output |
+| `-tostring` | Convert result to string |
+
+#### Maintenance Options
+
+| Option | Description |
+|--------|-------------|
+| `-autocreate <bool>` | Create target object on-demand if not already created |
+| `-autoflush <bool>` | Clear cached delegates (true = delegates only, false = all) |
+| `-autostatus <bool>` | Report count of mapped types/delegates |
+
+### Method Resolution
+
+The automatic command system resolves methods based on:
+
+1. **Method name** - Matched case-insensitively by default
+2. **Parameter count** - Number of arguments determines which overloads are eligible
+3. **BindingFlags** - Controls visibility (Public, NonPublic, Instance, Static)
+4. **Safe/Unsafe attributes** - Methods marked with `[CommandFlags(CommandFlags.Unsafe)]` are blocked in safe interpreters
+
+**Overload selection process:**
+1. Find all methods with matching name and parameter count
+2. Filter by binding flags and safety requirements
+3. If multiple matches remain, use `-autoindex` or let the marshaller choose
+4. Create/cache delegate for the selected method
+5. Invoke the delegate with converted arguments
+
+### Safety and Security
+
+Methods can be annotated with `[CommandFlags]` attributes to control accessibility:
+
+```csharp
+public class MyType
+{
+    [CommandFlags(CommandFlags.None)]
+    public void NeutralMethod() { }  // Accessible from any interpreter
+
+    [CommandFlags(CommandFlags.Safe)]
+    public void SafeMethod() { }     // Accessible from safe interpreters
+
+    [CommandFlags(CommandFlags.Unsafe)]
+    public void UnsafeMethod() { }   // Blocked in safe interpreters
+}
+```
+
+When running in a safe interpreter:
+- Methods with `CommandFlags.Safe` are allowed
+- Methods with `CommandFlags.Unsafe` are blocked with "permission denied"
+- Methods with `CommandFlags.None` follow the interpreter's default policy
+
+### DelegateFlags
+
+The `DelegateFlags` enumeration controls automatic command behavior:
+
+| Flag | Description |
+|------|-------------|
+| `None` | No special handling (default) |
+| `Public` | Include public members |
+| `NonPublic` | Include non-public members |
+| `Instance` | Include instance members |
+| `Static` | Include static members |
+| `AllowDuplicate` | Don't error on duplicate delegate names |
+| `OverwriteExisting` | Replace existing delegates |
+| `FailOnNone` | Fail if no methods found |
+| `NoComplain` | Continue on errors |
+| `Verbose` | Enable verbose error reporting |
+| `UseCallOptions` | Allow `[library call]` options |
+| `UseReturnOptions` | Allow `[object invoke]` return options |
+| `LookupObjects` | Translate object handles in arguments |
+| `MakeIntoObject` | Convert unsupported return types to object handles |
+| `WrapReturnType` | Force wrapping of return values |
+
+### AddAutomaticCommands Method
+
+```csharp
+public ReturnCode AddAutomaticCommands(
+    IPlugin plugin,                            // Optional parent plugin
+    IClientData clientData,                    // Optional client data
+    IEnumerable<TypedInstance> typedInstances, // Types/instances to map
+    IDelegateMapper mapper,                    // Optional shared mapper
+    BindingFlags? bindingFlags,                // Method binding flags
+    MarshalFlags? marshalFlags,                // Marshaling flags
+    DelegateFlags? delegateFlags,              // Delegate creation flags
+    bool? safe,                                // Override safe mode
+    ref long count,                            // Output: items added
+    ref LongList tokens,                       // Output: command tokens
+    ref Result result                          // Output: error message
+)
+```
+
+### DelegateMapper
+
+The `DelegateMapper` class maintains the mapping between .NET methods and script delegates:
+
+**Structure:** `Type → MethodName → ParameterCount → List<(MethodBase, Delegate, DelegateFlags)>`
+
+**Key methods:**
+- `Load(type, bindingFlags, ...)` - Load all methods from a type
+- `Lookup(type, methodName, paramCount, ...)` - Find matching delegates
+- `Clear(delegatesOnly, ...)` - Clear cached delegates
+- `Count(delegatesOnly, ...)` - Count mappings
+- `ToList(...)` - Get available sub-commands for help/completion
+- `CreateEnsemble(type, argCount)` - Create EnsembleDictionary for sub-command dispatch
+
+### Complete Example
+
+```tcl
+# Create an automatic command for a custom test class
+# Assumes Eagle._Tests.Default+Automatic class is available
+
+set interpreter [object invoke Interpreter.GetActive]
+
+# Create instance of the test class
+set instance [object invoke -alias Eagle._Tests.Default+Automatic Create]
+
+# Create TypedInstance
+set typedInstance [object create -alias TypedInstance \
+    Eagle._Tests.Default+Automatic None $instance automatic null null]
+
+# Build list
+set typedInstances [object create -alias \
+    {System.Collections.Generic.List`1[Eagle._Components.Public.TypedInstance]}]
+$typedInstances Add $typedInstance
+
+# Register automatic command
+set count 0; set tokens null; set result null
+$interpreter AddAutomaticCommands null null $typedInstances null \
+    {Public NonPublic Instance Static} null null false count tokens result
+
+# Now use the automatic command
+automatic NeutralStaticMethod          ;# Call with 0 args
+automatic NeutralStaticMethod 1234     ;# Call with 1 int arg
+automatic NeutralStaticMethod "test"   ;# Call with 1 string arg (different overload)
+automatic NeutralStaticMethod 10 20    ;# Call with 2 args
+
+# Check status
+automatic -autostatus true             ;# Returns delegate count
+
+# Clear cached delegates
+automatic -autoflush true              ;# Clear delegate cache only
+automatic -autoflush false             ;# Clear all mappings
+
+# Access non-public members
+automatic -flags +NonPublic get_SomePrivateProperty
+```
+
+### Error Handling
+
+When method resolution or invocation fails, the automatic command provides detailed error messages:
+
+```tcl
+# Method not found
+% myObject NonExistentMethod
+bad option "NonExistentMethod": must be ToString, GetHashCode, ...
+
+# Wrong number of arguments
+% myObject MethodWith2Args arg1
+wrong # args: should be "myObject ?options? method ?arg ...?"
+
+# Permission denied (in safe interpreter)
+% myObject UnsafeMethod
+permission denied: safe interpreter cannot use method overload System.Type.UnsafeMethod(..)
+
+# Overload ambiguity
+% myObject OverloadedMethod arg
+# (Uses -autoindex to select specific overload)
+```
+
+### Implementation Files
+
+| File | Description |
+|------|-------------|
+| `Eagle/Library/Commands/Automatic.cs` | The `Automatic` command class implementation |
+| `Eagle/Library/Components/Private/DelegateMapper.cs` | Method-to-delegate mapping logic |
+| `Eagle/Library/Components/Private/DelegateOps.cs` | Delegate type creation utilities |
+| `Eagle/Library/Components/Private/ObjectOps.cs` | `GetCallOptions()` and marshaling support |
+| `Eagle/Library/Components/Private/ScriptOps.cs` | `NewAutomaticCommand()` factory method |
+| `Eagle/Library/Components/Public/TypedInstance.cs` | Type/instance wrapper class |
+| `Eagle/Library/Components/Public/Interpreter.cs` | `AddAutomaticCommands()` method |
+
+### See Also
+
+- `Eagle/Library/Tests/interp-exited.eagle` - Test "interp-1.70001" demonstrates automatic commands
+- `Eagle/Library/Tests/Default.cs` - `Automatic` test class with various method signatures
+- `[library call]` command - Similar invocation options
+- `[object invoke]` command - Related object invocation functionality
