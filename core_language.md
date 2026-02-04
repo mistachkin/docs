@@ -279,11 +279,35 @@ Quick reference to all Eagle commands with links to their detailed documentation
   - **Returns**: The optional *string* value (rarely used).
 
 <a id="cmd-downlevel"></a>
-- **downlevel** - Execute script at lower call stack level
+- **downlevel** - Execute script in the pre-uplevel call frame (Eagle extension)
   - `downlevel arg ?arg ...?`
-  - Executes the concatenated arguments as a script in the context of a lower (more nested) call frame. This is the inverse of `uplevel` and is an Eagle extension.
-  - **Level specification**: Same as `uplevel` - a number indicates how many levels down, `#n` specifies an absolute level.
+  - Executes the concatenated arguments as a script in the context of the call frame that was active *prior to* the most recent `uplevel`. This is an Eagle extension that solves a problem that is otherwise quite difficult in Tcl: when you're inside an upleveled script and need to temporarily execute code back in the original (lower) context.
+  - **Use case**: When a procedure uses `uplevel` to execute a script in the caller's context, code within that script may need to access variables or execute commands in the *original* procedure's context. `downlevel` provides this capability.
   - **Returns**: The result of the executed script.
+  - **Example**:
+    ```tcl
+    proc deepdown {} {
+        lappend a 1              ;# in deepdown's frame (level 1)
+        uplevel 1 {
+            lappend a 2          ;# in caller's frame (level 0)
+            downlevel {
+                lappend a 3      ;# back in deepdown's frame (level 1)
+                uplevel #0 {
+                    lappend a 4  ;# in global frame (level 0)
+                    downlevel {
+                        lappend a 5  ;# back in deepdown's frame (level 1)
+                    }
+                }
+            }
+        }
+        return $a
+    }
+    set a [list]
+    list [deepdown] $a
+    # Returns: {{1 3 5} {0 2 4}}
+    # {1 3 5} = deepdown's local 'a' (level 1 appends)
+    # {0 2 4} = global 'a' (level 0 appends)
+    ```
 
 <a id="cmd-error"></a>
 - **error** - Generate an error
