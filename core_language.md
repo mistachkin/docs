@@ -3972,46 +3972,290 @@ These commands interact with the operating system and native code.
   kill -force [pid $channel]
   ```
 
-- **library** - Native library operations
-  - Provides P/Invoke-style access to native (unmanaged) libraries.
+- **library** - Native library operations (Eagle extension)
+  - `library subcommand ?options? ?args?`
+  - Provides P/Invoke-style access to native (unmanaged) libraries, enabling Eagle scripts to load native DLLs, declare native function signatures, and call native functions directly. This is an unsafe command that requires native code execution capability.
+  - **Note**: This command requires the `compile.EMIT`, `compile.NATIVE`, and `compile.LIBRARY` compile-time features and native platform support.
+  - **Core Concepts**:
+    - **Modules**: Native libraries (DLLs, .so, .dylib files) loaded into the process
+    - **Delegates**: Function signature declarations that describe native function prototypes
+    - **Resolution**: Binding a delegate to an actual function address in a module
+    - **Reference counting**: Modules track references from delegates; unloading a module only succeeds when no delegates reference it
+  - **Sub-commands**:
 
-  #### Loading Libraries
+    **library call** - Call a native function
+    - `library call ?options? delegate ?arg ...?`
+    - Invokes the native function associated with a previously declared and resolved delegate.
+    - **Options**: Supports extensive marshaling options for type conversion and return value handling:
+      - `-create` - Create an opaque object handle for the return value
+      - `-alias` - Create an alias command for the returned object
+      - `-dispose` - Dispose of the return value after use
+      - `-tostring` - Convert return value to string
+      - `-nobyref` - Disable by-reference argument handling
+      - `-invoke` - Force invocation (default behavior)
+      - `-debug` - Enable debug output for method resolution
+      - `-trace` - Enable tracing of method calls
+      - Additional marshaling options for controlling type conversion
+    - **Returns**: The function's return value, converted according to options.
+    - **Example**:
+      ```tcl
+      # Call GetConsoleWindow (no arguments, returns IntPtr)
+      set hwnd [library call $getConsoleWindow]
 
-  - `library load ?options? fileName` - Loads a native library (DLL, .so, .dylib).
-    - **Returns**: A module handle.
-  - `library unload module` - Unloads a previously loaded library.
-  - `library checkload ?options? fileName` - Checks if a library can be loaded without actually loading it.
-  - `library handle fileName` - Returns the handle for an already-loaded library.
-  - `library test ?fileName?` - Tests library loading.
+      # Call with arguments and create object handle for result
+      set result [library call -create $createInterp]
+      ```
 
-  #### Declaring Functions
+    **library certificate** - Check library digital signature
+    - `library certificate ?options? fileName`
+    - Retrieves and optionally verifies the digital certificate/signature of a native library file.
+    - **Options**:
+      - `-chain` - Verify the full certificate chain
+      - `-cache` - Use cached certificate information
+      - `-verificationflags flags` - X509 verification flags
+      - `-revocationmode mode` - Certificate revocation check mode
+      - `-revocationflag flag` - Certificate revocation flag
+    - **Returns**: Certificate information as a formatted string.
 
-  - `library declare ?options?` - Declares a native function signature.
-    - **Options**: Specify return type, parameter types, calling convention
-  - `library undeclare delegate` - Removes a function declaration.
-  - `library resolve ?options? delegate` - Resolves a function address.
-  - `library unresolve ?options? delegate` - Unresolves a function.
+    **library checkload** - Check if library can be loaded
+    - `library checkload ?options? fileName`
+    - Checks if a native library can be loaded without actually loading it. If already loaded, returns the existing module handle.
+    - **Options**: Same as `library load`
+    - **Returns**: Module handle name if already loaded, or loads and returns handle.
+    - **Use case**: Useful for conditionally loading libraries or avoiding duplicate loads.
 
-  #### Calling Functions
+    **library declare** - Declare a native function signature
+    - `library declare ?options?`
+    - Declares a native function signature by creating a delegate type dynamically. The delegate can then be resolved to an actual function address and called.
+    - **Options**:
+      - `-module moduleName` - Associate with a specific loaded module
+      - `-functionname name` - Name of the native function to bind to
+      - `-address intptr` - Explicit function address (dangerous)
+      - `-returntype type` - Return type (e.g., `IntPtr`, `int32`, `void`, `Boolean`)
+      - `-parametertypes typeList` - List of parameter types (e.g., `{IntPtr String int32}`)
+      - `-callingconvention conv` - Calling convention: `Winapi` (default), `Cdecl`, `StdCall`, `ThisCall`, `FastCall`
+      - `-charset charset` - Character set for string marshaling: `Ansi`, `Unicode`, `Auto`
+      - `-setlasterror bool` - Capture Win32 last error after call
+      - `-bestfitmapping bool` - Enable best-fit character mapping
+      - `-throwonunmappablechar bool` - Throw on unmappable characters
+      - `-assemblyname name` - Custom assembly name for dynamic type
+      - `-modulename name` - Custom module name for dynamic type
+      - `-typename name` - Custom type name for the delegate
+      - `-delegatename name` - Custom delegate handle name
+      - `-alias` - Create a command alias for the delegate
+    - **Returns**: Delegate handle name (e.g., `IDelegate#1`).
+    - **Example**:
+      ```tcl
+      # Declare GetConsoleWindow from kernel32.dll
+      set module [library load kernel32.dll]
+      set delegate [library declare \
+          -functionname GetConsoleWindow \
+          -returntype IntPtr \
+          -module $module]
 
-  - `library call ?options? delegate ?arg ...?` - Calls a native function.
+      # Declare a function with parameters
+      set delegate2 [library declare \
+          -functionname GetStdHandle \
+          -returntype IntPtr \
+          -parametertypes {int32} \
+          -module $module]
 
-  #### Information
+      # Declare Tcl_Eval from Tcl library
+      set tclEval [library declare \
+          -module $tclModule \
+          -functionname Tcl_Eval \
+          -callingconvention cdecl \
+          -charset ansi \
+          -returntype ReturnCode \
+          -parametertypes {IntPtr String}]
+      ```
 
-  - `library info delegate object` - Returns information about a delegate.
-  - `library info module object` - Returns information about a loaded module.
-  - `library certificate ?options? fileName` - Checks the digital signature of a library.
-  - `library matcharchitecture fileName` - Checks if library architecture matches current process.
-  - `library verifyarchitecture fileName` - Verifies library architecture compatibility.
+    **library handle** - Get module handle by file name
+    - `library handle fileName`
+    - Returns the native module handle for an already-loaded library without loading it.
+    - **Returns**: Integer handle value (IntPtr as Int32 or Int64 depending on platform).
+    - **Note**: Returns 0 if the library is not loaded.
 
-  **Example**:
-  ```tcl
-  # Load and call a native function
-  set lib [library load "mylib.dll"]
-  library declare -returntype int32 -parameters {int32 int32} MyAdd
-  set result [library call MyAdd 5 3]
-  library unload $lib
-  ```
+    **library info** - Get information about modules or delegates
+    - `library info delegate delegateName` - Returns detailed information about a delegate
+    - `library info module moduleName` - Returns detailed information about a module
+    - **Delegate info includes**: kind, id, name, description, callingConvention, returnType, parameterTypes, typeId, typeName, moduleFlags, moduleName, moduleFileName, moduleReferenceCount, functionName, address
+    - **Module info includes**: kind, id, name, description, flags, fileName, module (handle), referenceCount
+    - **Returns**: Dictionary-formatted list of key-value pairs.
+    - **Example**:
+      ```tcl
+      library info module $module
+      # Returns: {kind NativeModule id ... name IModule#1 fileName kernel32.dll ...}
+
+      library info delegate $delegate
+      # Returns: {kind NativeDelegate ... functionName GetConsoleWindow address 123456}
+      ```
+
+    **library load** - Load a native library
+    - `library load ?options? fileName`
+    - Loads a native library (DLL, .so, .dylib) into the process and creates a module handle.
+    - **Options**:
+      - `-modulename name` - Custom module handle name
+      - `-locked` - Prevent the module from being unloaded (sets `NoUnload` flag)
+      - `-flags flags` - Module flags (enum value)
+      - `-trustedonly` - Only load if library is signed/trusted
+      - `-maybetrustedonly` - Like `-trustedonly` but only in release builds
+    - **Returns**: Module handle name (e.g., `IModule#1`).
+    - **Note**: Module names can be used with `[info modules]` to list loaded modules.
+    - **Example**:
+      ```tcl
+      # Load a system DLL
+      set kernel32 [library load kernel32.dll]
+
+      # Load with explicit path
+      set myLib [library load "/path/to/mylib.so"]
+
+      # Load and lock (prevent unload)
+      set lockedLib [library load -locked "important.dll"]
+      ```
+
+    **library matcharchitecture** - Check architecture compatibility
+    - `library matcharchitecture fileName`
+    - Checks if a library file's architecture matches the current process architecture (x86/x64/ARM).
+    - **Returns**: Boolean `true` if compatible, `false` otherwise.
+
+    **library resolve** - Resolve delegate to function address
+    - `library resolve ?options? delegate`
+    - Binds a declared delegate to an actual function address in a module. This step is required before calling the function if not done during `library declare`.
+    - **Options**:
+      - `-module moduleName` - Module containing the function
+      - `-functionname name` - Function name to resolve (can change the binding)
+    - **Returns**: Empty string on success.
+    - **Use case**: Re-resolve a delegate to a different function or module.
+    - **Example**:
+      ```tcl
+      # Create delegate without module, then resolve later
+      set delegate [library declare -functionname MyFunc -returntype int32]
+      library resolve -module $myModule $delegate
+
+      # Re-resolve to different function
+      library resolve -module $otherModule -functionname OtherFunc $delegate
+      ```
+
+    **library test** - Test library loading capability
+    - `library test ?fileName?`
+    - Tests the native library loading subsystem, optionally with a specific file.
+    - **Returns**: Empty string on success.
+
+    **library undeclare** - Remove a function declaration
+    - `library undeclare delegate`
+    - Removes a previously declared delegate and releases any associated resources. Also removes any alias created with `-alias` option.
+    - **Returns**: Empty string on success.
+
+    **library unload** - Unload a native library
+    - `library unload module`
+    - Unloads a previously loaded native library module.
+    - **Note**: Unloading fails if any delegates still reference the module. Use `library undeclare` first.
+    - **Returns**: Empty string on success.
+
+    **library unresolve** - Unresolve a delegate
+    - `library unresolve ?options? delegate`
+    - Removes the function address binding from a delegate without removing the delegate itself. The delegate can be re-resolved later.
+    - **Returns**: Empty string on success.
+    - **Use case**: Release a module reference while keeping the delegate declaration.
+
+    **library verifyarchitecture** - Verify architecture compatibility
+    - `library verifyarchitecture fileName`
+    - Like `matcharchitecture` but returns an error if incompatible instead of a boolean.
+    - **Returns**: Empty string if compatible, error otherwise.
+
+  - **Complete P/Invoke Example** (Windows):
+    ```tcl
+    # Load kernel32.dll
+    set kernel32 [library load kernel32.dll]
+
+    # Declare GetConsoleWindow
+    set getConsoleWindow [library declare \
+        -functionname GetConsoleWindow \
+        -returntype IntPtr \
+        -module $kernel32]
+
+    # Declare GetStdHandle
+    set getStdHandle [library declare \
+        -functionname GetStdHandle \
+        -returntype IntPtr \
+        -parametertypes {int32} \
+        -module $kernel32]
+
+    # Call the functions
+    set hwnd [library call $getConsoleWindow]
+    set STD_OUTPUT_HANDLE -11
+    set handle [library call $getStdHandle $STD_OUTPUT_HANDLE]
+
+    puts "Console window handle: $hwnd"
+    puts "Standard output handle: $handle"
+
+    # Check module info
+    puts [library info module $kernel32]
+
+    # Cleanup
+    library undeclare $getStdHandle
+    library undeclare $getConsoleWindow
+    library unload $kernel32
+    ```
+
+  - **Calling Tcl from Eagle** (cross-library interop):
+    ```tcl
+    # Load the Tcl library
+    set tclDll [library load tcl86.dll]
+
+    # Declare Tcl functions
+    set createInterp [library declare \
+        -module $tclDll \
+        -functionname Tcl_CreateInterp \
+        -callingconvention cdecl \
+        -returntype IntPtr]
+
+    set tclEval [library declare \
+        -module $tclDll \
+        -functionname Tcl_Eval \
+        -callingconvention cdecl \
+        -charset ansi \
+        -returntype int32 \
+        -parametertypes {IntPtr String}]
+
+    set deleteInterp [library declare \
+        -module $tclDll \
+        -functionname Tcl_DeleteInterp \
+        -callingconvention cdecl \
+        -parametertypes {IntPtr}]
+
+    set tclFinalize [library declare \
+        -module $tclDll \
+        -functionname Tcl_Finalize \
+        -callingconvention cdecl]
+
+    # Create and use a Tcl interpreter
+    set interp [library call -create $createInterp]
+    set code [library call $tclEval $interp {expr {2 + 2}}]
+
+    # Cleanup
+    library call $deleteInterp $interp
+    library call $tclFinalize
+
+    # Undeclare and unload
+    library undeclare $tclFinalize
+    library undeclare $deleteInterp
+    library undeclare $tclEval
+    library undeclare $createInterp
+    library unload $tclDll
+    ```
+
+  - **Reference Counting Behavior**:
+    - Loading a module sets its reference count to 1
+    - Each delegate that references a module increments its reference count
+    - Undeclaring a delegate decrements the module's reference count
+    - Unloading a module only succeeds when reference count reaches 0
+    - Use `library info module` to check reference counts
+
+  - **Related Commands**:
+    - `[info modules]` - List all loaded native modules
+    - `[info delegates]` - List all declared delegates
 
 - **pid** - Get process ID
   - `pid ?channelId?`
