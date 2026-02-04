@@ -6410,7 +6410,7 @@ load -verifiedonly -- /path/to/SignedPlugin.dll
 load -verifiedonly -trustedonly -- /path/to/TrustedPlugin.dll
 
 # Verify specific public key token
-load -publickeytoken 0xabc123def456 -- /path/to/Plugin.dll
+load -publickeytoken 0x29c6297630be05eb -- /path/to/Plugin.dll
 ```
 
 **Isolated plugin loading**:
@@ -6536,25 +6536,52 @@ eval $cmd
 
 #### Loader Package Usage Pattern
 
-The typical usage pattern for the loader package is:
+The idiomatic usage of the Eagle.Loader package is from `pkgIndex.eagle` files (not `pkgIndex.tcl`), as it relies on Eagle-specific extensions. The `$dir` variable is automatically set by the package indexing system to the directory containing the index file.
 
 ```tcl
-# In a pkgIndex.tcl file:
-package require Eagle.Loader
+# In a pkgIndex.eagle file:
+if {![package vsatisfies [package provide Tcl] 8.4]} {return}
+if {![package vsatisfies [package provide Eagle] 1.0]} {return}
 
-namespace eval ::Eagle {
-    set dir [file dirname [info script]]
-    set tag "abc123def456"  ;# Public key token
+###############################################################################
 
-    # Register the package
-    set cmd [maybeCreatePackageIfNeededCommand \
-        MyPlugin $dir {MyPlugin.dll} tag]
+eval [maybeCreatePackageIfNeededCommand \
+    Sample.Class3 $dir [list Plugin.dll] tag 1.0]
 
-    if {[string length $cmd] > 0} {
-        eval $cmd
-    }
-}
+eval [maybeCreatePackageIfNeededCommand \
+    Sample.Class4 $dir [list Plugin.dll] tag 1.0]
 ```
+
+**Key Points**:
+- The version checks ensure the script only runs in compatible environments
+- Multiple plugins from the same assembly can be registered with separate calls
+- The `$dir` variable is provided by the package system and points to the directory containing the `pkgIndex.eagle` file
+- The `eval` command executes the generated `[package ifneeded]` script to register the package
+
+#### Tagged Package Index Files
+
+When a package index file is named with a tag suffix (e.g., `pkgIndex_29c6297630be05eb.eagle`), the package index subsystem automatically provides the `tag` variable set to that 16-character hexadecimal string. This tag represents the public key token of the target assembly.
+
+**File Naming Convention**:
+```
+pkgIndex_<16-char-hex-public-key-token>.eagle
+```
+
+**Example**:
+```
+pkgIndex_29c6297630be05eb.eagle
+```
+
+In this case, when the package index file is processed, the `tag` variable is automatically set to `29c6297630be05eb`.
+
+**Security Chain**:
+1. The tagged filename encodes the expected public key token
+2. The package index subsystem extracts the tag and provides it as a variable
+3. The `maybeCreatePackageIfNeededCommand` procedure uses the tag to build a `[load]` command with the `-publickeytoken` option
+4. When the plugin is loaded, the `-publickeytoken 0x29c6297630be05eb` option ensures the loaded assembly's public key token matches the expected value
+5. If the tokens don't match, the load fails, preventing unauthorized assemblies from being loaded
+
+This mechanism provides cryptographic binding between the package index and the plugin assembly, ensuring that only assemblies signed with the correct key can be loaded through that package index
 
 #### Build Type Handling
 
