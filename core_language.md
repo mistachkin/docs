@@ -4871,26 +4871,40 @@ This section documents advanced language features, edge cases, and patterns disc
 
 #### Escape Sequences
 
-Eagle supports standard Tcl escape sequences plus additional sequences:
+Eagle supports standard Tcl backslash escape sequences (see the [Tcl manual](https://www.tcl-lang.org/man/tcl8.6/TclCmd/Tcl.htm)) plus additional Eagle-specific extensions.
+
+**Standard Tcl/Eagle Escape Sequences**:
 
 | Escape | Description | Example |
 |--------|-------------|---------|
-| `\a` | Bell (BEL) | `puts "alert\a"` |
-| `\b` | Backspace | `puts "back\bspace"` |
-| `\f` | Form feed | `puts "page\fbreak"` |
-| `\n` | Newline | `puts "line1\nline2"` |
-| `\r` | Carriage return | `puts "return\rhere"` |
-| `\t` | Tab | `puts "col1\tcol2"` |
-| `\v` | Vertical tab | `puts "vert\vtab"` |
-| `\\` | Backslash | `puts "path\\file"` |
-| `\xhh` | Hex byte | `puts "\x41"` → "A" |
-| `\ooo` | Octal byte | `puts "\101"` → "A" |
-| `\uhhhh` | Unicode (Eagle) | `puts "\u0041"` → "A" |
+| `\a` | Bell (BEL, 0x07) | `puts "alert\a"` |
+| `\b` | Backspace (0x08) | `puts "back\bspace"` |
+| `\f` | Form feed (0x0C) | `puts "page\fbreak"` |
+| `\n` | Newline (0x0A) | `puts "line1\nline2"` |
+| `\r` | Carriage return (0x0D) | `puts "return\rhere"` |
+| `\t` | Tab (0x09) | `puts "col1\tcol2"` |
+| `\v` | Vertical tab (0x0B) | `puts "vert\vtab"` |
+| `\\` | Literal backslash | `puts "path\\file"` |
+| `\ooo` | Octal byte (1-3 digits) | `puts "\101"` → "A" |
+| `\xhh` | Hex byte (1-2 digits) | `puts "\x41"` → "A" |
+| `\uhhhh` | Unicode BMP (4 hex digits) | `puts "\u0041"` → "A" |
+| `\Uhhhhhhhh` | Unicode (8 hex digits, Tcl 8.6+) | `puts "\U0001F600"` → emoji |
 
-**Eagle-specific behavior**:
-- Unicode escape `\uhhhh` is fully supported
-- Hex escapes support 1-2 digits: `\x1` and `\x01` are equivalent
-- Octal escapes support 1-3 digits
+**Eagle-Specific Escape Extensions**:
+
+| Escape | Description | Example |
+|--------|-------------|---------|
+| `\B<bits>` | Binary number | `puts "\B01000001"` → "A" |
+| `\o<digits>` | Octal number (explicit) | `puts "\o101"` → "A" |
+| `\d<digits>` | Decimal number | `puts "\d65"` → "A" |
+| `\X<digits>` | Hex number (uppercase prefix) | `puts "\X41"` → "A" |
+
+**Notes**:
+- The `\uhhhh` escape requires exactly 4 hex digits for BMP characters
+- The `\Uhhhhhhhh` escape requires exactly 8 hex digits and supports the full Unicode range including supplementary planes
+- Eagle's `\B`, `\o`, `\d`, and `\X` extensions provide explicit radix specification for character codes
+- Hex escapes (`\x`) support 1-2 digits: `\x1` and `\x01` are equivalent
+- Octal escapes (`\ooo`) support 1-3 digits
 
 #### Brace and Quote Handling
 
