@@ -362,28 +362,262 @@ All variable commands belong to ObjectGroup: "variable"
     ```
 
 - **scope** - Variable scope operations (Eagle extension)
-  - Provides fine-grained control over variable scopes, enabling creation of isolated variable environments.
+  - `scope subcommand ?options? ?args?`
+  - Provides fine-grained control over variable scopes (call frames), enabling creation of isolated variable environments that persist across procedure calls. Scopes allow variables to be preserved and shared across multiple invocations of procedures, making them useful for implementing stateful operations, coroutine-like patterns, and persistent local state.
+  - **Core Concepts**:
+    - A **scope** is a named call frame with its own variable dictionary
+    - Scopes can be **created** (defining the frame), **opened** (pushing onto call stack), and **closed** (popping from call stack)
+    - Opening a scope makes its variables accessible as local variables
+    - Multiple opens of the same scope stack and affect `[info level]`
+    - Scopes are automatically closed when procedures return (implied close)
+    - Scopes can be **cloned** from existing variable frames to capture current state
   - **Sub-commands**:
-    - `scope attach scopeName` - Attach to an existing scope
-    - `scope close scopeName` - Close and release a scope
-    - `scope create ?options? scopeName` - Create a new scope
-    - `scope current` - Get the current scope name
-    - `scope destroy scopeName` - Destroy a scope and its variables
-    - `scope detach` - Detach from the current scope
-    - `scope eval scopeName script` - Evaluate script in the specified scope
-    - `scope exists scopeName` - Check if a scope exists
-    - `scope export scopeName varName ?varName ...?` - Export variables from a scope
-    - `scope global ?varName ...?` - Declare global scope variables
-    - `scope import scopeName varName ?varName ...?` - Import variables into a scope
-    - `scope list ?pattern?` - List available scopes
-    - `scope lock scopeName` - Lock a scope to prevent modifications
-    - `scope open scopeName` - Open a scope for access
-    - `scope set scopeName varName ?value?` - Get or set a variable in a scope
-    - `scope unlock scopeName` - Unlock a previously locked scope
-    - `scope unset scopeName varName ?varName ...?` - Unset variables in a scope
-    - `scope update scopeName varName value` - Update a variable in a scope
-    - `scope vars scopeName ?pattern?` - List variables in a scope
-  - **Returns**: Varies by sub-command.
+
+    **scope attach** - Attach scope to namespace (requires namespaces)
+    - `scope attach name namespace`
+    - Associates an existing scope with a namespace. Requires namespaces to be enabled.
+    - **Returns**: List of attached items.
+
+    **scope close** - Close an open scope
+    - `scope close ?options? ?name?`
+    - Pops the current (or named) scope from the call stack. If no name is specified, closes the innermost open scope.
+    - **Options**:
+      - `-all` - Close all open scopes at once, returning to the base level
+    - **Returns**: The name of the closed scope.
+    - **Note**: Scope close is implied when a procedure returns; explicit close is rarely needed.
+
+    **scope create** - Create a new scope
+    - `scope create ?options? ?name?`
+    - Creates a new named scope. If no name is provided, an automatic name is generated.
+    - **Options**:
+      - `-args` - Copy procedure arguments from enclosing procedure frame into the scope
+      - `-clone` - Clone variables from the current variable frame into the new scope
+      - `-byref` - Clone variables by reference instead of by value (unsafe option)
+      - `-global` - Clone variables from the global frame instead of current frame
+      - `-open` - Immediately open (push) the scope after creation
+      - `-procedure` - Auto-generate scope name based on enclosing procedure frame (cannot specify name with this option)
+      - `-shared` - Use a shared scope name (for cross-thread scenarios)
+      - `-strict` - Return error if scope with same name already exists
+      - `-fast` - Enable fast local variable access mode for the scope
+    - **Returns**: The name of the created scope.
+    - **Example**:
+      ```tcl
+      # Create a named scope with cloned variables, opened immediately
+      proc counter {name} {
+          scope create -open -clone -args $name
+          if {![info exists count]} {set count 0}
+          incr count
+          return $count
+          # scope close implied on return
+      }
+      counter myCounter  ;# Returns 1
+      counter myCounter  ;# Returns 2
+      counter myCounter  ;# Returns 3
+      scope destroy myCounter
+      ```
+
+    **scope current** - Get current open scope name
+    - `scope current`
+    - Returns the name of the currently open scope, or an empty string if no scope is open.
+    - **Returns**: Current scope name or empty string.
+
+    **scope destroy** - Destroy a scope
+    - `scope destroy name`
+    - Destroys the named scope, releasing all its variables and resources. If the scope is currently open, it is closed first. Any opaque object handles in the scope are released.
+    - **Returns**: List containing cleanup information.
+
+    **scope detach** - Detach scope from namespace (requires namespaces)
+    - `scope detach name namespace`
+    - Disassociates a scope from a namespace.
+    - **Returns**: List of detached items.
+
+    **scope eval** - Evaluate script in scope context
+    - `scope eval ?options? name arg ?arg ...?`
+    - Evaluates the script arguments in the context of the named scope. The scope is pushed, script is evaluated, and scope is popped (along with any scopes opened during evaluation).
+    - **Options**:
+      - `-lock` - Acquire lock on scope during evaluation
+      - `-timeout milliseconds` - Timeout for lock acquisition (unsafe option)
+      - `-eventwaitflags flags` - Event wait flags for lock (unsafe option)
+    - **Returns**: Result of evaluated script.
+    - **Example**:
+      ```tcl
+      scope create myScope
+      scope eval myScope {
+          set x 10
+          set y 20
+          expr {$x + $y}
+      }  ;# Returns 30
+      scope set myScope x  ;# Returns 10
+      scope destroy myScope
+      ```
+
+    **scope exists** - Check if scope exists
+    - `scope exists name`
+    - Tests whether a scope with the given name exists.
+    - **Returns**: Boolean true if scope exists, false otherwise.
+
+    **scope export** - Export scope variables to namespace (requires namespaces)
+    - `scope export name namespace`
+    - Exports variables from a scope into a namespace.
+    - **Returns**: List of exported items.
+
+    **scope global** - Get or set global scope
+    - `scope global ?options? ?name?`
+    - Gets or sets the interpreter's global scope. When a global scope is set, variable operations that would normally go to the true global frame go to the designated scope instead.
+    - **Options**:
+      - `-unset` - Unset the global scope (cannot specify name with this option)
+      - `-force` - Force setting even if already set
+    - **Returns**: Current global scope name (may be empty).
+    - **Example**:
+      ```tcl
+      scope create foo
+      scope global foo    ;# Set foo as global scope
+      scope global        ;# Returns "foo"
+      scope global -unset ;# Clear global scope setting
+      ```
+
+    **scope import** - Import namespace variables to scope (requires namespaces)
+    - `scope import name namespace`
+    - Imports variables from a namespace into a scope.
+    - **Returns**: List of imported items.
+
+    **scope list** - List all scopes
+    - `scope list ?pattern?`
+    - Returns a list of all defined scope names, optionally filtered by a glob pattern.
+    - **Returns**: List of scope names.
+
+    **scope lock** - Lock a scope
+    - `scope lock ?options? name`
+    - Acquires a lock on the named scope, preventing other operations from modifying it.
+    - **Options**:
+      - `-nocomplain` - Don't error if scope doesn't exist
+    - **Returns**: Empty string on success.
+
+    **scope open** - Open an existing scope
+    - `scope open ?options? ?name?`
+    - Pushes an existing scope onto the call stack, making its variables accessible. The scope must have been previously created.
+    - **Options**:
+      - `-procedure` - Use auto-generated name from procedure frame
+      - `-shared` - Use shared scope naming
+      - `-args` - Copy procedure arguments into the scope
+    - **Returns**: Empty string on success.
+    - **Note**: Each open increases `[info level]` by 1; multiple opens of the same scope stack.
+
+    **scope set** - Get or set variable in scope
+    - `scope set name varName ?value?`
+    - Gets or sets a variable within the named scope without opening it.
+    - **Returns**: The variable value.
+    - **Example**:
+      ```tcl
+      scope create myScope
+      scope set myScope x 100
+      scope set myScope x  ;# Returns 100
+      ```
+
+    **scope unlock** - Unlock a scope
+    - `scope unlock ?options? name`
+    - Releases a lock previously acquired on a scope.
+    - **Options**:
+      - `-nocomplain` - Don't error if scope doesn't exist
+    - **Returns**: Empty string on success.
+
+    **scope unset** - Unset variable in scope
+    - `scope unset name varName`
+    - Removes a variable from the named scope.
+    - **Returns**: Empty string on success.
+
+    **scope update** - Update scope with current variables
+    - `scope update ?options? ?name?`
+    - Updates the named scope (or current open scope) by cloning variables from the current or global frame. This refreshes the scope's variables to match the current state.
+    - **Options**:
+      - `-global` - Update from global frame instead of current frame
+    - **Returns**: Empty string on success.
+    - **Example**:
+      ```tcl
+      proc updateDemo {arg} {
+          set local 123
+          scope create -clone demo
+          set local 456
+          scope update demo
+          scope set demo local  ;# Returns 456
+      }
+      ```
+
+    **scope vars** - List variables in scope
+    - `scope vars name ?pattern?`
+    - Returns a list of defined variable names in the specified scope, optionally filtered by a glob pattern.
+    - **Returns**: List of variable names.
+
+  - **Procedure Scope Pattern** (using `-procedure`):
+    The `-procedure` option provides a convenient way to create per-procedure scopes that persist across calls:
+    ```tcl
+    proc statefulProc {varName} {
+        # Creates/opens scope named after this procedure
+        set ::scope [scope create -open -procedure -args]
+        upvar 0 $varName myVar
+        if {[info exists myVar]} {
+            incr myVar
+        } else {
+            set myVar 0
+        }
+        return $myVar
+        # scope close implied
+    }
+    statefulProc x  ;# Returns 0
+    statefulProc y  ;# Returns 0 (different variable)
+    statefulProc x  ;# Returns 1
+    statefulProc y  ;# Returns 1
+    scope destroy $::scope
+    ```
+
+  - **Scope with upvar Pattern**:
+    Scopes can be combined with `upvar` to implement persistent references:
+    ```tcl
+    proc accumulator {scopeName varName} {
+        set c 9
+        scope create -open -clone -args $scopeName
+        if {![info exists sum]} then {
+            upvar 2 $varName sum  ;# Link to caller's variable
+            set sum 0
+        }
+        incr sum $c
+        return $sum
+        # scope close implied
+    }
+    set total 0
+    accumulator myScope total  ;# total = 9
+    accumulator myScope total  ;# total = 18
+    accumulator myScope total  ;# total = 27
+    scope destroy myScope
+    ```
+
+  - **Impact on `[info level]`**:
+    Opening a scope increases the call stack level reported by `[info level]`:
+    ```tcl
+    info level                ;# 0
+    scope create -open foo
+    info level                ;# 1
+    scope open foo            ;# Opening same scope again
+    info level                ;# 2
+    scope close               ;# Close innermost
+    info level                ;# 1
+    scope close               ;# Close again
+    info level                ;# 0
+    scope destroy foo
+    ```
+
+  - **Error Handling**:
+    Scopes are properly unwound when errors occur. An error inside a procedure with an open scope will still properly close the scope:
+    ```tcl
+    proc mayFail {scopeName} {
+        scope create -open -clone $scopeName
+        error "something went wrong"
+        # scope close still implied, scope remains intact
+    }
+    catch {mayFail testScope}
+    scope exists testScope  ;# Returns True
+    scope destroy testScope
+    ```
 
 - **set** - Set variable value
   - `set varName ?newValue?`
