@@ -5,6 +5,7 @@ This document provides a comprehensive catalog the Eagle scripting language, org
 ## Table of Contents
 
 - [Command Count Summary](#command-count-summary)
+- [Alphabetical Command Index](#alphabetical-command-index)
 - [Commands by Category](#commands-by-category)
   - [Control Flow](#control-flow)
   - [Variables](#variables)
@@ -38,6 +39,9 @@ This document provides a comprehensive catalog the Eagle scripting language, org
   - [Core and Miscellaneous](#core-and-miscellaneous)
 - [Common Option Patterns](#common-option-patterns)
 - [Test Functions](#test-functions)
+- [Advanced Topics and Patterns](#advanced-topics-and-patterns)
+  - [Built-in Virtual Scripts](#built-in-virtual-scripts)
+  - [Managed Assembly Plugin Loader Subsystem](#managed-assembly-plugin-loader-subsystem)
 
 ---
 
@@ -64,6 +68,131 @@ Commands are organized into the following ObjectGroup categories:
 - Network: 2 commands
 - Test: 2 commands
 - Other categories: ~20 commands
+
+---
+
+## Alphabetical Command Index
+
+Quick reference to all Eagle commands with links to their detailed documentation.
+
+| Command | Description | Section |
+|---------|-------------|---------|
+| [`after`](#event-management) | Execute script after delay | [Event Management](#event-management) |
+| [`alias`](#delegates-and-aliases) | Create command alias | [Delegates and Aliases](#delegates-and-aliases) |
+| [`append`](#variables) | Append values to variable | [Variables](#variables) |
+| [`apply`](#procedures) | Apply lambda expression | [Procedures](#procedures) |
+| [`array`](#arrays) | Array operations | [Arrays](#arrays) |
+| [`automatic`](#core-and-miscellaneous) | Automatic command delegation | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`bgerror`](#core-and-miscellaneous) | Background error handler | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`break`](#control-flow) | Break out of loop | [Control Flow](#control-flow) |
+| [`callback`](#event-management) | Callback management | [Event Management](#event-management) |
+| [`catch`](#control-flow) | Catch exceptions and errors | [Control Flow](#control-flow) |
+| [`cd`](#file-system) | Change directory | [File System](#file-system) |
+| [`clock`](#time-and-clock) | Clock and time operations | [Time and Clock](#time-and-clock) |
+| [`close`](#io-and-channels) | Close channel | [I/O and Channels](#io-and-channels) |
+| [`concat`](#strings) | Concatenate arguments | [Strings](#strings) |
+| [`continue`](#control-flow) | Continue to next loop iteration | [Control Flow](#control-flow) |
+| [`core`](#core-and-miscellaneous) | Core operations | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`debug`](#debugging) | Debugging operations | [Debugging](#debugging) |
+| [`default`](#core-and-miscellaneous) | Default operations | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`delegate`](#delegates-and-aliases) | Delegate operations | [Delegates and Aliases](#delegates-and-aliases) |
+| [`do`](#control-flow) | Do-while loop | [Control Flow](#control-flow) |
+| [`downlevel`](#control-flow) | Execute script at lower call stack level | [Control Flow](#control-flow) |
+| [`encoding`](#strings) | Character encoding operations | [Strings](#strings) |
+| [`eof`](#io-and-channels) | Check for end-of-file | [I/O and Channels](#io-and-channels) |
+| [`error`](#control-flow) | Generate an error | [Control Flow](#control-flow) |
+| [`eval`](#engine-operations) | Evaluate script | [Engine Operations](#engine-operations) |
+| [`exec`](#native-environment) | Execute external program | [Native Environment](#native-environment) |
+| [`exit`](#native-environment) | Exit interpreter | [Native Environment](#native-environment) |
+| [`expr`](#expression-evaluation) | Evaluate expression | [Expression Evaluation](#expression-evaluation) |
+| [`fblocked`](#io-and-channels) | Check if channel is blocked | [I/O and Channels](#io-and-channels) |
+| [`fconfigure`](#io-and-channels) | Configure channel options | [I/O and Channels](#io-and-channels) |
+| [`fcopy`](#io-and-channels) | Copy data between channels | [I/O and Channels](#io-and-channels) |
+| [`file`](#file-system) | File operations | [File System](#file-system) |
+| [`flush`](#io-and-channels) | Flush channel buffer | [I/O and Channels](#io-and-channels) |
+| [`for`](#control-flow) | C-style for loop | [Control Flow](#control-flow) |
+| [`foreach`](#control-flow) | Iterate over lists | [Control Flow](#control-flow) |
+| [`format`](#strings) | Format string (like sprintf) | [Strings](#strings) |
+| [`fpclassify`](#expression-evaluation) | Classify floating point number | [Expression Evaluation](#expression-evaluation) |
+| [`getf`](#variables) | Get variable with flags | [Variables](#variables) |
+| [`gets`](#io-and-channels) | Read line from channel | [I/O and Channels](#io-and-channels) |
+| [`glob`](#file-system) | Glob for files | [File System](#file-system) |
+| [`global`](#variables) | Declare global variables | [Variables](#variables) |
+| [`guid`](#strings) | GUID/UUID operations | [Strings](#strings) |
+| [`hash`](#strings) | Hashing operations | [Strings](#strings) |
+| [`host`](#managed-environment) | Host operations | [Managed Environment](#managed-environment) |
+| [`if`](#control-flow) | Conditional execution | [Control Flow](#control-flow) |
+| [`incr`](#variables) | Increment variable value | [Variables](#variables) |
+| [`info`](#introspection) | Introspection operations | [Introspection](#introspection) |
+| [`interp`](#interpreter-management) | Interpreter management | [Interpreter Management](#interpreter-management) |
+| [`invoke`](#engine-operations) | Invoke command | [Engine Operations](#engine-operations) |
+| [`join`](#strings) | Join list elements with separator | [Strings](#strings) |
+| [`kill`](#native-environment) | Kill process | [Native Environment](#native-environment) |
+| [`lappend`](#lists) | Append elements to list variable | [Lists](#lists) |
+| [`lassign`](#lists) | Assign list elements to variables | [Lists](#lists) |
+| [`lget`](#lists) | Get element from list variable | [Lists](#lists) |
+| [`library`](#native-environment) | Native library operations | [Native Environment](#native-environment) |
+| [`lindex`](#lists) | Get list element by index | [Lists](#lists) |
+| [`linsert`](#lists) | Insert elements into list | [Lists](#lists) |
+| [`list`](#lists) | Create a list | [Lists](#lists) |
+| [`llength`](#lists) | Get list length | [Lists](#lists) |
+| [`lmap`](#lists) | List mapping (transform list) | [Lists](#lists) |
+| [`load`](#managed-environment) | Load binary plugin/extension | [Managed Environment](#managed-environment) |
+| [`lrange`](#lists) | Get range of list elements | [Lists](#lists) |
+| [`lremove`](#lists) | Remove list elements by index | [Lists](#lists) |
+| [`lrepeat`](#lists) | Create list by repeating values | [Lists](#lists) |
+| [`lreplace`](#lists) | Replace list elements | [Lists](#lists) |
+| [`lreverse`](#lists) | Reverse a list | [Lists](#lists) |
+| [`lsearch`](#lists) | Search for element in list | [Lists](#lists) |
+| [`lset`](#lists) | Set list element | [Lists](#lists) |
+| [`lsort`](#lists) | Sort a list | [Lists](#lists) |
+| [`namespace`](#namespaces) | Namespace operations | [Namespaces](#namespaces) |
+| [`napply`](#procedures) | Apply lambda with named arguments | [Procedures](#procedures) |
+| [`nop`](#core-and-miscellaneous) | No operation | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`nproc`](#procedures) | Create procedure with named arguments | [Procedures](#procedures) |
+| [`object`](#objects-net-interop) | .NET object operations | [Objects (.NET Interop)](#objects-net-interop) |
+| [`open`](#io-and-channels) | Open file or channel | [I/O and Channels](#io-and-channels) |
+| [`package`](#packages) | Package management | [Packages](#packages) |
+| [`parse`](#strings) | Parse scripts and expressions | [Strings](#strings) |
+| [`pid`](#native-environment) | Get process ID | [Native Environment](#native-environment) |
+| [`proc`](#procedures) | Create procedure | [Procedures](#procedures) |
+| [`puts`](#io-and-channels) | Write to channel | [I/O and Channels](#io-and-channels) |
+| [`pwd`](#file-system) | Print working directory | [File System](#file-system) |
+| [`read`](#io-and-channels) | Read from channel | [I/O and Channels](#io-and-channels) |
+| [`regexp`](#strings) | Regular expression matching | [Strings](#strings) |
+| [`regsub`](#strings) | Regular expression substitution | [Strings](#strings) |
+| [`rename`](#core-and-miscellaneous) | Rename command | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`return`](#control-flow) | Return from procedure or script | [Control Flow](#control-flow) |
+| [`scope`](#variables) | Variable scope operations | [Variables](#variables) |
+| [`seek`](#io-and-channels) | Set channel position | [I/O and Channels](#io-and-channels) |
+| [`set`](#variables) | Set variable value | [Variables](#variables) |
+| [`setf`](#variables) | Set variable with flags | [Variables](#variables) |
+| [`socket`](#network-and-uri) | Socket operations | [Network and URI](#network-and-uri) |
+| [`source`](#engine-operations) | Source script file | [Engine Operations](#engine-operations) |
+| [`split`](#strings) | Split string into list | [Strings](#strings) |
+| [`sql`](#database-sql) | Database operations | [Database (SQL)](#database-sql) |
+| [`string`](#strings) | String operations | [Strings](#strings) |
+| [`subdelegate`](#core-and-miscellaneous) | Sub-delegate operations | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`subst`](#engine-operations) | Perform substitutions | [Engine Operations](#engine-operations) |
+| [`switch`](#control-flow) | Pattern matching and branching | [Control Flow](#control-flow) |
+| [`tcl`](#tcl-integration) | Tcl integration | [Tcl Integration](#tcl-integration) |
+| [`tell`](#io-and-channels) | Get channel position | [I/O and Channels](#io-and-channels) |
+| [`throw`](#control-flow) | Throw an exception | [Control Flow](#control-flow) |
+| [`time`](#time-and-clock) | Time script execution | [Time and Clock](#time-and-clock) |
+| [`truncate`](#io-and-channels) | Truncate channel | [I/O and Channels](#io-and-channels) |
+| [`try`](#control-flow) | Try/finally exception handling | [Control Flow](#control-flow) |
+| [`unload`](#managed-environment) | Unload binary plugin/extension | [Managed Environment](#managed-environment) |
+| [`unset`](#variables) | Unset variables | [Variables](#variables) |
+| [`unsetf`](#variables) | Unset variable with flags | [Variables](#variables) |
+| [`update`](#event-management) | Process events | [Event Management](#event-management) |
+| [`uplevel`](#control-flow) | Execute script at higher call stack level | [Control Flow](#control-flow) |
+| [`upvar`](#variables) | Link variable to upper scope | [Variables](#variables) |
+| [`uri`](#network-and-uri) | URI operations | [Network and URI](#network-and-uri) |
+| [`variable`](#variables) | Declare namespace variables | [Variables](#variables) |
+| [`version`](#introspection) | Get Eagle version | [Introspection](#introspection) |
+| [`vwait`](#event-management) | Wait for variable change | [Event Management](#event-management) |
+| [`while`](#control-flow) | While loop | [Control Flow](#control-flow) |
+| [`xml`](#xml) | XML operations | [XML](#xml) |
 
 ---
 
@@ -3164,12 +3293,12 @@ Operators are used within expressions to perform calculations, comparisons, and 
 | `<<<` | LeftRotate | Left bit rotate (Eagle extension) |
 | `>>>` | RightRotate | Right bit rotate (Eagle extension) |
 
-#### List Operators (ObjectGroup: "list")
+#### List Membership Operators (ObjectGroup: "membership")
 
 | Operator | Name | Description |
 |----------|------|-------------|
-| `in` | ListIn | Check if element is in list |
-| `ni` | ListNotIn | Check if element is not in list |
+| `in` | ListIn | Check if string element is in list (no numeric conversion) |
+| `ni` | ListNotIn | Check if string element is not in list (no numeric conversion) |
 
 #### Conditional Operator (ObjectGroup: "conditional")
 
@@ -3958,18 +4087,28 @@ These commands interact with the operating system and native code.
   exit -force 2     ;# Force immediate exit
   ```
 
-- **kill** - Kill process
+- **kill** - Kill process (Eagle extension)
   - `kill ?options? process`
-  - Terminates the specified process.
+  - Terminates the specified process or processes matching a pattern.
   - **Options**:
-    - `-signal signum` - Send specific signal (Unix)
-    - `-force` - Force termination
-  - *process* can be a PID or process handle.
+    - `-all` - Kill all processes matching the pattern (only valid with process name patterns, not PIDs)
+    - `-force` - Force immediate termination using `Process.Kill()`. Without this option, attempts graceful termination via `Process.CloseMainWindow()`.
+    - `-whatIf` - Show what would be killed without actually terminating processes
+    - `-verbose` - Output detailed information about the kill operation
+  - *process* can be:
+    - A numeric PID (process identifier)
+    - A process name pattern using glob matching (e.g., `notepad*`)
+  - **Returns**: List of killed/closed processes on success.
+  - **Note**: This command is marked as unsafe and requires appropriate permissions.
 
   **Example**:
   ```tcl
-  kill $pid
-  kill -force [pid $channel]
+  kill 1234                    ;# Kill process with PID 1234 (graceful)
+  kill -force 1234             ;# Force kill process with PID 1234
+  kill notepad                 ;# Close first notepad process (graceful)
+  kill -all notepad            ;# Close all notepad processes
+  kill -all -force notepad*    ;# Force kill all processes matching notepad*
+  kill -whatIf -all chrome*    ;# Show what would be killed (dry run)
   ```
 
 - **library** - Native library operations (Eagle extension)
@@ -4850,12 +4989,13 @@ expr {decimal(123.45)}  ;# Eagle extension
 6. Shift: `<< >>`
 7. Comparison: `< > <= >=`
 8. Equality: `== != eq ne`
-9. Bitwise AND: `&`
-10. Bitwise XOR: `^`
-11. Bitwise OR: `|`
-12. Logical AND: `&&`
-13. Logical OR: `||`
-14. Ternary: `? :`
+9. List Membership: `in ni`
+10. Bitwise AND: `&`
+11. Bitwise XOR: `^`
+12. Bitwise OR: `|`
+13. Logical AND: `&&`
+14. Logical OR: `||`
+15. Ternary: `? :`
 
 #### String Comparison in Expressions
 
@@ -4874,6 +5014,44 @@ expr {"42" == 42}            ;# 1 (string converted to number)
 expr {" 42" eq "42"}         ;# 0 (different strings)
 expr {" 42" == 42}           ;# 1 (both convert to 42)
 ```
+
+#### List Membership in Expressions
+
+The `in` and `ni` operators test whether a string element is contained in a list. These operators perform **string comparison only** (no numeric conversion) and are the list-based counterparts to `eq` and `ne`.
+
+```tcl
+# Basic list membership
+expr {"apple" in {apple banana cherry}}     ;# 1 (found)
+expr {"grape" in {apple banana cherry}}     ;# 0 (not found)
+
+# List non-membership
+expr {"apple" ni {apple banana cherry}}     ;# 0 (it IS in the list)
+expr {"grape" ni {apple banana cherry}}     ;# 1 (not in the list)
+
+# String comparison - no numeric conversion
+expr {"1" in {1 2 3}}        ;# 1 (string "1" matches element "1")
+expr {"01" in {1 2 3}}       ;# 0 (string "01" does not match "1")
+expr {"0x1" in {1 2 3}}      ;# 0 (no numeric conversion)
+
+# Case sensitivity (default is case-sensitive)
+expr {"Apple" in {apple banana cherry}}     ;# 0 (case mismatch)
+expr {"apple" in {apple banana cherry}}     ;# 1 (exact match)
+
+# Common idiom: check before adding to avoid duplicates
+if {$item ni $result} {
+    lappend result $item
+}
+
+# Combining with other operators
+expr {$x in $valid_values && $y > 0}
+expr {$cmd ni $dangerous_commands || $is_admin}
+```
+
+**Key differences from numeric operators:**
+- `in`/`ni` perform **pure string matching** (like `eq`/`ne`)
+- No type coercion occurs - `"1"` and `1` are compared as strings
+- The second operand must be a valid Tcl list
+- Comparison type can be configured (case-sensitive by default)
 
 #### Boolean Handling
 
@@ -5945,6 +6123,713 @@ The `ScriptBinder` class provides custom type binding for Eagle:
 - Integrates with `MarshalOps.FixupReturnValue` for outbound conversions
 
 This enables seamless type conversion between Eagle's string-based values and .NET's strongly-typed system.
+
+---
+
+## Built-in Virtual Scripts
+
+Eagle provides several built-in virtual scripts that are embedded as resources within the core library assembly. These scripts are cryptographically signed and are used for security-critical operations such as enabling/disabling security policies, managing interpreter state during safe interpreter creation, and managing key rings for script signing verification.
+
+### Overview
+
+These virtual scripts:
+- Are stored in `Eagle/Library/Resources/library.resx` as embedded resources
+- Have accompanying `.harpy` certificate resources containing their digital signatures
+- Can only be loaded from within the compiled core library assembly itself
+- Are signed with trusted keys (either the core library script signing key or the Eagle Enterprise Trust Root key)
+- Cannot be modified without re-signing (signature verification would fail)
+
+### Security Scripts
+
+#### enableSecurity
+
+**Purpose**: Enables the security policies and certificates provided by the Harpy and Badge plugins.
+
+**Script Content**:
+```tcl
+package require Security.Core; security force true; keyring bootstrap; package require Security.Certificates
+```
+
+**Behavior**:
+1. Loads the `Security.Core` package
+2. Forces security mode to be enabled (`security force true`)
+3. Bootstraps the key ring with trusted signing keys
+4. Loads the `Security.Certificates` package for certificate management
+
+**Usage Context**: Called internally during interpreter initialization when security is requested. This is typically the first security-related script evaluated in a new interpreter.
+
+**Signature**: Signed with the core library script signing key.
+
+---
+
+#### disableSecurity
+
+**Purpose**: Disables the security policies and clears the key ring.
+
+**Script Content**:
+```tcl
+package require Security.Core; keyring clear; security force false
+```
+
+**Behavior**:
+1. Loads the `Security.Core` package
+2. Clears all keys from the key ring (`keyring clear`)
+3. Forces security mode to be disabled (`security force false`)
+
+**Usage Context**: Used when security needs to be disabled in an interpreter that previously had security enabled.
+
+**Signature**: Signed with the core library script signing key.
+
+---
+
+### Interpreter Cleanup Scripts
+
+These scripts are signed with the **Eagle Enterprise Trust Root** key (embedded in the Harpy assembly) rather than the normal core library script signing key. This is necessary because they are used during the trusted key ring loading process, when the normal signing key is not yet available.
+
+#### removeCommands
+
+**Purpose**: Removes all commands and procedures from the interpreter except those explicitly listed in a "keep" list.
+
+**Script Content**:
+```tcl
+apply [list [list keep] {
+    foreach namespace [namespace children ::] {
+        catch {namespace delete $namespace}
+    }
+    set keepIf [expr {"if" in $keep}]
+    set keepRename [expr {"rename" in $keep}]
+    lappend keep if rename
+    set keep [lsort -dictionary -unique $keep]
+    foreach command [info commands] {
+        if {$command ni $keep} then {
+            rename $command ""
+        }
+    }
+    if {!$keepIf} then {
+        if {!$keepRename} then {
+            rename if ""
+            rename rename ""
+        } else {
+            rename if ""
+        }
+    } elseif {!$keepRename} then {
+        rename rename ""
+    }
+}] [list set]
+```
+
+**Behavior**:
+1. Deletes all child namespaces
+2. Takes a list of commands to keep (passed as the `keep` argument)
+3. Temporarily adds `if` and `rename` to the keep list (needed for the cleanup logic)
+4. Removes all commands not in the keep list by renaming them to empty string
+5. Finally removes `if` and `rename` themselves unless they were in the original keep list
+
+**Usage Context**: Used during safe interpreter creation to strip down the interpreter to a minimal set of commands. Called via `ScriptOps.RemoveCommands()`.
+
+**Example Call** (internal):
+```csharp
+ScriptOps.RemoveCommands(interpreter, keepList, ref error);
+```
+
+**Signature**: Signed with the Eagle Enterprise Trust Root key.
+
+---
+
+#### removeVariables
+
+**Purpose**: Removes all global variables from the interpreter.
+
+**Script Content**:
+```tcl
+apply [list [list] {
+    foreach namespace [namespace children ::] {
+        catch {namespace delete $namespace}
+    }
+    foreach varName [info globals] {
+        catch {uplevel #0 [list unset -nocomplain $varName]}
+    }
+    unset -nocomplain ::errorCode ::errorInfo
+}]
+```
+
+**Behavior**:
+1. Deletes all child namespaces
+2. Iterates through all global variables (`info globals`)
+3. Unsets each variable at the global level (`uplevel #0`)
+4. Explicitly clears `::errorCode` and `::errorInfo` as a final cleanup
+
+**Usage Context**: Used during safe interpreter creation to ensure no pre-existing variables leak into the safe interpreter. Called via `ScriptOps.RemoveVariables()`.
+
+**Signature**: Signed with the Eagle Enterprise Trust Root key.
+
+---
+
+### Key Ring Management Scripts
+
+These scripts manage the trusted key ring used for script signature verification.
+
+#### fetchKeyRing
+
+**Purpose**: Fetches an official key ring from a configured remote URI.
+
+**Script Content**:
+```tcl
+package require Security.Core; keyring fetch
+```
+
+**Behavior**:
+1. Loads the `Security.Core` package
+2. Executes `keyring fetch` to download the key ring from the configured remote location
+
+**Usage Context**: Called when initializing security with trusted remote key ring support. The fetched key ring is written to a temporary file and then merged.
+
+**Signature**: Signed with the Eagle Enterprise Trust Root key.
+
+---
+
+#### mergeKeyRing
+
+**Purpose**: Merges a specified key ring file into the script key ring.
+
+**Script Content**:
+```tcl
+package require Security.Core; security true; keyring merge {0}
+```
+
+Note: `{0}` is a format placeholder that gets replaced with the actual key ring file path.
+
+**Behavior**:
+1. Loads the `Security.Core` package
+2. Enables security (`security true`)
+3. Merges the specified key ring file into the current key ring
+
+**Usage Context**: Called after `fetchKeyRing` to merge the downloaded key ring into the interpreter's trusted key store.
+
+**Signature**: Signed with the Eagle Enterprise Trust Root key.
+
+---
+
+### Security Considerations
+
+1. **Immutability**: These scripts cannot be modified without access to the signing keys. Any modification will cause signature verification to fail.
+
+2. **Trust Chain**: The scripts signed with the Eagle Enterprise Trust Root key form the foundation of the trust chain, allowing the normal script signing infrastructure to be bootstrapped.
+
+3. **Embedded Resources**: The scripts are compiled into the assembly, preventing file-system-based tampering.
+
+4. **Minimal Privileges**: The cleanup scripts (`removeCommands`, `removeVariables`) are designed to work with minimal privileges, using only basic commands like `foreach`, `catch`, `rename`, `unset`, and `info`.
+
+5. **Safe Interpreter Creation**: The `removeCommands` and `removeVariables` scripts are critical for creating properly isolated safe interpreters, ensuring no commands or variables leak from the parent interpreter.
+
+---
+
+This enables seamless type conversion between Eagle's string-based values and .NET's strongly-typed system.
+
+---
+
+## Managed Assembly Plugin Loader Subsystem
+
+The Eagle plugin loader subsystem provides a comprehensive framework for loading, managing, and unloading managed (.NET) assembly plugins at runtime. This subsystem extends Eagle's functionality by allowing dynamic loading of compiled extensions that can add commands, functions, policies, traces, and other entities to the interpreter.
+
+### Overview
+
+The plugin loader subsystem consists of several key components:
+
+1. **Script Commands**: The `[load]` and `[unload]` script commands provide the primary interface for plugin management
+2. **Script Library Package**: The `Eagle.Loader` package provides helper procedures for building `[package ifneeded]` scripts
+3. **C# Runtime Infrastructure**: The `Interpreter.LoadPlugin()` and related methods in `RuntimeOps.cs` handle the actual assembly loading
+4. **Security Integration**: Strong name verification, Authenticode trust checking, and policy enforcement
+5. **AppDomain Isolation**: Optional loading of plugins into isolated application domains
+
+### The `[load]` Command
+
+**Syntax**: `load ?options? fileName ?packageName? ?interp?`
+
+Loads a managed assembly plugin into the interpreter. The plugin assembly must contain one or more classes that implement the `IPlugin` interface.
+
+**Arguments**:
+- *fileName*: Path to the plugin assembly file (`.dll`)
+- *packageName*: Optional type name of the specific plugin class to load. If omitted, the primary plugin in the assembly is loaded.
+- *interp*: Optional target interpreter path. Defaults to the current interpreter.
+
+**Command Flags**: `Unsafe | Critical | Standard | SecuritySdk | LicenseSdk`
+
+**ObjectGroup**: `managedEnvironment`
+
+#### Load Options Reference
+
+| Option | Flags | Description |
+|--------|-------|-------------|
+| `-ruleset value` | Unsafe | Specifies a rule set for policy evaluation |
+| `-needclientdata` | Unsafe | Ensures client data is created if not provided |
+| `-anythread` | Unsafe | Allows loading on any thread (not just the primary thread) |
+| `-nocommands` | Unsafe | Skips adding commands from the plugin |
+| `-nofunctions` | Unsafe | Skips adding expression functions from the plugin |
+| `-nopolicies` | Unsafe | Skips adding policies from the plugin |
+| `-notraces` | Unsafe | Skips adding variable traces from the plugin |
+| `-noprovide` | Unsafe | Skips automatic `[package provide]` for the plugin |
+| `-noresources` | Unsafe | Skips querying plugin resources |
+| `-verifiedonly` | Unsafe | Requires strong name signature verification |
+| `-maybeverifiedonly` | Safe | Enables verification in non-debug builds |
+| `-trustedonly` | Unsafe | Requires Authenticode signature and trust |
+| `-maybetrustedonly` | Safe | Enables trust checking in non-debug builds |
+| `-publickeytoken value` | Unsafe | Requires matching public key token |
+| `-isolated` | Unsafe | Loads plugin into an isolated AppDomain |
+| `-noisolated` | Unsafe | Prevents isolated loading |
+| `-preview` | Unsafe | Enables plugin metadata preview |
+| `-nopreview` | Unsafe | Disables plugin metadata preview |
+| `-update` | Unsafe | Enables update checking before loading |
+| `-noupdate` | Unsafe | Disables update checking |
+| `-clientdata value` | N/A | Provides custom client data object |
+| `-data value` | N/A | Provides additional data object |
+| `-viaresource` | Safe | Loads plugin from embedded resource instead of file |
+| `--` | N/A | Marks end of options |
+
+#### Load Examples
+
+**Basic plugin loading**:
+```tcl
+# Load a plugin from file
+load /path/to/MyPlugin.dll
+
+# Load specific plugin class from assembly
+load /path/to/Plugin.dll Sample.Class3
+
+# Load into a child interpreter
+set child [interp create]
+load /path/to/Plugin.dll MyPlugin $child
+```
+
+**Security-verified loading**:
+```tcl
+# Require strong name verification
+load -verifiedonly -- /path/to/SignedPlugin.dll
+
+# Require both strong name and Authenticode trust
+load -verifiedonly -trustedonly -- /path/to/TrustedPlugin.dll
+
+# Verify specific public key token
+load -publickeytoken 0xabc123def456 -- /path/to/Plugin.dll
+```
+
+**Isolated plugin loading**:
+```tcl
+# Load into isolated AppDomain
+load -isolated -- /path/to/UntrustedPlugin.dll
+
+# Load without commands (just initialize)
+load -nocommands -nofunctions -- /path/to/Plugin.dll
+```
+
+### The `[unload]` Command
+
+**Syntax**: `unload ?options? fileName ?packageName? ?interp?`
+
+Unloads a previously loaded plugin from the interpreter. If the plugin was loaded into an isolated AppDomain, that AppDomain is unloaded.
+
+**Arguments**:
+- *fileName*: Path to the plugin assembly file
+- *packageName*: Optional type name or plugin name pattern to match
+- *interp*: Optional target interpreter path
+
+**Command Flags**: `Unsafe | Critical | Standard`
+
+**ObjectGroup**: `managedEnvironment`
+
+#### Unload Options Reference
+
+| Option | Description |
+|--------|-------------|
+| `-clientdata value` | Provides custom client data object |
+| `-data value` | Provides additional data object |
+| `-nocase` | Performs case-insensitive name matching |
+| `-keeplibrary` | Keeps the library loaded but removes the package |
+| `-nocomplain` | Suppresses errors if package is not loaded |
+| `-match mode` | Specifies match mode: `exact`, `glob`, or `regexp` (default: `glob`) |
+| `--` | Marks end of options |
+
+#### Unload Examples
+
+```tcl
+# Basic unload
+unload /path/to/MyPlugin.dll
+
+# Unload specific plugin class
+unload /path/to/Plugin.dll Sample.Class3
+
+# Unload with glob pattern matching
+unload -match glob /path/to/Plugin.dll "Sample.Class*"
+
+# Case-insensitive unload
+unload -nocase /path/to/Plugin.dll mypackage
+
+# Silent unload (no error if not loaded)
+unload -nocomplain /path/to/Plugin.dll
+```
+
+### The Eagle.Loader Script Package
+
+The `Eagle.Loader` package (source: `Eagle/Library/Resources/loader.eagle`) provides helper procedures for constructing `[package ifneeded]` scripts that can dynamically load binary plugins.
+
+#### Package Namespace
+
+All procedures are defined in the `::Eagle` namespace.
+
+#### Key Procedures
+
+**`::Eagle::isEagleForLoader`**: Detects if running in Eagle vs. Tcl
+```tcl
+# Returns non-zero only when running in Eagle
+if {[::Eagle::isEagleForLoader]} {
+    # Eagle-specific code
+}
+```
+
+**`::Eagle::isMonoForLoader`**: Detects if running on Mono runtime
+```tcl
+if {[::Eagle::isMonoForLoader]} {
+    # Mono-specific handling
+}
+```
+
+**`::Eagle::isDotNetCoreForLoader`**: Detects if running on .NET Core/.NET 5+
+```tcl
+if {[::Eagle::isDotNetCoreForLoader]} {
+    # .NET Core-specific handling
+}
+```
+
+**`::Eagle::isWindowsForLoader`**: Detects if running on Windows
+```tcl
+if {[::Eagle::isWindowsForLoader]} {
+    # Windows-specific paths
+}
+```
+
+**`::Eagle::getPatchLevelForLoader`**: Returns the Eagle core library patch level
+```tcl
+set version [::Eagle::getPatchLevelForLoader]
+```
+
+**`::Eagle::getBuildTypeForLoader`**: Returns the build type (e.g., "Bare", "MonoOnUnix")
+```tcl
+set buildType [::Eagle::getBuildTypeForLoader]
+```
+
+**`::Eagle::createLoadCommand`**: Constructs a `[load]` command with appropriate options
+```tcl
+# Create load command for plugin
+set loadCmd [::Eagle::createLoadCommand MyPlugin $publicKeyToken]
+# Result: "::load -publickeytoken 0x... -maybeverifiedonly -maybetrustedonly -- $fileName MyPlugin"
+```
+
+**`::Eagle::maybeCreatePackageIfNeededCommand`**: Creates a complete `[package ifneeded]` script
+```tcl
+# Create package ifneeded command
+set cmd [::Eagle::maybeCreatePackageIfNeededCommand \
+    MyPackage $dir {Plugin.dll} tag "1.0"]
+
+# Execute it to register the package
+eval $cmd
+```
+
+#### Loader Package Usage Pattern
+
+The typical usage pattern for the loader package is:
+
+```tcl
+# In a pkgIndex.tcl file:
+package require Eagle.Loader
+
+namespace eval ::Eagle {
+    set dir [file dirname [info script]]
+    set tag "abc123def456"  ;# Public key token
+
+    # Register the package
+    set cmd [maybeCreatePackageIfNeededCommand \
+        MyPlugin $dir {MyPlugin.dll} tag]
+
+    if {[string length $cmd] > 0} {
+        eval $cmd
+    }
+}
+```
+
+#### Build Type Handling
+
+The loader automatically adjusts behavior based on the build type:
+
+- **Bare**: No P/Invoke support; skips strong name and Authenticode verification
+- **MonoOnUnix**: Limited verification unless running on Mono
+- **Standard**: Full verification support
+
+```tcl
+set buildType [::Eagle::getBuildTypeForLoader]
+
+if {$buildType ni [list Bare]} {
+    # Can use strong name verification
+    lappend loadCmd -maybeverifiedonly
+}
+```
+
+### PluginFlags Enumeration
+
+The `PluginFlags` enumeration controls plugin loading and behavior. Flags can be set via command options or programmatically.
+
+#### Plugin Type Flags
+
+| Flag | Value | Description |
+|------|-------|-------------|
+| `Primary` | 0x4 | Primary plugin in the assembly |
+| `System` | 0x8 | System plugin (part of Eagle runtime) |
+| `Host` | 0x10 | Plugin contains a custom host |
+| `Debugger` | 0x20 | Plugin contains a script debugger |
+| `User` | 0x40 | Third-party user plugin |
+| `Commercial` | 0x80 | Commercial/proprietary plugin |
+| `Proprietary` | 0x100 | Contains proprietary code |
+
+#### Content Flags
+
+| Flag | Value | Description |
+|------|-------|-------------|
+| `Command` | 0x200 | Contains custom commands |
+| `Function` | 0x400 | Contains expression functions |
+| `Trace` | 0x800 | Contains variable traces |
+| `Notify` | 0x1000 | Listens for notifications |
+| `Policy` | 0x2000 | Contains policies (requires Primary) |
+| `Resolver` | 0x4000 | Contains command/variable resolvers |
+
+#### Loading Context Flags
+
+| Flag | Value | Description |
+|------|-------|-------------|
+| `Static` | 0x8000 | Statically provided by application |
+| `Demand` | 0x10000 | Loaded on-demand by `[load]` command |
+| `UnsafeCode` | 0x20000 | Contains unsafe code |
+| `NativeCode` | 0x40000 | Contains native code |
+| `SafeCommands` | 0x80000 | Only contains safe commands |
+
+#### Behavior Control Flags
+
+| Flag | Value | Description |
+|------|-------|-------------|
+| `MergeCommands` | 0x100000 | Ignore existing commands when adding |
+| `OverwriteCommands` | 0x200000 | Overwrite existing commands |
+| `MergeProcedures` | 0x400000 | Ignore existing procedures |
+| `OverwriteProcedures` | 0x800000 | Overwrite existing procedures |
+| `MergePolicies` | 0x1000000 | Ignore existing policies |
+| `OverwritePolicies` | 0x2000000 | Overwrite existing policies |
+| `NoInitialize` | 0x10000000 | Skip initialization logic |
+| `NoTerminate` | 0x20000000 | Skip termination logic |
+| `NoCommands` | 0x40000000 | Don't add commands |
+| `NoFunctions` | 0x80000000 | Don't add functions |
+| `NoPolicies` | 0x100000000 | Don't add policies |
+| `NoTraces` | 0x200000000 | Don't add traces |
+| `NoProvide` | 0x400000000 | Don't provide package |
+| `NoResources` | 0x800000000 | Don't query resources |
+
+#### Security Flags
+
+| Flag | Value | Description |
+|------|-------|-------------|
+| `StrongName` | 0x20000000000 | Assembly has strong name signature |
+| `Verified` | 0x40000000000 | Strong name has been verified |
+| `VerifiedOnly` | 0x80000000000 | Require strong name verification |
+| `SkipVerified` | 0x100000000000 | Skip verification |
+| `Authenticode` | 0x200000000000 | Assembly has Authenticode signature |
+| `Trusted` | 0x400000000000 | Authenticode is trusted |
+| `TrustedOnly` | 0x800000000000 | Require Authenticode trust |
+| `SkipTrusted` | 0x1000000000000 | Skip trust checking |
+
+#### Isolation Flags
+
+| Flag | Value | Description |
+|------|-------|-------------|
+| `Isolated` | 0x4000000000000 | Load into isolated AppDomain |
+| `NoIsolated` | 0x8000000000000 | Prevent isolated loading |
+| `IsolatedOnly` | 0x10000000000000 | Must load into isolated AppDomain |
+| `NoIsolatedOnly` | 0x20000000000000 | Prevent IsolatedOnly from being honored |
+| `NoUseEntryAssembly` | 0x40000000000000 | Don't reset entry assembly |
+| `OptionalEntryAssembly` | 0x80000000000000 | Ignore entry assembly errors |
+| `VerifyCoreAssembly` | 0x100000000000000 | Verify core assembly in AppDomain |
+| `UpdateCheck` | 0x200000000000000 | Check for plugin updates |
+| `NoUpdateCheck` | 0x400000000000000 | Prevent update checking |
+| `NoPreview` | 0x800000000000000 | Disable metadata preview |
+
+#### Threading Flags
+
+| Flag | Value | Description |
+|------|-------|-------------|
+| `LoadOnAnyThread` | 0x4000000000000000 | Allow loading on any thread |
+
+### Plugin Lifecycle
+
+#### Loading Phase
+
+1. **Policy Check**: The engine checks plugin policies before loading
+2. **Thread Verification**: Verifies loading is happening on the correct thread (unless `-anythread`)
+3. **Security Verification**:
+   - Strong name verification (if `-verifiedonly` or `-maybeverifiedonly`)
+   - Authenticode trust checking (if `-trustedonly` or `-maybetrustedonly`)
+   - Public key token matching (if `-publickeytoken`)
+4. **Preview Phase** (if not `-nopreview`): Creates temporary AppDomain to preview plugin metadata
+5. **AppDomain Creation**: Creates or obtains AppDomain (isolated or default)
+6. **Assembly Loading**: Loads the assembly bytes or file into the target AppDomain
+7. **Type Resolution**: Locates the plugin type within the assembly
+8. **Plugin Instantiation**: Creates the plugin instance
+9. **Initialization**: Calls `IState.Initialize()` on the plugin
+10. **Entity Registration**: Adds commands, functions, policies, traces as appropriate
+11. **Package Provision**: Automatically provides the package (unless `-noprovide`)
+12. **Notification**: Sends `NotifyType.Plugin` notification with `NotifyFlags.Load`
+
+#### Unloading Phase
+
+1. **Plugin Lookup**: Finds the plugin by name, token, or file path
+2. **Pre-Unload Notification**: Sends `NotifyFlags.PreUnload` notification
+3. **Termination**: Calls `IState.Terminate()` on the plugin
+4. **Entity Removal**: Removes commands, functions, policies, traces
+5. **Post-Unload Notification**: Sends `NotifyFlags.Unload` notification
+6. **AppDomain Unload**: If isolated, unloads the associated AppDomain
+
+### Isolated Plugin Loading
+
+Isolated plugins are loaded into separate AppDomains, providing:
+
+- **Memory Isolation**: Plugin can be fully unloaded, freeing memory
+- **Security Boundary**: Plugin runs with restricted permissions
+- **Version Isolation**: Different assembly versions can coexist
+- **Crash Isolation**: Plugin failures don't crash the host
+
+#### Enabling Isolation
+
+```tcl
+# Via command option
+load -isolated /path/to/Plugin.dll
+
+# Via interpreter plugin flags
+package require Eagle.Test
+enablePluginFlags Isolated true
+load /path/to/Plugin.dll
+```
+
+#### Isolation Considerations
+
+1. **Cross-AppDomain Marshaling**: Data crossing AppDomain boundaries must be serializable or MarshalByRefObject
+2. **Performance**: Isolated calls have marshaling overhead
+3. **Debugging**: Isolated plugins are harder to debug
+4. **Static State**: Each AppDomain has its own static state
+
+### Security Integration
+
+#### Policy-Based Security
+
+Plugins can be allowed or denied by interpreter policies:
+
+```tcl
+# Example: Policy callback to deny specific plugins
+proc MyPluginPolicy {args} {
+    array set info $args
+    if {[string match "*Untrusted*" $info(typeName)]} {
+        return -code error "Plugin denied by policy"
+    }
+    return approved
+}
+```
+
+#### Strong Name Verification
+
+Strong name verification ensures the assembly hasn't been tampered with:
+
+```tcl
+# Require verification
+load -verifiedonly /path/to/Plugin.dll
+
+# In loader scripts, automatically enabled for non-Bare builds
+lappend loadCmd -maybeverifiedonly
+```
+
+#### Authenticode Trust
+
+Authenticode verification checks the assembly is signed and the certificate is trusted:
+
+```tcl
+# Require trust
+load -trustedonly /path/to/Plugin.dll
+
+# For official Eagle plugins
+load -maybeverifiedonly -maybetrustedonly /path/to/OfficialPlugin.dll
+```
+
+### Resource-Based Loading
+
+Plugins can be loaded from embedded resources instead of files:
+
+```tcl
+# Load plugin from embedded resource
+load -viaresource MyPlugin.dll
+
+# RuntimeOps.LoadPlugin retrieves bytes from host's GetData method
+```
+
+This is used internally for loading plugins embedded in the host application.
+
+### Testing Plugin Loading
+
+The test file `Eagle/Library/Tests/load.eagle` provides comprehensive test coverage:
+
+```tcl
+# Test isolated plugin loading
+runTest {test load-1.1.1 {load/unload isolated plugin assembly} -setup {
+    package require Eagle.Test
+    set savedPluginFlags [enablePluginFlags]
+    enablePluginFlags Isolated true
+} -body {
+    set file [file join $core_lib_path Plugin1.0 Plugin.dll]
+    list [llength [info loaded]] \
+         [load $file Sample.Class3 {}] \
+         [llength [info loaded]] \
+         [unload -match glob $file "Sample.Class3, *" {}] \
+         [llength [info loaded]]
+} -cleanup {
+    enablePluginFlags $savedPluginFlags
+}}
+```
+
+### Introspection
+
+**`[info loaded]`**: Lists loaded plugins
+```tcl
+# List all loaded plugins
+info loaded
+
+# Filter by interpreter
+info loaded "" $childInterp
+
+# Filter by pattern
+info loaded "" "" "*Sample*"
+```
+
+**`[info load]`**: Returns low-level load information
+
+### Error Handling
+
+Plugin loading can fail for various reasons:
+
+- **File Not Found**: Assembly file doesn't exist
+- **Policy Denied**: Interpreter policy rejected the plugin
+- **Wrong Thread**: Loading attempted on non-primary thread without `-anythread`
+- **Verification Failed**: Strong name or Authenticode verification failed
+- **Type Not Found**: Specified plugin type doesn't exist in assembly
+- **Initialization Failed**: Plugin's `Initialize()` method returned error
+- **Already Loaded**: Plugin is already loaded (unless merge/overwrite flags set)
+
+```tcl
+# Handle loading errors
+if {[catch {load /path/to/Plugin.dll} err]} {
+    puts "Plugin load failed: $err"
+}
+```
 
 ---
 
