@@ -1,5 +1,7 @@
 # Eagle Scripting Language
 
+> **For AI agents**: This document is searchable by command name using anchors `#cmd-NAME` (e.g., `#cmd-string`, `#cmd-object`). Use the [Alphabetical Command Index](#alphabetical-command-index) for quick lookup. Eagle-specific commands (not in Tcl 8.6) are listed in the [Eagle Extensions Quick Reference](#eagle-extensions-quick-reference). Internal infrastructure classes are documented in [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure).
+
 This document provides a comprehensive catalog the Eagle scripting language, organized by functional category based on their ObjectGroup attributes.
 
 ## Table of Contents
@@ -42,12 +44,60 @@ This document provides a comprehensive catalog the Eagle scripting language, org
 - [Advanced Topics and Patterns](#advanced-topics-and-patterns)
   - [Built-in Virtual Scripts](#built-in-virtual-scripts)
   - [Managed Assembly Plugin Loader Subsystem](#managed-assembly-plugin-loader-subsystem)
+- [Advanced: Interpreter Customization Hooks](#advanced-interpreter-customization-hooks)
+- [Advanced: Automatic Command Mapping Subsystem](#advanced-automatic-command-mapping-subsystem)
+- [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure)
+- [Eagle Shell Command Line Options](#eagle-shell-command-line-options)
+- [Interactive Commands](#interactive-commands)
+- [Environment Variables](#environment-variables)
+- [Eagle Extensions Quick Reference](#eagle-extensions-quick-reference)
+
+---
+
+## Eagle Extensions Quick Reference
+
+The following commands are Eagle-specific extensions not found in standard Tcl 8.6. All other commands are Tcl-compatible (with possible Eagle enhancements noted in their documentation).
+
+| Command | Category | Brief Description |
+|---------|----------|-------------------|
+| `callback` | Event | Callback queue for async operations |
+| `debug` | Debugging | 70+ sub-commands for interpreter debugging |
+| `do` | Loop | Do-while / do-until loop |
+| `downlevel` | Control Flow | Execute script in the pre-uplevel call frame |
+| `fpclassify` | Expression | Classify floating-point value (normal, zero, infinite, nan, ...) |
+| `getf` | Variables | Get variable with internal flags (obsolete diagnostic) |
+| `guid` | Strings | GUID/UUID generation, validation, comparison |
+| `hash` | Strings | Cryptographic hashing (MD5, SHA-1, SHA-256, SHA-512, ...) |
+| `host` | Managed Env | Interactive console host control (colors, input, screens) |
+| `invoke` | Engine | Invoke command at a specific call stack level |
+| `lget` | Lists | Get element from list variable (combines set + lindex) |
+| `lmap` | Lists/Loop | Transform list by applying body to each element |
+| `lremove` | Lists | Remove list elements by index |
+| `library` | Native Env | Native library P/Invoke (.dll/.so loading and calls) |
+| `napply` | Procedures | Apply lambda with named arguments |
+| `nop` | Misc | No operation (returns empty string) |
+| `nproc` | Procedures | Create procedure with named arguments |
+| `object` | .NET Interop | Full .NET object system (create, invoke, dispose, ...) |
+| `parse` | Strings | Parse scripts, expressions, and options |
+| `scope` | Variables | Persistent variable scopes across procedure calls |
+| `setf` | Variables | Set variable with internal flags (obsolete diagnostic) |
+| `sql` | Database | SQLite/ADO.NET database operations |
+| `tcl` | Tcl Integration | Bridge to native Tcl interpreter |
+| `unsetf` | Variables | Unset variable with internal flags (obsolete diagnostic) |
+| `uri` | Network | URI operations and HTTP client |
+| `version` | Introspection | Eagle version information |
+| `xml` | XML | XML serialization, deserialization, validation |
+
+**Eagle-enhanced Tcl commands** (present in Tcl but with significant Eagle additions):
+`exec` (30+ Eagle options), `for` (optional *end* script), `regexp`/`regsub` (Eagle-specific switches), `vwait` (timeout option), `load`/`unload` (.NET assembly support).
 
 ---
 
 ## Command Count Summary
 
-Total Commands: **122**
+Total Commands: **116** (user-callable)
+
+Additionally, 8 internal infrastructure classes (`Default`, `Core`, `Alias`, `_Delegate`, `SubDelegate`, `Automatic`, `Ensemble`, `Stub`) serve as base classes and wrappers — see [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure).
 
 Commands are organized into the following ObjectGroup categories:
 - Control Flow (conditional, control, loop): 12 commands
@@ -78,27 +128,28 @@ Quick reference to all Eagle commands with links to their detailed documentation
 | Command | Description | Section |
 |---------|-------------|---------|
 | [`after`](#cmd-after) | Execute script after delay | [Event Management](#event-management) |
-| [`alias`](#cmd-alias) | Create command alias | [Delegates and Aliases](#delegates-and-aliases) |
+| [`alias`](#cmd-alias) | Alias command wrapper (internal, see `interp alias`) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
 | [`append`](#cmd-append) | Append values to variable | [Variables](#variables) |
 | [`apply`](#cmd-apply) | Apply lambda expression | [Procedures](#procedures) |
 | [`array`](#cmd-array) | Array operations | [Arrays](#arrays) |
-| [`automatic`](#cmd-automatic) | Automatic command delegation | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`automatic`](#cmd-automatic) | Automatic command mapping wrapper (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
 | [`bgerror`](#cmd-bgerror) | Background error handler | [Core and Miscellaneous](#core-and-miscellaneous) |
 | [`break`](#cmd-break) | Break out of loop | [Control Flow](#control-flow) |
-| [`callback`](#cmd-callback) | Callback management | [Event Management](#event-management) |
+| [`callback`](#cmd-callback) | Callback queue (enqueue/dequeue/execute) | [Event Management](#event-management) |
 | [`catch`](#cmd-catch) | Catch exceptions and errors | [Control Flow](#control-flow) |
 | [`cd`](#cmd-cd) | Change directory | [File System](#file-system) |
 | [`clock`](#cmd-clock) | Clock and time operations | [Time and Clock](#time-and-clock) |
 | [`close`](#cmd-close) | Close channel | [I/O and Channels](#io-and-channels) |
 | [`concat`](#cmd-concat) | Concatenate arguments | [Strings](#strings) |
 | [`continue`](#cmd-continue) | Continue to next loop iteration | [Control Flow](#control-flow) |
-| [`core`](#cmd-core) | Core operations | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`core`](#cmd-core) | Core command base class (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
 | [`debug`](#cmd-debug) | Debugging operations | [Debugging](#debugging) |
-| [`default`](#cmd-default) | Default operations | [Core and Miscellaneous](#core-and-miscellaneous) |
-| [`delegate`](#cmd-delegate) | Delegate operations | [Delegates and Aliases](#delegates-and-aliases) |
+| [`default`](#cmd-default) | Command base class (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
+| [`delegate`](#cmd-delegate) | Delegate command wrapper (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
 | [`do`](#cmd-do) | Do-while loop | [Control Flow](#control-flow) |
 | [`downlevel`](#cmd-downlevel) | Execute script at lower call stack level | [Control Flow](#control-flow) |
 | [`encoding`](#cmd-encoding) | Character encoding operations | [Strings](#strings) |
+| [`ensemble`](#cmd-ensemble) | Ensemble command class (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
 | [`eof`](#cmd-eof) | Check for end-of-file | [I/O and Channels](#io-and-channels) |
 | [`error`](#cmd-error) | Generate an error | [Control Flow](#control-flow) |
 | [`eval`](#cmd-eval) | Evaluate script | [Engine Operations](#engine-operations) |
@@ -113,7 +164,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 | [`for`](#cmd-for) | C-style for loop | [Control Flow](#control-flow) |
 | [`foreach`](#cmd-foreach) | Iterate over lists | [Control Flow](#control-flow) |
 | [`format`](#cmd-format) | Format string (like sprintf) | [Strings](#strings) |
-| [`fpclassify`](#cmd-fpclassify) | Classify floating point number | [Expression Evaluation](#expression-evaluation) |
+| [`fpclassify`](#cmd-fpclassify) | Classify floating-point value (normal/zero/infinite/nan) | [Expression Evaluation](#expression-evaluation) |
 | [`getf`](#cmd-getf) | Get variable with flags | [Variables](#variables) |
 | [`gets`](#cmd-gets) | Read line from channel | [I/O and Channels](#io-and-channels) |
 | [`glob`](#cmd-glob) | Glob for files | [File System](#file-system) |
@@ -125,7 +176,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 | [`incr`](#cmd-incr) | Increment variable value | [Variables](#variables) |
 | [`info`](#cmd-info) | Introspection operations | [Introspection](#introspection) |
 | [`interp`](#cmd-interp) | Interpreter management | [Interpreter Management](#interpreter-management) |
-| [`invoke`](#cmd-invoke) | Invoke command | [Engine Operations](#engine-operations) |
+| [`invoke`](#cmd-invoke) | Invoke command at specific stack level | [Engine Operations](#engine-operations) |
 | [`join`](#cmd-join) | Join list elements with separator | [Strings](#strings) |
 | [`kill`](#cmd-kill) | Kill process | [Native Environment](#native-environment) |
 | [`lappend`](#cmd-lappend) | Append elements to list variable | [Lists](#lists) |
@@ -153,7 +204,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 | [`object`](#cmd-object) | .NET object operations | [Objects (.NET Interop)](#objects-net-interop) |
 | [`open`](#cmd-open) | Open file or channel | [I/O and Channels](#io-and-channels) |
 | [`package`](#cmd-package) | Package management | [Packages](#packages) |
-| [`parse`](#cmd-parse) | Parse scripts and expressions | [Strings](#strings) |
+| [`parse`](#cmd-parse) | Parse scripts, expressions, and options | [Strings](#strings) |
 | [`pid`](#cmd-pid) | Get process ID | [Native Environment](#native-environment) |
 | [`proc`](#cmd-proc) | Create procedure | [Procedures](#procedures) |
 | [`puts`](#cmd-puts) | Write to channel | [I/O and Channels](#io-and-channels) |
@@ -161,7 +212,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 | [`read`](#cmd-read) | Read from channel | [I/O and Channels](#io-and-channels) |
 | [`regexp`](#cmd-regexp) | Regular expression matching | [Strings](#strings) |
 | [`regsub`](#cmd-regsub) | Regular expression substitution | [Strings](#strings) |
-| [`rename`](#cmd-rename) | Rename command | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`rename`](#cmd-rename) | Rename or delete identifiers | [Core and Miscellaneous](#core-and-miscellaneous) |
 | [`return`](#cmd-return) | Return from procedure or script | [Control Flow](#control-flow) |
 | [`scope`](#cmd-scope) | Variable scope operations | [Variables](#variables) |
 | [`seek`](#cmd-seek) | Set channel position | [I/O and Channels](#io-and-channels) |
@@ -172,7 +223,8 @@ Quick reference to all Eagle commands with links to their detailed documentation
 | [`split`](#cmd-split) | Split string into list | [Strings](#strings) |
 | [`sql`](#cmd-sql) | Database operations | [Database (SQL)](#database-sql) |
 | [`string`](#cmd-string) | String operations | [Strings](#strings) |
-| [`subdelegate`](#cmd-subdelegate) | Sub-delegate operations | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`stub`](#cmd-stub) | Stub ensemble placeholder (internal, see `interp stub`) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
+| [`subdelegate`](#cmd-subdelegate) | Sub-delegate ensemble wrapper (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
 | [`subst`](#cmd-subst) | Perform substitutions | [Engine Operations](#engine-operations) |
 | [`switch`](#cmd-switch) | Pattern matching and branching | [Control Flow](#control-flow) |
 | [`tcl`](#cmd-tcl) | Tcl integration | [Tcl Integration](#tcl-integration) |
@@ -308,6 +360,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
     # {1 3 5} = deepdown's local 'a' (level 1 appends)
     # {0 2 4} = global 'a' (level 0 appends)
     ```
+  - **See also**: [`uplevel`](#cmd-uplevel), [`invoke`](#cmd-invoke)
 
 <a id="cmd-error"></a>
 - **error** - Generate an error
@@ -403,7 +456,23 @@ Quick reference to all Eagle commands with links to their detailed documentation
         puts $i
         incr i
     } while {$i < 5}
+
+    # Until form (loops while condition is FALSE)
+    set j 0
+    do {
+        incr j
+    } until {$j >= 5}
+    # j is now 5
+
+    # Break and continue work as expected
+    set k 0
+    do {
+        incr k
+        if {$k == 3} continue
+        if {$k == 7} break
+    } while {$k < 10}
     ```
+  - **See also**: [`while`](#cmd-while), [`for`](#cmd-for), [`foreach`](#cmd-foreach)
 
 <a id="cmd-for"></a>
 - **for** - C-style for loop
@@ -462,6 +531,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
     }]
     # Result: {2 4}
     ```
+  - **See also**: [`foreach`](#cmd-foreach), [`lsearch`](#cmd-lsearch)
 
 <a id="cmd-while"></a>
 - **while** - While loop
@@ -503,6 +573,8 @@ All variable commands belong to ObjectGroup: "variable"
   - `getf varName`
   - Retrieves a variable's value along with internal flag information. This is an obsolete diagnostic command primarily used for interpreter debugging.
   - **Returns**: The variable value with associated flags.
+  - **Deprecation note**: This command is retained for backward compatibility and internal diagnostics. Use `set` for normal variable access.
+  - **See also**: [`setf`](#cmd-setf), [`unsetf`](#cmd-unsetf), [`set`](#cmd-set)
 
 <a id="cmd-global"></a>
 - **global** - Declare global variables
@@ -794,6 +866,8 @@ All variable commands belong to ObjectGroup: "variable"
     scope destroy testScope
     ```
 
+  - **See also**: [`uplevel`](#cmd-uplevel), [`upvar`](#cmd-upvar), [`variable`](#cmd-variable)
+
 <a id="cmd-set"></a>
 - **set** - Set variable value
   - `set varName ?newValue?`
@@ -815,6 +889,8 @@ All variable commands belong to ObjectGroup: "variable"
   - `setf varFlags varName ?newValue?`
   - Sets a variable with specific internal flags. This is an obsolete diagnostic command used for interpreter debugging.
   - **Returns**: The value of the variable.
+  - **Deprecation note**: This command is retained for backward compatibility and internal diagnostics. Use `set` for normal variable operations.
+  - **See also**: [`getf`](#cmd-getf), [`unsetf`](#cmd-unsetf), [`set`](#cmd-set)
 
 <a id="cmd-unset"></a>
 - **unset** - Unset variables
@@ -833,10 +909,12 @@ All variable commands belong to ObjectGroup: "variable"
     ```
 
 <a id="cmd-unsetf"></a>
-- **unsetf** - Unset variable with flags
+- **unsetf** - Unset variable with flags (obsolete, diagnostic)
   - `unsetf varFlags ?varName varName ...?`
   - Unsets variables with specific internal flags. This is a diagnostic command for advanced interpreter manipulation.
   - **Returns**: An empty string.
+  - **Deprecation note**: This command is retained for backward compatibility and internal diagnostics. Use `unset` for normal variable removal.
+  - **See also**: [`getf`](#cmd-getf), [`setf`](#cmd-setf), [`unset`](#cmd-unset)
 
 <a id="cmd-upvar"></a>
 - **upvar** - Link variable to upper scope
@@ -935,7 +1013,13 @@ Many list commands accept index arguments. Valid index formats include:
     ```tcl
     set data {{a b} {c d} {e f}}
     lget data 1 0    ;# Returns: "c"
+
+    set data {a b c {d e f {g h i}}}
+    lget data 0        ;# Returns: "a"
+    lget data end       ;# Returns: {d e f {g h i}}
+    lget data end end   ;# Returns: {g h i}
     ```
+  - **See also**: [`lindex`](#cmd-lindex), [`lset`](#cmd-lset)
 
 <a id="cmd-lindex"></a>
 - **lindex** - Get list element by index
@@ -1024,6 +1108,7 @@ Many list commands accept index arguments. Valid index formats include:
     ```tcl
     lremove {a b c d e} 1 3    ;# Returns: {a c e}
     ```
+  - **See also**: [`lreplace`](#cmd-lreplace), [`lrange`](#cmd-lrange)
 
 <a id="cmd-lrepeat"></a>
 - **lrepeat** - Create list by repeating values
@@ -1229,6 +1314,14 @@ String commands belong to ObjectGroup: "string"
     set id [guid new]           ;# e.g., "550e8400-e29b-41d4-a716-446655440000"
     guid isvalid $id            ;# Returns: 1 (true)
     guid isnull [guid null]     ;# Returns: 1 (true)
+
+    set a [guid new]
+    set b [guid new]
+    guid compare $a $b       ;# Returns: -1, 0, or 1
+    guid compare $a $a       ;# Returns: 0
+    guid isnull [guid null]  ;# Returns: 1
+    guid isnull [guid new]   ;# Returns: 0
+    guid isvalid "not-a-guid" ;# Returns: 0
     ```
 
 <a id="cmd-hash"></a>
@@ -1248,7 +1341,12 @@ String commands belong to ObjectGroup: "string"
     # Returns: 185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969
 
     hash mac sha256 "message" "secretkey"
-    hash list  ;# List available algorithms
+
+    # List available algorithms (returns pairs of {type name})
+    hash list          ;# e.g., {{normal MD5} {normal SHA1} {normal SHA256} ...}
+    hash list normal   ;# Only normal (non-keyed) algorithms
+
+    hash mac sha256 "message" "secret-key"   ;# HMAC
     ```
 
 <a id="cmd-join"></a>
@@ -1265,13 +1363,32 @@ String commands belong to ObjectGroup: "string"
     ```
 
 <a id="cmd-parse"></a>
-- **parse** - Parse scripts and expressions (Eagle extension)
-  - `parse command ?options? text` - Parse text as a single command
-  - `parse expression ?options? text` - Parse text as an expression
-  - `parse options ?options? optionList argumentList` - Parse command-line style options
-  - `parse script ?options? text` - Parse text as a script (multiple commands)
-  - **Use cases**: Syntax analysis, building tools, validating scripts
-  - **Returns**: Parsed structure information (varies by sub-command).
+- **parse** - Parse scripts, expressions, and options (Eagle extension)
+  - `parse command ?options? text` - Parses *text* as a single command. Returns a structured list of tokens describing the parsed command, including word boundaries, types, and character positions.
+  - `parse expression ?options? text` - Parses *text* as a mathematical/logical expression. Returns token structure with operator precedence and operand boundaries.
+  - `parse options ?options? optionList argumentList` - Parses command-line style options from *argumentList* according to the option definitions in *optionList*. Returns the parsed option values.
+  - `parse script ?options? text` - Parses *text* as a complete script (zero or more commands). Returns a list of parsed command structures.
+  - **Common Options**:
+    - `-characters count` - Limit parsing to *count* characters
+  - **Returns**: Parsed structure (list of tokens with type, text, and position info).
+  - **Use cases**: Syntax analysis, script validation, building development tools, IDE integration.
+  - **See also**: `info complete` (check if script is complete)
+  - **Example**:
+    ```tcl
+    # Parse a simple command
+    parse command {puts "hello world"}
+    # Returns token structure describing the command
+
+    # Parse an expression
+    parse expression {2 + 3 * 4}
+    # Returns token structure with operator precedence
+
+    # Check script structure
+    parse script {
+        set x 1
+        puts $x
+    }
+    ```
 
 <a id="cmd-regexp"></a>
 - **regexp** - Regular expression matching
@@ -2063,6 +2180,7 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
     }
     connect -host localhost -port 8080 -timeout 60
     ```
+  - **See also**: [`proc`](#cmd-proc), [`napply`](#cmd-napply)
 
 <a id="cmd-apply"></a>
 - **apply** - Apply lambda expression
@@ -2092,6 +2210,7 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
     ```tcl
     napply {{x y} {expr {$x + $y}}} -x 3 -y 4    ;# Returns: 7
     ```
+  - **See also**: [`apply`](#cmd-apply), [`nproc`](#cmd-nproc)
 
 ---
 
@@ -3136,6 +3255,8 @@ The `xml` command provides XML processing capabilities using the .NET XML infras
   }
   ```
 
+  - **See also**: [`object`](#cmd-object)
+
 ---
 
 ### Tcl Integration
@@ -3263,8 +3384,23 @@ Expression commands belong to ObjectGroup: "expression"
   - `expr arg ?arg ...?`
 
 <a id="cmd-fpclassify"></a>
-- **fpclassify** - Classify floating point number
+- **fpclassify** - Classify floating-point value (normal/zero/infinite/nan) (Eagle extension)
   - `fpclassify value`
+  - Classifies a floating-point *value* into one of the following categories:
+    - `normal` — A normal (non-zero, finite) number
+    - `subnormal` — A subnormal (denormalized) number
+    - `zero` — Positive or negative zero
+    - `infinite` — Positive or negative infinity
+    - `nan` — Not a number
+  - **Returns**: One of the classification strings listed above.
+  - **See also**: `expr`
+  - **Example** (from test suite):
+    ```tcl
+    fpclassify 1.0              ;# Returns: normal
+    fpclassify 0.0              ;# Returns: zero
+    fpclassify [expr {1.0/0}]   ;# Returns: infinite
+    fpclassify NaN              ;# Returns: nan
+    ```
 
 - **incr** - Increment variable (see Variables)
 
@@ -3720,16 +3856,36 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
   - `after flags ?flags?` - Gets or sets event processing flags.
 
 <a id="cmd-callback"></a>
-- **callback** - Callback management (Eagle extension)
+- **callback** - Callback queue (enqueue/dequeue/execute) (Eagle extension)
 
-  Provides a callback queue system for managing asynchronous operations.
+  Provides a callback queue system for managing deferred command execution. Callbacks are named commands queued for later execution, useful for decoupling event producers from consumers.
 
-  - `callback enqueue name ?arg ...?` - Adds a callback to the queue.
-  - `callback dequeue ?options?` - Removes and returns a callback from the queue.
-  - `callback execute` - Executes pending callbacks.
-  - `callback list ?pattern?` - Lists callbacks matching *pattern*.
-  - `callback count` - Returns the number of queued callbacks.
-  - `callback clear` - Clears all queued callbacks.
+  - `callback enqueue name ?arg ...?` - Adds a callback named *name* (with optional arguments) to the queue.
+  - `callback dequeue ?options?` - Removes and returns the first callback from the queue. With `-alias`, creates a command alias instead.
+  - `callback execute` - Executes all pending callbacks in order and removes them from the queue.
+  - `callback list ?pattern?` - Lists queued callback names matching *pattern* (default: all).
+  - `callback count` - Returns the number of callbacks currently in the queue.
+  - `callback clear` - Removes all callbacks from the queue without executing them.
+  - **Returns**: Varies by sub-command (count returns integer; list returns list; others return empty string).
+  - **See also**: [`after`](#cmd-after) (time-based event scheduling), [`update`](#cmd-update) (event processing)
+
+  **Example**:
+  ```tcl
+  # Queue some callbacks
+  callback enqueue set x 1
+  callback enqueue puts "deferred message"
+  callback count            ;# Returns: 2
+  callback list             ;# Returns: {set puts}
+
+  # Execute all queued callbacks
+  callback execute          ;# Runs both callbacks, empties queue
+  callback count            ;# Returns: 0
+
+  # Clear without executing
+  callback enqueue set y 2
+  callback clear
+  callback count            ;# Returns: 0
+  ```
 
 <a id="cmd-update"></a>
 - **update** - Process events
@@ -3971,9 +4127,10 @@ The `info` command is the primary means for querying the state of the interprete
 <a id="cmd-version"></a>
 - **version** - Get Eagle version
   - `version ?flags?`
-  - Returns the Eagle version string. With *flags*, can control the format:
-    - Default returns version like "1.0.0.0"
-    - Various flags control inclusion of build info, configuration, etc.
+  - Returns the Eagle version string. Without *flags*, returns the base version (e.g., "1.0.0.0").
+  - **Flags**: Control what additional information is included. Flags are a combination of version-related enum values.
+  - **Returns**: Version string with requested information.
+  - **See also**: [`info`](#cmd-info) (`info patchlevel`, `info nameofexecutable`)
 
   **Example**:
   ```tcl
@@ -3987,42 +4144,37 @@ The `info` command is the primary means for querying the state of the interprete
 Aliases and delegates provide mechanisms to create command shortcuts and manage callable objects.
 
 <a id="cmd-alias"></a>
-- **alias** - Create command alias (ObjectGroup: "alias")
-  - `alias name` - Returns the definition of alias *name*.
-  - `alias name {}` - Deletes alias *name*.
-  - `alias name targetCmd ?arg ...?` - Creates an alias *name* that invokes *targetCmd* with optional prepended arguments.
+- **alias** - Alias command wrapper (internal, ObjectGroup: "alias")
 
-  Aliases allow creating shortcuts or wrappers for commands. When the alias is invoked, any additional arguments are appended to the predefined arguments.
+  > **Not a standalone user-callable command.** The `Alias` class (`CommandFlags: NoPopulate | NoAdd | Alias | Safe`) is a transparent conduit that delegates execution to a target command. Aliases are created, queried, and deleted using [`interp alias`](#cmd-interp).
 
-  **Example**:
+  **Creating and using aliases via `interp alias`**:
   ```tcl
-  # Create a shortcut
-  alias ll list                ;# 'll' is now an alias for 'list'
+  # Create an alias in the current interpreter
+  interp alias {} ll {} list
 
   # Create an alias with prepended arguments
-  alias dir glob -nocomplain   ;# 'dir *.txt' becomes 'glob -nocomplain *.txt'
+  interp alias {} dir {} glob -nocomplain
+  #   'dir *.txt' becomes 'glob -nocomplain *.txt'
 
-  # Create a procedure-like alias
-  alias greet puts "Hello,"    ;# 'greet World' prints "Hello, World"
+  # Query an alias definition
+  interp alias {} ll           ;# Returns: list
 
   # Delete an alias
-  alias greet {}
+  interp alias {} ll {}
+
+  # Cross-interpreter alias (child interpreter can call parent commands)
+  interp alias $child myCmd {} someProc arg1
   ```
+
+  See [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) for class details.
 
 <a id="cmd-delegate"></a>
-- **delegate** - Delegate operations (ObjectGroup: "delegate")
-  - `delegate create ?options? typeName` - Creates a delegate of the specified .NET type.
-  - `delegate delete delegateName` - Deletes a delegate.
-  - `delegate invoke delegateName ?arg ...?` - Invokes a delegate with arguments.
-  - `delegate list ?pattern?` - Lists delegates matching *pattern*.
+- **delegate** - Delegate command wrapper (internal, ObjectGroup: "delegate")
 
-  Delegates are used to create callable wrappers for .NET methods, enabling callback mechanisms and event handling.
+  > **Not a standalone user-callable command.** The `_Delegate` class (`CommandFlags: NoPopulate | NoAdd | Delegate`) wraps a single `System.Delegate` instance as a command. Delegate commands are created by interpreter infrastructure when a .NET delegate needs to be invocable as a script command.
 
-  **Example**:
-  ```tcl
-  # Create a delegate for a .NET method
-  set del [delegate create -alias System.Comparison\`1\[System.Int32\]]
-  ```
+  See [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) for class details.
 
 ---
 
@@ -4032,7 +4184,9 @@ Ensemble commands belong to ObjectGroup: "ensemble"
 
 Ensemble commands group related sub-commands under a single command name. In Eagle, commands like `string`, `array`, `file`, `info`, `debug`, and `object` are implemented as ensemble commands internally.
 
-**Note**: Unlike Tcl 8.5+, Eagle does not provide user-facing `ensemble` or `namespace ensemble` commands for creating custom ensembles at the script level. Ensemble functionality is handled internally by the interpreter for built-in commands.
+The `Ensemble` class (`Commands/Ensemble.cs`) and `Stub` class (`Commands/Stub.cs`) provide the infrastructure for creating ensemble commands programmatically. Stubs can be created at the script level using `interp stub`. See [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) for details on these classes.
+
+**Note**: Unlike Tcl 8.5+, Eagle does not provide user-facing `namespace ensemble` commands for creating custom ensembles at the script level. However, `interp stub` can create minimal ensemble placeholders, and plugins can create full `Ensemble` commands.
 
 ---
 
@@ -4067,16 +4221,27 @@ These commands control script evaluation and substitution at the core level.
   **Note**: Eagle does NOT support the Tcl 8.5+ argument expansion operator `{*}`. Use `[eval]` with `[list]` for dynamic command construction to properly handle quoting.
 
 <a id="cmd-invoke"></a>
-- **invoke** - Invoke command
+- **invoke** - Invoke command at specific stack level (Eagle extension)
   - `invoke ?level? cmd ?arg ...?`
   - Invokes *cmd* with the given arguments at the specified stack *level*.
   - Without *level*, invokes at the current level.
   - This is an Eagle extension for controlled command invocation.
+  - **Returns**: The result of the invoked command.
+  - **Level specification**: Same as `uplevel` — a positive integer *n* means *n* levels up; `#n` means absolute stack level (0 is global).
+  - **See also**: [`uplevel`](#cmd-uplevel), [`downlevel`](#cmd-downlevel)
 
   **Example**:
   ```tcl
-  invoke #0 set globalVar "value"  ;# Set variable at global level
-  invoke 1 puts "Message"          ;# Invoke at caller's level
+  # Execute at global level
+  invoke #0 set globalVar "value"
+
+  # Get info at parent frame
+  proc foo {} {
+      invoke 1 info level     ;# Returns caller's level
+  }
+
+  # Verify current level
+  expr {[info level] == [invoke 0 info level]}  ;# True
   ```
 
 <a id="cmd-source"></a>
@@ -4761,6 +4926,8 @@ These commands interact with the .NET runtime and the interactive host environme
   - `host sleep milliseconds` - Sleeps for the specified duration.
   - `host font ?options?` - Gets or sets the console font.
 
+  - **See also**: [`puts`](#cmd-puts), [`gets`](#cmd-gets)
+
 <a id="cmd-load"></a>
 - **load** - Load binary package/extension
   - `load ?options? fileName ?packageName? ?interp?`
@@ -4803,9 +4970,9 @@ These commands interact with the .NET runtime and the interactive host environme
 These commands provide fundamental interpreter operations and utility functions.
 
 <a id="cmd-automatic"></a>
-- **automatic** - Automatic command delegation (ObjectGroup: "delegate")
-  - Manages automatic delegation of commands to other implementations.
-  - Used internally for command dispatch optimization.
+- **automatic** - Automatic command mapping wrapper (internal, ObjectGroup: "delegate")
+
+  > **Not a user-callable command.** The `Automatic` class (`CommandFlags: NoPopulate | NoAdd`) is the command type created by the automatic command mapping subsystem. See [Advanced: Automatic Command Mapping Subsystem](#advanced-automatic-command-mapping-subsystem) and [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) for details.
 
 <a id="cmd-bgerror"></a>
 - **bgerror** - Background error handler (ObjectGroup: "scriptEnvironment")
@@ -4823,14 +4990,14 @@ These commands provide fundamental interpreter operations and utility functions.
   ```
 
 <a id="cmd-core"></a>
-- **core** - Core operations (ObjectGroup: "core")
-  - Provides access to core interpreter functionality.
-  - Used for advanced interpreter manipulation and debugging.
+- **core** - Core command base class (internal, ObjectGroup: "core")
+
+  > **Not a user-callable command.** The `Core` class is the internal base class for all built-in commands in the core library. It extracts `CommandFlags` from class-level attributes. See [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) for details.
 
 <a id="cmd-default"></a>
-- **default** - Default operations (ObjectGroup: "default")
-  - Provides default behavior for various operations.
-  - Used internally by the interpreter.
+- **default** - Command base class (internal, ObjectGroup: "default")
+
+  > **Not a user-callable command.** The `Default` class is the public base class for every command in Eagle. It provides the `ICommand` interface, `Execute()` dispatch, usage tracking, and ensemble support. See [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) for details.
 
 <a id="cmd-nop"></a>
 - **nop** - No operation (ObjectGroup: "nop")
@@ -4845,12 +5012,18 @@ These commands provide fundamental interpreter operations and utility functions.
   ```
 
 <a id="cmd-rename"></a>
-- **rename** - Rename command (ObjectGroup: "scriptEnvironment")
+- **rename** - Rename or delete identifiers (ObjectGroup: "scriptEnvironment")
   - `rename ?options? oldName newName`
-  - Renames command *oldName* to *newName*.
-  - If *newName* is empty, deletes the command.
+  - Renames identifier *oldName* to *newName*.
+  - If *newName* is empty, deletes the identifier.
+  - Can rename various identifier types: commands, procedures, functions, objects, variables, and more (controlled by `-kind`).
   - **Options**:
-    - `-force` - Overwrite existing command
+    - `-nodelete` - Prevent deletion (error if *newName* is empty)
+    - `-hidden` - Include hidden identifiers (unsafe)
+    - `-hiddenonly` - Only match hidden identifiers (unsafe)
+    - `-kind <IdentifierKind>` - Specify the type of identifier to rename (unsafe). Values include `Command` (default behavior), `Function`, `Object`, `Variable`, etc. When `-kind Object` is used, calls `RenameObject`; when `-kind Function`, calls `RenameFunction`; otherwise defaults to `RenameAnyIExecute`.
+    - `-newnamevar <varName>` - Store the resulting new name in the variable *varName*
+    - `--` - End of options
 
   **Example**:
   ```tcl
@@ -4865,12 +5038,22 @@ These commands provide fundamental interpreter operations and utility functions.
 
   # Delete a command
   rename myproc {}
+
+  # Rename but prevent accidental deletion
+  rename -nodelete myproc my_new_proc
+
+  # Rename a function (expression function)
+  rename -kind Function oldfunc newfunc
+
+  # Rename and capture the resulting name in a variable
+  rename -newnamevar result myproc my_new_proc
+  puts "New name is: $result"
   ```
 
 <a id="cmd-subdelegate"></a>
-- **subdelegate** - Sub-delegate operations (ObjectGroup: "delegate")
-  - Manages sub-delegation of commands within ensemble structures.
-  - Used for advanced command routing.
+- **subdelegate** - Sub-delegate ensemble wrapper (internal, ObjectGroup: "delegate")
+
+  > **Not a user-callable command.** The `SubDelegate` class (`CommandFlags: NoPopulate | NoAdd`) is an ensemble where each sub-command is backed by a separate `System.Delegate`. See [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) for details.
 
 ---
 
@@ -7770,3 +7953,699 @@ permission denied: safe interpreter cannot use method overload System.Type.Unsaf
 - `Eagle/Library/Tests/Default.cs` - `Automatic` test class with various method signatures
 - `[library call]` command - Similar invocation options
 - `[object invoke]` command - Related object invocation functionality
+
+---
+
+## Advanced: Core Library Command Infrastructure
+
+<a id="cmd-ensemble"></a>
+<a id="cmd-stub"></a>
+
+Eagle's command system is built on a class hierarchy of C# types in the `Eagle._Commands` namespace. Most of these classes are **not user-callable commands** — they carry `CommandFlags.NoPopulate | CommandFlags.NoAdd`, which prevents the interpreter from automatically registering them as named commands. Instead, they serve as base classes, wrappers, or infrastructure used by other parts of the interpreter.
+
+This section documents the eight infrastructure command classes and how they relate to user-visible functionality.
+
+### Class Hierarchy
+
+```
+Default (public)                     ← Base class for ALL commands
+├── Core (internal)                  ← Base class for core library commands
+│   ├── Alias (internal sealed)      ← Created by [interp alias]
+│   └── Stub (internal sealed)       ← Created by [interp stub]
+├── _Delegate (public)               ← Wraps a single System.Delegate
+│   └── SubDelegate (public)         ← Ensemble with per-sub-command delegates
+├── Automatic (public)               ← Created by automatic command mapping
+└── Ensemble (public)                ← Structured ensemble with sub-commands
+```
+
+### Class Reference
+
+| Class | Source File | ObjectGroup | Base Class | NoPopulate/NoAdd | Purpose |
+|-------|-----------|-------------|------------|------------------|---------|
+| `Default` | `Commands/Default.cs` | `"default"` | — | No | Public base class for all commands |
+| `Core` | `Commands/Core.cs` | `"core"` | `Default` | No (flags: `Core`) | Internal base for core library commands |
+| `Alias` | `Commands/Alias.cs` | `"alias"` | `Core` | Yes | Alias wrapper, created by `interp alias` |
+| `_Delegate` | `Commands/Delegate.cs` | `"delegate"` | `Default` | Yes | Wraps a single `System.Delegate` |
+| `SubDelegate` | `Commands/SubDelegate.cs` | `"delegate"` | `_Delegate` | Yes | Ensemble with per-sub-command delegates |
+| `Automatic` | `Commands/Automatic.cs` | `"delegate"` | `Default` | Yes | Automatic command mapping wrapper |
+| `Ensemble` | `Commands/Ensemble.cs` | `"ensemble"` | `Default` | Yes | Structured ensemble command |
+| `Stub` | `Commands/Stub.cs` | `"ensemble"` | `Core` | Yes | Minimal ensemble placeholder |
+
+### Per-Class Documentation
+
+#### Default
+
+- **File**: `Eagle/Library/Commands/Default.cs`
+- **Visibility**: `public`
+- **Implements**: `ICommand`, `IHaveNoCase`
+- **CommandFlags**: (none at class level — derived classes set their own)
+
+`Default` is the root base class for every command in Eagle. It provides the standard `ICommand` interface implementation, including:
+
+- `Execute()` method dispatch
+- Usage tracking (execution count)
+- Ensemble support infrastructure (sub-command dictionaries)
+- Object ID and group extraction from attributes
+
+All user-visible commands (like `string`, `file`, `puts`, etc.) ultimately inherit from `Default`, typically through the `Core` subclass.
+
+#### Core
+
+- **File**: `Eagle/Library/Commands/Core.cs`
+- **Visibility**: `internal`
+- **Inherits**: `Default`
+- **CommandFlags**: `Core`
+
+`Core` is the internal base class used by all commands in the core library (the built-in command set shipped with Eagle). Its primary role is to extract `CommandFlags` from class-level attributes and cache them correctly. Behavior specific to core commands (as opposed to plugin or user-defined commands) is implemented here rather than in `Default`.
+
+Commands like `string`, `file`, `info`, `interp`, and all other built-in commands inherit from `Core`.
+
+#### Alias
+
+- **File**: `Eagle/Library/Commands/Alias.cs`
+- **Visibility**: `internal sealed`
+- **Inherits**: `Core` → `Default`
+- **Implements**: `IAlias`
+- **CommandFlags**: `NoPopulate | NoAdd | Alias | Safe`
+- **ObjectGroup**: `"alias"`
+
+`Alias` is a transparent conduit that delegates execution to a target command. It is marked `Safe` because it provides no functionality by itself — it merely forwards to functionality elsewhere in the interpreter. Aliases support cross-interpreter delegation (the source and target interpreters can differ).
+
+**How users create aliases**: Use [`interp alias`](#cmd-interp) to create, query, or delete aliases.
+
+```tcl
+# Create an alias in the current interpreter
+interp alias {} ll {} list
+
+# Create an alias with prepended arguments
+interp alias {} dir {} glob -nocomplain
+
+# Query an alias definition
+interp alias {} ll
+
+# Delete an alias
+interp alias {} ll {}
+
+# Cross-interpreter alias
+interp alias $child myCmd {} someProc arg1
+```
+
+#### _Delegate
+
+- **File**: `Eagle/Library/Commands/Delegate.cs`
+- **Visibility**: `public`
+- **Inherits**: `Default`
+- **Implements**: `IDelegateData`
+- **CommandFlags**: `NoPopulate | NoAdd | Delegate`
+- **ObjectGroup**: `"delegate"`
+
+`_Delegate` wraps a single `System.Delegate` instance as a command. It is created by interpreter infrastructure (not by user-level commands) when a .NET delegate needs to be invocable as a script command. The class name uses a leading underscore to avoid conflicting with the C# keyword `delegate`.
+
+Note: `_Delegate` does not inherit from `Core` — it manually assigns command flags from its class-level attributes.
+
+#### SubDelegate
+
+- **File**: `Eagle/Library/Commands/SubDelegate.cs`
+- **Visibility**: `public`
+- **Inherits**: `_Delegate` → `Default`
+- **CommandFlags**: `NoPopulate | NoAdd | SubDelegate`
+- **ObjectGroup**: `"delegate"`
+
+`SubDelegate` is an ensemble command where each sub-command is backed by a separate `System.Delegate`. It combines `IdentifierKind.Ensemble` and `IdentifierKind.SubDelegate` to provide structured access to multiple delegate-backed operations under a single command name.
+
+#### Automatic
+
+- **File**: `Eagle/Library/Commands/Automatic.cs`
+- **Visibility**: `public`
+- **Inherits**: `Default`
+- **CommandFlags**: `NoPopulate | NoAdd | Automatic`
+- **ObjectGroup**: `"delegate"`
+
+`Automatic` is the command type created by the [Automatic Command Mapping Subsystem](#advanced-automatic-command-mapping-subsystem). It wraps .NET type methods as script sub-commands, providing direct access to .NET functionality without writing custom command classes. See the dedicated Advanced section for full documentation.
+
+#### Ensemble
+
+- **File**: `Eagle/Library/Commands/Ensemble.cs`
+- **Visibility**: `public`
+- **Inherits**: `Default`
+- **Implements**: `IEnsembleData`, `IEnsembleManager`
+- **CommandFlags**: `NoPopulate | NoAdd | Ensemble`
+- **ObjectGroup**: `"ensemble"`
+
+`Ensemble` is a structured ensemble command that provides built-in sub-commands including `about`, `isolated`, and `options`. It supports plugin-based extension and ensemble management through the `IEnsembleManager` interface.
+
+Note: `Ensemble` does not inherit from `Core` — it manually assigns command flags from its class-level attributes. This class is used when plugins or infrastructure need to create managed ensemble commands.
+
+#### Stub
+
+- **File**: `Eagle/Library/Commands/Stub.cs`
+- **Visibility**: `internal sealed`
+- **Inherits**: `Core` → `Default`
+- **CommandFlags**: `Safe | NonStandard | NoPopulate | NoAdd | Delegate`
+- **ObjectGroup**: `"ensemble"`
+
+`Stub` is a minimal ensemble placeholder created by [`interp stub`](#cmd-interp). It provides a bare command that can have sub-commands added to it, serving as a lightweight container for building ensemble command structures at runtime.
+
+**How users create stubs**: Use `interp stub` to create a stub ensemble command.
+
+```tcl
+# Create a stub command
+interp stub {} myensemble
+
+# Sub-commands can then be added to the stub
+```
+
+### User Interaction Summary
+
+| Class | How Users Create/Use It | User-Facing Command |
+|-------|------------------------|-------------------|
+| `Default` | (not created directly — base class) | — |
+| `Core` | (not created directly — base class) | — |
+| `Alias` | `interp alias` | The alias name itself |
+| `_Delegate` | Created by infrastructure | The delegate name itself |
+| `SubDelegate` | Created by infrastructure | The sub-delegate ensemble name |
+| `Automatic` | `interp addautocommand` or `AddAutomaticCommands()` | The automatic command name |
+| `Ensemble` | Created by plugins or infrastructure | The ensemble command name |
+| `Stub` | `interp stub` | The stub command name |
+
+### Implementation Files
+
+| File | Description |
+|------|-------------|
+| `Eagle/Library/Commands/Default.cs` | Base command class |
+| `Eagle/Library/Commands/Core.cs` | Core library command base |
+| `Eagle/Library/Commands/Alias.cs` | Alias command wrapper |
+| `Eagle/Library/Commands/Delegate.cs` | Delegate command wrapper |
+| `Eagle/Library/Commands/SubDelegate.cs` | Sub-delegate ensemble wrapper |
+| `Eagle/Library/Commands/Automatic.cs` | Automatic command mapping wrapper |
+| `Eagle/Library/Commands/Ensemble.cs` | Ensemble command |
+| `Eagle/Library/Commands/Stub.cs` | Stub ensemble placeholder |
+| `Eagle/Library/Components/Public/Interpreter.cs` | `AddAlias()`, `AddStub()`, `AddAutomaticCommands()` methods |
+| `Eagle/Library/Tests/Default.cs` | Test classes: `Automatic` (method/property mapping tests), `Ensemble` (ensemble with sub-commands), `SubCommand` (sub-command execution infrastructure), execute callbacks |
+
+### See Also
+
+- [Advanced: Interpreter Customization Hooks](#advanced-interpreter-customization-hooks) - Sub-command manipulation and name resolution
+- [Advanced: Automatic Command Mapping Subsystem](#advanced-automatic-command-mapping-subsystem) - Automatic command details
+- [`interp`](#cmd-interp) command - `interp alias`, `interp stub`, and related sub-commands
+- `Eagle/Library/Tests/Default.cs` - Test infrastructure with `Automatic`, `Ensemble`, and `SubCommand` test classes demonstrating command infrastructure usage
+
+---
+
+## Eagle Shell Command Line Options
+
+> **Important**: The command line options documented in this section apply only when using the **Eagle shell** executable (e.g., `EagleShell.exe` or equivalent). They are not necessarily available when the Eagle core library is embedded directly into a host application. When no command line arguments are supplied, or after all arguments have been processed, the interactive loop is entered (unless it has been disabled).
+
+### Command Line Notes
+
+- Option names are **case-insensitive**.
+- Most options are processed in the order they are encountered.
+- All options whose names begin with `-startup` may be processed **prior to** interpreter creation.
+- If a file named `EagleShell.exe.argv` (or supported per-user, per-machine, or per-domain variations thereof) exists in the executable directory, its contents are read and inserted before any preexisting arguments, prior to further argument processing.
+- If any unrecognized argument is encountered, it will be passed to the shell argument callback, if any; otherwise, an error will be generated.
+
+### Command Line Options Reference
+
+| Option | Arguments | Description |
+|--------|-----------|-------------|
+| `-anyFile` | `<fileName>` | Evaluates the specified file (whether or not the script library has been initialized) and then continues processing arguments. Also see `-preFile`, `-file`, and `-postFile`. |
+| `-anyInitialize` | `<script>` | Evaluates the specified script (whether or not the script library has been initialized) and then continues processing arguments. Also see `-preInitialize`, `-initialize`, and `-postInitialize`. |
+| `-arguments` | `<fileName>` | Reads the entire specified file, interpreting each line as a list of arguments to be inserted in order (replacing the `-arguments` option and file name), and then continues processing arguments. The literal string `"-"` or `"stdin"` may be used to read from standard input. |
+| `-break` | | Waits until a key is pressed and then triggers a managed debugger break. Useful for attaching a managed debugger before any subsequent arguments are processed. |
+| `-child` | | Changes the interpreter to its child interpreter, if available, and then continues processing arguments. |
+| `-clearTrace` | | Clears all trace listeners and then continues processing arguments. |
+| `-debug` | | Enables debug mode for the interpreter and then continues processing arguments. Various strategically placed diagnostic messages are produced to help troubleshoot the startup process. |
+| `-encoding` | `<encodingName>` | Sets the encoding to use for script files and then continues processing arguments. |
+| `-evaluate` | `[string ...]` | Evaluates the specified string(s) and then exits. |
+| `-evaluateEncoded` | `[string ...]` | Evaluates the specified base64-encoded string(s) and then exits. Useful for strings containing complex quoting constructs that would otherwise conflict with OS command line quoting. |
+| `-file` | `<fileName> [argument ...]` | Evaluates the specified file and then exits. Any additional arguments after the file name are passed to the script via `$argv`. |
+| `-forceInitialize` | | Enables forced initialization of the script library and then continues processing arguments. |
+| `-help` | | Displays version and syntax information and then exits. |
+| `-initialize` | | Immediately attempts to initialize the script library for the interpreter and then continues processing arguments. |
+| `-interactive` | | Enables interactive mode for the interpreter and then continues processing arguments. |
+| `-isolated` | `<enable>` | Enables or disables plugin isolation for the interpreter and then continues processing arguments. |
+| `-kiosk` | | Arranges for the interactive loop to be reentered instead of exiting the process and then continues processing arguments. |
+| `-lockHostArguments` | | Processed prior to standard argument processing. Causes all existing arguments to be replaced by those returned from the interpreter host; also causes arguments from the `EagleShell.exe.argv` file to be ignored. If the host returns no arguments, this option has no effect. |
+| `-namespaces` | `<enable>` | Enables or disables Tcl 8.6 compliant namespace support for the interpreter and then continues processing arguments. |
+| `-noAppSettings` | | Processed prior to standard argument processing. Skips processing of arguments from application settings and then continues processing arguments. |
+| `-noArgumentsFileNames` | | Processed prior to standard argument processing. Skips processing of arguments from various files including `EagleShell.exe.argv` (if it exists in the executable directory) and then continues processing arguments. |
+| `-noExit` | | Arranges for the interactive loop to be entered instead of exiting the process and then continues processing arguments. |
+| `-noTrim` | | Disables automatic trimming of surrounding whitespace for all subsequent arguments and then continues processing arguments. |
+| `-parent` | | Changes the interpreter to its parent interpreter, if available, and then continues processing arguments. |
+| `-pause` | | Waits for a key to be pressed and then continues processing arguments. Useful for attaching a managed debugger before any scripts (with the possible exception of the script library) have been evaluated. |
+| `-pluginArguments` | `<pluginName> <arguments>` | Stores the specified arguments and arranges for them to be passed into the specified plugin if/when it is subsequently loaded into the interpreter. If the plugin is never loaded, the arguments are never used. |
+| `-pluginTest` | `[pattern] [all] [argument ...]` | Runs the specified plugin test(s) or the full plugin test suite(s) if no pattern is supplied and then exits. |
+| `-postFile` | `<fileName>` | Evaluates the specified file (after the script library has been initialized) and then continues processing arguments. If the script library has not been initialized, an error is generated. |
+| `-postInitialize` | `<script>` | Evaluates the specified script (after the script library has been initialized) and then continues processing arguments. If the script library has not been initialized, an error is generated. |
+| `-preFile` | `<fileName>` | Evaluates the specified file (before the script library has been initialized) and then continues processing arguments. If the script library has already been initialized, an error is generated. |
+| `-preInitialize` | `<script>` | Evaluates the specified script (before the script library has been initialized) and then continues processing arguments. If the script library has already been initialized, an error is generated. |
+| `-profile` | `<profile>` | Loads the specified interpreter host profile and then continues processing arguments. |
+| `-quiet` | `<enable>` | Enables or disables quiet mode for the shell itself and then continues processing arguments. |
+| `-reconfigure` | `<settings>` | Loads the specified interpreter settings, recreates the interpreter based on the new settings, and then continues processing arguments. |
+| `-recreate` | | Copies the interpreter settings from the interpreter, recreates the interpreter based (mostly) on the old settings, and then continues processing arguments. |
+| `-runtimeOption` | `<optionName>` | Adds, removes, or resets the specified runtime option(s) and then continues processing arguments. If the script library has not been initialized, an error is generated. |
+| `-safe` | | Enables "safe" mode for the interpreter and then continues processing arguments (all "unsafe" commands will be hidden). |
+| `-scriptTrace` | `<value>` | Uses the specified value to create and add a trace listener and then continues processing arguments. |
+| `-security` | `<enable>` | Enables or disables script signing policies and core script certificates for the interpreter, using plugins that belong to the security package (e.g. Harpy and Badge), and then continues processing arguments. If any of the necessary plugins are unavailable, an error is generated. |
+| `-setCreate` | `<enable>` | Arranges for the interpreter to be recreated the next time its available commands would have been modified and then continues processing arguments. |
+| `-setInitialize` | `<enable>` | Enables or disables initialization of the script library and then continues processing arguments. |
+| `-setLoop` | `<enable>` | Enables or disables entering the interactive loop and then continues processing arguments. |
+| `-setupTrace` | | Sets up trace listeners appropriate to the current debug mode and then continues processing arguments. |
+| `-standard` | | Enables "standard" mode for the interpreter and then continues processing arguments (all "non-standard" commands will be hidden). |
+| `-startupLibrary` | `<directory>` | Processed prior to interpreter creation. Sets the script library location to the specified directory and then continues processing arguments. |
+| `-startupLogFile` | `<fileName>` | Processed prior to interpreter creation. Sets up tracing to the specified file and then continues processing arguments. |
+| `-startupPreInitialize` | `<script>` | Processed prior to interpreter creation. Evaluates the specified script (before the script library has been initialized) and then continues processing arguments. |
+| `-step` | | Enables single-step mode for the script debugger and then continues processing arguments. |
+| `-stopOnUnknown` | `<enable>` | Enables or disables relaxed unknown argument handling for the interactive loop and then continues processing arguments. |
+| `-test` | `[pattern] [all] [argument ...]` | Runs the specified test(s) or the full test suite(s) if no pattern is supplied and then exits. |
+| `-testDirectory` | `<directory>` | Sets the base directory for the test suite. This directory is used when searching for test files matching a specific pattern. |
+| `-traceToHost` | | Enables trace listener output to potentially be written to the interpreter host and then continues processing arguments. Intended for use with custom shells. |
+| `-vendorPath` | `<path>` | Sets the vendor path (i.e. the name of an additional sub-directory within each directory searched when attempting to locate files specific to the user and/or application) and then continues processing arguments. |
+| `-version` | | Displays detailed version information and then exits. |
+
+### Special Short-Form Help Arguments
+
+In addition to the named options above, the shell recognizes these special argument forms:
+
+| Argument | Equivalent |
+|----------|------------|
+| `-?` | Show about/version |
+| `-??` | Show command line help |
+| `-???` | Show environment variable help |
+| `-????` | Show full help (all sections) |
+
+---
+
+## Interactive Commands
+
+> **Important**: The interactive commands documented in this section are only available within the **standard interactive loop** provided by the `Interpreter` class (i.e., when using the Eagle shell interactively or when the interactive debugger is active). They are not regular Eagle scripting commands and are not available in scripts.
+
+Interactive commands are prefixed with `#` (the number sign character). When typing at the interactive prompt, lines that begin with `#` are interpreted as interactive commands rather than Eagle scripts. Use `##` for interactive system commands, `###` for interactive verbatim commands, and `####` for interactive verbatim system commands.
+
+### Interactive Commands Reference
+
+#### Session and Display
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `#about` | `?what?` | Displays the version summary and licensing information. |
+| `#ainfo` | | Displays the argument information for this interactive debugging session. |
+| `#args` | | Displays the command line arguments as they were passed to this interactive debugging session. |
+| `#cinfo` | | Displays the control information for the interactive interpreter, such as whether the script in progress is being canceled. |
+| `#complaint` | | Displays the previously stored complaint for the interactive interpreter. |
+| `#cuinfo` | | Displays the custom information for the interpreter host, if any. |
+| `#einfo` | | Displays the engine status information for the interactive interpreter. |
+| `#eninfo` | | Displays the entity summary information for the interactive interpreter. |
+| `#finfo` | | Displays the flags for the interactive interpreter and the flags that were passed to this interactive debugging session. |
+| `#hinfo` | `?flags?` | Displays detailed information about the interpreter host for the interactive interpreter. |
+| `#iinfo` | | Displays information about the interactive interpreter. |
+| `#lfinfo` | | Displays the local flags and the flags for the interactive interpreter. |
+| `#oinfo` | `name` | Displays detailed information about the specified object. |
+| `#rinfo` | | Displays the global and local results, leaving them untouched. |
+| `#sinfo` | `?refresh?` | Displays the native stack information for the interactive interpreter. |
+| `#show` | `?local? ?empty?` | Displays the information that corresponds to the local header display flags. |
+| `#stack` | `?limit? ?flags? ?info?` | Displays the call stack for the interactive interpreter. |
+| `#testinfo` | | Displays the test suite information for the interactive interpreter. |
+| `#tinfo` | `?flags?` | Displays the variable trace information for this interactive debugging session or from the per-thread cache. |
+| `#toinfo` | | Displays the token information for this interactive debugging session. |
+| `#vinfo` | `name ?flags?` | Displays detailed information about the specified variable. |
+| `#version` | `?banner? ?legalese? ?source? ?update? ?context? ?plugins? ?certificate? ?options? ?compactMode?` | Displays detailed version information. |
+| `#website` | | Opens the official web site for the library in the configured web browser. |
+
+#### Evaluation and Execution
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `#eval` | `arg ?arg ...?` | Evaluates the specified arguments using the interactive interpreter. |
+| `#deval` | `arg ?arg ...?` | Evaluates the specified arguments using the isolated debugger interpreter. |
+| `#dsubst` | `?-nobackslashes? ?-nocommands? ?-novariables? string` | Substitutes the specified arguments using the isolated debugger interpreter. |
+| `#cmd` | `?arg ...?` | Executes the "Command Processor" (i.e. shell) configured for the operating system with the specified arguments. |
+| `#queue` | | Enters queued input mode. The next command or script entered will be queued for asynchronous evaluation. |
+| `#init` | `?shell? ?force?` | Initializes the core or shell script library, optionally forcing it to reinitialize. |
+
+#### Debugger Control
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `#again` | | Processes the previous interactive input again. |
+| `#break` | | Enters a new interactive debugging session. |
+| `#go` | | When actively debugging, continues execution of the script in progress. |
+| `#halt` | | When actively debugging, halts execution of the script in progress and breaks out of all nested interactive debugging sessions immediately. |
+| `#run` | | When actively debugging, disables single-stepping and continues execution of the script in progress. |
+| `#step` | | Toggles whether single-stepping through scripts is enabled. |
+| `#suspend` | | When actively debugging, saves the debugger state and then temporarily suspends debugging. |
+| `#resume` | | When actively debugging, restores the debugger to its previous state. |
+| `#reset` | | Resets the state of the debugger to its initial default, enabled and inactive. |
+| `#dinfo` | | Displays the debugger information for this interactive debugging session. |
+| `#done` | `?code? ?result?` | Unconditionally exits this interactive debugging session. |
+| `#exit` | | Exits the interactive debugging session immediately. |
+| `#pause` | `?threadId? ?appDomainId? ?microseconds?` | Pauses the specified interactive debugging session. |
+| `#unpause` | `?threadId? ?appDomainId?` | Unpauses the specified interactive debugging session. |
+| `#paused` | | Returns the list of paused interactive debugging sessions. |
+
+#### Flags and Configuration
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `#ceflags` | `?flags?` | Displays or sets the context engine flags for the interactive interpreter. |
+| `#cflags` | `?flags?` | Displays or sets the creation flags for the interactive interpreter. |
+| `#dcflags` | `?flags?` | Displays or sets the default creation flags for the interactive interpreter. |
+| `#dflags` | `?flags?` | Displays or sets the detail display flags for the interactive interpreter. |
+| `#diflags` | `?flags?` | Displays or sets the default instance flags for the interactive interpreter. |
+| `#dizflags` | `?flags?` | Displays or sets the default initialization flags for the interactive interpreter. |
+| `#dscflags` | `?flags?` | Displays or sets the default script flags for the interactive interpreter. |
+| `#dtflags` | `?flags?` | Displays or sets the default test flags for the interactive interpreter. |
+| `#evflags` | `?flags?` | Displays or sets the event flags for the interactive interpreter. |
+| `#exflags` | `?flags?` | Displays or sets the expression flags for the interactive interpreter. |
+| `#hflags` | `?flags?` | Displays or sets the header display flags for the interactive interpreter. |
+| `#ieflags` | `?flags?` | Displays or sets the interactive command engine flags for the interactive interpreter. |
+| `#ievflags` | `?flags?` | Displays or sets the interactive command event flags for the interactive interpreter. |
+| `#iexflags` | `?flags?` | Displays or sets the interactive command expression flags for the interactive interpreter. |
+| `#iflags` | `?flags?` | Displays or sets the instance flags for the interactive interpreter. |
+| `#isflags` | `?flags?` | Displays or sets the interactive command substitution flags for the interactive interpreter. |
+| `#itflags` | `?flags?` | Displays or sets the test flags for the interactive interpreter. |
+| `#izflags` | `?flags?` | Displays or sets the initialization flags for the interactive interpreter. |
+| `#ldflags` | `?flags?` | Displays or sets the local detail display flags for the interactive interpreter. |
+| `#leflags` | `?flags?` | Displays or sets the local engine flags for the interactive interpreter. |
+| `#levflags` | `?flags?` | Displays or sets the local event flags for the interactive interpreter. |
+| `#lexflags` | `?flags?` | Displays or sets the local expression flags for the interactive interpreter. |
+| `#lhflags` | `?flags?` | Displays or sets the local header display flags for the interactive interpreter. |
+| `#lsflags` | `?flags?` | Displays or sets the local substitution flags for the interactive interpreter. |
+| `#nflags` | `?flags?` | Displays or sets the plugin notification flags for the interactive interpreter. |
+| `#ntypes` | `?flags?` | Displays or sets the plugin notification types for the interactive interpreter. |
+| `#pflags` | `?flags?` | Displays or sets the plugin loader flags for the interactive interpreter. |
+| `#scflags` | `?flags?` | Displays or sets the script flags for the interactive interpreter. |
+| `#seflags` | `?flags?` | Displays or sets the shared engine flags for the interactive interpreter. |
+| `#sflags` | `?flags?` | Displays or sets the substitution flags for the interactive interpreter. |
+| `#spaflags` | `?flags?` | Displays or sets the shared package creation flags for the interactive interpreter. |
+| `#sprflags` | `?flags?` | Displays or sets the shared procedure creation flags for the interactive interpreter. |
+
+#### Results and State Management
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `#clearq` | | Clears the callback queue for the interactive interpreter. |
+| `#clearr` | | Clears the local result. The global result is untouched. |
+| `#copyr` | | Copies the global result into the local result. The global result is untouched. |
+| `#fresr` | | Resets the global and local results in-place. |
+| `#grinfo` | `?previous?` | Displays detailed information about the global result, leaving it untouched. The local result is untouched. |
+| `#lrinfo` | | Displays detailed information about the local result, leaving it untouched. The global result is untouched. |
+| `#mover` | | Moves the local result into the global result. The local result is reset. |
+| `#nextr` | | Sets the previous result for the interactive interpreter to the local result. The global result is untouched. |
+| `#nullr` | | Sets the local result to null. The global result is untouched. |
+| `#overr` | `?options?` | Sets the local result to the specified value. The global result is untouched. |
+| `#prevr` | | Sets the local result to the previous result for the interactive interpreter. The global result is untouched. |
+| `#resr` | | Resets the global and local results. |
+| `#setr` | | Copies the local result into the global result. The local result is untouched. |
+| `#sresult` | `?varName? ?global?` | Stores the local or global result into the specified variable. The local and global results are untouched. |
+
+#### Call Frame and Variables
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `#frinfo` | `level ?flags?` | Displays detailed information about the specified call frame. |
+| `#purge` | | Purges undefined variables in the current call frame for the interactive interpreter. |
+| `#restv` | | Restores the core variables for the interactive interpreter. |
+| `#dpath` | `?flags?` | Displays the path information for the interactive interpreter. |
+
+#### Interpreter Management
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `#cancel` | | Initiates script cancellation for all registered interpreters. |
+| `#canexit` | | Toggles whether the interpreter host should allow scripts to exit. |
+| `#chans` | `?replace?` | Adds or replaces the standard channels (stdin, stdout, and stderr) for the interactive interpreter. |
+| `#color` | | Toggles whether color is used by the interpreter host. |
+| `#exact` | | Toggles exact name matching for interactive extension commands. |
+| `#exceptions` | | Toggles how exceptional return codes are formatted by the interpreter host. |
+| `#fresc` | | Toggles whether script cancellation flags are forcibly reset before interactive input. |
+| `#fresh` | | Toggles whether the halt flag is forcibly reset before interactive input. |
+| `#hcancel` | | Queues an asynchronous event that causes the interpreter host to cancel pending evaluations in all interpreters. |
+| `#hexit` | | Queues an asynchronous event that causes the interpreter host to exit. |
+| `#nop` | | Does nothing. The local and global results are untouched. |
+| `#rehash` | `?profile? ?encoding?` | Reloads the user-specific interpreter host profile. |
+| `#relimit` | `?limit?` | Displays or sets the readiness limit for the interactive interpreter. |
+| `#resc` | `?global?` | Resets the cancel and unwind flag(s) for the interactive interpreter. |
+| `#resh` | `?global?` | Resets the halt flag(s) for the interactive interpreter. |
+| `#restc` | `?strict? ?verbose?` | Restores the core plugin for the interactive interpreter. |
+| `#restm` | `?strict? ?verbose?` | Restores the monitor plugin for the interactive interpreter. |
+| `#rlimit` | `?limit?` | Displays or sets the recursion limit for the interactive interpreter. |
+| `#style` | `?style?` | Displays or sets the interpreter host output style for the debugger. |
+| `#useattach` | | Toggles whether an attempt will be made by the interpreter host to use an existing interface, if any. |
+| `#useforce` | | Toggles whether the status of the existing interface will be ignored. |
+| `#vout` | `?channel? ?enabled?` | Enables, disables, or displays queued virtual output for a channel. |
+
+#### Testing and Updates
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `#check` | `?wantScripts? ?quiet? ?prompt? ?automatic? ?actionType? ?releaseType? ?updateType?` | Checks the official updates site to see if this is the latest available build. Optionally fetches the latest release package or launches an external updater. |
+| `#ptest` | `?pattern? ?all? ?extraPath?` | Runs one or more plugin tests for the interactive interpreter. |
+| `#stable` | `?stable?` | Displays or sets the "stability" level used when checking for the latest build. |
+| `#test` | `?pattern? ?all? ?extraPath?` | Runs one or more tests using the interactive interpreter. |
+| `#testdir` | `directory` | Displays or sets the directory used when searching for test files matching a specific pattern. |
+| `#testgc` | `start` | Starts or stops a thread that collects garbage periodically. |
+
+#### Security and Trust
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `#fmkeys` | `?force?` | Fetches an official key ring from the configured remote URI and merges it into the local script key ring. |
+| `#intsec` | `?enabled? ?force?` | Enables or disables script signing policies and core script certificates for the interactive interpreter. |
+| `#trustclr` | | Clears the list of trusted directories for the interactive interpreter. |
+| `#trustdir` | `directory` | Displays or adds to the list of trusted directories for the interactive interpreter. |
+
+#### Tcl Integration
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `#tclinterp` | `?interp?` | Displays or sets the selected native Tcl interpreter for this interactive debugging session, if available. |
+| `#tclsh` | | Toggles whether all scripts entered interactively are evaluated using the selected native Tcl interpreter, if available. |
+| `#tclshrc` | `?arg ...?` | Executes the configured text editor to edit the `.tclshrc` script file with the specified arguments. |
+| `#npinfo` | | Displays detailed information about the native package. |
+
+#### Variable Trace Manipulation
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `#tcancel` | `?cancel?` | Displays or sets the cancel flag within the variable trace information for this interactive debugging session. |
+| `#tcode` | `?code?` | Displays or sets the return code within the variable trace information for this interactive debugging session. |
+| `#toldvalue` | `?value?` | Displays or sets the old value within the variable trace information for this interactive debugging session. |
+| `#tnewvalue` | `?value?` | Displays or sets the new value within the variable trace information for this interactive debugging session. |
+
+#### Help and Usage
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `#help` | `?topic? ?showGroups? ?showTopics? ?useInterpreter? ?useSyntax? ?showHeader? ?matchingOnly? ?matchMode? ?textFlags?` | Displays information on the specified command, sub-command, help topic, or a list of available help topics. |
+| `#ihelp` | `?topic?` | Displays information on the specified command, sub-command, procedure, et al. |
+| `#usage` | `?banner? ?legalese? ?options? ?environment? ?compactMode?` | Displays the complete command line syntax for the default shell and describes all environment variables. |
+
+#### History
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `#histclear` | | Clears the command history for the interactive interpreter. |
+| `#histfile` | `?fileName?` | Displays or sets the default file name to use when loading and saving the command history. |
+| `#histinfo` | | Displays the command history for the interactive interpreter. |
+| `#histload` | `fileName` | Loads the command history for the interactive interpreter. |
+| `#histsave` | `fileName` | Saves the command history for the interactive interpreter. |
+
+---
+
+## Environment Variables
+
+> **Note**: Environment variable names may be case-sensitive depending on the underlying operating system (e.g., case-sensitive on Linux, case-insensitive on Windows). Some of these environment variables are specific to the Eagle shell; however, many are processed by the core library itself and are therefore applicable when Eagle is embedded in any host application. Determining exactly which variables are universally applicable versus shell-specific can be context-dependent, so all are listed here for completeness.
+
+### Script Library and Path Configuration
+
+| Variable | Description |
+|----------|-------------|
+| `EAGLE` | If set, its value is used as the anchor point base directory when automatically detecting the script library location. |
+| `EAGLE_BASE` | If set, its value is used as the base directory for locating the script library, packages, and tests. |
+| `EAGLELIBPATH` / `TCLLIBPATH` | If set, interpreted as lists of directory names where the script library and/or additional package indexes may be located. |
+| `EAGLE_LIBRARY` / `TCL_LIBRARY` | If set, interpreted as directory names where the script library and/or additional package indexes may be located. |
+| `AssemblyAnchorPath` | If set, used as the anchor point for assembly paths instead of the application domain base directory and/or the process binary directory. |
+| `StubPath` | If set, interpreted as the name of the directory containing the stub assembly. |
+| `VendorPath` | If set, interpreted as the name of an additional sub-directory within each directory searched when attempting to locate files specific to the user and/or application. |
+| `StrictBasePath` | If set, assumptions about the directory layout of the application domain will be minimized. |
+
+### Interpreter Creation and Initialization
+
+| Variable | Description |
+|----------|-------------|
+| `CreateFlags` | If set, its value alters or sets the creation flags for the interpreter. Ignored if the value cannot be converted. |
+| `CreateFailSafe` | If set, interpreter creation is allowed if a token has been specified and it has not been persistently disabled via the stub assembly. |
+| `InitializeFlags` | If set, its value alters or sets the initialize flags for the interpreter. Ignored if the value cannot be converted. |
+| `InterpreterFlags` | If set, its value alters or sets the instance flags for the interpreter. Ignored if the value cannot be converted. |
+| `ScriptFlags` | If set, its value alters or sets the script flags for the interpreter. Ignored if the value cannot be converted. |
+| `DataFlags` | If set, its value alters or sets the script data flags for the interpreter. Ignored if the value cannot be converted. |
+| `HostCreateFlags` | If set, its value alters or sets the creation flags for the interpreter host. Ignored if the value cannot be converted. |
+| `NoInitialize` | If set, script library initialization is skipped after creating the interpreter. |
+| `NoInitializeShell` | If set, shell script library initialization is skipped when entering the interactive loop. |
+| `NoStartups` | If set, startup scripts are disabled while creating and initializing the interpreter. |
+| `NoAppSettings` | If set, processing of arguments from application settings is skipped. |
+| `NativePackagePreInitialize` | If set, its value is used as the script to evaluate just prior to initializing an interpreter created by the native package. |
+| `ShellPreInitialize` | If set, the default shell will pre-scan for a `-preInitialize` option, causing the interpreter to evaluate the specified script very early during its creation process. |
+
+### Mode and Behavior
+
+| Variable | Description |
+|----------|-------------|
+| `Debug` | If set, debug mode is enabled immediately after creating the interpreter. |
+| `Interactive` | If set, interactive mode is enabled immediately after creating the interpreter. |
+| `Safe` | If set, enables "safe" mode for the interpreter (all "unsafe" commands will be hidden). |
+| `Standard` | If set, enables "standard" mode for the interpreter (all "non-standard" commands will be hidden). |
+| `Step` | If set, single-step mode for the script debugger is enabled immediately after creating the interpreter. |
+| `DefaultQuiet` | If set, quiet mode is enabled immediately after creating the interpreter. |
+| `Quiet` | If set, potentially important diagnostic messages about non-fatal errors will not cause a modal message box to be displayed when the originating interpreter host is unknown or unavailable. |
+| `Verbose` | If set, selected diagnostic messages will be enabled during the interpreter creation process. |
+| `NoVerbose` | If set, selected diagnostic messages will be disabled during the interpreter creation process. |
+| `NoLoop` | If set, the interactive loop will not be entered. |
+| `NoExit` | If set, the core interpreter host will deny exit requests. |
+| `NoColor` | If set, the console output will not be in color. |
+| `UserInteractive` | If set, its value overrides user interactivity detection. |
+
+### Console and Host
+
+| Variable | Description |
+|----------|-------------|
+| `Console` | If set, the console window will be enabled. Intended for custom shells. |
+| `NoConsole` | If set, the console window will be disabled. Intended for custom shells. |
+| `NoConsoleSetup` | If set, the console interpreter host will not setup the console window (title, icon, mode, and cancel key press handler will not be modified). |
+| `NoCancel` | If set, the interpreter host script cancellation interface will not be enabled (e.g., Control-C will not trigger script cancellation). |
+| `NoClose` | If set, the console window cannot be closed. |
+| `NoIcon` | If set, the console icon will not be changed. |
+| `NoTitle` | If set, the console title will not be changed. |
+| `NoNativeConsole` | If set (Windows only), any features that require native console integration will be disabled. |
+| `Profile` | If set, the interpreter host will attempt to load the specified profile. |
+| `NoProfile` | If set, the interpreter host profile will not be loaded. |
+| `UseAttach` | If set, the existing console will be used, if available (by attaching to it). |
+| `UseForce` | If set, the existing console status will be ignored. |
+| `NoWritePrompt` | If set, no prompts for important configuration settings will be written to the console. |
+
+### Debugging and Tracing
+
+| Variable | Description |
+|----------|-------------|
+| `Break` | If set, waits until a key is pressed and then triggers a managed debugger break. Useful for attaching a managed debugger before any significant initialization. |
+| `NoBreak` | If set, attempts to trigger a managed debugger break will be logged and then ignored. |
+| `DefaultTraceStack` | If set, tracing of managed call stack information is enabled immediately after creating the interpreter. |
+| `Trace` | If set, all tracing within the core library will be enabled. Has no effect if `NoTrace` is also set. |
+| `NoTrace` | If set, all tracing within the core library will be disabled. Overrides `Trace`. |
+| `TraceCategories` | If set, its value sets the list of enabled trace categories. |
+| `NoTraceCategories` | If set, its value sets the list of disabled trace categories. |
+| `BonusTraceCategories` | If set, its value sets the list of "bonus" trace categories. |
+| `PenaltyTraceCategories` | If set, its value sets the list of "penalty" trace categories. |
+| `NoTraceLimits` | If set, all frequency limits on tracing within the core library will be disabled. |
+| `TraceFormat` | If set, its value is used as the format for trace messages (format string, index, or a `TraceFormatType` enumeration value). |
+| `TracePriorities` | If set, its value alters or sets the default trace priority mask. |
+| `TracePriority` | If set, its value alters or sets the default trace priority. |
+| `TracePriorityLimits` | If set, its value alters or sets the trace priority mask for message frequency limits. |
+| `GlobalPriorities` | If set, its value alters or sets the default trace priority flags. |
+| `TraceStack` | If set, trace listener output may include managed call stack information. |
+| `TraceToHost` | If set, trace listener output may be sent to the interpreter host. Intended for use with custom shells. |
+| `TraceToListeners` | If set, trace listener output will always be sent to active trace listeners, even if a stream is active. |
+| `ClearTrace` | If set, all trace listeners will be cleared before any are added. |
+| `SetupTrace` | If set, trace listeners appropriate to the current debug mode will be set up. |
+| `ScriptTrace` | If set, its value is used to create and add a trace listener. |
+| `ComplainViaTrace` | If set, complaint output may be sent to `System.Diagnostics.Debug` and/or `System.Diagnostics.Trace`. |
+| `ComplainViaTest` | If set, complaint output may be sent to the `tputs` or `puts` commands within the interpreter. |
+| `IncludeResultStack` | If set, created result objects will include managed call stack information in their string representations. |
+| `PopulateResultStack` | If set, created result objects will capture managed call stack information. |
+
+### Garbage Collection
+
+| Variable | Description |
+|----------|-------------|
+| `NeverGC` | If set, internal calls into the garbage collector will be disabled. |
+| `AlwaysWaitForGC` | If set, internal GC calls will always wait for all pending finalizers to complete, even in non-default application domains. |
+| `NeverWaitForGC` | If set, internal GC calls will never wait for all pending finalizers to complete. |
+| `NeverCompactForGC` | If set, internal GC calls will never compact the large object heap. |
+
+### Security and Trust
+
+| Variable | Description |
+|----------|-------------|
+| `Security` | If set, script signing policies and core script certificates will be enabled using the security package plugins (e.g., Harpy and Badge). |
+| `ForceSecurity` | If set, bypasses detection of potential error conditions that may prevent security package plugins from being loaded. |
+| `ForceModernAlgorithms` | If set, the most modern cryptographic algorithms will be used wherever applicable. |
+| `ForceTrustedHashes` | If set, the lists of trusted hashes will be used when making trust decisions on platforms where they would normally be ignored. |
+| `ForceTrustedRemote` | If set, trusted script library initialization via the configured remote URI will be forcibly enabled. |
+| `NoTrusted` | If set, assembly files will not be checked for trust during the interpreter creation process. |
+| `NoTrustedHashes` | If set, the lists of trusted hashes will not be used when making trust decisions. |
+| `NoTrustedRemote` | If set, trusted script library initialization via the configured remote URI will be skipped. |
+| `TrustFlags` | If set (Windows only), interpreted as a list of flags to use when determining if assembly files should be trusted. |
+| `TrustedBundlePassword` | If set, its value will be used to decrypt trusted remote script bundles. |
+| `NoSecurityUpdate` | If set, plugin update checks will be skipped for the security package. |
+| `NoVerified` | If set, assembly strong name signatures will not be verified during interpreter creation. |
+
+### Native Tcl Integration
+
+| Variable | Description |
+|----------|-------------|
+| `Eagle_Tcl_Dir` / `Tcl_Dir` | If set, used as directory locations to check for native Tcl libraries. |
+| `Eagle_Tcl_Dll` / `Tcl_Dll` | If set, used as file locations to check for native Tcl libraries. |
+| `Eagle_Tk_Dll` / `Tk_Dll` | If set, used as file locations to check for native Tk libraries. |
+| `Eagle_Tcl_Shell` / `Tcl_Shell` | If set, used as file locations to check for native Tcl shells. |
+| `Eagle_Tk_Shell` / `Tk_Shell` | If set, used as file locations to check for native Tk shells. |
+
+### Temporary Files and Testing
+
+| Variable | Description |
+|----------|-------------|
+| `EAGLE_TEST_TEMP` / `EAGLE_TEMP` / `XDG_RUNTIME_DIR` | If set, their values are used by the test suite as the directory for temporary files. |
+| `TestCommands` | If set, extra commands, functions, etc., may be added by the test plugin to all created interpreters. |
+
+### Threading and Performance
+
+| Variable | Description |
+|----------|-------------|
+| `AllowAnyThread` | If set, plugins may be loaded on any thread; otherwise, they may be loaded only on the primary thread for the associated interpreter. |
+| `NoWorkers` | If set, worker threads (e.g., via the thread pool) are disabled while creating and initializing the interpreter. |
+| `MeasureTime` | If set, various time measurements will be made to help troubleshoot performance issues. |
+| `UseNamedEvents` | If set, the internal wrapper class will be used for named events. |
+
+### Caching
+
+| Variable | Description |
+|----------|-------------|
+| `BumpCacheLevel` | If set, its value alters or sets the default cache level. Ignored if the value cannot be converted to an integer. |
+| `CacheFlags` | If set, its value alters or sets the cache flags for the interpreter. Ignored if the value cannot be converted. |
+
+### Network
+
+| Variable | Description |
+|----------|-------------|
+| `NetworkTimeout` | If set, interpreted as an integer number of milliseconds to use as the default network timeout. |
+| `NoUpdates` | If set, checking for updates will be disabled. Only applies to automatic checks within the core library. |
+| `WebClientTag*` | If set, the value will be included within library-created HTTP/1.0 "User-Agent" header values. |
+
+### Application Settings
+
+| Variable | Description |
+|----------|-------------|
+| `MergeAllAppSettings` | If set, application settings from applicable sources will be merged. |
+| `MergeXmlAppSettings` | If set, application settings from applicable XML files will be merged. |
+| `RefreshAppSettings` | If set, application settings will be refreshed before the next time they are used. |
+| `UseXmlFiles` | If set, application settings from applicable XML files will be favored over those provided by the runtime. |
+
+### Miscellaneous
+
+| Variable | Description |
+|----------|-------------|
+| `EllipsisLimit` | If set, its value overrides the length limit for elided text. Ignored if the value cannot be converted to an integer. |
+| `Isolated` | If set, enables plugin isolation for the interpreter. |
+| `NoNativeStack` | If set, the native stack checking subsystem will be disabled. |
+| `NoNativeUtility` | If set, the native utility library will not be loaded. |
+| `NoMutexes` | If set (Windows only), the mutexes normally checked by external updaters and setup packages will not be created or opened. |
+| `NoPopulateOsExtra` | If set, asynchronous population of the `tcl_platform(osExtra)` array element will be skipped. |
+| `NoThrowOnDisposed` | If set, exceptions will not be thrown when a disposed object is accessed. |
+| `PluginPatterns` | If set, interpreted as a list of patterns to match against candidate plugin file names. |
+| `SpecialFolder_<name>` | If set, its value is used in lieu of `GetFolderPath(<name>)` for the folder identified by `<name>`. |
+| `Throw` | If set, unhandled exceptions are rethrown after being reported. |
+| `TreatAsDotNetCore` | If set, attempt to treat the current runtime as .NET Core. May cause functionality to be disabled and/or malfunction. |
+| `TreatAsFramework20` | If set, attempt to treat the current runtime as .NET Framework 2.0. May cause functionality to be disabled and/or malfunction. |
+| `TreatAsFramework40` | If set, attempt to treat the current runtime as .NET Framework 4.0. May cause functionality to be disabled and/or malfunction. |
+| `TreatAsMono` | If set, attempt to treat the current runtime as Mono. May cause functionality to be disabled and/or malfunction. |
+| `UtilityPath` | If set, interpreted as the name of the file or directory where the optional native utility library is located. |

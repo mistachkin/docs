@@ -1,5 +1,7 @@
 # Eagle Script Library
 
+> **For AI agents**: This document covers 350+ script library procedures. Use the [Alphabetical Procedure Index](#alphabetical-procedure-index) for quick lookup by name. Each procedure has an anchor `####-procedureName` under its source file section. Eagle-only procedures are marked "(Eagle only)". The [Advanced Usage Patterns](#advanced-usage-patterns-and-examples) section provides common idioms.
+
 This document provides comprehensive documentation for all script procedures in the Eagle scripting language libraries, organized by package and functional category.
 
 ## Table of Contents
@@ -34,6 +36,150 @@ This document provides comprehensive documentation for all script procedures in 
 - [Test1.0 Library](#test10-library)
   - [Test Constraints (constraints.eagle)](#test-constraints-constraintseagle)
 - [System Aliases](#system-aliases)
+- [Alphabetical Procedure Index](#alphabetical-procedure-index)
+
+---
+
+## Alphabetical Procedure Index
+
+Quick reference to all documented Eagle script library procedures.
+
+| Procedure | Source File | Brief Description |
+|-----------|-----------|-------------------|
+| `addToPath` | platform.eagle | Add directory to search path |
+| `appendArgs` | auxiliary.eagle | Concatenate arguments as strings |
+| `appendFile` | file1.eagle | Append data to a binary file |
+| `appendLogFile` | file2.eagle | Append data to a log file |
+| `appendSharedFile` | file2.eagle | Append to a shared file with locking |
+| `appendSharedLogFile` | file2.eagle | Append to a shared log file |
+| `canGetManagedType` | object.eagle | Check if a managed type can be resolved |
+| `canUseComSpecDir` | file3.eagle | Check if ComSpec directory can be used |
+| `checkForUpdate` | update.eagle | Check for software updates |
+| `checkForEngine` | update.eagle | Check for engine updates |
+| `combineFlags` | object.eagle | Combine .NET enum flag strings |
+| `compileViaCSharpCodeProvider` | csharp.eagle | Compile C# via CodeDom provider |
+| `compileViaDotNetCoreCSharp` | csharp.eagle | Compile C# via .NET Core SDK |
+| `copyFilesRecursive` | file3.eagle | Recursively copy files |
+| `csharpLog` | csharp.eagle | Log C# compilation messages |
+| `doesCompileCSharpWork` | csharp.eagle | Test if C# compilation works |
+| `downloadAndExtractNativeTclKitDll` | pkgt.eagle | Download native TclKit DLL |
+| `downloadAndExtractNativeTclTkDlls` | pkgt.eagle | Download native Tcl/Tk DLLs |
+| `downloadAndExtractPackageClientToolset` | pkgt.eagle | Download package client toolset |
+| `downloadAndExtractSecurityToolset` | pkgt.eagle | Download security toolset |
+| `downloadExampleScript` | shell.eagle | Download an example script |
+| `evalAsync` | object.eagle | Evaluate script asynchronously (Eagle only) |
+| `evaluateInRemoteSandbox` | shell.eagle | Evaluate in remote sandbox |
+| `execShell` | exec.eagle | Execute command via system shell |
+| `exportAndImportPackageCommands` | auxiliary.eagle | Export/import package commands |
+| `filter` | list.eagle | Filter list elements by predicate |
+| `filterForGlob` | file3.eagle | Filter for glob-compatible patterns |
+| `findDirectories` | file3.eagle | Find directories matching pattern |
+| `findDirectoriesRecursive` | file3.eagle | Find directories recursively |
+| `findFiles` | file3.eagle | Find files matching pattern |
+| `findFilesRecursive` | file3.eagle | Find files recursively |
+| `forceScanOfPackages` | pkgt.eagle | Force rescan of package indexes |
+| `foundInPath` | platform.eagle | Check if directory is in path |
+| `getBasePath` | info.eagle | Get Eagle base path (Eagle only) |
+| `getBogusPackageName` | pkgt.eagle | Get a non-existent package name |
+| `getColumnValue` | database.eagle | Get column value from row |
+| `getCompileInfo` | info.eagle | Get compilation information |
+| `getCSharpTestProgram` | csharp.eagle | Get C# test program source |
+| `getDefaultValue` | object.eagle | Get CLR type default value |
+| `getDictionaryValue` | auxiliary.eagle | Get value from key-value list |
+| `getDotNetCoreSdkPath` | csharp.eagle | Get .NET Core SDK path |
+| `getDotNetStandardReferencePath` | csharp.eagle | Get .NET Standard reference path |
+| `getEnvironmentVariable` | auxiliary.eagle | Get environment variable value |
+| `getExternalIpAddress` | shell.eagle | Get external IP address |
+| `getHostSize` | compat.eagle | Get console size (columns/rows) |
+| `getOwnerForProcess` | process.eagle | Get process owner |
+| `getPackageInstallPath` | info.eagle | Get package install path |
+| `getPlatformInfo` | info.eagle | Get platform information |
+| `getPluginFlags` | info.eagle | Get plugin flags |
+| `getPluginName` | info.eagle | Get plugin name |
+| `getPluginPath` | info.eagle | Get plugin path |
+| `getProcesses` | process.eagle | Get running processes |
+| `getReturnType` | object.eagle | Get CLR member return type |
+| `getRowColumnValue` | database.eagle | Get column value from row array |
+| `getRuntimeCommandLine` | exec.eagle | Get runtime command line |
+| `getShellExecutableName` | exec.eagle | Get shell executable name |
+| `getStringFromObjectHandle` | object.eagle | Convert object handle to string |
+| `getUpdateFileName` | update.eagle | Get update file name |
+| `haveColumnValue` | database.eagle | Check if column exists in row |
+| `haveGaruda` | info.eagle | Check if Garuda is available |
+| `haveRowColumnValue` | database.eagle | Check if column exists in row array |
+| `hasRuntimeOption` | runopt.eagle | Check if runtime option is set |
+| `help` | safe.eagle | Display help (safe interpreter) |
+| `isAdministrator` | platform.eagle | Check for admin privileges |
+| `isBasicType` | object.eagle | Check if object is basic type |
+| `isDotNetCore` | platform.eagle | Detect .NET Core runtime |
+| `isEagle` | init.eagle | Detect Eagle vs Tcl |
+| `isInteractive` | platform.eagle | Check for interactive session |
+| `isMacOS` | platform.eagle | Detect macOS |
+| `isManagedType` | object.eagle | Check for valid CLR type |
+| `isMono` | platform.eagle | Detect Mono runtime |
+| `isNonNullObjectHandle` | object.eagle | Check for non-null object handle |
+| `isObjectHandle` | object.eagle | Check for object handle |
+| `isSameFileName` | platform.eagle | Compare file names |
+| `isTclThread` | info.eagle | Check if running in Tcl thread |
+| `isUpdateInstalled` | update.eagle | Check if update is installed |
+| `isWindows` | platform.eagle | Detect Windows OS |
+| `lappendArgs` | list.eagle | Append args as list elements |
+| `ldifference` | list.eagle | Compute list difference |
+| `listExampleScripts` | shell.eagle | List available example scripts |
+| `listRuntimeOptions` | runopt.eagle | List runtime options |
+| `loadGarudaForUseByEagle` | init.eagle | Load Garuda native library |
+| `loadPackageClientToolset` | pkgt.eagle | Load package client toolset |
+| `loadScripts` | init.eagle | Source package script files |
+| `lshuffle` | list.eagle | Randomly shuffle list |
+| `makeAsciiChannel` | file2.eagle | Configure channel for ASCII |
+| `makeBinaryChannel` | file1.eagle | Configure channel for binary |
+| `makeLogChannel` | file2.eagle | Configure channel for logging |
+| `makeProcedureFast` | init.eagle | Optimization hint for procedure (Eagle only) |
+| `makeUnicodeBinaryChannel` | file2u.eagle | Configure channel for Unicode binary |
+| `makeUnicodeChannel` | file2u.eagle | Configure channel for Unicode |
+| `makeUpdateId` | update.eagle | Create update identifier |
+| `makeUtf8Channel` | file2u.eagle | Configure channel for UTF-8 |
+| `makeVariableFast` | init.eagle | Optimization hint for variable (Eagle only) |
+| `map` | list.eagle | Transform list elements |
+| `markUpdateInstalled` | update.eagle | Mark update as installed |
+| `maybeGetExitCode` | exec.eagle | Get exit code if available |
+| `maybeLoadScripts` | init.eagle | Conditionally source scripts |
+| `parray` | compat.eagle | Print array contents |
+| `pdict` | compat.eagle | Print dictionary contents |
+| `populateTypesForComSpecDir` | file3.eagle | Populate types for ComSpec |
+| `populateTypesForGlob` | file3.eagle | Populate types for glob |
+| `quit` | safe.eagle | Exit safe interpreter |
+| `readAsciiFile` | file2.eagle | Read ASCII file |
+| `readFile` | file1.eagle | Read binary file |
+| `readSharedFile` | file2.eagle | Read shared file with locking |
+| `readUnicodeBinaryFile` | file2u.eagle | Read Unicode binary file |
+| `readUnicodeFile` | file2u.eagle | Read Unicode file |
+| `readUtf8File` | file2u.eagle | Read UTF-8 file |
+| `reduce` | list.eagle | Reduce list to single value |
+| `removeFromPath` | platform.eagle | Remove directory from path |
+| `removeRuntimeOption` | runopt.eagle | Remove runtime option |
+| `requestLicenseCertificate` | shell.eagle | Request license certificate |
+| `runUpdateAndExit` | update.eagle | Install update and exit |
+| `setupPackageToolsetVars` | pkgt.eagle | Setup package toolset variables |
+| `setupUnzipVars` | unzip.eagle | Setup unzip variables |
+| `sourceWithInfo` | init.eagle | Source with location tracking (Eagle only) |
+| `tclLog` | compat.eagle | Tcl-compatible logging |
+| `tclLogForCommand` | exec.eagle | Log command execution |
+| `tclPkgUnknown` | init.eagle | Package unknown handler |
+| `test` | compat.eagle | Tcl-compatible test command |
+| `toggleRuntimeOption` | runopt.eagle | Toggle runtime option |
+| `tqlog` | testlog.eagle | Log to test queue |
+| `tqputs` | testlog.eagle | Write to test queue |
+| `unknown` | init.eagle | Unknown command handler |
+| `unknownObjectInvoke` | unkobj.eagle | Invoke unknown as .NET type |
+| `unzipMustBeInstalled` | unzip.eagle | Check for unzip tool |
+| `vwaitLocked` | runopt.eagle | Wait for variable with lock |
+| `waitForProcesses` | process.eagle | Wait for processes to exit |
+| `writeAsciiFile` | file2.eagle | Write ASCII file |
+| `writeFile` | file1.eagle | Write binary file |
+| `writeUnicodeBinaryFile` | file2u.eagle | Write Unicode binary file |
+| `writeUnicodeFile` | file2u.eagle | Write Unicode file |
+| `writeUtf8File` | file2u.eagle | Write UTF-8 file |
 
 ---
 
@@ -144,7 +290,12 @@ Sources a script file while preserving location information for procedures defin
 
 - **Arguments**: Same as the `source` command
 - **Returns**: Result of the sourced script.
-- **Note**: Eagle-only. Manages argument caching and location tracking.
+- **Note**: Eagle-only. Wraps `source` to record file path and line information for each procedure defined in the sourced file, enabling better error messages and `info body`/`info args` output.
+
+- **Example**:
+```tcl
+sourceWithInfo "mylib.eagle"    ;# Same as source, but tracks procedure locations
+```
 
 ---
 
@@ -162,6 +313,15 @@ The unknown command handler executed when a command is not found.
 - **Returns**: Error with "invalid command name" message.
 - **Note**: If the `eagleUnknownObjectInvoke` runtime option is set, attempts to use the command name as a CLR type name first.
 
+- **Example**:
+```tcl
+# Default behavior: error for unknown commands
+unknown nonexistentCmd    ;# Error: invalid command name "nonexistentCmd"
+
+# With eagleUnknownObjectInvoke, CLR types become commands:
+# System.Math Max 1 2      ;# Returns: 2  (if runtime option is set)
+```
+
 ---
 
 #### tclPkgUnknown
@@ -170,7 +330,7 @@ The unknown command handler executed when a command is not found.
 tclPkgUnknown name args
 ```
 
-Package unknown handler that forces a rescan of package indexes.
+Package unknown handler. Called automatically when `package require` cannot find a package. Re-scans `auto_path` directories for `pkgIndex.tcl` files to discover newly available packages.
 
 - **Arguments**:
   - `name` - The requested package name
@@ -186,12 +346,19 @@ Package unknown handler that forces a rescan of package indexes.
 makeProcedureFast name fast
 ```
 
-Marks a procedure for "fast" execution by disabling variable access overhead.
+Experimental optimization hint. Marks a procedure for potential fast-path execution by the interpreter engine. The exact effect is implementation-defined and may change.
 
 - **Arguments**:
   - `name` - Procedure name
   - `fast` - Boolean to enable/disable fast mode
 - **Returns**: Empty string.
+- **See also**: `makeVariableFast`
+
+- **Example**:
+```tcl
+# Mark a hot-path procedure for optimization
+makeProcedureFast myProc true
+```
 
 ---
 
@@ -201,12 +368,19 @@ Marks a procedure for "fast" execution by disabling variable access overhead.
 makeVariableFast name fast
 ```
 
-Marks a variable for "fast" access by disabling access overhead.
+Experimental optimization hint. Marks a variable for potential fast-path access by the interpreter engine. The exact effect is implementation-defined and may change.
 
 - **Arguments**:
   - `name` - Variable name
   - `fast` - Boolean to enable/disable fast mode
 - **Returns**: Empty string.
+- **See also**: `makeProcedureFast`
+
+- **Example**:
+```tcl
+# Mark a frequently-accessed variable for optimization
+makeVariableFast myVar true
+```
 
 ---
 
@@ -275,6 +449,8 @@ set color [getDictionaryValue $dict color "unknown"]  ;# Returns: red
 set shape [getDictionaryValue $dict shape "circle"]   ;# Returns: circle
 ```
 
+- **See also**: `lappendArgs`, `appendArgs`
+
 ---
 
 #### exportAndImportPackageCommands
@@ -291,6 +467,11 @@ Exports commands from a namespace and imports them into the global namespace.
   - `forget` - If true, forget previous imports first
   - `force` - If true, overwrite existing commands
 - **Returns**: Empty string.
+
+- **Example**:
+```tcl
+exportAndImportPackageCommands [namespace current] [list myProc1 myProc2] true true
+```
 
 ---
 
@@ -396,6 +577,7 @@ Checks if a database column exists within a row.
   - `row` - Database row (list of `{columnName value}` pairs)
   - `column` - Column name to find
 - **Returns**: Non-zero if the column exists.
+- **See also**: `getColumnValue`, `getRowColumnValue`
 
 ---
 
@@ -437,6 +619,8 @@ set name [getColumnValue $row name "Unknown"]  ;# Returns: John
 set city [getColumnValue $row city "N/A"]      ;# Returns: N/A
 ```
 
+- **See also**: `getRowColumnValue`, `haveColumnValue`
+
 ---
 
 #### getRowColumnValue
@@ -454,6 +638,7 @@ Gets a column value from a specific row in an array of rows.
   - `default` - Default value if not found
   - `wrap` - String to wrap around the value
 - **Returns**: Column value or default.
+- **See also**: `getColumnValue`, `haveColumnValue`
 
 ---
 
@@ -540,6 +725,8 @@ set numbers {1 2 3 4 5 6}
 set evens [filter $numbers {expr {$item % 2 == 0}}]  ;# Returns: {2 4 6}
 ```
 
+- **See also**: `map`, `reduce`
+
 ---
 
 #### map
@@ -560,6 +747,8 @@ Applies a transformation script to each list element.
 set numbers {1 2 3 4}
 set doubled [map $numbers {expr {$item * 2}}]  ;# Returns: {2 4 6 8}
 ```
+
+- **See also**: `filter`, `reduce`
 
 ---
 
@@ -582,6 +771,8 @@ set numbers {1 2 3 4 5}
 set sum [reduce $numbers {expr {$result + $item}}]  ;# Returns: 15
 ```
 
+- **See also**: `filter`, `map`
+
 ---
 
 ### Platform Detection (platform.eagle)
@@ -597,6 +788,7 @@ isEagle
 Detects if running in Eagle (vs Tcl).
 
 - **Returns**: Non-zero if Eagle, zero if Tcl.
+- **See also**: `isMono`, `isDotNetCore`, `isWindows`
 
 ---
 
@@ -609,6 +801,7 @@ isMono
 Detects if running in Eagle on the Mono runtime.
 
 - **Returns**: Non-zero if running on Mono.
+- **See also**: `isEagle`, `isDotNetCore`, `isWindows`
 
 ---
 
@@ -621,6 +814,7 @@ isDotNetCore
 Detects if running in Eagle on .NET Core (or .NET 5+).
 
 - **Returns**: Non-zero if running on .NET Core.
+- **See also**: `isEagle`, `isMono`, `isWindows`
 
 ---
 
@@ -646,6 +840,7 @@ isWindows
 Detects if running on Windows.
 
 - **Returns**: Non-zero if Windows.
+- **See also**: `isEagle`, `isMono`, `isDotNetCore`, `isMacOS`
 
 ---
 
@@ -767,6 +962,8 @@ Reads all data from a binary file.
 set data [readFile "image.png"]
 ```
 
+- **See also**: `writeFile`, `appendFile`
+
 ---
 
 #### writeFile
@@ -781,6 +978,7 @@ Writes data to a binary file (overwrites existing content).
   - `fileName` - Path to file
   - `data` - Data to write
 - **Returns**: Empty string.
+- **See also**: `readFile`, `appendFile`
 
 ---
 
@@ -796,6 +994,7 @@ Appends data to a binary file.
   - `fileName` - Path to file
   - `data` - Data to append
 - **Returns**: Empty string.
+- **See also**: `readFile`, `writeFile`
 
 ---
 
@@ -1146,6 +1345,8 @@ Finds directories matching a pattern (non-recursive).
 set dirs [findDirectories "/home/user/*"]
 ```
 
+- **See also**: `findFiles`, `findFilesRecursive`, `findDirectoriesRecursive`
+
 ---
 
 #### findDirectoriesRecursive
@@ -1178,6 +1379,8 @@ Finds files matching a pattern (non-recursive).
 ```tcl
 set scripts [findFiles "*.eagle"]
 ```
+
+- **See also**: `findDirectories`, `findFilesRecursive`
 
 ---
 
@@ -1434,6 +1637,13 @@ Combines two flag strings and optionally excludes specified flags.
   - `noCase` - Case-insensitive comparison
 - **Returns**: Combined flags as comma-separated string.
 
+- **Example**:
+```tcl
+# Combine .NET enum flags
+set flags [combineFlags "Public" "Instance"]
+# Returns: "Public, Instance"
+```
+
 ---
 
 #### getReturnType
@@ -1477,6 +1687,7 @@ Converts an opaque object handle to a string.
   - `value` - Object handle
   - `default` - Default value if conversion fails
 - **Returns**: String representation or default.
+- **See also**: `isObjectHandle`, `isNonNullObjectHandle`
 
 ---
 
@@ -1491,6 +1702,15 @@ Checks if a value can be used as an opaque object handle.
 - **Arguments**:
   - `value` - Value to check
 - **Returns**: Boolean.
+- **See also**: `isNonNullObjectHandle`, `getStringFromObjectHandle`
+
+- **Example**:
+```tcl
+set obj [object create System.Object]
+isObjectHandle $obj            ;# Returns: 1
+isObjectHandle "not an object" ;# Returns: 0
+object dispose $obj
+```
 
 ---
 
@@ -1505,6 +1725,14 @@ Checks if a value is a valid, non-null object handle.
 - **Arguments**:
   - `value` - Value to check
 - **Returns**: Boolean.
+- **See also**: `isObjectHandle`, `getStringFromObjectHandle`
+
+- **Example**:
+```tcl
+set obj [object create System.Object]
+isNonNullObjectHandle $obj     ;# Returns: 1
+object dispose $obj
+```
 
 ---
 
