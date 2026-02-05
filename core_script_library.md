@@ -1,6 +1,6 @@
 # Eagle Script Library
 
-> **For AI agents**: This document covers 350+ script library procedures. Use the [Alphabetical Procedure Index](#alphabetical-procedure-index) for quick lookup by name. Each procedure has an anchor `####-procedureName` under its source file section. Eagle-only procedures are marked "(Eagle only)". The [Advanced Usage Patterns](#advanced-usage-patterns-and-examples) section provides common idioms.
+> **For AI agents**: This document covers 580+ script library procedures. Use the [Alphabetical Procedure Index](#alphabetical-procedure-index) for quick lookup by name. Each procedure has an anchor `####-procedureName` under its source file section. Eagle-only procedures are marked "(Eagle only)". The [Advanced Usage Patterns](#advanced-usage-patterns-and-examples) section provides common idioms.
 
 This document provides comprehensive documentation for all script procedures in the Eagle scripting language libraries, organized by package and functional category.
 
@@ -2625,7 +2625,389 @@ Queries and returns the current external IP address.
 
 Package: `Eagle.Test`
 
-The test.eagle file is the core test framework library, containing approximately 250+ procedures for test execution, constraint management, logging, statistics tracking, and remote result reporting. This is the most comprehensive file in the Eagle script library.
+The test.eagle file is the core test framework library, containing approximately 377 procedures for test execution, constraint management, logging, statistics tracking, and remote result reporting. This is the most comprehensive file in the Eagle script library.
+
+#### Alphabetical Procedure Table
+
+| Procedure | Brief Description |
+|-----------|-------------------|
+| `__exit` | Saved original exit command before test framework override |
+| `addConstraint` | Adds a test constraint to the active constraint set |
+| `addConstraintToArgv` | Appends a constraint name to the global argv list |
+| `addTestScripts` | Adds test script file names to the test run list |
+| `addToArgv` | Appends a value to the global argv list |
+| `annotateProcedure` | Adds metadata annotation to a procedure definition |
+| `announceForDebugHook` | Outputs an announcement message during debug hook execution |
+| `architectureForPlatform` | Converts a platform identifier to its architecture name |
+| `assemblyNameToRegexp` | Converts a .NET assembly name to a regex pattern |
+| `augmentTestArguments` | Augments test argument flags with additional settings |
+| `breakOnError` | Enters debugger on error if break-on-error is enabled |
+| `breakpoint` | Forces a debugger breakpoint |
+| `calculateBogoCops` | Calculates a BogoCops performance metric |
+| `calculateRelativePerformance` | Computes relative performance against a baseline |
+| `calculateTestConstraintCounts` | Computes per-constraint counts of skipped tests |
+| `canTestExec` | Checks if exec command is available for test processes |
+| `changeArrayElement` | Modifies a single element in a named array variable |
+| `checkActiveTestLogFile` | Verifies the active test log file is accessible |
+| `checkForAndSetTestPath` | Validates and sets the test path from environment or defaults |
+| `checkOsAndModeForPath` | Retrieves OS type and file mode bits for a path |
+| `cleanState` | Resets interpreter to a clean state for test isolation |
+| `cleanupAfterEvents` | Cleans up after event processing |
+| `cleanupEvaluateViaTemporaryFiles` | Cleans up temporary files used during script evaluation |
+| `cleanupExcel` | Releases Excel COM automation objects and closes instances |
+| `cleanupThread` | Disposes a .NET thread handle after optional join |
+| `cleanupVisualBasic` | Releases Visual Basic COM automation objects |
+| `cleanupWinForms` | Disposes Windows Forms resources used during testing |
+| `cleanupXml` | Releases XML document and related objects |
+| `clearTestPercent` | Resets the test completion percentage tracking variable |
+| `cloneProcedure` | Creates a copy of a procedure under a new name |
+| `combineTestScriptResults` | Merges results from multiple test script evaluations |
+| `command` | Saved original command implementation via rename |
+| `compileCanaryDyLib` | Compiles a minimal canary dynamic library for platform testing |
+| `configureTcltest` | Configures tcltest package with test constraints and options |
+| `createMultipartFormData` | Creates multipart/form-data encoded content for HTTP requests |
+| `createPairs` | Converts a flat list into a list of two-element pairs |
+| `createThread` | Creates a new .NET thread to execute a script asynchronously |
+| `debugBreakHook` | Debug break hook callback for breakpoint handling |
+| `debugBreakWithNewConsole` | Opens a new console window for interactive debugging |
+| `delayForTest` | Pauses test execution for a configurable delay with randomization |
+| `deleteInactiveTestLogFiles` | Removes test log files not currently in use |
+| `detectDotNetCoreRuntimeVersion` | Detects the installed .NET Core runtime version |
+| `didTestLogHaveStartSentry` | Returns whether test log had a valid start sentry on open |
+| `disableTracing` | Disables procedure call tracing |
+| `dlog` | Writes a debug log message |
+| `doesTestLogFileExist` | Checks if configured test log file path exists |
+| `doesTestLogHaveStartSentry` | Checks if current test log contains start sentry |
+| `doesTestOutputRepeat` | Checks if test output is duplicated to both host and log |
+| `dputs` | Writes debug output to the test channel |
+| `dtrace` | Writes a debug trace message |
+| `dumpState` | Dumps interpreter state for debugging |
+| `dumpWhereAmI` | Outputs current execution location information |
+| `eagle_appendExecArgs` | Appends exec arguments for Eagle shell |
+| `eagle_buildDataId` | Builds a data identifier for Eagle shell |
+| `eagle_enableShellUnknown` | Enables shell unknown command handler |
+| `eagle_getShellPromptScript` | Gets the shell prompt script |
+| `eagle_getUnsafePromptCommands` | Returns unsafe prompt commands list |
+| `eagle_haveProbeForCommand` | Checks if command probing is available |
+| `eagle_haveShell` | Checks if shell is available |
+| `eagle_isShellScriptLevel` | Checks if at shell script level |
+| `eagle_probeForCommand` | Probes for a specific command |
+| `eagle_probeForCommands` | Probes for multiple commands |
+| `eagle_probeForPromptCommands` | Probes for prompt commands |
+| `eagle_setupPromptScript` | Sets up the interactive prompt script |
+| `eagle_shellBuildCommand` | Builds a shell command string |
+| `eagle_shellUnknown` | Unknown command handler for shell integration |
+| `enableContextEngineFlags` | Enables context engine flags |
+| `enableContextPackageFlags` | Enables context package flags |
+| `enableContextPackageIndexFlags` | Enables context package index flags |
+| `enableContextProcedureFlags` | Enables context procedure flags |
+| `enableDataFlags` | Enables data flags for the interpreter |
+| `enableDefaultInterpreterFlags` | Enables default interpreter flags |
+| `enableEventWaitFlags` | Enables event wait flags |
+| `enableExpressionFlags` | Enables expression evaluation flags |
+| `enableFailSafeExitAfter` | Enables fail-safe exit timer |
+| `enableFlags` | General flag enablement procedure |
+| `enableHostFlags` | Enables host flags |
+| `enableInteractiveCommands` | Enables or disables interactive commands |
+| `enableInteractiveLoopFlags` | Enables interactive loop flags |
+| `enableInterpreterFlags` | Enables interpreter flags |
+| `enableInterpreterStateFlags` | Enables interpreter state flags |
+| `enableInterpreterTestFlags` | Enables interpreter test flags |
+| `enableNewGlobalVariableFlags` | Enables new global variable flags |
+| `enableNewLocalVariableFlags` | Enables new local variable flags |
+| `enablePluginFlags` | Enables plugin flags |
+| `enableQueueEventFlags` | Enables queue event flags |
+| `enableReadyFlags` | Enables ready flags |
+| `enableRuntimeOptionsForTcl` | Configures runtime options for Tcl compatibility |
+| `enableSharedEngineFlags` | Enables shared engine flags |
+| `enableSharedPackageFlags` | Enables shared package flags |
+| `enableSharedPackageIndexFlags` | Enables shared package index flags |
+| `enableSharedProcedureFlags` | Enables shared procedure flags |
+| `enableSystemAliasFlags` | Enables or disables system alias flag settings |
+| `enableTclExitUnloadFlags` | Enables Tcl exit/unload flags |
+| `enableTestStatisticsLists` | Enables or disables test statistics list tracking |
+| `enableTracing` | Enables procedure call tracing |
+| `enableWaitEventFlags` | Enables wait event flags |
+| `encodeRemoteMessage` | Encodes a message for remote transmission via URL parameters |
+| `errorTestHook` | Test hook called on error conditions |
+| `escapeForJsonString` | Escapes special characters for JSON string values |
+| `evalPackageIndexFile` | Evaluates a package index file in current context |
+| `evalWithTclShell` | Evaluates a script using a native Tcl shell process |
+| `evalWithTimeout` | Evaluates a script with a millisecond timeout guard |
+| `evaluateTestScripts` | Evaluates a list of test script files |
+| `evaluateViaTemporaryFile` | Evaluates a script by writing to and sourcing a temp file |
+| `execTestShell` | Executes a test shell command with argument processing |
+| `exit` | Test framework override of exit tracking test completion |
+| `extractTestRunIdFromLogStartSentry` | Parses test run ID from a log file start sentry |
+| `f_proc` | Creates a flexible procedure (proc or nproc) |
+| `failTestHook` | Test hook called on test failure |
+| `fileNormalizeWithTclShell` | Normalizes a file path using native Tcl shell |
+| `findParentDirectory` | Finds a parent directory matching a name pattern |
+| `findStringInFile` | Searches a file for a string pattern match |
+| `fixConstraints` | Resolves and normalizes test constraint names |
+| `fixMemoryConstraints` | Adjusts memory-related test constraints |
+| `fixTimingConstraints` | Adjusts timing-related test constraints |
+| `flattenPairs` | Flattens a list of pairs back into a flat list |
+| `forceInteractiveLoopForDebugHook` | Forces entry into the interactive debugging loop |
+| `formatDecimal` | Formats a number with decimal places |
+| `formatElapsedTime` | Formats elapsed time in human-readable form |
+| `formatLeakedNames` | Formats a list of leaked resource names for display |
+| `formatList` | Formats a list for display output |
+| `formatListAsDict` | Formats a list as a dictionary for display |
+| `formatTimeStamp` | Formats a timestamp in standard format |
+| `generateUniqueId` | Generates a unique random hexadecimal identifier |
+| `getCachedConstraints` | Returns the set of previously cached test constraints |
+| `getCommandsForTclShell` | Returns list of commands from a native Tcl shell |
+| `getConstraints` | Returns the current set of test constraints |
+| `getCurrentTestName` | Returns the name of the currently executing test |
+| `getDefaultTestLog` | Returns the default test log file path |
+| `getDefaultTestLogPath` | Returns the default directory path for test log files |
+| `getDefaultTestLogSubPath` | Returns the default subdirectory path for test logs |
+| `getDisabledPercentage` | Calculates percentage of disabled tests |
+| `getDotNetCoreRuntimeConfiguration` | Returns runtime configuration JSON for .NET Core |
+| `getDotNetCoreRuntimeVersions` | Returns list of detected .NET Core runtime versions |
+| `getDotNetCoreTargetFrameworkMoniker` | Returns the target framework moniker for .NET Core |
+| `getEngineFlagsForTest` | Returns current engine flags relevant to testing |
+| `getEnvironmentViaComSpec` | Retrieves environment information using command processor |
+| `getFiles` | Gets files matching a pattern in a directory |
+| `getFirstLineOfError` | Extracts first line from a multi-line error message |
+| `getGarudaDll` | Returns path to the Garuda DLL for current architecture |
+| `getIndexForDirectory` | Returns the package index file path for a directory |
+| `getKnownEagleVariables` | Returns list of known Eagle variable names |
+| `getKnownEagleVersions` | Returns list of known Eagle release version numbers |
+| `getKnownOtherVariables` | Returns list of other known variable names |
+| `getKnownPublicKeyTokens` | Returns list of known Eagle public key token values |
+| `getKnownTclVariables` | Returns list of known Tcl variable names |
+| `getKnownTestVariables` | Returns list of known test variable names |
+| `getLastTestLog` | Returns file name of the most recent test log file |
+| `getMachineForTclShell` | Returns machine architecture from native Tcl shell |
+| `getNameForDebugHook` | Returns name context for current debug hook invocation |
+| `getNamesForTestStatistics` | Returns names of statistics tracked during test execution |
+| `getNewTestRunId` | Generates a new unique test run identifier |
+| `getOrSetViaJsonPaths` | Gets or sets values via JSON path expressions |
+| `getParameterFromAny` | Searches multiple sources for a named test parameter |
+| `getPassedPercentage` | Calculates percentage of passed tests |
+| `getPidFromTestLogFileName` | Extracts process ID from test log file name |
+| `getProcedureArguments` | Returns the argument list of a named procedure |
+| `getProcessGroup` | Returns the process group for the current process |
+| `getRemoteMessageDirectory` | Returns directory path for queued remote message files |
+| `getRemoteMessageFileName` | Generates unique file name for remote message queue entry |
+| `getRemoteMessageHeader` | Builds descriptive header for remote test run messages |
+| `getRemoteMessageLimit` | Returns maximum allowed remote message size in bytes |
+| `getRemoteMessageRaiseError` | Returns whether to raise errors on remote logging failure |
+| `getRemoteMessageRetries` | Returns retry count for failed HTTPS remote messages |
+| `getRemoteTestResults` | Collects test pass/fail/skip counts and constraint stats |
+| `getRuntimeAssemblyName` | Returns core .NET runtime assembly name |
+| `getSharedLibPrefix` | Returns "lib" on non-Windows, empty on Windows |
+| `getSkippedPercentage` | Calculates percentage of skipped tests |
+| `getSoftwareRegistryKey` | Returns native or WoW64 Software registry key path |
+| `getTclExecutableForTclShell` | Returns Tcl executable path from info nameofexecutable |
+| `getTclMaximumVersion` | Returns maximum supported Tcl version |
+| `getTclMinimumVersion` | Returns minimum supported Tcl version |
+| `getTclShellFileName` | Returns Tcl shell file name for the platform |
+| `getTclShellRaw` | Returns configured raw mode for Tcl shell execution |
+| `getTclShellVerbosity` | Returns configured verbosity for Tcl shell operations |
+| `getTclVersionForTclShell` | Returns Tcl version from a Tcl shell process |
+| `getTemporaryFileName` | Generates unique temporary file name using random chars |
+| `getTemporaryPath` | Resolves usable temporary directory from environment |
+| `getTestAppDomains` | Returns list of AppDomain IDs not yet unloaded |
+| `getTestAssemblyName` | Returns the name of the test assembly |
+| `getTestChannelOrDefault` | Returns test output channel or defaults to stdout |
+| `getTestChildren` | Returns list of child interpreters |
+| `getTestConfiguration` | Returns the active test configuration |
+| `getTestFile` | Returns current test file name or active script path |
+| `getTestFiles` | Returns list of test files to execute |
+| `getTestLibraryDirectory` | Returns directory path of the Eagle script library |
+| `getTestListedLeaks` | Returns resource types tracked for leak listing |
+| `getTestLog` | Returns current test log file path |
+| `getTestLogId` | Returns test log identifier with dot separator |
+| `getTestLogPath` | Returns the test log directory path |
+| `getTestLogStartSentry` | Returns the test log start sentry string |
+| `getTestMachine` | Returns the test machine architecture |
+| `getTestName` | Gets current test name with optional full name and reset |
+| `getTestNamePrefix` | Returns configured test name prefix |
+| `getTestPlatform` | Returns the current test platform identifier |
+| `getTestRunBucket` | Returns current test run bucket identifier |
+| `getTestRunId` | Returns the current test run identifier |
+| `getTestRunTag` | Returns the current test run tag |
+| `getTestSnippets` | Lists available interpreter snippets |
+| `getTestSuffix` | Returns effective build suffix |
+| `getTestSuite` | Returns the test suite name |
+| `getTestSuiteFileName` | Returns the test suite file name |
+| `getTestSuiteFullName` | Returns formatted test suite file name and name |
+| `getTestSuiteVariantName` | Builds descriptive variant name with engine/OS/arch |
+| `getTestUncountedLeaks` | Returns resource types excluded from leak counts |
+| `getThreadTimeout` | Resolves thread timeout supporting integer/infinite modes |
+| `getTkVersionForTclShell` | Returns Tk version from a Tcl shell process |
+| `getValueOrDefault` | Returns a variable value or a default if undefined |
+| `hasAllowBigIntegers` | Checks if interpreter allows big integer support |
+| `hasInterpreterFlags` | Checks whether interpreter flags are currently set |
+| `haveCaches` | Checks if caching is available |
+| `haveConstraint` | Checks if a test constraint is set |
+| `haveInfinitySymbol` | Checks if culture uses Unicode infinity symbols |
+| `haveModernNetFx` | Checks if running on modern .NET Framework |
+| `haveOrAddConstraint` | Checks or adds a test constraint |
+| `hideMyself` | Shows or hides the native console window |
+| `hookPuts` | Redirects stdout puts to test channel via interception |
+| `initializeTests` | Resets global test arrays and initializes constraints |
+| `inverseLsearchGlob` | Matches element against a list of glob patterns |
+| `invokePackageScanCommand` | Executes package scan to index available packages |
+| `isActiveProcess` | Checks if a process with given PID is running |
+| `isBreakOnDemand` | Returns whether break-on-demand is enabled |
+| `isBreakOnLeak` | Returns whether break on resource leak is enabled |
+| `isCorePublicKeyToken` | Checks if token matches known core public key tokens |
+| `isDirectoryReadable` | Verifies path is a readable directory |
+| `isExitOnComplete` | Returns whether auto-exit after completion is enabled |
+| `isFileReadable` | Verifies path is a readable regular file |
+| `isLogRemoteMessageOk` | Checks if remote message response is OK |
+| `isNetFx40` | Checks if framework is .NET Framework 4.0 or later |
+| `isOfficialStableReleaseInProgress` | Returns true if OFFICIAL and STABLE vars are set |
+| `isRandomOrder` | Returns whether tests run in random order |
+| `isStableEagleRelease` | Checks if current version matches stable release |
+| `isStopOnFailure` | Returns whether to stop after first failure |
+| `isStopOnLeak` | Returns whether to stop on resource leak |
+| `isTestSuiteRunning` | Returns whether test suite is currently running |
+| `isTestUncountedLeak` | Checks if statistic is in uncounted leak list |
+| `isUriLikelyToBeRedirected` | Checks if a URI is likely to be redirected |
+| `isValidGuid` | Validates a string as properly formatted GUID |
+| `isValidJson` | Validates a string as well-formed JSON |
+| `joinThread` | Joins a thread with configurable timeout |
+| `killProcessGroup` | Kills all processes in a process group |
+| `lmissing` | Returns elements from list1 not present in list2 |
+| `loadTetrisViaTclTk` | Loads native Tcl/Tk and runs Tk Tetris game |
+| `logRemoteMessage` | Sends a message to the remote logging endpoint |
+| `logRemoteMessageFile` | Reads message file and sends remotely |
+| `logRemoteMessageQueue` | Processes all queued remote message files |
+| `logRemoteMessageWrapper` | Wraps remote message sending with async support |
+| `logRemoteTestResults` | Logs test results to the remote endpoint |
+| `logRemoteTestRunMessage` | Sends test run status with results to remote |
+| `machineToPlatform` | Converts machine name to platform identifier |
+| `makeProcedureCommand` | Constructs a procedure command invocation |
+| `makeUseOfTestArguments` | Applies parsed test flags to global configuration |
+| `makeUseOfTestDefaults` | Initializes test flags with default values |
+| `maybeAddToAutoPath` | Appends directory to auto_path if not present |
+| `maybeAppendNewLine` | Appends newline if variable starts with non-whitespace |
+| `maybeFullyResolveUri` | Fully resolves a URI following all redirects |
+| `maybeGetArgv` | Returns global argv or empty if not set |
+| `maybeGetOption` | Searches argv for a named option pair |
+| `maybeInvokeForTester` | Conditionally invokes a tester hook command |
+| `maybeKillProcessGroup` | Conditionally kills a process group |
+| `maybeMakeHighPriority` | Attempts high-priority mode for interpreter |
+| `maybeRecordTestStatistics` | Conditionally records test resource statistics |
+| `maybeReportTestStatistics` | Conditionally reports test resource statistics |
+| `maybeResolveUri` | Resolves a single level of URI redirection |
+| `maybeScanAutoPath` | Scans package indexes along auto_path |
+| `needTestDoEvents` | Checks whether DoEvents processing is needed |
+| `newPackageId` | Generates unique random hex ID for package naming |
+| `newTestLog` | Stub for notifying of test log file name changes |
+| `noFailTestHook` | Test hook that prevents failure propagation |
+| `openAI_chatCompletion` | Sends a chat completion request to OpenAI API |
+| `openAI_cleanupSandbox` | Cleans up the OpenAI sandbox environment |
+| `openAI_enableSecurity` | Enables security for OpenAI operations |
+| `openAI_enableUnknown` | Enables unknown command handling for OpenAI |
+| `openAI_getAnyApiKey` | Returns any available OpenAI API key |
+| `openAI_getDefaultModel` | Returns the default OpenAI model name |
+| `openAI_getJson` | Retrieves JSON data from OpenAI response |
+| `openAI_getJsonPaths` | Returns JSON path mappings for OpenAI responses |
+| `openAI_getKeyRingDirectory` | Returns directory for API key storage |
+| `openAI_getPrompt` | Returns the configured OpenAI prompt |
+| `openAI_getStandardModel` | Returns the standard OpenAI model name |
+| `openAI_getTypes` | Returns type definitions for OpenAI integration |
+| `openAI_haveSecurity` | Checks if security is enabled for OpenAI |
+| `openAI_maybeEvaluateInSandbox` | Conditionally evaluates in OpenAI sandbox |
+| `openAI_scriptWebClient` | Creates web client for OpenAI script requests |
+| `openAI_setupScriptWebClient` | Sets up script web client for OpenAI |
+| `openAI_unknown` | Unknown command handler for OpenAI integration |
+| `openAI_writeScript` | Writes an OpenAI-generated script to output |
+| `pathToRegexp` | Converts a file path to a regular expression |
+| `private` | Makes a procedure private to its namespace |
+| `probeForScriptFileName` | Searches script locations for active script file |
+| `proc` | Built-in proc command (renamed internally) |
+| `processTestArguments` | Parses command-line test option pairs |
+| `promptForAndGetTextInput` | Prompts user for text input with validation |
+| `purgeAndCleanup` | Clears internal caches for multiple subsystems |
+| `readTestLogStartSentry` | Reads test log and extracts run ID from start sentry |
+| `recordTestStatistics` | Records test resource statistics for leak tracking |
+| `recursiveGetDirectories` | Recursively searches for matching directories |
+| `recursiveGetFiles` | Recursively searches for matching files |
+| `removeConstraint` | Removes a test constraint from the active set |
+| `removeConstraintFromArgv` | Removes a constraint name from global argv |
+| `removeFromArgv` | Removes a value from the global argv list |
+| `removePathFromFileNames` | Strips directory prefix from file names |
+| `removeTemporarySubDirectories` | Removes empty temporary subdirectories |
+| `reopenHost` | Closes and reopens interpreter host |
+| `reportArrayGet` | Returns sorted array contents by value descending |
+| `reportCaches` | Reports current cache contents and statistics |
+| `reportTestConstraintCounts` | Displays per-constraint skipped test counts |
+| `reportTestDuplicateNames` | Reports duplicate test names found |
+| `reportTestPercent` | Displays test suite progress percentage |
+| `reportTestResultCounts` | Reports final test result counts |
+| `reportTestStatisticCounts` | Summarizes counts of each leak type |
+| `reportTestStatistics` | Reports comprehensive test statistics |
+| `resetCaches` | Resets all test framework caches |
+| `restorePrecision` | Restores saved numeric precision setting |
+| `returnInfoScript` | Returns current script file via [info script] |
+| `runAllTests` | Runs all test files in sequence |
+| `runTest` | Runs a single test with logging and tracking |
+| `runTestEpilogue` | Performs test suite epilogue operations |
+| `runTestPrologue` | Performs test suite prologue operations |
+| `s_proc` | Creates a stub procedure with minimal body |
+| `saveAndResetPrecision` | Saves precision and resets to default |
+| `savedTest` | Rename target of ::test during tsource shimming |
+| `savedUnknown` | Rename target of ::unknown during shell integration |
+| `scriptWebClient` | Alias of openAI_scriptWebClient for web requests |
+| `setTestLogStartSentry` | Sets global test log start sentry |
+| `setupEvaluateViaTemporaryFile` | Creates temp file for script evaluation |
+| `setupSystemAliases` | Enables/disables system alias flags by stage |
+| `setupTestPackageVars` | Initializes default test package configuration |
+| `setupTestRunTag` | Sets up the test run tag identifier |
+| `setupTestShims` | Adds/removes Tcl test compatibility shims |
+| `shouldRecordTestStatistics` | Returns true unless leak recording is disabled |
+| `shouldReportTestStatistics` | Returns true unless reporting is disabled |
+| `shouldWriteTestData` | Checks if test data should be written for result |
+| `skipTestHook` | Test hook called when a test is skipped |
+| `sourceIfValid` | Sources a script file if it exists |
+| `startThread` | Starts a .NET thread with optional parameter |
+| `syncThread` | Waits for thread to reach specified state |
+| `tclLoadForTest` | Loads native Tcl library for interop testing |
+| `tclLogForTester` | Logs via tclLog command or stderr fallback |
+| `tclUnloadForTest` | Unloads native Tcl library loaded for testing |
+| `tcltest::cleanupTests` | Stub compatibility shim for Tcl test scripts |
+| `tcltest::DebugPuts` | Override tracking current test name from RunTest |
+| `tcltest::loadTestedCommands` | Stub compatibility shim for Tcl test scripts |
+| `tcltest::RunTest` | Rewritten to pass list args to DebugPuts |
+| `tcltest::SavedDebugPuts` | Backup of original tcltest::DebugPuts |
+| `test` | Built-in Eagle test command (shimmed) |
+| `testArrayGet` | Returns test array contents in sorted order |
+| `testArrayGet2` | Returns sorted array with optional pattern filtering |
+| `testCheckOverallResult` | Evaluates overall pass/fail and sets exit code |
+| `testClrExec` | Executes CLR process with runtime prefix |
+| `testDebugBreak` | Conditionally triggers debug breakpoint |
+| `testDoEvents` | Processes pending events during test execution |
+| `testExec` | Executes external process with permission checking |
+| `testExecTclScript` | Writes and executes Tcl script via native shell |
+| `testObjectMembers` | Returns sorted list of .NET object members |
+| `testPuts` | Custom puts redirecting stdout to test channel |
+| `testResultGet` | Evaluates script and returns result or error |
+| `testShim` | Wraps [test] inside [runTest] for tracking |
+| `testValueGet` | Gets a test result value |
+| `thostresult` | Sends result code and value to host |
+| `tlog` | Writes message to the test log |
+| `toneputs` | Outputs a tone and text to the test channel |
+| `tputs` | Writes text to the test output channel |
+| `trawputs` | Writes raw text to the test output channel |
+| `tresult` | Sends result to host display and test log |
+| `tryToLoadZeus` | Loads Zeus Enterprise plugin for encrypted scripts |
+| `tryVerifyTestPath` | Checks test path exists and is non-empty |
+| `tsource` | Sources a test script file with tracking |
+| `ttclLog` | Outputs string with newline to test channel |
+| `unhookPuts` | Restores original [puts] removing test override |
+| `unknown` | Shell unknown handler via eagle_shellUnknown rename |
+| `useCachedConstraints` | Adds cached constraints to active set |
+| `verifyConfigurationDirectory` | Verifies configuration directory exists |
+| `vwaitWithTimeout` | Waits for variable change with timeout |
+| `whatIfTestHook` | Test hook for what-if mode testing |
+| `whereAmI` | Reports current execution location |
 
 #### Core Procedure Definition Utilities
 
@@ -4954,6 +5336,321 @@ Sends a chat completion request to the OpenAI API.
 
 ---
 
+#### Thread Management
+
+| Procedure | Description |
+|-----------|-------------|
+| `cleanupThread handle` | Disposes a .NET thread handle after optional join |
+| `createThread script` | Creates a new .NET thread to execute a script asynchronously |
+| `delayForTest {milliseconds ""}` | Pauses test execution for a configurable delay with randomization |
+| `getThreadTimeout` | Resolves a thread timeout value supporting integer, infinite, and effective modes |
+| `joinThread handle` | Joins a thread with optional configurable timeout value |
+| `startThread handle {parameter ""}` | Starts a .NET thread, optionally passing a parameter value |
+| `syncThread handle state {timeout ""}` | Waits for a thread to reach a specified state with timeout |
+
+#### Test Log Management
+
+| Procedure | Description |
+|-----------|-------------|
+| `checkActiveTestLogFile channel` | Verifies the active test log file is accessible and writable |
+| `clearTestPercent` | Resets the test completion percentage tracking variable |
+| `deleteInactiveTestLogFiles` | Removes test log files that are not currently in use |
+| `didTestLogHaveStartSentry` | Returns whether the test log had a valid start sentry on open |
+| `doesTestLogFileExist` | Checks if the configured test log file path exists on disk |
+| `doesTestOutputRepeat` | Checks if test output is duplicated to both host and log |
+| `extractTestRunIdFromLogStartSentry sentry` | Parses the test run ID from a log file start sentry line |
+| `getDefaultTestLogPath` | Returns the default directory path for test log files |
+| `getDefaultTestLogSubPath` | Returns the default subdirectory path component for test logs |
+| `getLastTestLog` | Returns the file name of the most recent test log file |
+| `getTestLogId` | Returns the test log identifier prefixed with a dot separator |
+| `newTestLog {fileName ""}` | Stub for notifying external code of test log file name changes |
+| `getPidFromTestLogFileName fileName` | Extracts the process ID from a test log file name |
+| `readTestLogStartSentry fileName` | Reads a test log file and extracts the run ID from its start sentry |
+| `setTestLogStartSentry` | Sets the global test log start sentry and returns initialization message |
+| `shouldWriteTestData code` | Checks via TestOps whether test data should be written for a result code |
+
+#### Remote Messaging and Results
+
+| Procedure | Description |
+|-----------|-------------|
+| `encodeRemoteMessage message` | Encodes a message string for remote transmission via URL parameters |
+| `getRemoteMessageDirectory` | Returns the directory path for queued remote message files |
+| `getRemoteMessageFileName {directory ""} {prefix ""}` | Generates a unique file name for a remote message queue entry |
+| `getRemoteMessageHeader success` | Builds a descriptive header for remote test run status messages |
+| `getRemoteMessageLimit` | Returns the maximum allowed remote message size in bytes |
+| `getRemoteMessageRaiseError` | Returns whether to raise errors when remote logging fails |
+| `getRemoteMessageRetries` | Returns configured retry count for failed HTTPS remote messages |
+| `getRemoteTestResults verbose` | Collects test pass/fail/skip counts and constraint statistics |
+| `isLogRemoteMessageOk result` | Checks if a remote message response matches the "OK" success pattern |
+| `logRemoteMessageFile fileName {uri ""} args` | Reads a message file and sends it remotely, deleting on success |
+| `logRemoteMessageQueue {directory ""} args` | Processes all queued remote message files from a directory |
+| `logRemoteMessageWrapper message args` | Wraps remote message sending with optional caller context and async |
+| `logRemoteTestRunMessage success args` | Sends a test run status message with optional results to remote endpoint |
+
+#### Tcl Shell Interaction
+
+| Procedure | Description |
+|-----------|-------------|
+| `configureTcltest` | Configures the tcltest package with test constraints and options |
+| `evalWithTclShell script` | Evaluates a script using a native Tcl shell process (already documented) |
+| `fileNormalizeWithTclShell path` | Normalizes a file path using a native Tcl shell process |
+| `getCommandsForTclShell` | Returns list of available commands from a native Tcl shell |
+| `getMachineForTclShell` | Returns the machine architecture from a native Tcl shell |
+| `getTclExecutableForTclShell` | Returns the Tcl executable path from info nameofexecutable |
+| `getTclShellRaw` | Returns the configured raw mode setting for Tcl shell execution |
+| `getTclShellVerbosity` | Returns the configured verbosity level for Tcl shell operations |
+| `getTclVersionForTclShell` | Queries and returns the Tcl version from a Tcl shell process |
+| `getTkVersionForTclShell` | Queries and returns the Tk version from a Tcl shell process |
+
+#### .NET/Runtime Detection
+
+| Procedure | Description |
+|-----------|-------------|
+| `architectureForPlatform platform` | Converts a platform identifier to its architecture name |
+| `assemblyNameToRegexp name` | Converts a .NET assembly name to a regular expression pattern |
+| `getDotNetCoreRuntimeConfiguration {version ""}` | Returns runtime configuration JSON for .NET Core |
+| `getEngineFlagsForTest` | Returns the current engine flags relevant to testing |
+| `getRuntimeAssemblyName` | Returns the core .NET runtime assembly name (mscorlib or CoreLib) |
+| `getSharedLibPrefix` | Returns "lib" on non-Windows, empty string on Windows |
+| `getSoftwareRegistryKey {wow64 false}` | Returns native or WoW64 Software registry key path |
+| `hasAllowBigIntegers` | Checks if interpreter allows arbitrary precision big integers |
+| `hasInterpreterFlags flags` | Checks whether specified interpreter flags are currently set |
+| `haveInfinitySymbol` | Checks if current culture uses Unicode infinity symbols |
+| `isCorePublicKeyToken token` | Checks if a public key token matches known core tokens |
+| `machineToPlatform machine {full false}` | Converts machine architecture name to platform identifier |
+
+#### Runtime State Checks
+
+| Procedure | Description |
+|-----------|-------------|
+| `canTestExec` | Checks if the exec command is available for test processes |
+| `haveModernNetFx` | Checks if running on modern .NET Framework (already documented) |
+| `isNetFx40` | Checks if framework version is .NET Framework 4.0 or later |
+| `isOfficialStableReleaseInProgress` | Returns true if both OFFICIAL and STABLE environment variables are set |
+| `isStableEagleRelease` | Checks if current Eagle version matches a known stable release |
+| `isTestSuiteRunning` | Returns whether the test suite is currently marked as running |
+| `isBreakOnDemand` | Returns whether break-on-demand is enabled via environment variable |
+| `isBreakOnLeak` | Returns whether debugger break on resource leak detection is enabled |
+| `isExitOnComplete` | Returns whether automatic exit after test completion is enabled |
+| `isRandomOrder` | Returns whether tests should be executed in random order |
+
+#### Test Configuration and Parameters
+
+| Procedure | Description |
+|-----------|-------------|
+| `augmentTestArguments varName` | Augments test argument flags with additional settings |
+| `getParameterFromAny name` | Searches multiple sources for a named test parameter value |
+| `getTestAppDomains` | Returns list of AppDomain IDs created but not yet unloaded |
+| `getTestAssemblyName` | Returns the name of the test assembly |
+| `getTestChannelOrDefault` | Returns configured test output channel or defaults to stdout |
+| `getTestChildren` | Returns list of child interpreters |
+| `getTestFile` | Returns the current test file name or the active script path |
+| `getTestLibraryDirectory` | Returns the directory path of the Eagle script library |
+| `getTestListedLeaks` | Returns configured list of resource types tracked for leak listing |
+| `getTestName script asFullName reset` | Gets current test name, optionally as full name, with reset |
+| `getTestNamePrefix` | Returns the configured test name prefix from flags or defaults |
+| `getTestRunBucket` | Returns the current test run bucket identifier |
+| `getTestSnippets` | Lists available interpreter snippets via ListSnippets API |
+| `getTestSuffix` | Returns the effective build suffix (e.g., NetFx20, NetFx40) |
+| `getTestSuiteFullName` | Returns formatted string combining test suite file name and name |
+| `getTestSuiteVariantName` | Builds descriptive variant name including engine, OS, and architecture |
+| `getTestUncountedLeaks` | Returns configured list of resource types excluded from leak counts |
+| `isTestUncountedLeak statistic` | Checks if a statistic is in the uncounted leak exclusion list |
+
+#### Test Setup and Initialization
+
+| Procedure | Description |
+|-----------|-------------|
+| `checkForAndSetTestPath` | Validates and sets the test path from environment or defaults |
+| `initializeTests` | Resets global test tracking arrays and initializes constraints |
+| `makeUseOfTestArguments varName` | Applies parsed test flags to global test configuration variables |
+| `makeUseOfTestDefaults varName` | Initializes test flags array with default values for all settings |
+| `processTestArguments varName` | Parses and processes command-line test option pairs |
+| `setupEvaluateViaTemporaryFile args` | Creates or validates a temporary file for script evaluation |
+| `setupSystemAliases stage` | Enables or disables system alias flags based on stage parameter |
+| `setupTestPackageVars` | Initializes or resets default configuration variables for test package |
+| `setupTestShims {add true}` | Adds or removes Tcl test compatibility shims |
+| `tryVerifyTestPath` | Checks that test path exists, is a directory, and is non-empty |
+| `verifyConfigurationDirectory` | Verifies configuration directory exists (already documented) |
+| `cleanupEvaluateViaTemporaryFiles` | Cleans up temporary files used during script evaluation |
+
+#### Test Statistics and Reporting
+
+| Procedure | Description |
+|-----------|-------------|
+| `calculateTestConstraintCounts channel` | Computes per-constraint counts of skipped tests |
+| `getDisabledPercentage` | Calculates percentage of disabled tests out of total |
+| `getNamesForTestStatistics` | Returns names of statistics tracked during test execution |
+| `getNewTestRunId` | Generates a new unique test run identifier (already documented) |
+| `getPassedPercentage` | Calculates percentage of passed tests out of total |
+| `getSkippedPercentage` | Calculates percentage of skipped tests out of total |
+| `maybeRecordTestStatistics statsVarName` | Conditionally records test resource statistics if enabled |
+| `maybeReportTestStatistics channel statsVarName` | Conditionally reports test resource statistics if enabled |
+| `reportTestConstraintCounts channel` | Displays per-constraint counts of skipped tests |
+| `reportTestDuplicateNames channel` | Checks and reports any duplicate test names found |
+| `reportTestPercent channel percent args` | Displays test suite progress percentage with counts |
+| `reportTestStatisticCounts channel statsVarName` | Summarizes and displays counts of each leak type detected |
+| `shouldRecordTestStatistics` | Returns true unless leak recording is explicitly disabled |
+| `shouldReportTestStatistics` | Returns true unless statistic reporting is explicitly disabled |
+
+#### Cleanup Procedures
+
+| Procedure | Description |
+|-----------|-------------|
+| `cleanupExcel` | Releases Excel COM automation objects and closes instances |
+| `cleanupVisualBasic` | Releases Visual Basic COM automation objects |
+| `cleanupWinForms` | Disposes Windows Forms resources used during testing |
+| `cleanupXml` | Releases XML document and related objects |
+| `purgeAndCleanup` | Clears internal caches for ProcessOps, EnumOps, HelpOps, and StringOps |
+| `cleanupAfterEvents` | Cleans up after event processing (already documented) |
+
+#### File and Path Utilities
+
+| Procedure | Description |
+|-----------|-------------|
+| `checkOsAndModeForPath path varName1 varName2` | Retrieves OS type and file mode bits for a path |
+| `findStringInFile fileName pattern` | Searches a file for a string pattern match |
+| `getIndexForDirectory directory` | Returns the package index file path for a directory |
+| `getTemporaryFileName` | Generates a unique temporary file name using random characters |
+| `getTemporaryPath` | Resolves a usable temporary directory from environment variables |
+| `isDirectoryReadable path` | Verifies a path is a readable directory checking Unix mode bits |
+| `isFileReadable path` | Verifies a path is a readable regular file checking Unix mode bits |
+| `recursiveGetDirectories directory pattern` | Recursively searches for directories matching a pattern |
+| `recursiveGetFiles directory pattern` | Recursively searches for files matching a pattern |
+| `removePathFromFileNames path fileNames` | Strips directory path prefix from file names |
+| `removeTemporarySubDirectories` | Removes empty temporary subdirectories beneath system temp |
+
+#### Process Management
+
+| Procedure | Description |
+|-----------|-------------|
+| `getProcessGroup` | Returns process group for the current process (already documented) |
+| `isActiveProcess pid` | Checks whether a process with the given PID is still running |
+| `killProcessGroup processGroup` | Kills all processes in a process group (already documented) |
+| `maybeKillProcessGroup processGroup` | Conditionally kills a process group (already documented) |
+
+#### URI/Network Utilities
+
+| Procedure | Description |
+|-----------|-------------|
+| `isUriLikelyToBeRedirected uri` | Checks if a URI is likely to be redirected (already documented) |
+| `maybeFullyResolveUri uri` | Fully resolves a URI following all redirects (already documented) |
+| `maybeResolveUri uri` | Resolves a single level of URI redirection (already documented) |
+
+#### String and Format Utilities
+
+| Procedure | Description |
+|-----------|-------------|
+| `createMultipartFormData boundary fields` | Creates multipart/form-data encoded content for HTTP requests |
+| `createPairs list` | Converts a flat list into a list of two-element pairs |
+| `flattenPairs pairs` | Flattens a list of pairs back into a flat list |
+| `formatLeakedNames names` | Formats a list of leaked resource names for display |
+| `generateUniqueId` | Generates a unique random hexadecimal identifier string |
+| `getFirstLineOfError error` | Extracts the first line from a multi-line error message |
+| `isValidGuid string` | Validates whether a string is a properly formatted GUID |
+| `maybeAppendNewLine varName` | Appends a newline if the variable starts with non-whitespace |
+
+#### Procedure and Code Utilities
+
+| Procedure | Description |
+|-----------|-------------|
+| `annotateProcedure name annotation` | Adds metadata annotation to a procedure definition |
+| `getProcedureArguments name` | Returns the argument list of a named procedure |
+| `probeForScriptFileName` | Searches interpreter script locations for the active script file |
+| `returnInfoScript` | Returns the current script file name via [info script] |
+| `hideMyself {show false}` | Shows or hides the native console window for the current process |
+
+#### Debug Hook Procedures
+
+| Procedure | Description |
+|-----------|-------------|
+| `announceForDebugHook message` | Outputs an announcement message during debug hook execution |
+| `forceInteractiveLoopForDebugHook` | Forces entry into the interactive debugging loop |
+| `getNameForDebugHook` | Returns the name context for the current debug hook invocation |
+| `getEnvironmentViaComSpec` | Retrieves environment information using the command processor |
+
+#### Tcltest Compatibility
+
+| Procedure | Description |
+|-----------|-------------|
+| `tcltest::DebugPuts args` | Custom override that tracks current test name from RunTest output |
+| `tcltest::RunTest args` | Rewritten to pass list-structured arguments to DebugPuts |
+| `tcltest::SavedDebugPuts` | Original tcltest::DebugPuts renamed as backup before override |
+| `tcltest::cleanupTests` | Empty stub procedure as compatibility shim for Tcl test scripts |
+| `tcltest::loadTestedCommands` | Empty stub procedure as compatibility shim for Tcl test scripts |
+
+#### Flag and Option Enablement
+
+| Procedure | Description |
+|-----------|-------------|
+| `enableInteractiveCommands flags` | Enables or disables interactive command availability |
+| `enableRuntimeOptionsForTcl` | Configures runtime options appropriate for Tcl compatibility |
+| `enableSystemAliasFlags flags` | Enables or disables system alias flag settings |
+| `enableTestStatisticsLists flags` | Enables or disables test statistics list tracking |
+
+#### Miscellaneous Test Infrastructure
+
+| Procedure | Description |
+|-----------|-------------|
+| `__exit args` | Saved original exit command before test framework override |
+| `changeArrayElement arrayName index value` | Modifies a single element in a named array variable |
+| `command` | Saved original command implementation via rename |
+| `compileCanaryDyLib` | Compiles a minimal canary dynamic library for platform testing |
+| `evalPackageIndexFile args` | Evaluates a package index file in the current context |
+| `evalWithTimeout script timeout` | Evaluates a script with a millisecond timeout guard |
+| `execTestShell args` | Executes a test shell command with argument processing |
+| `exit {exitCode 0}` | Test framework override of exit that tracks test completion |
+| `getCurrentTestName` | Returns the name of the currently executing test |
+| `getCachedConstraints` | Returns the set of previously cached test constraints |
+| `getGarudaDll` | Returns the path to the Garuda DLL for current architecture |
+| `getKnownEagleVersions` | Returns list of known Eagle release version numbers |
+| `getKnownPublicKeyTokens` | Returns list of known Eagle public key token values |
+| `hookPuts` | Redirects stdout puts output to the test channel via interception |
+| `inverseLsearchGlob element patterns` | Matches a single element against a list of glob patterns |
+| `invokePackageScanCommand` | Executes the package scan command to index available packages |
+| `lmissing list1 list2` | Returns elements from list1 that are not present in list2 |
+| `loadTetrisViaTclTk` | Loads native Tcl/Tk runtime and runs the Tk Tetris game |
+| `maybeAddToAutoPath directory` | Appends a directory to auto_path if not already present |
+| `maybeGetArgv` | Returns global argv list if it exists, otherwise returns empty |
+| `maybeGetOption name args` | Searches argv for a named option pair with type validation |
+| `maybeInvokeForTester command` | Conditionally invokes a named tester hook command if it exists |
+| `maybeMakeHighPriority` | Attempts to enable high-priority mode for the interpreter |
+| `maybeScanAutoPath` | Scans package indexes along auto_path for available packages |
+| `needTestDoEvents` | Checks whether test event processing (DoEvents) is needed |
+| `newPackageId` | Generates a unique random hex identifier for package index naming |
+| `proc` | Built-in proc command (renamed internally for framework use) |
+| `reopenHost` | Closes and reopens the interpreter host; exits on failure |
+| `reportArrayGet varName` | Returns array contents sorted by integer value descending |
+| `savedTest` | Rename target of ::test during tsource shimming |
+| `savedUnknown` | Rename target of ::unknown during shell integration |
+| `scriptWebClient` | Alias created by renaming openAI_scriptWebClient |
+| `sourceIfValid fileName` | Sources a script file if it exists, logging results |
+| `tclLoadForTest` | Loads the native Tcl library into Eagle for interop testing |
+| `tclLogForTester message` | Logs a string via tclLog command or stderr as fallback |
+| `tclUnloadForTest` | Unloads the native Tcl library previously loaded for testing |
+| `test` | Built-in Eagle test command (shimmed via testShim) |
+| `testArrayGet2 arrayName args` | Returns sorted array contents with optional pattern filtering |
+| `testCheckOverallResult channel percent args` | Evaluates overall test pass/fail result and sets exit code |
+| `testClrExec args` | Executes a CLR command-line process with runtime prefix and logging |
+| `testExec args` | Executes an external process with permission checking and logging |
+| `testExecTclScript script` | Writes a Tcl script to temp file and executes via native Tcl shell |
+| `testObjectMembers object args` | Returns sorted list of .NET object members |
+| `testPuts args` | Custom puts replacement redirecting stdout to test channel |
+| `testResultGet script` | Evaluates a script and returns its result or error indicator |
+| `testShim args` | Wraps the saved [test] command inside [runTest] for tracking |
+| `thostresult code value` | Sends a result code and value to the interpreter host |
+| `tresult code value` | Sends result to both host display and test log file |
+| `tryToLoadZeus` | Attempts to load the Zeus Enterprise plugin for encrypted scripts |
+| `ttclLog message` | Outputs a string with newline to the test channel as log |
+| `unhookPuts` | Restores the original Tcl [puts] command removing test override |
+| `unknown args` | Shell integration unknown handler via eagle_shellUnknown rename |
+| `useCachedConstraints` | Adds all previously cached constraints to the active set |
+| `vwaitWithTimeout varName timeout` | Waits for a variable change with millisecond timeout |
+| `isStopOnFailure` | Returns whether test execution should stop after first failure |
+| `isStopOnLeak` | Returns whether test execution should stop on resource leak |
+
+---
+
 ## Test1.0 Library
 
 ### Test Constraints (constraints.eagle)
@@ -5038,6 +5735,33 @@ These procedures add test constraints based on environmental checks:
 | `checkForFossil channel` | Checks Fossil availability |
 | `checkForVisualStudioViaVsWhere channel` | Detects Visual Studio |
 | `checkForEagle channel` | Verifies running in Eagle |
+| `checkForAllowBigIntegers channel` | Adds "bigIntegers" constraint if big integers are allowed |
+| `checkForCulture channel` | Adds a test constraint for the current interpreter culture |
+| `checkForEFormat channel` | Checks if exponential floating-point format is supported |
+| `checkForExcelUsable channel` | Verifies a usable Microsoft Excel COM automation instance |
+| `checkForFile channel fileName` | Adds a test constraint if the specified file exists |
+| `checkForGarudaDll channel` | Checks if Garuda DLL exists and matches process architecture |
+| `checkForGetInstalledUpdates channel` | Checks if OS installed updates enumeration is available |
+| `checkForGlobalTip285 channel` | Checks if global TIP #285 script cancellation reset is supported |
+| `checkForGnuScreen channel` | Detects if session is running inside GNU Screen |
+| `checkForGuru channel` | Checks availability and enablement of Guru diagnostic mode |
+| `checkForHostType channel` | Adds a test constraint for the active interpreter host type |
+| `checkForIeee754r2008 channel` | Checks for IEEE 754-2008 compliant Double.ToString formatting |
+| `checkForImageRuntimeVersion channel` | Adds a constraint for the CLR image runtime version |
+| `checkForIntIsWide channel` | Checks if the "int" Tcl type is equivalent to "wide" |
+| `checkForLibraryAssemblyName channel` | Adds a constraint for the Eagle core library assembly name |
+| `checkForManagedDebuggingAssistants channel` | Detects enabled managed debugging assistants |
+| `checkForMatchingFrameworkVersion channel` | Checks if framework version matches image runtime version |
+| `checkForNativeCode channel` | Adds "native" constraint if binary matches current platform |
+| `checkForNativeLibraryFile channel` | Searches multiple directories for a native shared library file |
+| `checkForNativeUtility channel` | Adds constraint for the loaded native utility library |
+| `checkForNetFx20ServicePack channel` | Detects .NET Framework 2.0 service pack level via registry |
+| `checkForOfficialStableReleaseInProgress channel` | Adds constraint when official stable release testing is active |
+| `checkForOperatingSystemUpdate channel name` | Adds constraint if a named OS update is installed |
+| `checkForPathFile channel fileName` | Searches PATH directories for a file |
+| `checkForQuiet channel` | Adds "quiet" constraint if interpreter quiet mode is enabled |
+| `checkForReferenceCountTracking channel` | Checks if object reference count tracking is compiled in |
+| `checkForSoftwareUpdateTrust channel` | Checks if software update certificate trust is enabled |
 
 #### Feature Checks
 
@@ -5105,6 +5829,7 @@ These procedures add test constraints based on environmental checks:
 | `checkForInternet channel uri timeout` | Checks internet connectivity |
 | `checkForTlsOk channel hosts timeout` | Checks TLS/SSL |
 | `canPing {varName ""}` | Checks ping capability |
+| `checkForWoW64 channel` | Adds "wow64" constraint if running in WoW64 process |
 
 #### Build/Compile Checks
 
@@ -5114,6 +5839,7 @@ These procedures add test constraints based on environmental checks:
 | `checkForBuildType channel name` | Checks build type |
 | `checkForKnownBuildTypes channel` | Checks all build types |
 | `checkForKnownCompileOptions channel` | Checks all compile options |
+| `checkForVisualStudioViaRegistry channel` | Detects Visual Studio versions via Windows registry |
 
 #### Runtime Option Management
 
@@ -5147,6 +5873,12 @@ These procedures add test constraints based on environmental checks:
 | `checkForDatabase channel type string` | Checks database availability |
 | `checkForAssembly channel name` | Checks .NET assembly |
 | `checkForObjectMember channel object member {constraint ""}` | Checks object member |
+| `checkForRuntimeBuild channel` | Adds a constraint for the current runtime build version |
+| `checkForRuntimeOption channel name` | Adds a constraint if a specific runtime option is active |
+| `checkForStaThread channel` | Adds "staThread" constraint if current thread is STA |
+| `checkForStrongNameKey channel` | Checks the core library strong name public key token |
+| `checkForTargetFramework channel` | Adds a constraint for the build target framework moniker |
+| `checkForWindowsCommandProcessor channel` | Checks if ComSpec matches a command processor pattern |
 
 #### Framework Installation Checks
 
@@ -5165,6 +5897,7 @@ These procedures add test constraints based on environmental checks:
 | `getFrameworkSetup472Value` | .NET 4.7.2 installation status |
 | `getFrameworkSetup48Value` | .NET 4.8 installation status |
 | `getFrameworkSetup481Value` | .NET 4.8.1 installation status |
+| `isFrameworkSetup453Installed` | Checks registry for .NET Framework 4.5.3 SKU installation |
 
 #### OS Detection
 
@@ -5186,6 +5919,8 @@ These procedures add test constraints based on environmental checks:
 | `checkForTkPackage channel` | Checks Tk package |
 | `checkForPowerShell channel` | Checks PowerShell |
 | `checkForWix channel` | Checks WiX toolset |
+| `checkForTclOptions channel` | Adds platform and compile-related constraints for native Tcl |
+| `checkForWindowsTerminal channel` | Detects if running inside Windows Terminal |
 
 #### Debugging Checks
 
@@ -5195,6 +5930,48 @@ These procedures add test constraints based on environmental checks:
 | `checkForManagedDebugger channel` | Checks managed debugger attached |
 | `checkForScriptDebugger channel` | Checks script debugger |
 | `checkForScriptDebuggerInterpreter channel` | Checks debugger interpreter |
+
+#### Test Environment Checks
+
+| Procedure | Description |
+|-----------|-------------|
+| `checkForTestCallStack channel` | Validates test call stack depth is acceptable |
+| `checkForTestConfiguration channel` | Adds a constraint for the active test configuration name |
+| `checkForTestMachine channel` | Adds a constraint for the current test machine architecture |
+| `checkForTestNamePrefix channel` | Adds a constraint for the configured test name prefix |
+| `checkForTestPlatform channel` | Adds a constraint for the current test platform identifier |
+| `checkForTestSuffix channel` | Adds a constraint for the configured test suffix string |
+
+#### Internationalization/Culture Checks
+
+| Procedure | Description |
+|-----------|-------------|
+| `checkForThreadCulture channel` | Adds a constraint for the current .NET thread culture name |
+| `checkForUnicodeCategory channel` | Adds constraint for Unicode category of a given character |
+
+#### Utility Procedures
+
+| Procedure | Description |
+|-----------|-------------|
+| `addListStreamChannel channel` | Adds a named list-backed stream channel to the interpreter |
+| `appendExecArguments` | Appends properly quoted arguments to an exec command list |
+| `cleanConstraintName name` | Strips special characters and whitespace from a constraint name |
+| `cleanPackageName name` | Sanitizes a package name by replacing special characters |
+| `compileViaC99 channel source` | Compiles C99 source text into an executable using the C compiler |
+| `execFossilCommand directory args` | Executes a Fossil version control command in a given directory |
+| `getCpuStatus` | Returns CPU name and clock speed via WMIC or /proc/cpuinfo |
+| `getDotNetCoreLibPathDirectoryNameOnly` | Returns .NET Core output directory name under the core library path |
+| `getUlimitC99` | Returns C99 source code for a ulimit-like stack size utility |
+| `getUnicodeCategoryCode category` | Maps a .NET Unicode category name to its two-letter abbreviation |
+| `haveTclPlatformOsExtraUpdateName name` | Checks if a named OS update exists in tcl_platform(osExtra) |
+| `isTestAdministrator` | Determines if the test suite is running with admin privileges |
+| `isTestDotNetCore` | Returns true if the test suite is running on .NET Core |
+| `isTestMono` | Returns true if the test suite is running on Mono |
+| `maybeDownloadFromUri uri` | Attempts to download content from a URI with optional pattern match |
+| `removeChannel channel` | Removes a named channel from the active interpreter |
+| `testForDynamicLoading` | Tests if native dynamic library loading (dlopen) works |
+| `tryDetectFossilRoot` | Walks parent directories to detect the Fossil repository root |
+| `ulimitStackSizeToBytes value` | Converts a ulimit stack size value in kilobytes to bytes |
 
 ---
 
@@ -5226,7 +6003,7 @@ When the Eagle script library is loaded, the following system aliases are create
 - **Total files**: 28
 - **Files with procedures**: 24
 - **Stub files**: 4 (embed.eagle, vendor.eagle, pkgIndex.eagle, test.eagle)
-- **Estimated procedures**: 150+
+- **Estimated procedures**: 500+ (includes 377 in test.eagle)
 
 ### Test1.0 Library
 - **Total files**: 5
@@ -5235,7 +6012,7 @@ When the Eagle script library is loaded, the following system aliases are create
 
 ### Combined Total
 - **All files**: 33
-- **All procedures**: 350+
+- **All procedures**: 580+
 
 ---
 
