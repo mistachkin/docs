@@ -223,7 +223,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
   - `switch ?switches? string {pattern body ... ?default body?}`
   - `switch ?switches? string pattern body ... ?default body?`
   - Compares *string* against each *pattern* in order. When a match is found, executes the corresponding *body* and returns its result. The special pattern `default` matches anything and is typically used as the last pattern.
-  - **Switches**:
+  - **Options**:
     - `-exact` - Use exact string matching (default)
     - `-glob` - Use glob-style pattern matching (*, ?, [chars])
     - `-regexp` - Use regular expression matching
@@ -252,7 +252,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 - **catch** - Catch exceptions and errors
   - `catch script ?resultVarName? ?optionsVarName?`
   - Executes *script* and catches any errors or exceptions that occur. This prevents errors from propagating up the call stack.
-  - **Parameters**:
+  - **Arguments**:
     - *script* - The script to execute
     - *resultVarName* - Optional variable to store the script's result (or error message if an error occurred)
     - *optionsVarName* - Optional variable to store a dictionary of return options (including `-code`, `-errorinfo`, `-errorcode`, `-level`)
@@ -313,7 +313,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 - **error** - Generate an error
   - `error ?message? ?errorInfo? ?errorCode? ?returnCode?`
   - Raises an error with the specified *message*. The error propagates up the call stack until caught by `catch` or `try`.
-  - **Parameters**:
+  - **Arguments**:
     - *message* - The error message text
     - *errorInfo* - Initial stack trace information (appended to as error propagates)
     - *errorCode* - Machine-readable error code (a list, e.g., `{POSIX ENOENT}`)
@@ -350,7 +350,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 - **throw** - Throw an exception
   - `throw message ?returnCode? ?innerException?`
   - Throws an exception with the specified message. This is an Eagle extension that provides .NET-style exception handling.
-  - **Parameters**:
+  - **Arguments**:
     - *message* - The exception message
     - *returnCode* - Return code (default is error)
     - *innerException* - An inner exception object for exception chaining
@@ -409,7 +409,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 - **for** - C-style for loop
   - `for start test next script ?end?`
   - Executes *start* once, then repeatedly executes *script* followed by *next* while *test* evaluates to true. The optional *end* script (Eagle extension) is executed when the loop terminates normally.
-  - **Parameters**:
+  - **Arguments**:
     - *start* - Initialization script (executed once before the loop)
     - *test* - Boolean expression evaluated before each iteration
     - *next* - Script executed after each iteration (even after `continue`)
@@ -427,7 +427,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 - **foreach** - Iterate over lists
   - `foreach varList list ?varList list ...? script`
   - Iterates over one or more lists, assigning elements to variables and executing *script* for each iteration.
-  - **Parameters**:
+  - **Arguments**:
     - *varList* - One or more variable names to receive list elements
     - *list* - The list to iterate over
     - Multiple varList/list pairs can be specified for parallel iteration
@@ -523,7 +523,7 @@ All variable commands belong to ObjectGroup: "variable"
 - **incr** - Increment variable value
   - `incr varName ?increment?`
   - Increments the integer value stored in *varName* by *increment* (default is 1). The variable must contain a valid integer value, or an error is raised.
-  - **Parameters**:
+  - **Arguments**:
     - *varName* - Name of the variable to increment
     - *increment* - Amount to add (can be negative); default is 1
   - **Returns**: The new value of the variable.
@@ -865,7 +865,7 @@ All variable commands belong to ObjectGroup: "variable"
 - **variable** - Declare namespace variables
   - `variable ?name value...? name ?value?`
   - Declares variables within the current namespace. If called inside a procedure within a namespace, creates a link to the namespace variable (similar to `global` but for namespace variables).
-  - **Parameters**:
+  - **Arguments**:
     - *name* - Variable name to declare
     - *value* - Optional initial value
   - **Returns**: An empty string.
@@ -1366,7 +1366,7 @@ String commands belong to ObjectGroup: "string"
 - **split** - Split string into list
   - `split string ?splitChars? ?options?`
   - Splits *string* into a list of elements. By default, splits on any whitespace and removes empty elements.
-  - **Parameters**:
+  - **Arguments**:
     - *splitChars* - Characters to split on (each character is a separator); default is whitespace
     - If *splitChars* is empty string, splits into individual characters
   - **Returns**: A list of substrings.
@@ -2816,7 +2816,7 @@ Eagle provides built-in test commands for unit testing. These commands integrate
 - **test1** - Basic test command (Eagle-specific)
   - `test1 name description constraints body result`
   - Defines and executes a simple test case.
-  - **Parameters**:
+  - **Arguments**:
     - *name* - Unique identifier for the test (e.g., "myproc-1.1")
     - *description* - Human-readable description of what is being tested
     - *constraints* - List of constraints that must be satisfied for the test to run (e.g., `{unix}`, `{knownBug}`)
@@ -2923,7 +2923,7 @@ The `sql` command provides database connectivity using ADO.NET, supporting any d
   - `sql execute ?options? connection query ?{paramName ?paramType? paramValue ?paramSize?} ...?` - Executes a SQL query with optional parameters.
     - **For SELECT**: Returns results as a list of dictionaries (one per row)
     - **For INSERT/UPDATE/DELETE**: Returns the number of affected rows
-    - **Parameters**: Specified as lists `{name type value}` for parameterized queries (prevents SQL injection)
+    - **Arguments**: Specified as lists `{name type value}` for parameterized queries (prevents SQL injection)
     - **Options**: `-time` (measure execution time)
 
   - `sql foreach ?options? connection query ?params...? body` - Executes a query and iterates over results, executing *body* for each row with column values accessible as variables.
@@ -4310,7 +4310,7 @@ These commands interact with the operating system and native code.
   exec -setall -stdout out -stderr err -exitcode code program
   ```
 
-  **Notes**:
+  **Note**:
   - Eagle's exec does NOT support Tcl-style pipeline syntax (`cmd1 | cmd2`)
   - Eagle's exec does NOT support Tcl-style I/O redirection (`< file`, `> file`, `2>&1`)
   - For pipelines, use separate exec calls or the shell: `exec cmd /c "cmd1 | cmd2"`
@@ -5158,7 +5158,7 @@ Eagle supports standard Tcl backslash escape sequences (see the [Tcl manual](htt
 | `\d<digits>` | Decimal number | `puts "\d65"` → "A" |
 | `\X<digits>` | Hex number (uppercase prefix) | `puts "\X41"` → "A" |
 
-**Notes**:
+**Note**:
 - The `\uhhhh` escape requires exactly 4 hex digits for BMP characters
 - The `\Uhhhhhhhh` escape requires exactly 8 hex digits and supports the full Unicode range including supplementary planes
 - Eagle's `\B`, `\o`, `\d`, and `\X` extensions provide explicit radix specification for character codes
@@ -7206,7 +7206,7 @@ The `interp subcommand` command provides a simpler interface for sub-command man
 interp subcommand ?options? path cmdName subCmdName ?command?
 ```
 
-**Arguments:**
+**Arguments**:
 - `path` - Interpreter path ("" for current interpreter)
 - `cmdName` - Name of the ensemble command (e.g., "string")
 - `subCmdName` - Name of the sub-command (e.g., "length")
@@ -7225,7 +7225,7 @@ interp subcommand ?options? path cmdName subCmdName ?command?
 | `UseExecuteArguments` | Append execution arguments to script command |
 | `SkipNameArguments` | Omit command/sub-command names from passed arguments |
 
-**Examples:**
+**Example**:
 
 ```tcl
 # Query a sub-command
@@ -7252,19 +7252,12 @@ $list Add return
 $list Add "custom result"
 
 # Create a custom sub-command
+# Constructor parameters (in order):
+#   name, command, callback, clientData, commandFlags, scriptCommand,
+#   execute, nameIndex, useIExecute, strictNoArguments,
+#   useExecuteArguments, skipNameArguments
 set subCommand [object create -alias Eagle._Tests.Default+SubCommand \
-    mySubCmd           ;# name
-    $command           ;# parent command
-    null               ;# callback
-    null               ;# clientData
-    None               ;# commandFlags
-    $list              ;# scriptCommand
-    null               ;# execute (IExecute)
-    1                  ;# nameIndex
-    false              ;# useIExecute
-    false              ;# strictNoArguments
-    false              ;# useExecuteArguments
-    false]             ;# skipNameArguments
+    mySubCmd $command null null None $list null 1 false false false false]
 
 # Add to the sub-commands dictionary
 $subCommands Add mySubCmd $subCommand
@@ -7502,13 +7495,9 @@ set code [$interpreter AddAutomaticCommands \
 A `TypedInstance` encapsulates the information needed for automatic command creation:
 
 ```tcl
+# Constructor: TypedInstance type objectFlags object objectName fullObjectName extraParts
 set typedInstance [object create -alias TypedInstance \
-    $typeName       ;# Type - the .NET type containing methods
-    $objectFlags    ;# ObjectFlags - flags controlling object handling
-    $instance       ;# Object - instance for instance methods (or null for static-only)
-    $objectName     ;# ObjectName - short command name
-    $fullObjectName ;# FullObjectName - optional full name (fallback)
-    $extraParts]    ;# ExtraParts - additional name parts (optional)
+    $typeName $objectFlags $instance $objectName $fullObjectName $extraParts]
 ```
 
 **Constructor parameters:**
@@ -7530,7 +7519,7 @@ Once created, automatic commands follow this syntax:
 commandName ?options? methodName ?arg ...?
 ```
 
-**Example:**
+**Example**:
 ```tcl
 # Call ToString with no arguments
 myInt64 ToString
@@ -7689,7 +7678,7 @@ public ReturnCode AddAutomaticCommands(
 
 The `DelegateMapper` class maintains the mapping between .NET methods and script delegates:
 
-**Structure:** `Type → MethodName → ParameterCount → List<(MethodBase, Delegate, DelegateFlags)>`
+**Structure**: `Type → MethodName → ParameterCount → List<(MethodBase, Delegate, DelegateFlags)>`
 
 **Key methods:**
 - `Load(type, bindingFlags, ...)` - Load all methods from a type

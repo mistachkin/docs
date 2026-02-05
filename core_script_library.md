@@ -70,9 +70,9 @@ isEagle
 Detects whether the script is running in Eagle or vanilla Tcl.
 
 - **Returns**: Non-zero if running in Eagle, zero if running in Tcl.
-- **Notes**: This is a bootstrap procedure that must work in both interpreters. It checks for the presence of `::tcl_platform(engine)` set to "eagle".
+- **Note**: This is a bootstrap procedure that must work in both interpreters. It checks for the presence of `::tcl_platform(engine)` set to "eagle".
 
-**Example**:
+- **Example**:
 ```tcl
 if {[isEagle]} {
     puts "Running in Eagle"
@@ -91,7 +91,7 @@ loadGarudaForUseByEagle {machine ""} {configuration ""} {suffix ""} {methodFlags
 
 Loads the native Tcl library, enables command bridging, and loads the Eagle Native Package for Tcl (Garuda).
 
-- **Parameters**:
+- **Arguments**:
   - `machine` - Target machine architecture (optional, auto-detected)
   - `configuration` - Build configuration (optional, auto-detected)
   - `suffix` - Test suffix (optional)
@@ -99,7 +99,7 @@ Loads the native Tcl library, enables command bridging, and loads the Eagle Nati
   - `noNormalize` - Avoid Tcl junction bug (default: true)
   - `quiet` - Suppress logging (default: false)
 - **Returns**: Empty string on success.
-- **Notes**: This procedure can fail if native Tcl or Garuda is not available.
+- **Note**: This procedure can fail if native Tcl or Garuda is not available.
 
 ---
 
@@ -111,11 +111,11 @@ loadScripts directory fileNamesOnly
 
 Sources other script files that belong to the package.
 
-- **Parameters**:
+- **Arguments**:
   - `directory` - Directory containing scripts (uses `$tcl_library` if empty)
   - `fileNamesOnly` - List of script file names to load
 - **Returns**: Empty string on success.
-- **Notes**: In Eagle, uses `-withinfo` and `-library` options to preserve procedure location information.
+- **Note**: In Eagle, uses `-withinfo` and `-library` options to preserve procedure location information.
 
 ---
 
@@ -127,7 +127,7 @@ maybeLoadScripts directory fileNamesOnly
 
 Like `loadScripts`, but skips files that have been explicitly forbidden via `::no($fileNameOnly)`.
 
-- **Parameters**:
+- **Arguments**:
   - `directory` - Directory containing scripts
   - `fileNamesOnly` - List of script file names to load
 - **Returns**: Empty string on success.
@@ -142,9 +142,9 @@ sourceWithInfo args
 
 Sources a script file while preserving location information for procedures defined within it.
 
-- **Parameters**: Same as the `source` command
+- **Arguments**: Same as the `source` command
 - **Returns**: Result of the sourced script.
-- **Notes**: Eagle-only. Manages argument caching and location tracking.
+- **Note**: Eagle-only. Manages argument caching and location tracking.
 
 ---
 
@@ -156,11 +156,11 @@ unknown name args
 
 The unknown command handler executed when a command is not found.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - The unknown command name
   - `args` - Arguments passed to the command
 - **Returns**: Error with "invalid command name" message.
-- **Notes**: If the `eagleUnknownObjectInvoke` runtime option is set, attempts to use the command name as a CLR type name first.
+- **Note**: If the `eagleUnknownObjectInvoke` runtime option is set, attempts to use the command name as a CLR type name first.
 
 ---
 
@@ -172,11 +172,11 @@ tclPkgUnknown name args
 
 Package unknown handler that forces a rescan of package indexes.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - The requested package name
   - `args` - Additional arguments
 - **Returns**: Empty string.
-- **Notes**: Called by the package management subsystem when a package cannot be found.
+- **Note**: Called by the package management subsystem when a package cannot be found.
 
 ---
 
@@ -188,7 +188,7 @@ makeProcedureFast name fast
 
 Marks a procedure for "fast" execution by disabling variable access overhead.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Procedure name
   - `fast` - Boolean to enable/disable fast mode
 - **Returns**: Empty string.
@@ -203,7 +203,7 @@ makeVariableFast name fast
 
 Marks a variable for "fast" access by disabling access overhead.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Variable name
   - `fast` - Boolean to enable/disable fast mode
 - **Returns**: Empty string.
@@ -222,11 +222,11 @@ getEnvironmentVariable name
 
 Returns the value of an environment variable, or empty string if it doesn't exist.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Environment variable name
 - **Returns**: The environment variable value or empty string.
 
-**Example**:
+- **Example**:
 ```tcl
 set home [getEnvironmentVariable HOME]
 set path [getEnvironmentVariable PATH]
@@ -242,10 +242,10 @@ appendArgs args
 
 Appends all arguments into one string verbatim, avoiding undesired string interpolation.
 
-- **Parameters**: Any number of arguments
+- **Arguments**: Any number of arguments
 - **Returns**: Concatenated string.
 
-**Example**:
+- **Example**:
 ```tcl
 set result [appendArgs "Hello, " $name "!"]
 # Equivalent to: set result "Hello, ${name}!"
@@ -261,14 +261,14 @@ getDictionaryValue dictionary name {default ""} {wrap ""}
 
 Finds and returns a named value from a dictionary (list of name-value pairs).
 
-- **Parameters**:
+- **Arguments**:
   - `dictionary` - List in format `{name1 value1 name2 value2 ...}`
   - `name` - Name to search for
   - `default` - Default value if not found
   - `wrap` - String to wrap around the value
 - **Returns**: The found value (optionally wrapped) or the default.
 
-**Example**:
+- **Example**:
 ```tcl
 set dict {color red size large}
 set color [getDictionaryValue $dict color "unknown"]  ;# Returns: red
@@ -285,7 +285,7 @@ exportAndImportPackageCommands namespace exports forget force
 
 Exports commands from a namespace and imports them into the global namespace.
 
-- **Parameters**:
+- **Arguments**:
   - `namespace` - Source namespace
   - `exports` - List of command names to export
   - `forget` - If true, forget previous imports first
@@ -318,12 +318,12 @@ parray a ?pattern?
 
 Prints the contents of an array to stdout, emulating the native Tcl `parray` procedure.
 
-- **Parameters**:
+- **Arguments**:
   - `a` - Array name
   - `pattern` - Optional glob pattern to filter names
 - **Returns**: Empty string (output goes to stdout).
 
-**Example**:
+- **Example**:
 ```tcl
 array set data {name "John" age 30 city "NYC"}
 parray data
@@ -343,7 +343,7 @@ pdict d
 
 Prints the contents of a dictionary to stdout.
 
-- **Parameters**:
+- **Arguments**:
   - `d` - Dictionary (list of name-value pairs)
 - **Returns**: Empty string (output goes to stdout).
 
@@ -357,12 +357,12 @@ test name description args
 
 Emulates the native Tcl `test` command from the tcltest package. Automatically detects old-style vs new-style tests.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Test name
   - `description` - Test description
   - `args` - Test arguments (constraints, body, result, etc.)
 - **Returns**: Test result.
-- **Notes**: Delegates to `test1` (old-style) or `test2` (new-style) based on argument format.
+- **Note**: Delegates to `test1` (old-style) or `test2` (new-style) based on argument format.
 
 ---
 
@@ -374,7 +374,7 @@ tclLog string
 
 Emulates the native Tcl `tclLog` command by writing to stderr.
 
-- **Parameters**:
+- **Arguments**:
   - `string` - Message to log
 - **Returns**: Empty string.
 
@@ -392,7 +392,7 @@ haveColumnValue row column
 
 Checks if a database column exists within a row.
 
-- **Parameters**:
+- **Arguments**:
   - `row` - Database row (list of `{columnName value}` pairs)
   - `column` - Column name to find
 - **Returns**: Non-zero if the column exists.
@@ -407,7 +407,7 @@ haveRowColumnValue varName id column
 
 Checks if a column exists within a specific row in an array of rows.
 
-- **Parameters**:
+- **Arguments**:
   - `varName` - Name of array variable containing rows
   - `id` - Row identifier (array index)
   - `column` - Column name to find
@@ -423,14 +423,14 @@ getColumnValue row column {default ""} {wrap ""}
 
 Gets the value of a database column from a row.
 
-- **Parameters**:
+- **Arguments**:
   - `row` - Database row (list of `{columnName value}` pairs)
   - `column` - Column name
   - `default` - Default value if column not found
   - `wrap` - String to wrap around the value
 - **Returns**: Column value or default.
 
-**Example**:
+- **Example**:
 ```tcl
 set row {{name "John"} {age 30}}
 set name [getColumnValue $row name "Unknown"]  ;# Returns: John
@@ -447,7 +447,7 @@ getRowColumnValue varName id column {default ""} {wrap ""}
 
 Gets a column value from a specific row in an array of rows.
 
-- **Parameters**:
+- **Arguments**:
   - `varName` - Name of array variable containing rows
   - `id` - Row identifier (array index)
   - `column` - Column name
@@ -469,10 +469,10 @@ lappendArgs args
 
 Appends all arguments as list elements and returns the resulting list.
 
-- **Parameters**: Any number of arguments
+- **Arguments**: Any number of arguments
 - **Returns**: A list containing all arguments.
 
-**Example**:
+- **Example**:
 ```tcl
 set items [lappendArgs "a" "b" "c"]  ;# Returns: {a b c}
 ```
@@ -487,11 +487,11 @@ lshuffle list
 
 Pseudo-randomly shuffles a list using the Fisher-Yates algorithm.
 
-- **Parameters**:
+- **Arguments**:
   - `list` - List to shuffle
 - **Returns**: Shuffled list.
 
-**Example**:
+- **Example**:
 ```tcl
 set cards {1 2 3 4 5}
 set shuffled [lshuffle $cards]  ;# e.g., {3 1 5 2 4}
@@ -507,12 +507,12 @@ ldifference list1 list2
 
 Returns elements present in one list but not the other (symmetric difference).
 
-- **Parameters**:
+- **Arguments**:
   - `list1` - First list
   - `list2` - Second list
 - **Returns**: List of elements unique to either list.
 
-**Example**:
+- **Example**:
 ```tcl
 set a {1 2 3 4}
 set b {3 4 5 6}
@@ -529,12 +529,12 @@ filter list script
 
 Returns elements from the list for which the script returns non-zero.
 
-- **Parameters**:
+- **Arguments**:
   - `list` - List to filter
   - `script` - Script that receives each element and returns a boolean
 - **Returns**: Filtered list.
 
-**Example**:
+- **Example**:
 ```tcl
 set numbers {1 2 3 4 5 6}
 set evens [filter $numbers {expr {$item % 2 == 0}}]  ;# Returns: {2 4 6}
@@ -550,12 +550,12 @@ map list script
 
 Applies a transformation script to each list element.
 
-- **Parameters**:
+- **Arguments**:
   - `list` - List to transform
   - `script` - Script that receives each element and returns transformed value
 - **Returns**: Transformed list.
 
-**Example**:
+- **Example**:
 ```tcl
 set numbers {1 2 3 4}
 set doubled [map $numbers {expr {$item * 2}}]  ;# Returns: {2 4 6 8}
@@ -571,12 +571,12 @@ reduce list script
 
 Reduces a list to a single value by applying a script cumulatively.
 
-- **Parameters**:
+- **Arguments**:
   - `list` - List to reduce
   - `script` - Script receiving `result` and `item`, returns accumulated value
 - **Returns**: Final accumulated value.
 
-**Example**:
+- **Example**:
 ```tcl
 set numbers {1 2 3 4 5}
 set sum [reduce $numbers {expr {$result + $item}}]  ;# Returns: 15
@@ -633,7 +633,7 @@ isAdministrator
 Checks if the current user has administrator privileges.
 
 - **Returns**: Non-zero if administrator.
-- **Notes**: Currently only works in Eagle.
+- **Note**: Currently only works in Eagle.
 
 ---
 
@@ -681,7 +681,7 @@ foundInPath dirs dir
 
 Checks if a directory is in a list of directories (case-insensitive on Windows).
 
-- **Parameters**:
+- **Arguments**:
   - `dirs` - List of directories
   - `dir` - Directory to find
 - **Returns**: Boolean.
@@ -696,7 +696,7 @@ addToPath dir
 
 Adds a directory to the system PATH (or LD_LIBRARY_PATH on Unix).
 
-- **Parameters**:
+- **Arguments**:
   - `dir` - Directory to add
 - **Returns**: Non-zero if the path was modified.
 
@@ -710,7 +710,7 @@ removeFromPath dir
 
 Removes a directory from the system PATH.
 
-- **Parameters**:
+- **Arguments**:
   - `dir` - Directory to remove
 - **Returns**: Non-zero if the path was modified.
 
@@ -724,11 +724,11 @@ isSameFileName fileName1 fileName2
 
 Compares two file names for equality using the most robust method available.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName1` - First file name
   - `fileName2` - Second file name
 - **Returns**: Non-zero if the files are the same.
-- **Notes**: Uses `file same` in Eagle, string comparison in Tcl (case-insensitive on Windows).
+- **Note**: Uses `file same` in Eagle, string comparison in Tcl (case-insensitive on Windows).
 
 ---
 
@@ -744,7 +744,7 @@ makeBinaryChannel channel
 
 Reconfigures a channel for full binary mode.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Channel identifier
 - **Returns**: Empty string.
 
@@ -758,11 +758,11 @@ readFile fileName
 
 Reads all data from a binary file.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to file
 - **Returns**: File contents as binary data.
 
-**Example**:
+- **Example**:
 ```tcl
 set data [readFile "image.png"]
 ```
@@ -777,7 +777,7 @@ writeFile fileName data
 
 Writes data to a binary file (overwrites existing content).
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to file
   - `data` - Data to write
 - **Returns**: Empty string.
@@ -792,7 +792,7 @@ appendFile fileName data
 
 Appends data to a binary file.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to file
   - `data` - Data to append
 - **Returns**: Empty string.
@@ -811,7 +811,7 @@ makeAsciiChannel channel
 
 Reconfigures a channel for ASCII mode with auto line-ending translation.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Channel identifier
 - **Returns**: Empty string.
 
@@ -825,7 +825,7 @@ readAsciiFile fileName
 
 Reads all data from an ASCII text file.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to file
 - **Returns**: File contents as ASCII text.
 
@@ -839,7 +839,7 @@ writeAsciiFile fileName data
 
 Writes data to an ASCII text file.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to file
   - `data` - Text to write
 - **Returns**: Empty string.
@@ -854,10 +854,10 @@ makeLogChannel channel
 
 Reconfigures a channel for use by the logging subsystem.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Channel identifier
 - **Returns**: Empty string.
-- **Notes**: Uses "protocol" translation in Eagle, "auto" in Tcl.
+- **Note**: Uses "protocol" translation in Eagle, "auto" in Tcl.
 
 ---
 
@@ -869,7 +869,7 @@ appendLogFile fileName data
 
 Appends data to a log file.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to log file
   - `data` - Data to append
 - **Returns**: Empty string.
@@ -884,7 +884,7 @@ appendSharedLogFile fileName data
 
 Appends data to a shared log file (allows concurrent access).
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to log file
   - `data` - Data to append
 - **Returns**: Empty string.
@@ -899,7 +899,7 @@ readSharedFile fileName
 
 Reads from a file with shared access (allows concurrent readers/writers).
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to file
 - **Returns**: File contents.
 
@@ -913,7 +913,7 @@ appendSharedFile fileName data
 
 Appends to a file with shared access.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to file
   - `data` - Data to append
 - **Returns**: Empty string.
@@ -932,7 +932,7 @@ makeUnicodeChannel channel
 
 Reconfigures a channel for Unicode mode with auto line-ending translation.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Channel identifier
 - **Returns**: Empty string.
 
@@ -946,7 +946,7 @@ readUnicodeFile fileName
 
 Reads all data from a Unicode file.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to file
 - **Returns**: File contents.
 
@@ -960,7 +960,7 @@ writeUnicodeFile fileName data
 
 Writes data to a Unicode file.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to file
   - `data` - Data to write
 - **Returns**: Empty string.
@@ -975,7 +975,7 @@ makeUnicodeBinaryChannel channel
 
 Reconfigures a channel for Unicode mode with binary (no) line-ending translation.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Channel identifier
 - **Returns**: Empty string.
 
@@ -989,7 +989,7 @@ readUnicodeBinaryFile fileName
 
 Reads from a Unicode binary file (no line-ending translation).
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to file
 - **Returns**: File contents.
 
@@ -1003,7 +1003,7 @@ writeUnicodeBinaryFile fileName data
 
 Writes to a Unicode binary file.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to file
   - `data` - Data to write
 - **Returns**: Empty string.
@@ -1018,7 +1018,7 @@ makeUtf8Channel channel
 
 Reconfigures a channel for UTF-8 mode.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Channel identifier
 - **Returns**: Empty string.
 
@@ -1032,7 +1032,7 @@ readUtf8File fileName
 
 Reads from a UTF-8 file.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to file
 - **Returns**: File contents.
 
@@ -1046,7 +1046,7 @@ writeUtf8File fileName data
 
 Writes to a UTF-8 file.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Path to file
   - `data` - Data to write
 - **Returns**: Empty string.
@@ -1065,7 +1065,7 @@ tclLogForCommand {command ""}
 
 Emits a Tcl log message based on the calling procedure.
 
-- **Parameters**:
+- **Arguments**:
   - `command` - Optional command to include in log
 - **Returns**: Empty string.
 
@@ -1079,7 +1079,7 @@ populateTypesForComSpecDir dirVarName fileVarName
 
 Populates arrays with type options for the Windows `dir` command.
 
-- **Parameters**:
+- **Arguments**:
   - `dirVarName` - Variable name for directory types
   - `fileVarName` - Variable name for file types
 - **Returns**: Empty string.
@@ -1094,7 +1094,7 @@ populateTypesForGlob dirVarName fileVarName
 
 Populates arrays with `-types` option values for `glob`.
 
-- **Parameters**:
+- **Arguments**:
   - `dirVarName` - Variable name for directory types
   - `fileVarName` - Variable name for file types
 - **Returns**: Empty string.
@@ -1109,7 +1109,7 @@ filterForGlob paths
 
 Filters glob results to remove unwanted entries like "." and "..".
 
-- **Parameters**:
+- **Arguments**:
   - `paths` - List of paths
 - **Returns**: Filtered list.
 
@@ -1123,7 +1123,7 @@ canUseComSpecDir pattern
 
 Checks if file searches can use the Windows command shell `dir` command.
 
-- **Parameters**:
+- **Arguments**:
   - `pattern` - Search pattern
 - **Returns**: Boolean.
 
@@ -1137,11 +1137,11 @@ findDirectories pattern
 
 Finds directories matching a pattern (non-recursive).
 
-- **Parameters**:
+- **Arguments**:
   - `pattern` - Glob pattern
 - **Returns**: List of matching directories.
 
-**Example**:
+- **Example**:
 ```tcl
 set dirs [findDirectories "/home/user/*"]
 ```
@@ -1156,7 +1156,7 @@ findDirectoriesRecursive pattern
 
 Finds directories matching a pattern (recursive).
 
-- **Parameters**:
+- **Arguments**:
   - `pattern` - Glob pattern
 - **Returns**: List of matching directories.
 
@@ -1170,11 +1170,11 @@ findFiles pattern
 
 Finds files matching a pattern (non-recursive).
 
-- **Parameters**:
+- **Arguments**:
   - `pattern` - Glob pattern
 - **Returns**: List of matching files.
 
-**Example**:
+- **Example**:
 ```tcl
 set scripts [findFiles "*.eagle"]
 ```
@@ -1189,7 +1189,7 @@ findFilesRecursive pattern
 
 Finds files matching a pattern (recursive).
 
-- **Parameters**:
+- **Arguments**:
   - `pattern` - Glob pattern
 - **Returns**: List of matching files.
 
@@ -1203,7 +1203,7 @@ copyFilesRecursive sourceDirectory targetDirectory {patterns ""} {options ""}
 
 Copies files recursively using Robocopy (Windows only).
 
-- **Parameters**:
+- **Arguments**:
   - `sourceDirectory` - Source directory
   - `targetDirectory` - Target directory
   - `patterns` - File patterns to copy (default: all)
@@ -1236,10 +1236,10 @@ getRuntimeCommandLine fileName
 
 Returns command line arguments needed to run an executable on the current runtime.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Executable file name
 - **Returns**: List of command line arguments.
-- **Notes**: Handles differences between .NET Framework, Mono, and .NET Core.
+- **Note**: Handles differences between .NET Framework, Mono, and .NET Core.
 
 ---
 
@@ -1251,12 +1251,12 @@ execShell options args
 
 Executes a native Tcl or Eagle sub-shell with the specified arguments.
 
-- **Parameters**:
+- **Arguments**:
   - `options` - Options for the `exec` command
   - `args` - Arguments for the shell
 - **Returns**: Captured output from the shell.
 
-**Example**:
+- **Example**:
 ```tcl
 set result [execShell {} -c {puts "Hello from sub-shell"}]
 ```
@@ -1271,12 +1271,12 @@ maybeGetExitCode value {default ""}
 
 Extracts the exit code from `$::errorCode` after an `exec` command.
 
-- **Parameters**:
+- **Arguments**:
   - `value` - The `$::errorCode` value
   - `default` - Default value if no exit code found
 - **Returns**: Exit code as integer or default.
 
-**Example**:
+- **Example**:
 ```tcl
 if {[catch {exec somecommand} result]} {
     set exitCode [maybeGetExitCode $::errorCode -1]
@@ -1309,7 +1309,7 @@ getPlatformInfo name {default ""}
 
 Returns specific Eagle platform information.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Platform info key (e.g., "machine", "runtime")
   - `default` - Default value if not found
 - **Returns**: Platform information value.
@@ -1324,7 +1324,7 @@ getPluginName pattern
 
 Returns the name of the first loaded plugin matching a pattern.
 
-- **Parameters**:
+- **Arguments**:
   - `pattern` - Regular expression pattern
 - **Returns**: Plugin name or empty string.
 
@@ -1338,7 +1338,7 @@ getPluginPath pattern
 
 Returns the file path of the first loaded plugin matching a pattern.
 
-- **Parameters**:
+- **Arguments**:
   - `pattern` - Regular expression pattern
 - **Returns**: Plugin file path or empty string.
 
@@ -1352,7 +1352,7 @@ getPackageInstallPath {packageName ""} {temporaryPrefix ""}
 
 Returns the directory where packages should be installed.
 
-- **Parameters**:
+- **Arguments**:
   - `packageName` - Optional package name (creates subdirectory)
   - `temporaryPrefix` - Prefix for temporary directory if Tcl library unavailable
 - **Returns**: Installation directory path.
@@ -1379,7 +1379,7 @@ getPluginFlags pattern
 
 Returns the flags for the first loaded plugin matching a pattern.
 
-- **Parameters**:
+- **Arguments**:
   - `pattern` - Regular expression pattern
 - **Returns**: List of plugin flags.
 
@@ -1393,7 +1393,7 @@ haveGaruda {varName ""}
 
 Checks if the Eagle Native Package for Tcl (Garuda) is loaded.
 
-- **Parameters**:
+- **Arguments**:
   - `varName` - Optional variable to store the Garuda package ID
 - **Returns**: Non-zero if Garuda is available.
 
@@ -1407,7 +1407,7 @@ isTclThread name
 
 Checks if a name represents a thread managed by the native Tcl integration subsystem.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Thread name
 - **Returns**: Non-zero if it's a Tcl thread.
 
@@ -1427,7 +1427,7 @@ combineFlags flags1 flags2 {flags3 ""} {noCase false}
 
 Combines two flag strings and optionally excludes specified flags.
 
-- **Parameters**:
+- **Arguments**:
   - `flags1` - First flag string
   - `flags2` - Second flag string
   - `flags3` - Flags to exclude
@@ -1444,7 +1444,7 @@ getReturnType object member
 
 Returns the type name of the return type for a CLR member.
 
-- **Parameters**:
+- **Arguments**:
   - `object` - Object or type name
   - `member` - Member name
 - **Returns**: Assembly-qualified type name.
@@ -1459,7 +1459,7 @@ getDefaultValue typeName
 
 Returns the default value for a CLR type.
 
-- **Parameters**:
+- **Arguments**:
   - `typeName` - CLR type name
 - **Returns**: `0` for value types, `"null"` for reference types.
 
@@ -1473,7 +1473,7 @@ getStringFromObjectHandle value {default ""}
 
 Converts an opaque object handle to a string.
 
-- **Parameters**:
+- **Arguments**:
   - `value` - Object handle
   - `default` - Default value if conversion fails
 - **Returns**: String representation or default.
@@ -1488,7 +1488,7 @@ isObjectHandle value
 
 Checks if a value can be used as an opaque object handle.
 
-- **Parameters**:
+- **Arguments**:
   - `value` - Value to check
 - **Returns**: Boolean.
 
@@ -1502,7 +1502,7 @@ isNonNullObjectHandle value
 
 Checks if a value is a valid, non-null object handle.
 
-- **Parameters**:
+- **Arguments**:
   - `value` - Value to check
 - **Returns**: Boolean.
 
@@ -1516,7 +1516,7 @@ isBasicType value {subset basic}
 
 Checks if a CLR object is a basic type (losslessly convertible to string).
 
-- **Parameters**:
+- **Arguments**:
   - `value` - Object handle
   - `subset` - Type subset: `basic`, `integral`, `integral8`, `fixedPoint`, `floatingPoint`, `string`, `dateTime`, `dbNull`
 - **Returns**: Boolean.
@@ -1531,7 +1531,7 @@ isManagedType name
 
 Checks if a name represents a valid CLR type.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Type name
 - **Returns**: Boolean.
 
@@ -1545,7 +1545,7 @@ canGetManagedType name allowExtra {typeVarName ""} {extraVarName ""}
 
 Checks if a name is usable as a CLR type name, optionally with member access.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Name to check
   - `allowExtra` - Allow extra parts after type name
   - `typeVarName` - Variable to store the type name
@@ -1562,13 +1562,13 @@ evalAsync doneScript args
 
 Evaluates a script asynchronously with optional completion notification.
 
-- **Parameters**:
+- **Arguments**:
   - `doneScript` - Script to run when evaluation completes (empty for no notification)
   - `args` - Script to evaluate (concatenated if multiple)
 - **Returns**: Empty string (result goes to callback).
-- **Notes**: Requires THREADING compile option. If using a callback, also requires EMIT compile option.
+- **Note**: Requires THREADING compile option. If using a callback, also requires EMIT compile option.
 
-**Example**:
+- **Example**:
 ```tcl
 evalAsync {puts "Done: $context"} {
     after 1000
@@ -1590,7 +1590,7 @@ getOwnerForProcess process {noIntegrity false} {refresh false}
 
 Determines the owner of a process.
 
-- **Parameters**:
+- **Arguments**:
   - `process` - Process object
   - `noIntegrity` - Skip integrity level check
   - `refresh` - Refresh cached information
@@ -1606,7 +1606,7 @@ getProcesses name
 
 Returns a list of process IDs matching a name.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Process name (empty for all processes)
 - **Returns**: List of process IDs.
 
@@ -1620,7 +1620,7 @@ waitForProcesses ids timeout {collect true} {kill true}
 
 Waits for processes to exit within a timeout.
 
-- **Parameters**:
+- **Arguments**:
   - `ids` - List of process IDs
   - `timeout` - Timeout in milliseconds
   - `collect` - Run garbage collection
@@ -1641,12 +1641,12 @@ hasRuntimeOption name {default false}
 
 Checks if a runtime option is currently set.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Option name
   - `default` - Default return value
 - **Returns**: Non-zero if option is set.
 
-**Example**:
+- **Example**:
 ```tcl
 if {[hasRuntimeOption verbose]} {
     puts "Verbose mode enabled"
@@ -1663,7 +1663,7 @@ listRuntimeOptions {default ""}
 
 Returns a list of runtime options that are currently set.
 
-- **Parameters**:
+- **Arguments**:
   - `default` - Default return value
 - **Returns**: List of option names.
 
@@ -1677,7 +1677,7 @@ addRuntimeOption name
 
 Adds a runtime option.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Option name
 - **Returns**: Non-zero if added successfully.
 
@@ -1691,7 +1691,7 @@ removeRuntimeOption name
 
 Removes a runtime option.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Option name
 - **Returns**: Non-zero if removed successfully.
 
@@ -1705,7 +1705,7 @@ toggleRuntimeOption name {value ""}
 
 Toggles a runtime option or sets it to a specific value.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Option name
   - `value` - Specific value to set (empty to toggle)
 - **Returns**: Empty string.
@@ -1724,7 +1724,7 @@ vwaitLocked varName isArray script
 
 Locks a variable while evaluating a script (thread-safe).
 
-- **Parameters**:
+- **Arguments**:
   - `varName` - Variable name
   - `isArray` - True if variable is an array
   - `script` - Script to evaluate
@@ -1740,7 +1740,7 @@ tqputs channel string
 
 Emits a message to a channel and adds it to the test log queue.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `string` - Message to emit
 - **Returns**: Empty string.
@@ -1755,7 +1755,7 @@ tqlog string
 
 Adds a message to the test log queue for later writing.
 
-- **Parameters**:
+- **Arguments**:
   - `string` - Message to log
 - **Returns**: Empty string.
 
@@ -1773,7 +1773,7 @@ setupUnzipVars force {cleanup false}
 
 Sets up default configuration parameters for the unzip package.
 
-- **Parameters**:
+- **Arguments**:
   - `force` - Force setup even if already done
   - `cleanup` - Clean up existing configuration
 - **Returns**: Empty string.
@@ -1801,12 +1801,12 @@ extractZipArchive archiveFileName {extractRootDirectory ""} {rootOnly false}
 
 Extracts a ZIP archive using the unzip command.
 
-- **Parameters**:
+- **Arguments**:
   - `archiveFileName` - Path to ZIP file
   - `extractRootDirectory` - Extraction destination (default: temp directory)
   - `rootOnly` - Extract only root-level files
 - **Returns**: Extraction directory path.
-- **Notes**: Downloads unzip tool automatically on Windows if needed.
+- **Note**: Downloads unzip tool automatically on Windows if needed.
 
 ---
 
@@ -1822,7 +1822,7 @@ makeUpdateId args
 
 Creates an identifier for use with update tracking.
 
-- **Parameters**: Variable arguments forming the identifier
+- **Arguments**: Variable arguments forming the identifier
 - **Returns**: Update identifier string.
 
 ---
@@ -1835,7 +1835,7 @@ getUpdateFileName {directory ""}
 
 Returns the path to the updates.tsv file.
 
-- **Parameters**:
+- **Arguments**:
   - `directory` - Directory containing the file
 - **Returns**: Full path to updates.tsv.
 
@@ -1849,7 +1849,7 @@ isUpdateInstalled updateId {directory ""} {script ""}
 
 Checks if a specific update is installed.
 
-- **Parameters**:
+- **Arguments**:
   - `updateId` - Update identifier
   - `directory` - Directory containing updates.tsv
   - `script` - Optional script to evaluate for each found update
@@ -1865,7 +1865,7 @@ markUpdateInstalled updateId installed {directory ""} {notes ""}
 
 Marks an update as installed or removes the installation mark.
 
-- **Parameters**:
+- **Arguments**:
   - `updateId` - Update identifier
   - `installed` - True to mark installed, false to unmark
   - `directory` - Directory containing updates.tsv
@@ -1882,7 +1882,7 @@ checkForUpdate {type ""} {uri ""} {publicKeyToken ""} {name ""} {culture ""} {pa
 
 Main procedure to check for software updates.
 
-- **Parameters**:
+- **Arguments**:
   - `type` - Update type
   - `uri` - Update server URI
   - `publicKeyToken` - Product public key token
@@ -1906,7 +1906,7 @@ checkForEngine {wantScripts false} {quiet false} {prompt false} {automatic false
 
 Checks for new Eagle engine versions.
 
-- **Parameters**:
+- **Arguments**:
   - `wantScripts` - Also check for update scripts
   - `quiet` - Suppress output
   - `prompt` - Prompt before downloading
@@ -1923,7 +1923,7 @@ runUpdateAndExit {automatic false} {whatIf false}
 
 Runs the updater tool and exits the process.
 
-- **Parameters**:
+- **Arguments**:
   - `automatic` - Automatic mode
   - `whatIf` - Preview mode (don't actually update)
 - **Returns**: Does not return (exits process).
@@ -1942,12 +1942,12 @@ unknownObjectInvoke level name args
 
 Handler for the `unknown` command that treats command names as CLR type names.
 
-- **Parameters**:
+- **Arguments**:
   - `level` - Call stack level
   - `name` - Unknown command name (treated as type name)
   - `args` - Arguments for the invocation
 - **Returns**: Result of the object invocation.
-- **Notes**: Enables syntax like `System.Console WriteLine "Hello"`.
+- **Note**: Enables syntax like `System.Console WriteLine "Hello"`.
 
 ---
 
@@ -1963,7 +1963,7 @@ csharpLog string {object ""}
 
 Logs C# compilation lifecycle stages.
 
-- **Parameters**:
+- **Arguments**:
   - `string` - Log message
   - `object` - Optional object to include properties from
 - **Returns**: Empty string.
@@ -1990,7 +1990,7 @@ getDotNetStandardReferencePath {packageVersion ""} {standardVersion ""} {useSdkV
 
 Returns the path to .NET Standard reference assemblies.
 
-- **Parameters**:
+- **Arguments**:
   - `packageVersion` - NuGet package version
   - `standardVersion` - .NET Standard version
   - `useSdkVersion` - Use SDK version for lookup
@@ -2006,7 +2006,7 @@ getCSharpTestProgram {name ""}
 
 Returns a C# test program for compiler verification.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Test class name
 - **Returns**: List with class name and program text.
 
@@ -2020,7 +2020,7 @@ doesCompileCSharpWork {name ""} {errorsVarName ""} {memory true} args
 
 Tests if the C# compiler is working.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Test class name
   - `errorsVarName` - Variable to store errors
   - `memory` - Compile to memory (vs. file)
@@ -2037,7 +2037,7 @@ compileViaCSharpCodeProvider string memory symbols strict resultsVarName errorsV
 
 Compiles C# code using CSharpCodeProvider (desktop .NET Framework).
 
-- **Parameters**:
+- **Arguments**:
   - `string` - C# source code
   - `memory` - Compile to memory
   - `symbols` - Generate debug symbols
@@ -2057,7 +2057,7 @@ compileViaDotNetCoreCSharp string memory symbols strict resultsVarName errorsVar
 
 Compiles C# code using the .NET Core SDK command-line compiler.
 
-- **Parameters**: Same as `compileViaCSharpCodeProvider`
+- **Arguments**: Same as `compileViaCSharpCodeProvider`
 - **Returns**: Assembly object on success.
 
 ---
@@ -2122,7 +2122,7 @@ help args
 
 Displays help via the interactive "#help" command.
 
-- **Parameters**: Optional help topic
+- **Arguments**: Optional help topic
 - **Returns**: Empty string.
 
 ---
@@ -2135,7 +2135,7 @@ quit args
 
 Exits the interactive shell.
 
-- **Parameters**: Optional exit code
+- **Arguments**: Optional exit code
 - **Returns**: Does not return (exits).
 
 ---
@@ -2166,7 +2166,7 @@ getLengthModifier value {width ""}
 
 Returns a format modifier to force 64-bit integer treatment in native Tcl.
 
-- **Parameters**:
+- **Arguments**:
   - `value` - The value to format
   - `width` - Optional width specification
 - **Returns**: Format modifier string.
@@ -2181,9 +2181,9 @@ debug args
 
 Intercepts Eagle `debug` calls from Tcl scripts.
 
-- **Parameters**: Debug command arguments
+- **Arguments**: Debug command arguments
 - **Returns**: Empty string.
-- **Notes**: Prints a diagnostic message indicating the command is not available.
+- **Note**: Prints a diagnostic message indicating the command is not available.
 
 ---
 
@@ -2199,7 +2199,7 @@ setupPackageToolsetVars force {cleanup false}
 
 Sets up default configuration for the package toolset.
 
-- **Parameters**:
+- **Arguments**:
   - `force` - Force setup
   - `cleanup` - Clean up existing configuration
 - **Returns**: Empty string.
@@ -2214,7 +2214,7 @@ downloadAndExtractPackageClientToolset {channel stdout} {quiet false}
 
 Downloads and extracts the Package Client Toolset.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `quiet` - Suppress output
 - **Returns**: Auto-path directory.
@@ -2253,7 +2253,7 @@ loadPackageClientToolset {directory auto} {apiKeys ""} {hookUnknown true} {enabl
 
 Loads the package client toolset via `package require`.
 
-- **Parameters**:
+- **Arguments**:
   - `directory` - Toolset directory ("auto" for auto-detect)
   - `apiKeys` - API keys for package repository
   - `hookUnknown` - Hook the unknown package handler
@@ -2274,7 +2274,7 @@ downloadAndExtractNativeTclKitDll {channel stdout} {quiet false}
 
 Downloads and extracts the native TclKit DLL for the current platform.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `quiet` - Suppress output
 - **Returns**: Empty string.
@@ -2289,7 +2289,7 @@ downloadAndExtractNativeTclTkDlls {channel stdout} {quiet false}
 
 Downloads and extracts native Tcl/Tk DLLs for the current platform.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `quiet` - Suppress output
 - **Returns**: Empty string.
@@ -2304,7 +2304,7 @@ downloadAndExtractSecurityToolset {channel stdout} {quiet false}
 
 Downloads and extracts the Security Toolset (Harpy and Badge plugins).
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `quiet` - Suppress output
 - **Returns**: Empty string.
@@ -2319,7 +2319,7 @@ requestLicenseCertificate {channel stdout} {quiet false}
 
 Requests an Eagle license certificate from the license server.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `quiet` - Suppress output
 - **Returns**: Empty string.
@@ -2334,7 +2334,7 @@ evaluateInRemoteSandbox script {apiKey ""} {params ""} {channel stdout} {quiet f
 
 Submits a script to the remote sandbox for evaluation.
 
-- **Parameters**:
+- **Arguments**:
   - `script` - Script to evaluate
   - `apiKey` - API key for authentication
   - `params` - Additional parameters
@@ -2352,7 +2352,7 @@ listExampleScripts {apiKey ""} {channel stdout} {quiet false}
 
 Lists available named example scripts.
 
-- **Parameters**:
+- **Arguments**:
   - `apiKey` - API key
   - `channel` - Output channel
   - `quiet` - Suppress output
@@ -2368,7 +2368,7 @@ downloadExampleScript script {apiKey ""} {channel stdout} {quiet false}
 
 Downloads and saves a named example script.
 
-- **Parameters**:
+- **Arguments**:
   - `script` - Script name
   - `apiKey` - API key
   - `channel` - Output channel
@@ -2385,7 +2385,7 @@ getExternalIpAddress {apiKey ""} {channel stdout} {quiet false}
 
 Queries and returns the current external IP address.
 
-- **Parameters**:
+- **Arguments**:
   - `apiKey` - API key
   - `channel` - Output channel
   - `quiet` - Suppress output
@@ -2409,7 +2409,7 @@ s_proc name {args ""} {command ""}
 
 Creates a "stub" procedure with minimal body, typically used as a placeholder.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Procedure name
   - `args` - Argument list (default: "args")
   - `command` - Base command ("proc" or "nproc", default: "proc")
@@ -2425,7 +2425,7 @@ f_proc name args body {command ""}
 
 Creates a "flexible" procedure, automatically selecting `nproc` when available in Eagle.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Procedure name
   - `args` - Argument list
   - `body` - Procedure body
@@ -2442,7 +2442,7 @@ private command name arguments body
 
 Declares a procedure as "private", preventing calls from outside its namespace.
 
-- **Parameters**:
+- **Arguments**:
   - `command` - "proc" or "nproc"
   - `name` - Procedure name
   - `arguments` - Argument list
@@ -2459,7 +2459,7 @@ annotateProcedure annotation enable command name {arguments ""} {body ""}
 
 Adds or removes metadata annotations from a procedure body.
 
-- **Parameters**:
+- **Arguments**:
   - `annotation` - Annotation name (e.g., "inline", "nonCaching")
   - `enable` - Boolean to add or remove
   - `command` - "proc" or "nproc"
@@ -2480,14 +2480,14 @@ promptForAndGetTextInput {prompt ""} {title ""} {default ""} {noDots true} {canc
 
 Prompts the user for text input, using a GUI dialog when available.
 
-- **Parameters**:
+- **Arguments**:
   - `prompt` - Prompt text
   - `title` - Dialog title
   - `default` - Default value
   - `noDots` - Forbid dots-only input
   - `canceledVarName` - Variable to receive cancellation status
 - **Returns**: User-provided text.
-- **Notes**: Uses Microsoft.VisualBasic.Interaction.InputBox when available, falls back to stdin.
+- **Note**: Uses Microsoft.VisualBasic.Interaction.InputBox when available, falls back to stdin.
 
 ---
 
@@ -2501,7 +2501,7 @@ addTestScripts scriptVarName args
 
 Adds test scripts to an indexed array for batch execution.
 
-- **Parameters**:
+- **Arguments**:
   - `scriptVarName` - Name of script array variable
   - `args` - Script strings to add
 - **Returns**: Count of scripts added.
@@ -2516,7 +2516,7 @@ evaluateTestScripts interp scriptVarName codeVarName resultVarName
 
 Evaluates all scripts in the script array, capturing codes and results.
 
-- **Parameters**:
+- **Arguments**:
   - `interp` - Interpreter name (empty for current)
   - `scriptVarName` - Script array variable
   - `codeVarName` - Variable for return codes
@@ -2533,7 +2533,7 @@ combineTestScriptResults scriptVarName codeVarName resultVarName {debug false}
 
 Combines test script results into a structured list.
 
-- **Parameters**:
+- **Arguments**:
   - `scriptVarName` - Script array variable
   - `codeVarName` - Return codes array
   - `resultVarName` - Results array
@@ -2553,7 +2553,7 @@ haveModernNetFx
 Returns non-zero if running on .NET Framework 4.x on Windows 10 or higher.
 
 - **Returns**: Boolean.
-- **Notes**: Returns false on Mono, .NET Core, or non-Windows systems.
+- **Note**: Returns false on Mono, .NET Core, or non-Windows systems.
 
 ---
 
@@ -2565,7 +2565,7 @@ getDotNetCoreRuntimeVersions {versionOnly false}
 
 Gets available .NET Core runtime versions via the `dotnet` CLI.
 
-- **Parameters**:
+- **Arguments**:
   - `versionOnly` - Return only version strings (default: false for [version, path] pairs)
 - **Returns**: Sorted list of versions or version/path pairs.
 
@@ -2579,7 +2579,7 @@ detectDotNetCoreRuntimeVersion {majorOnly false}
 
 Detects the current .NET Core runtime version.
 
-- **Parameters**:
+- **Arguments**:
   - `majorOnly` - Return only major version number
 - **Returns**: Version string.
 
@@ -2593,7 +2593,7 @@ getDotNetCoreTargetFrameworkMoniker {version ""} {includeVersion false}
 
 Gets the Target Framework Moniker (TFM) for .NET Core.
 
-- **Parameters**:
+- **Arguments**:
   - `version` - Major version (default: auto-detect)
   - `includeVersion` - Include version in TFM
 - **Returns**: TFM string (e.g., "net", "netcoreapp").
@@ -2611,7 +2611,7 @@ getTclMinimumVersion
 Returns the minimum supported Tcl version (default: 8.6).
 
 - **Returns**: Version string.
-- **Notes**: Can be overridden via `TclMinimumVersion` environment variable.
+- **Note**: Can be overridden via `TclMinimumVersion` environment variable.
 
 ---
 
@@ -2624,7 +2624,7 @@ getTclMaximumVersion
 Returns the maximum supported Tcl version (default: 8.9).
 
 - **Returns**: Version string.
-- **Notes**: Can be overridden via `TclMaximumVersion` environment variable.
+- **Note**: Can be overridden via `TclMaximumVersion` environment variable.
 
 ---
 
@@ -2638,7 +2638,7 @@ getProcedureArguments name
 
 Returns the full argument specification for a procedure, including defaults.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Procedure name
 - **Returns**: Argument list with defaults.
 
@@ -2652,7 +2652,7 @@ cloneProcedure oldName newName {command ""}
 
 Creates a copy of a procedure with a new name.
 
-- **Parameters**:
+- **Arguments**:
   - `oldName` - Source procedure
   - `newName` - Target procedure name
   - `command` - "proc" or "nproc"
@@ -2668,7 +2668,7 @@ makeProcedureCommand oldName {newName ""} {command ""}
 
 Constructs a procedure definition command from an existing procedure.
 
-- **Parameters**:
+- **Arguments**:
   - `oldName` - Source procedure
   - `newName` - New name (optional)
   - `command` - Base command
@@ -2686,7 +2686,7 @@ haveCaches type
 
 Checks if caches of the specified type are available.
 
-- **Parameters**:
+- **Arguments**:
   - `type` - Cache type: "instance", "toString", or "stringBuilder"
 - **Returns**: Boolean.
 
@@ -2700,7 +2700,7 @@ resetCaches {enable true}
 
 Resets interpreter caches to initial state.
 
-- **Parameters**:
+- **Arguments**:
   - `enable` - Lock/unlock caches after reset
 - **Returns**: Empty string.
 
@@ -2730,7 +2730,7 @@ enableFlags memberName {newFlags ""} {enable ""} {memberType Field} {typeName In
 
 Generic flag modification for interpreter fields/properties.
 
-- **Parameters**:
+- **Arguments**:
   - `memberName` - Name of flag field/property
   - `newFlags` - Flags to set
   - `enable` - true to add, false to remove
@@ -2782,7 +2782,7 @@ debugBreakHook args
 
 Debug hook that breaks into interactive loop when matched.
 
-- **Parameters**: Dictionary from `[debug hook]`
+- **Arguments**: Dictionary from `[debug hook]`
 - **Returns**: `-code Ok` with message.
 - **Usage**: `debug hook -type Before basic-1.* ::debugBreakHook`
 
@@ -2858,10 +2858,10 @@ breakOnError script
 
 Evaluates a script with automatic debug break on errors.
 
-- **Parameters**:
+- **Arguments**:
   - `script` - Script to evaluate
 - **Returns**: Result on success.
-- **Notes**: On error, displays error info and enters interactive debug loop. User can fix issues and retry by returning true from the loop.
+- **Note**: On error, displays error info and enters interactive debug loop. User can fix issues and retry by returning true from the loop.
 
 ---
 
@@ -2873,7 +2873,7 @@ getFirstLineOfError error
 
 Extracts the first line from an error message.
 
-- **Parameters**:
+- **Arguments**:
   - `error` - Error string
 - **Returns**: First line of error.
 
@@ -2889,7 +2889,7 @@ haveConstraint name
 
 Checks if a test constraint is currently set.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Constraint name
 - **Returns**: Boolean.
 
@@ -2903,7 +2903,7 @@ addConstraint name {value 1}
 
 Adds a test constraint.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Constraint name
   - `value` - Constraint value (default: 1)
 - **Returns**: Empty string.
@@ -2918,7 +2918,7 @@ removeConstraint name
 
 Removes a test constraint.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Constraint name
 - **Returns**: Empty string.
 
@@ -2932,7 +2932,7 @@ haveOrAddConstraint name {value ""}
 
 Checks or sets a constraint depending on argument count.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Constraint name
   - `value` - Value to set (optional)
 - **Returns**: Boolean (query) or empty string (set).
@@ -2959,10 +2959,10 @@ fixConstraints constraints
 
 Normalizes constraint syntax for Tcl compatibility.
 
-- **Parameters**:
+- **Arguments**:
   - `constraints` - Constraint expression
 - **Returns**: Fixed constraint expression.
-- **Notes**: Handles "!" negation syntax differences between Eagle and Tcl.
+- **Note**: Handles "!" negation syntax differences between Eagle and Tcl.
 
 ---
 
@@ -2974,7 +2974,7 @@ fixMemoryConstraints constraints
 
 Adjusts constraints for memory-sensitive tests.
 
-- **Parameters**:
+- **Arguments**:
   - `constraints` - Base constraints
 - **Returns**: Constraints with `fail.false` added when appropriate.
 
@@ -2988,7 +2988,7 @@ fixTimingConstraints constraints
 
 Adjusts constraints for timing-sensitive tests.
 
-- **Parameters**:
+- **Arguments**:
   - `constraints` - Base constraints
 - **Returns**: Constraints with `fail.false` added when appropriate.
 
@@ -3004,11 +3004,11 @@ tputs channel string
 
 Primary test output procedure - writes to channel and log file.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `string` - Text to output
 - **Returns**: Empty string.
-- **Notes**: Suppresses repeated consecutive output.
+- **Note**: Suppresses repeated consecutive output.
 
 ---
 
@@ -3020,7 +3020,7 @@ trawputs channel string
 
 Raw output without repeat suppression.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `string` - Text to output
 - **Returns**: Empty string.
@@ -3035,7 +3035,7 @@ toneputs channel string
 
 Output to channel and log without repeat check.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `string` - Text to output
 - **Returns**: Empty string.
@@ -3050,7 +3050,7 @@ tlog string
 
 Writes string to test log file only.
 
-- **Parameters**:
+- **Arguments**:
   - `string` - Text to log
 - **Returns**: Empty string.
 
@@ -3064,7 +3064,7 @@ dputs string
 
 Debug output via `debug output`.
 
-- **Parameters**:
+- **Arguments**:
   - `string` - Debug text
 - **Returns**: Empty string.
 
@@ -3078,7 +3078,7 @@ dlog string
 
 Debug log via `debug log`.
 
-- **Parameters**:
+- **Arguments**:
   - `string` - Log text
 - **Returns**: Empty string.
 
@@ -3092,7 +3092,7 @@ dtrace string
 
 Debug trace output.
 
-- **Parameters**:
+- **Arguments**:
   - `string` - Trace text
 - **Returns**: Empty string.
 
@@ -3170,11 +3170,11 @@ calculateBogoCops {milliseconds 2000} {legacy false}
 
 Calculates "bogus commands per second" for performance scaling.
 
-- **Parameters**:
+- **Arguments**:
   - `milliseconds` - Measurement duration
   - `legacy` - Use legacy calculation method
 - **Returns**: Commands per second.
-- **Notes**: Used to scale test timeouts based on machine performance.
+- **Note**: Used to scale test timeouts based on machine performance.
 
 ---
 
@@ -3186,7 +3186,7 @@ calculateRelativePerformance type value
 
 Adjusts performance values based on machine speed ratio.
 
-- **Parameters**:
+- **Arguments**:
   - `type` - "elapsed" or "iterations"
   - `value` - Base value
 - **Returns**: Adjusted value.
@@ -3239,7 +3239,7 @@ setupTestRunTag {channel stdout} {quiet false}
 
 Sets up the WebClient tag for remote logging.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `quiet` - Suppress output
 - **Returns**: Boolean indicating if tag was set.
@@ -3292,7 +3292,7 @@ getTestPlatform {architecture false}
 
 Returns the test platform.
 
-- **Parameters**:
+- **Arguments**:
   - `architecture` - Include architecture details
 - **Returns**: Platform string.
 
@@ -3320,7 +3320,7 @@ cleanState {namespaceName ""} {excludePatterns ""} {noEagle false} {noTest false
 
 Cleans interpreter state by removing non-system variables.
 
-- **Parameters**:
+- **Arguments**:
   - `namespaceName` - Namespace to clean
   - `excludePatterns` - Patterns to exclude
   - `noEagle` - Skip Eagle variables
@@ -3339,7 +3339,7 @@ dumpState {namespaceName ""}
 
 Dumps all variable state for debugging.
 
-- **Parameters**:
+- **Arguments**:
   - `namespaceName` - Namespace to dump
 - **Returns**: Dictionary of variable names and values.
 
@@ -3355,13 +3355,13 @@ evaluateViaTemporaryFile varName name script {verbose 0}
 
 Evaluates a script by writing it to a temporary file first.
 
-- **Parameters**:
+- **Arguments**:
   - `varName` - Tracking variable name
   - `name` - Unique script name
   - `script` - Script content
   - `verbose` - Verbosity level
 - **Returns**: Script result.
-- **Notes**: Useful for debugging script evaluation issues.
+- **Note**: Useful for debugging script evaluation issues.
 
 ---
 
@@ -3373,7 +3373,7 @@ cleanupEvaluateViaTemporaryFiles varName {verbose 0}
 
 Cleans up temporary script files.
 
-- **Parameters**:
+- **Arguments**:
   - `varName` - Tracking variable name
   - `verbose` - Verbosity level
 - **Returns**: List of deleted files.
@@ -3390,7 +3390,7 @@ getProcessGroup pid {varName ""} {quiet false}
 
 Gets the process group ID for a process (Unix only).
 
-- **Parameters**:
+- **Arguments**:
   - `pid` - Process ID
   - `varName` - Variable to receive PGID
   - `quiet` - Suppress output
@@ -3406,7 +3406,7 @@ killProcessGroup pgid {quiet false}
 
 Kills a process group (Unix only).
 
-- **Parameters**:
+- **Arguments**:
   - `pgid` - Process group ID
   - `quiet` - Suppress output
 - **Returns**: Boolean success.
@@ -3421,7 +3421,7 @@ maybeKillProcessGroup pid {self false} {quiet false}
 
 Conditionally kills a process group if safe to do so.
 
-- **Parameters**:
+- **Arguments**:
   - `pid` - Target process ID
   - `self` - Allow killing own process group
   - `quiet` - Suppress output
@@ -3437,11 +3437,11 @@ enableFailSafeExitAfter {group false} {milliseconds 600000}
 
 Sets up a fail-safe process termination after timeout.
 
-- **Parameters**:
+- **Arguments**:
   - `group` - Kill entire process group
   - `milliseconds` - Timeout (default: 10 minutes)
 - **Returns**: Result value.
-- **Notes**: Prevents runaway tests from hanging indefinitely.
+- **Note**: Prevents runaway tests from hanging indefinitely.
 
 ---
 
@@ -3455,7 +3455,7 @@ testDebugBreak {force 0} args
 
 Breaks into the script debugger for test debugging.
 
-- **Parameters**:
+- **Arguments**:
   - `force` - Force debugger activation level
   - `args` - Additional arguments
 - **Returns**: Debug break result.
@@ -3470,7 +3470,7 @@ runTest script
 
 Executes a test script with proper tracking and statistics.
 
-- **Parameters**:
+- **Arguments**:
   - `script` - Test script
 - **Returns**: Test result.
 
@@ -3484,7 +3484,7 @@ tsource fileName {prologue true} {epilogue true}
 
 Sources a test file with optional prologue/epilogue.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Test file path
   - `prologue` - Run test prologue
   - `epilogue` - Run test epilogue
@@ -3500,7 +3500,7 @@ runTestPrologue {overridePath ""} {quiet false}
 
 Executes the test prologue script.
 
-- **Parameters**:
+- **Arguments**:
   - `overridePath` - Custom prologue path
   - `quiet` - Suppress output
 - **Returns**: Empty string.
@@ -3515,7 +3515,7 @@ runTestEpilogue {overridePath ""} {quiet false}
 
 Executes the test epilogue script.
 
-- **Parameters**:
+- **Arguments**:
   - `overridePath` - Custom epilogue path
   - `quiet` - Suppress output
 - **Returns**: Empty string.
@@ -3530,7 +3530,7 @@ runAllTests channel path fileNames skipFileNames startFileNames stopFileNames
 
 Executes all test files in sequence.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `path` - Test directory path
   - `fileNames` - List of test files
@@ -3551,7 +3551,7 @@ recordTestStatistics varName index
 
 Records current test statistics to a tracking variable.
 
-- **Parameters**:
+- **Arguments**:
   - `varName` - Statistics variable name
   - `index` - Array index
 - **Returns**: Empty string.
@@ -3566,7 +3566,7 @@ reportTestStatistics channel name stop statsVarName namesVarName {quiet false}
 
 Reports test resource leak statistics.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `name` - Test name
   - `stop` - Statistics index
@@ -3585,7 +3585,7 @@ reportTestResultCounts channel
 
 Reports final test result counts (passed, failed, skipped).
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
 - **Returns**: Empty string.
 
@@ -3601,7 +3601,7 @@ logRemoteMessage message {uri ""} {apiKey ""} {password ""} {channel stdout} {qu
 
 Sends a message to a remote logging service.
 
-- **Parameters**:
+- **Arguments**:
   - `message` - Message content
   - `uri` - Target URI
   - `apiKey` - API authentication key
@@ -3620,7 +3620,7 @@ logRemoteTestResults success {channel stdout} {verbose false} {quiet false}
 
 Logs test results to a remote service.
 
-- **Parameters**:
+- **Arguments**:
   - `success` - Overall success status
   - `channel` - Output channel
   - `verbose` - Include detailed results
@@ -3639,7 +3639,7 @@ formatTimeStamp seconds {gmt false}
 
 Formats a timestamp for display.
 
-- **Parameters**:
+- **Arguments**:
   - `seconds` - Unix timestamp
   - `gmt` - Use GMT timezone
 - **Returns**: Formatted timestamp string.
@@ -3654,7 +3654,7 @@ formatElapsedTime seconds
 
 Formats elapsed time as hours:minutes:seconds.
 
-- **Parameters**:
+- **Arguments**:
   - `seconds` - Elapsed seconds
 - **Returns**: Formatted time string.
 
@@ -3668,7 +3668,7 @@ formatList list {default ""} {columns 1}
 
 Formats a list for display.
 
-- **Parameters**:
+- **Arguments**:
   - `list` - List to format
   - `default` - Default if empty
   - `columns` - Number of columns
@@ -3684,7 +3684,7 @@ formatListAsDict list {default ""}
 
 Formats a list as a dictionary.
 
-- **Parameters**:
+- **Arguments**:
   - `list` - List to format
   - `default` - Default if empty
 - **Returns**: Formatted dictionary string.
@@ -3699,7 +3699,7 @@ formatDecimal value {places 4} {zeros false}
 
 Formats a decimal number.
 
-- **Parameters**:
+- **Arguments**:
   - `value` - Numeric value
   - `places` - Decimal places
   - `zeros` - Include trailing zeros
@@ -3717,7 +3717,7 @@ testArrayGet varName {integer false}
 
 Gets array contents in sorted order.
 
-- **Parameters**:
+- **Arguments**:
   - `varName` - Array variable name
   - `integer` - Sort keys as integers
 - **Returns**: Sorted key-value list.
@@ -3732,7 +3732,7 @@ testValueGet varName {integer false}
 
 Gets variable value, handling both arrays and scalars.
 
-- **Parameters**:
+- **Arguments**:
   - `varName` - Variable name
   - `integer` - Sort array keys as integers
 - **Returns**: Value or array contents.
@@ -3747,7 +3747,7 @@ getValueOrDefault varName {default <none>}
 
 Gets variable value or returns default if undefined/empty.
 
-- **Parameters**:
+- **Arguments**:
   - `varName` - Variable name
   - `default` - Default value
 - **Returns**: Value or default.
@@ -3764,7 +3764,7 @@ addToArgv option subValue
 
 Adds a value to a command-line option in argv.
 
-- **Parameters**:
+- **Arguments**:
   - `option` - Option name (e.g., "-constraints")
   - `subValue` - Value to add
 - **Returns**: Modified argv.
@@ -3779,7 +3779,7 @@ removeFromArgv option subValue
 
 Removes a value from a command-line option in argv.
 
-- **Parameters**:
+- **Arguments**:
   - `option` - Option name
   - `subValue` - Value to remove
 - **Returns**: Modified argv.
@@ -3794,7 +3794,7 @@ addConstraintToArgv subValue
 
 Convenience wrapper to add a constraint to argv.
 
-- **Parameters**:
+- **Arguments**:
   - `subValue` - Constraint value
 - **Returns**: Modified argv.
 
@@ -3808,7 +3808,7 @@ removeConstraintFromArgv subValue
 
 Convenience wrapper to remove a constraint from argv.
 
-- **Parameters**:
+- **Arguments**:
   - `subValue` - Constraint value
 - **Returns**: Modified argv.
 
@@ -3848,7 +3848,7 @@ breakpoint args
 
 Enters the script debugger at the current point.
 
-- **Parameters**: Ignored
+- **Arguments**: Ignored
 - **Returns**: Debug result.
 
 ---
@@ -3861,7 +3861,7 @@ debugBreakWithNewConsole args
 
 Opens a new console window and enters debugger.
 
-- **Parameters**: Ignored
+- **Arguments**: Ignored
 - **Returns**: Debug result.
 
 ---
@@ -3876,7 +3876,7 @@ enableTracing {stateTypes "=CoreEnableMask +ForceListeners"} {message true}
 
 Enables maximum tracing for debugging.
 
-- **Parameters**:
+- **Arguments**:
   - `stateTypes` - Trace state types
   - `message` - Output trace message
 - **Returns**: Trace result.
@@ -3891,7 +3891,7 @@ disableTracing {stateTypes "=CoreDisableMask +ForceListeners"} {message true}
 
 Disables tracing.
 
-- **Parameters**:
+- **Arguments**:
   - `stateTypes` - Trace state types
   - `message` - Output trace message
 - **Returns**: Trace result.
@@ -3908,7 +3908,7 @@ getFiles directory include {exclude ""} {forceReadable false}
 
 Gets files matching include pattern, excluding specified patterns.
 
-- **Parameters**:
+- **Arguments**:
   - `directory` - Search directory
   - `include` - Include glob pattern
   - `exclude` - Exclude glob pattern
@@ -3925,7 +3925,7 @@ getTestFiles directories matchFilePatterns skipFilePatterns {quiet false}
 
 Gets test files from multiple directories.
 
-- **Parameters**:
+- **Arguments**:
   - `directories` - Search directories
   - `matchFilePatterns` - Match patterns
   - `skipFilePatterns` - Skip patterns
@@ -3942,7 +3942,7 @@ findParentDirectory path name
 
 Finds a parent directory with the specified name.
 
-- **Parameters**:
+- **Arguments**:
   - `path` - Starting path
   - `name` - Directory name to find
 - **Returns**: Parent directory path or empty string.
@@ -3957,7 +3957,7 @@ pathToRegexp path {list false}
 
 Converts a file path to a regular expression pattern.
 
-- **Parameters**:
+- **Arguments**:
   - `path` - File path
   - `list` - Return as list
 - **Returns**: Regexp pattern.
@@ -4024,7 +4024,7 @@ testDoEvents milliseconds
 
 Processes events for the specified duration.
 
-- **Parameters**:
+- **Arguments**:
   - `milliseconds` - Duration to process events
 - **Returns**: List of [count, total_time].
 
@@ -4038,7 +4038,7 @@ cleanupAfterEvents {quiet false}
 
 Cancels all pending after events.
 
-- **Parameters**:
+- **Arguments**:
   - `quiet` - Suppress output
 - **Returns**: Count of canceled events or -1 on failure.
 
@@ -4054,7 +4054,7 @@ getTclShellFileName automatic kits machine
 
 Locates the Tcl shell executable.
 
-- **Parameters**:
+- **Arguments**:
   - `automatic` - Auto-detect
   - `kits` - Include tclkit variants
   - `machine` - Target architecture
@@ -4070,7 +4070,7 @@ evalWithTclShell args
 
 Evaluates a script in an external Tcl shell.
 
-- **Parameters**:
+- **Arguments**:
   - `args` - Script and arguments
 - **Returns**: Evaluation result.
 
@@ -4086,7 +4086,7 @@ saveAndResetPrecision {precision 0}
 
 Saves current tcl_precision and resets to specified value.
 
-- **Parameters**:
+- **Arguments**:
   - `precision` - New precision value
 - **Returns**: Empty string.
 
@@ -4116,10 +4116,10 @@ eagle_haveShell {varName ""}
 
 Checks if an operating system shell is available.
 
-- **Parameters**:
+- **Arguments**:
   - `varName` - Variable to receive shell path
 - **Returns**: Boolean indicating shell availability.
-- **Notes**: Checks `ComSpec` on Windows, `SHELL` on Unix.
+- **Note**: Checks `ComSpec` on Windows, `SHELL` on Unix.
 
 ---
 
@@ -4131,11 +4131,11 @@ eagle_enableShellUnknown {enable ""} {quiet false}
 
 Enables or disables the shell-based unknown command handler.
 
-- **Parameters**:
+- **Arguments**:
   - `enable` - Boolean to enable/disable (empty to query)
   - `quiet` - Suppress output
 - **Returns**: Boolean indicating current state.
-- **Notes**: When enabled, unknown commands are passed to the OS shell.
+- **Note**: When enabled, unknown commands are passed to the OS shell.
 
 ---
 
@@ -4147,7 +4147,7 @@ eagle_isShellScriptLevel {extraLevels 0} {quiet false}
 
 Checks if currently at the shell script execution level.
 
-- **Parameters**:
+- **Arguments**:
   - `extraLevels` - Additional levels to account for
   - `quiet` - Suppress output
 - **Returns**: Boolean.
@@ -4162,7 +4162,7 @@ eagle_appendExecArgs viaShell varName args
 
 Appends arguments to an exec command with proper escaping.
 
-- **Parameters**:
+- **Arguments**:
   - `viaShell` - Whether executing via shell
   - `varName` - Command list variable
   - `args` - Arguments to append
@@ -4178,12 +4178,12 @@ eagle_shellBuildCommand shell name args
 
 Builds a shell command for execution.
 
-- **Parameters**:
+- **Arguments**:
   - `shell` - Shell executable path
   - `name` - Command name
   - `args` - Command arguments
 - **Returns**: Command list for exec.
-- **Notes**: Handles differences between cmd.exe, PowerShell, and Unix shells.
+- **Note**: Handles differences between cmd.exe, PowerShell, and Unix shells.
 
 ---
 
@@ -4195,11 +4195,11 @@ eagle_shellUnknown name args
 
 Unknown command handler that passes commands to the OS shell.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Unknown command name
   - `args` - Command arguments
 - **Returns**: Shell command output.
-- **Notes**: Activated via `eagle_enableShellUnknown`.
+- **Note**: Activated via `eagle_enableShellUnknown`.
 
 ---
 
@@ -4235,7 +4235,7 @@ eagle_probeForCommand name
 
 Probes for availability of an external command.
 
-- **Parameters**:
+- **Arguments**:
   - `name` - Command name to probe
 - **Returns**: Boolean indicating availability.
 
@@ -4249,7 +4249,7 @@ eagle_probeForCommands names
 
 Probes for multiple external commands.
 
-- **Parameters**:
+- **Arguments**:
   - `names` - List of command names
 - **Returns**: List of available commands.
 
@@ -4263,7 +4263,7 @@ eagle_probeForPromptCommands {names ""}
 
 Probes for commands safe to use in interactive prompts.
 
-- **Parameters**:
+- **Arguments**:
   - `names` - Command names (optional)
 - **Returns**: List of safe available commands.
 
@@ -4289,7 +4289,7 @@ eagle_setupPromptScript {enable ""}
 
 Sets up or tears down the shell prompt script.
 
-- **Parameters**:
+- **Arguments**:
   - `enable` - Boolean to enable/disable
 - **Returns**: Empty string.
 
@@ -4303,7 +4303,7 @@ eagle_buildDataId value {length 16} {hashAlgorithmName SHA512}
 
 Builds a unique identifier from data using a hash function.
 
-- **Parameters**:
+- **Arguments**:
   - `value` - Data to hash
   - `length` - Output length
   - `hashAlgorithmName` - Hash algorithm (default: SHA512)
@@ -4321,10 +4321,10 @@ isUriLikelyToBeRedirected uri
 
 Checks if a URI is likely to be a redirect service URL.
 
-- **Parameters**:
+- **Arguments**:
   - `uri` - URI to check
 - **Returns**: Boolean.
-- **Notes**: Checks against the auxiliary base URI.
+- **Note**: Checks against the auxiliary base URI.
 
 ---
 
@@ -4336,7 +4336,7 @@ maybeResolveUri uri {varName ""} {channel stdout} {quiet false}
 
 Resolves a URI through redirect services if needed.
 
-- **Parameters**:
+- **Arguments**:
   - `uri` - URI to resolve
   - `varName` - Variable to receive resolution status
   - `channel` - Output channel
@@ -4353,7 +4353,7 @@ maybeFullyResolveUri uri redirectLimit {channel stdout} {quiet false}
 
 Fully resolves a URI through multiple redirects.
 
-- **Parameters**:
+- **Arguments**:
   - `uri` - URI to resolve
   - `redirectLimit` - Maximum redirects (-1 for unlimited)
   - `channel` - Output channel
@@ -4370,7 +4370,7 @@ escapeForJsonString value
 
 Escapes a string for safe inclusion in JSON.
 
-- **Parameters**:
+- **Arguments**:
   - `value` - String to escape
 - **Returns**: JSON-safe escaped string.
 
@@ -4384,10 +4384,10 @@ isValidJson value
 
 Validates that a string is valid JSON.
 
-- **Parameters**:
+- **Arguments**:
   - `value` - String to validate
 - **Returns**: Boolean.
-- **Notes**: Uses Newtonsoft.Json for parsing.
+- **Note**: Uses Newtonsoft.Json for parsing.
 
 ---
 
@@ -4399,7 +4399,7 @@ getOrSetViaJsonPaths json jpaths {value ""} {root false}
 
 Gets or sets a value in JSON using a path list.
 
-- **Parameters**:
+- **Arguments**:
   - `json` - JSON string
   - `jpaths` - List of path elements (keys/indices)
   - `value` - Value to set (optional)
@@ -4416,7 +4416,7 @@ verifyConfigurationDirectory directory {pattern ""}
 
 Verifies a configuration directory exists and is readable.
 
-- **Parameters**:
+- **Arguments**:
   - `directory` - Directory path
   - `pattern` - File pattern to check
 - **Returns**: Boolean.
@@ -4435,7 +4435,7 @@ openAI_getPrompt command {channel stdout} {quiet false}
 
 Builds a prompt for OpenAI from an unknown command.
 
-- **Parameters**:
+- **Arguments**:
   - `command` - The unknown command
   - `channel` - Output channel
   - `quiet` - Suppress output
@@ -4451,7 +4451,7 @@ openAI_getJsonPaths json {channel stdout} {quiet false}
 
 Returns the JSON path to extract content from OpenAI response.
 
-- **Parameters**:
+- **Arguments**:
   - `json` - JSON response
   - `channel` - Output channel
   - `quiet` - Suppress output
@@ -4467,7 +4467,7 @@ openAI_enableUnknown {enable ""} {options true} {whatIf true} {channel stdout} {
 
 Enables or disables OpenAI-based unknown command handling.
 
-- **Parameters**:
+- **Arguments**:
   - `enable` - Boolean to enable/disable (empty to query)
   - `options` - Manage runtime options
   - `whatIf` - Use what-if mode
@@ -4485,11 +4485,11 @@ openAI_getKeyRingDirectory {channel stdout} {quiet false}
 
 Locates the keyring directory for OpenAI credentials.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `quiet` - Suppress output
 - **Returns**: Directory path.
-- **Notes**: Searches `OPENAI_KEYRING_DIRECTORY`, binary directory, and Kapok paths.
+- **Note**: Searches `OPENAI_KEYRING_DIRECTORY`, binary directory, and Kapok paths.
 
 ---
 
@@ -4501,7 +4501,7 @@ openAI_writeScript script
 
 Writes a script to a temporary file.
 
-- **Parameters**:
+- **Arguments**:
   - `script` - Script content
 - **Returns**: Temporary file path.
 
@@ -4515,7 +4515,7 @@ openAI_haveSecurity {channel stdout} {quiet false}
 
 Checks if security (script signing) is available.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `quiet` - Suppress output
 - **Returns**: Boolean.
@@ -4530,7 +4530,7 @@ openAI_enableSecurity {varName ""} {channel stdout} {quiet false}
 
 Enables security for OpenAI script execution.
 
-- **Parameters**:
+- **Arguments**:
   - `varName` - Variable to receive security status
   - `channel` - Output channel
   - `quiet` - Suppress output
@@ -4546,7 +4546,7 @@ openAI_cleanupSandbox {channel stdout} {quiet false}
 
 Cleans up the OpenAI sandbox interpreter.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `quiet` - Suppress output
 - **Returns**: Empty string.
@@ -4561,7 +4561,7 @@ openAI_maybeEvaluateInSandbox fileName security {channel stdout} {quiet false}
 
 Evaluates a script in the sandbox interpreter if security allows.
 
-- **Parameters**:
+- **Arguments**:
   - `fileName` - Script file path
   - `security` - Security enabled flag
   - `channel` - Output channel
@@ -4578,7 +4578,7 @@ openAI_unknown whatIf channel quiet name args
 
 Unknown command handler that queries OpenAI for corrections.
 
-- **Parameters**:
+- **Arguments**:
   - `whatIf` - Use what-if mode
   - `channel` - Output channel
   - `quiet` - Suppress output
@@ -4596,10 +4596,10 @@ openAI_scriptWebClient args
 
 Callback procedure for ScriptWebClient customization.
 
-- **Parameters**:
+- **Arguments**:
   - `args` - Callback arguments
 - **Returns**: Empty string.
-- **Notes**: Configures HTTP headers for OpenAI API requests.
+- **Note**: Configures HTTP headers for OpenAI API requests.
 
 ---
 
@@ -4611,7 +4611,7 @@ openAI_setupScriptWebClient enable varName {channel stdout} {quiet false}
 
 Sets up or tears down the ScriptWebClient for OpenAI.
 
-- **Parameters**:
+- **Arguments**:
   - `enable` - Boolean to enable/disable
   - `varName` - Variable for saved flags
   - `channel` - Output channel
@@ -4628,7 +4628,7 @@ openAI_getTypes {channel stdout} {quiet false}
 
 Returns supported OpenAI model types.
 
-- **Parameters**:
+- **Arguments**:
   - `channel` - Output channel
   - `quiet` - Suppress output
 - **Returns**: List of types (default: `"" chat`).
@@ -4643,7 +4643,7 @@ openAI_getDefaultModel type {channel stdout} {quiet false}
 
 Returns the default model for a type.
 
-- **Parameters**:
+- **Arguments**:
   - `type` - Model type
   - `channel` - Output channel
   - `quiet` - Suppress output
@@ -4659,7 +4659,7 @@ openAI_getStandardModel type {channel stdout} {quiet false}
 
 Returns the standard (premium) model for a type.
 
-- **Parameters**:
+- **Arguments**:
   - `type` - Model type
   - `channel` - Output channel
   - `quiet` - Suppress output
@@ -4675,14 +4675,14 @@ openAI_getJson prompt model options {channel stdout} {quiet false}
 
 Builds the JSON payload for an OpenAI API request.
 
-- **Parameters**:
+- **Arguments**:
   - `prompt` - User prompt
   - `model` - Model name
   - `options` - Additional options dictionary
   - `channel` - Output channel
   - `quiet` - Suppress output
 - **Returns**: JSON string.
-- **Notes**: Supports `deterministic` option for reproducible results.
+- **Note**: Supports `deterministic` option for reproducible results.
 
 ---
 
@@ -4694,11 +4694,11 @@ openAI_getAnyApiKey proxy {varName ""}
 
 Retrieves an API key from available sources.
 
-- **Parameters**:
+- **Arguments**:
   - `proxy` - Use proxy service
   - `varName` - Variable to receive proxy flag
 - **Returns**: API key string.
-- **Notes**: Checks `OPENAI_API_KEY`, `OPENAI_API_KEY_FILE`, and Harpy plugin.
+- **Note**: Checks `OPENAI_API_KEY`, `OPENAI_API_KEY_FILE`, and Harpy plugin.
 
 ---
 
@@ -4710,7 +4710,7 @@ openAI_chatCompletion prompt {apiKey ""} {model ""} {type ""} {options ""} {prox
 
 Sends a chat completion request to the OpenAI API.
 
-- **Parameters**:
+- **Arguments**:
   - `prompt` - User prompt text
   - `apiKey` - API key (optional, auto-detected)
   - `model` - Model name (optional, auto-detected)
@@ -4722,7 +4722,7 @@ Sends a chat completion request to the OpenAI API.
   - `channel` - Output channel
   - `quiet` - Suppress output
 - **Returns**: AI response JSON.
-- **Notes**: Handles URI resolution, authentication, and ScriptWebClient setup.
+- **Note**: Handles URI resolution, authentication, and ScriptWebClient setup.
 
 ---
 
