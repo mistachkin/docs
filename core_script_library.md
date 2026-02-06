@@ -6059,7 +6059,6 @@ test example-1.1 {description of test} -setup {
 ###############################################################################
 
 runTestEpilogue
-unset -nocomplain test_channel
 ```
 
 #### Constraint-Based Test Skipping
