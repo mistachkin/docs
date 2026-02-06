@@ -35,6 +35,7 @@ pitfalls** when working with Eagle.
 |------|------------------|-----------------|
 | `core_language.md` | Eagle command catalog (built-ins), organized by category; includes advanced topics | When you need command syntax, options, behavior, or Eagle-only extensions |
 | `core_script_library.md` | 580+ library procedures (script-level utilities), organized by package and source file | When you need helper procedures, test utilities, file helpers, platform detection, etc. |
+| `garuda.md` | The Eagle Native Package for Tcl (Garuda) reference | When you need to integrate with Eagle via a native Tcl environment |
 | `AGENTS.md` | You are here | How to navigate and answer accurately |
 
 ---
