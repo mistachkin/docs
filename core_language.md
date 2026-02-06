@@ -4372,17 +4372,427 @@ These commands control script evaluation and substitution at the core level.
   ```
 
 <a id="cmd-source"></a>
-- **source** - Source script file
+- **source** - Source script file or script bundle database
   - `source ?options? fileName`
-  - Reads and evaluates the contents of *fileName* as a script.
-  - **Options**:
-    - `-encoding name` - Character encoding of the file
-  - **Returns**: The result of the last command in the file.
+  - Reads and evaluates the contents of *fileName* as a script.  When the file
+    is a script bundle database (a `.db` file), the command evaluates the signed
+    scripts contained within it according to the bundle evaluation pipeline
+    described below.  The `source` command pushes a tracking call frame of type
+    `Source` for the duration of evaluation, and pops it (along with any
+    intervening scope call frames) when evaluation completes.
 
-  **Example**:
+  - **Options**:
+    - `-encoding name` - Character encoding used to read the file (standard
+      path only; ignored for bundles).
+    - `-withinfo boolean` - When true, disables the argument cache and enables
+      breakpoint location tracking for the duration of the sourced script.
+      This is useful for debugging, as it preserves source file and line
+      number information at the cost of reduced evaluation performance.
+      Requires `ARGUMENT_CACHE` and `DEBUGGER && DEBUGGER_BREAKPOINTS`
+      compile-time features.
+    - `-time boolean` - When true, profiles the evaluation and emits elapsed
+      time to the diagnostic trace output upon completion.
+    - `-password byteArray` - Decryption password for an encrypted bundle
+      database (passed to the SQLite Encryption Extension).  Only meaningful
+      when the file is evaluated as a bundle.
+    - `-library boolean` - When true, enters the package-level sourcing
+      context before evaluation and exits it afterward.  This affects how
+      the interpreter resolves package-related paths.
+    - `-bundle boolean?` - Explicitly force (`true`) or suppress (`false`)
+      bundle evaluation mode.  When omitted or set to the nullable default,
+      the command auto-detects bundle mode by inspecting the file extension:
+      files ending in `.db` are treated as bundles (via
+      `PathOps.MightBeBundleFile`).  Requires `DATA` compile-time feature;
+      when `DATA` is not available, the option is present but unsupported.
+    - `-bundleflags flags` - One or more `BundleFlags` values (combinable
+      with `|`) controlling bundle evaluation behavior:
+      - `None` - No special behavior.
+      - `ErrorOnEmpty` - Return an error if the bundle contains no scripts.
+      - `StopOnError` - Stop evaluation at the first script that raises an
+        error, rather than continuing through the remaining scripts.
+      - `RequireKeyRing` - Return an error if the security key ring file
+        (`keyRing.one.eagle`) cannot be located.
+      - `ForDefault` - Included in the `Default` composite.
+      - `Default` - The default flags (equivalent to `ForDefault`).
+    - `--` - Marks the end of options.
+
+  - **Returns**: For standard script files, returns the result of the last
+    command in the file.  For bundles, returns a list of the results from
+    each evaluated script, or the combined error list if any script failed.
+
+  - **Error conditions**:
+    - Wrong number of arguments.
+    - Unknown or unsupported option.
+    - File does not exist or cannot be read.
+    - Bundle signature verification failure (Harpy).
+    - Bundle database integrity check failure.
+    - Empty bundle when `ErrorOnEmpty` is set.
+    - Individual script evaluation error (collected or stopped depending on
+      `StopOnError`).
+
+  #### Standard Script Evaluation
+
+  When the file is not a bundle, `source` reads the file using the specified
+  (or default) encoding and evaluates its contents as a script in the current
+  interpreter, equivalent to reading the file and passing its contents to
+  `eval`.  The `-withinfo`, `-time`, and `-library` options apply to this
+  path as well.
+
+  #### Script Bundle Subsystem
+
+  The script bundle subsystem allows multiple signed Eagle scripts to be
+  packaged into a single SQLite database file for secure distribution and
+  evaluation.  This is the primary mechanism for delivering trusted script
+  packages in production environments.
+
+  ##### Bundle Evaluation Pipeline
+
+  When `source` evaluates a bundle, the following pipeline executes:
+
+  ```
+  source myBundle.db
+         |
+         v
+  +------------------+
+  | 1. Security Init |  Enable interpreter security context
+  +------------------+
+         |
+         v
+  +------------------+
+  | 2. KeyRing Merge |  Find and evaluate keyRing.one.eagle
+  +------------------+  (merge trusted signing keys)
+         |
+         v
+  +------------------+
+  | 3. Harpy Verify  |  harpy verify myBundle.db
+  +------------------+  (verify bundle file integrity)
+         |
+         v
+  +------------------+
+  | 4. Gather Scripts|  Open SQLite DB, run integrity_check,
+  +------------------+  query Scripts table, verify each record
+         |
+         v
+  +------------------+
+  | 5. Mount Bundle  |  Register bundle in BundleManager
+  +------------------+  (creates virtual filesystem path)
+         |
+         v
+  +------------------+
+  | 6. Evaluate Loop |  For each script (by Sequence order):
+  |                  |    - Route by IsolationLevel
+  +------------------+    - Evaluate in target interpreter
+         |
+         v
+  +------------------+
+  | 7. Cleanup       |  EndEvaluation, restore context
+  +------------------+
+  ```
+
+  **Step 1 - Security Initialization**: The interpreter's security context is
+  enabled to ensure that all subsequent script operations are subject to
+  security policy enforcement.
+
+  **Step 2 - Key Ring Merge**: The system locates the security key ring file
+  `keyRing.one.eagle` via `ScriptOps.FindSecurityPackageFile`.  If found, it
+  is evaluated as a trusted script to merge additional signing keys into the
+  interpreter's trusted key ring set.  If the file is not found and
+  `RequireKeyRing` is set in the bundle flags, the operation fails with an
+  error.
+
+  **Step 3 - Harpy Verification**: The bundle file is verified using the
+  `harpy verify` trusted command.  This validates the overall integrity and
+  authenticity of the bundle database file against the interpreter's trusted
+  key rings.  Failure at this step prevents any scripts from being extracted
+  or evaluated.
+
+  **Step 4 - Gather Scripts**: The bundle database is opened as a read-only
+  SQLite connection.  The system performs the following validation sequence:
+
+  1. **File validation** - The file must exist, be at least 512 bytes (one
+     SQLite page), and have a size that is a multiple of 512 bytes.
+  2. **File hashing** - A SHA512 hash of the entire file is computed and
+     included in the connection string for tamper detection.
+  3. **Database integrity** - `PRAGMA integrity_check` is executed and must
+     return `"ok"`.
+  4. **Locking** - `PRAGMA locking_mode = EXCLUSIVE` is set.
+  5. **Record query** - All rows are read from the `Scripts` table, ordered
+     by `Sequence`.
+  6. **Per-record verification** - Each record's 17 fields are validated by
+     `VerifyBundleRecord` (see "Bundle Record Verification" below).
+
+  **Step 5 - Mount Bundle**: The bundle file is registered with the
+  interpreter's `BundleManager`.  Mounting creates a virtual filesystem
+  mapping so that scripts within the bundle can reference each other using
+  database-qualified paths of the form `fileName:fullName` (e.g.,
+  `myBundle.db:/scripts/init.eagle`).  The `BundleManager` stores the raw
+  database bytes for each mounted bundle, enabling data retrieval without
+  re-opening the file.
+
+  **Step 6 - Evaluate Loop**: Scripts are evaluated in `Sequence` order.
+  Only scripts with positive sequence numbers are evaluated directly;
+  negative-sequence scripts are package index files accessible via
+  `[package scan]` or `[interp readorgetscriptfile]`.  Each script is
+  routed by its `IsolationLevel`:
+
+  ```
+  IsolationLevel routing:
+
+  None ──────────────> Evaluate in current interpreter
+                       (security level must match;
+                        RuleSet must be null)
+
+  Interpreter ───────> Create child interpreter
+                       (same AppDomain, applies RuleSet)
+
+  AppDomain ─────────> Create isolated child interpreter
+                       (separate AppDomain, applies RuleSet;
+                        requires ISOLATED_INTERPRETERS)
+
+  AppDomainOr ───────> AppDomain if ISOLATED_INTERPRETERS,
+  Interpreter          otherwise Interpreter
+  ```
+
+  For isolated evaluation, a child interpreter is created using
+  `InterpreterSettings` configured with the script's `RuleSet` and
+  `SecurityLevel`.  The child interpreter is cached in the `BundleData`
+  object and reused for subsequent scripts at the same isolation level.
+
+  **Step 7 - Cleanup**: `BundleManager.EndEvaluation` is called in a
+  `finally` block to restore the previous script filename context.
+
+  ##### Bundle Database Schema
+
+  The bundle database contains a single table, `Scripts`, with the following
+  columns:
+
+  | Column | Type | Null | Description |
+  |--------|------|------|-------------|
+  | `Id` | `BLOB(16)` | NOT NULL | Unique script identifier (GUID). |
+  | `Language` | `TEXT` | NOT NULL | Must be `"Eagle"`. |
+  | `Sequence` | `INTEGER` | NOT NULL | Evaluation order.  Positive values define direct evaluation order.  Negative values denote package scripts (accessed via `[package scan -normal -host -bundle --]`).  Zero is not allowed. |
+  | `IsolationLevel` | `TEXT` | NULL | `None`, `Interpreter`, `AppDomain`, `AppDomainOrInterpreter`, `Process`, `Session`, or `Machine`.  Only `None`, `Interpreter`, `AppDomain`, and `AppDomainOrInterpreter` are currently implemented. |
+  | `SecurityLevel` | `TEXT` | NULL | `None`, `Safe`, or `Sdk`. |
+  | `SecurityFlags` | `TEXT` | NULL | `ScriptSecurityFlags` value.  Typically `BundleMask` (`Immutable \| NoEntityValue \| NoBlockType \| TreatAsFile`). |
+  | `RuleSet` | `TEXT` | NULL | Optional command/policy restriction rules (see "RuleSet Format" below). |
+  | `BlockType` | `TEXT` | NULL | `XmlBlockType` value.  Reserved; must be `None`. |
+  | `FullName` | `TEXT` | NOT NULL | POSIX-style path, e.g. `/scripts/init.eagle`. |
+  | `Group` | `TEXT` | NOT NULL | Human-readable logical grouping. |
+  | `Description` | `TEXT` | NOT NULL | Human-readable script summary. |
+  | `TimeStamp` | `DATETIME` | NOT NULL | Creation or modification timestamp. |
+  | `PublicKeyToken` | `BLOB(8)` | NOT NULL | Strong name key public token (8 bytes), e.g. `0x8bf43b4749e46a0b`. |
+  | `Text` | `TEXT` | NOT NULL | The script source code.  Must be syntactically complete. |
+  | `Vendor` | `TEXT` | NOT NULL | Vendor responsible for creating and signing the script, e.g. `"Mistachkin Systems"`. |
+  | `HashAlgorithm` | `TEXT` | NOT NULL | Cryptographic hash algorithm for signature verification.  Must be `SHA512`. |
+  | `Signature` | `BLOB` | NOT NULL | RSA digital signature of all data in the row.  Typically 2048 bytes (16384-bit key). |
+
+  **Uniqueness constraints**:
+  - `UNIQUE (Id)` - Each script has a unique identifier.
+  - `UNIQUE (FullName)` - Each script path is unique within the bundle.
+  - `UNIQUE (Language, Sequence)` - Each sequence number is unique per
+    language.
+
+  ##### Bundle Record Verification
+
+  Every record extracted from a bundle database is validated by
+  `DataOps.VerifyBundleRecord`, which checks all 17 fields:
+
+  - **Id**: Must be a valid 16-byte GUID.
+  - **Language**: Must exactly match the package name (`"Eagle"`).
+  - **Sequence**: Must be positive for directly-evaluated scripts or
+    non-positive for package scripts (depending on the `demand` flag).
+  - **Vendor**: Must be a non-empty string.
+  - **HashAlgorithm**: Must match the modern hash algorithm name (`SHA512`).
+  - **IsolationLevel**: If present, must parse as valid `IsolationLevel`
+    flags and match the `BaseMask` (`Interpreter | AppDomain |
+    AppDomainOrInterpreter`).
+  - **SecurityLevel**: If present, must parse as valid `SecurityLevel` flags
+    and match the `BaseMask` (`Safe`).
+  - **SecurityFlags**: If present, must parse as valid `ScriptSecurityFlags`.
+  - **RuleSet**: If present, must successfully create an `IRuleSet` instance.
+  - **BlockType**: If present, must parse as valid `XmlBlockType` flags.
+  - **FullName**: Must pass bundle full-name validation (path format check).
+  - **Group**: Must be a non-empty string.
+  - **Description**: Must be a non-empty string.
+  - **TimeStamp**: Must be a valid `DateTime`.
+  - **PublicKeyToken**: Must be exactly 8 bytes.
+  - **Text**: Must be a non-empty, syntactically complete script (verified
+    by the parser).
+  - **Signature**: Must be at least 2048 bytes (corresponding to a minimum
+    16384-bit RSA key), or the special 4-byte `NULL` sentinel value
+    (`{ 0x4E, 0x55, 0x4C, 0x4C }`).
+
+  ##### Security Architecture
+
+  The bundle subsystem implements defense-in-depth through multiple layers:
+
+  ```
+  Security Layer Stack:
+
+  +--------------------------------------------------+
+  |            Layer 7: Isolation Levels              |
+  |  Interpreter / AppDomain / Process boundaries     |
+  +--------------------------------------------------+
+  |            Layer 6: RuleSet Enforcement           |
+  |  Command and policy allow/deny rules              |
+  +--------------------------------------------------+
+  |            Layer 5: Security Levels               |
+  |  None / Safe / Sdk interpreter restrictions       |
+  +--------------------------------------------------+
+  |            Layer 4: Per-Script RSA Signatures     |
+  |  SHA512 hash + RSA signature per database row     |
+  |  Minimum 16384-bit keys (2048-byte signatures)    |
+  +--------------------------------------------------+
+  |            Layer 3: Bundle File Verification      |
+  |  Harpy verify command validates entire file       |
+  +--------------------------------------------------+
+  |            Layer 2: Database Integrity            |
+  |  SQLite PRAGMA integrity_check + file hash        |
+  +--------------------------------------------------+
+  |            Layer 1: File Validation               |
+  |  Size checks, page alignment, read-only mount     |
+  +--------------------------------------------------+
+  |            Layer 0: Optional Encryption           |
+  |  SQLite Encryption Extension (password-based)     |
+  +--------------------------------------------------+
+  ```
+
+  **Layer 0 - Encryption**: Bundle databases may optionally be encrypted
+  using the SQLite Encryption Extension.  The decryption password is
+  supplied via the `-password` option and passed as a hex-encoded password
+  in the SQLite connection string.
+
+  **Layer 1 - File Validation**: Before the database is opened, the file
+  is validated: it must exist, be at least 512 bytes (one SQLite database
+  page), and have a size that is an exact multiple of 512 bytes.  The file
+  path is normalized to its fully-qualified form.
+
+  **Layer 2 - Database Integrity**: After opening the connection, SQLite's
+  built-in `PRAGMA integrity_check` is executed and must return `"ok"`.
+  The connection is opened in exclusive locking mode.  Additionally, a
+  SHA512 hash of the entire file is computed before the connection is
+  established and is included in the connection string metadata.
+
+  **Layer 3 - Bundle File Verification**: The `harpy verify` command
+  validates the bundle file against the interpreter's trusted key rings.
+  This step occurs before any database queries, ensuring that only bundles
+  signed by trusted parties are processed.
+
+  **Layer 4 - Per-Script Signatures**: Each row in the `Scripts` table
+  carries an RSA digital signature computed over all other fields in the
+  row.  The signature must be at least 2048 bytes (corresponding to a
+  16384-bit RSA key), or the 4-byte `NULL` sentinel (`"NULL"` in ASCII).
+  The hash algorithm must be SHA512.
+
+  **Layer 5 - Security Levels**: Each script declares a `SecurityLevel`
+  (`None`, `Safe`, or `Sdk`).  The interpreter must match the declared
+  security level before the script can execute at `IsolationLevel.None`.
+  For isolated evaluation, the security level is passed to the child
+  interpreter's settings.
+
+  **Layer 6 - RuleSet Enforcement**: Scripts may declare a `RuleSet` that
+  restricts which commands and policies are available in the child
+  interpreter created for isolated evaluation.  Each rule is a dictionary
+  specifying:
+  - `type` - `Include` or `Exclude`
+  - `kind` - `Command` or `Policy`
+  - `mode` - Match mode flags (e.g., `{Include Exact}`, `Glob`, `RegExp`)
+  - `patterns` - List of patterns to match against identifier names
+
+  RuleSets are only valid with isolated evaluation (`IsolationLevel` other
+  than `None`); specifying a RuleSet with `IsolationLevel.None` is an
+  error.
+
+  **Layer 7 - Isolation Levels**: Scripts may be evaluated in the current
+  interpreter, a child interpreter in the same AppDomain, or a child
+  interpreter in a separate AppDomain (when `ISOLATED_INTERPRETERS` is
+  compiled in).  Isolation prevents bundled scripts from affecting the
+  parent interpreter's state.
+
+  ##### Key Ring Management
+
+  The key ring file `keyRing.one.eagle` is located via the security
+  package file search and evaluated as a trusted script before bundle
+  verification begins.  This merges additional signing keys into the
+  interpreter's trusted key ring set, enabling verification of bundles
+  signed by multiple vendors.  The merge operation uses the `keyring merge`
+  trusted command internally.
+
+  ##### BundleManager Lifecycle
+
+  The `IBundleManager` interface manages bundle mount/unmount operations:
+
+  | Method | Description |
+  |--------|-------------|
+  | `Mount(interpreter, fileName, password, errorOnMounted, ref error)` | Opens and registers a bundle.  The raw database bytes are stored in a `BundleDictionary`. |
+  | `BeginEvaluation(interpreter, fileName, out savedFileName)` | Saves the current script filename and sets the bundle file as the active context. |
+  | `GetData(interpreter, cultureInfo, encoding, path, ref data, ref error)` | Retrieves raw data for a database-qualified path from a mounted bundle. |
+  | `ListMounts(interpreter, pattern, noCase, ref error)` | Lists currently mounted bundle files, optionally filtered by pattern. |
+  | `EndEvaluation(interpreter, ref savedFileName)` | Restores the previously saved script filename context. |
+  | `Unmount(interpreter, fileName, errorOnNotMounted, ref error)` | Unregisters and removes a previously mounted bundle. |
+
+  The `BundleManager` is thread-safe; all operations are synchronized on an
+  internal lock object.
+
+  ##### Database-Qualified Paths
+
+  Scripts within a mounted bundle are addressed using database-qualified
+  paths of the form:
+
+  ```
+  /path/to/bundle.db:/path/within/bundle/script.eagle
+  ```
+
+  The colon (`:`) is the delimiter between the bundle file path and the
+  script's `FullName` within the database.  The minimum path must contain
+  at least 3 components (the file path, the delimiter, and the script
+  name).  These paths are used by `[package scan]`,
+  `[interp readorgetscriptfile]`, and the `BundleManager.GetData` method
+  to locate and retrieve scripts from mounted bundles.
+
+  For package index files (negative `Sequence`), the `[package scan]`
+  sub-command must be invoked with specific flags:
+
   ```tcl
-  source "config.tcl"
-  source -encoding utf-8 "unicode_script.tcl"
+  package scan -normal -host -bundle --
+  ```
+
+  ##### Conditional Compilation
+
+  The bundle functionality requires the `DATA` compile-time feature.  When
+  `DATA` is not defined, the `-bundle` and `-bundleflags` options are
+  present but marked as unsupported.  The AppDomain isolation level
+  additionally requires `ISOLATED_INTERPRETERS`.  The `-withinfo` option
+  interacts with `ARGUMENT_CACHE` and `DEBUGGER_BREAKPOINTS`.
+
+  **Examples**:
+  ```tcl
+  # Source a plain script file
+  source "config.eagle"
+
+  # Source with explicit UTF-8 encoding
+  source -encoding utf-8 "unicode_script.eagle"
+
+  # Source with debugging information enabled
+  source -withinfo true "debug_target.eagle"
+
+  # Source with execution profiling
+  source -time true "benchmark_script.eagle"
+
+  # Source as a library (package-level context)
+  source -library true "pkgIndex.eagle"
+
+  # Evaluate a script bundle database (auto-detected via .db extension)
+  source "myScripts.db"
+
+  # Evaluate an encrypted bundle with explicit bundle mode
+  source -bundle true -password $encryptionKey "secure_bundle.db"
+
+  # Evaluate a bundle, stop on first error, require key ring
+  source -bundleflags {StopOnError|RequireKeyRing} "production.db"
+
+  # Force non-bundle evaluation of a .db-extension file
+  source -bundle false "not_a_bundle.db"
   ```
 
 <a id="cmd-subst"></a>
