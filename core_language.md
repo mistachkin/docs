@@ -60,6 +60,7 @@ The following commands are Eagle-specific extensions not found in standard Tcl 8
 
 | Command | Category | Brief Description |
 |---------|----------|-------------------|
+| `base64` | Strings | Base64 encoding/decoding |
 | `callback` | Event | Callback queue for async operations |
 | `debug` | Debugging | 70+ sub-commands for interpreter debugging |
 | `do` | Loop | Do-while / do-until loop |
@@ -83,6 +84,8 @@ The following commands are Eagle-specific extensions not found in standard Tcl 8
 | `setf` | Variables | Set variable with internal flags (obsolete diagnostic) |
 | `sql` | Database | SQLite/ADO.NET database operations |
 | `tcl` | Tcl Integration | Bridge to native Tcl interpreter |
+| `test1` | Testing | Basic test command |
+| `test2` | Testing | Advanced test command |
 | `unsetf` | Variables | Unset variable with internal flags (obsolete diagnostic) |
 | `uri` | Network | URI operations and HTTP client |
 | `version` | Introspection | Eagle version information |
@@ -95,29 +98,30 @@ The following commands are Eagle-specific extensions not found in standard Tcl 8
 
 ## Command Count Summary
 
-Total Commands: **116** (user-callable)
-
-Additionally, 8 internal infrastructure classes (`Default`, `Core`, `Alias`, `_Delegate`, `SubDelegate`, `Automatic`, `Ensemble`, `Stub`) serve as base classes and wrappers — see [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure).
+Total Commands: **121** (core library commands, including 8 internal infrastructure classes: `Default`, `Core`, `Alias`, `_Delegate`, `SubDelegate`, `Automatic`, `Ensemble`, `Stub` — see [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure)).
 
 Commands are organized into the following ObjectGroup categories:
-- Control Flow (conditional, control, loop): 12 commands
+- Conditional: 2 commands
+- Control: 9 commands
+- Loop: 5 commands
 - Variables: 10 commands
-- Lists: 18 commands
-- Strings: 11 commands
+- Lists: 15 commands
+- Strings: 13 commands
 - Channels (I/O): 12 commands
 - File System: 5 commands
 - Procedures: 4 commands
 - Script Environment: 5 commands
 - Managed Environment: 6 commands
-- Native Environment: 5 commands
+- Native Environment: 6 commands
 - Debugging: 1 command (with 70+ sub-commands)
+- Engine: 4 commands
 - Expression: 3 commands
 - Time: 2 commands
 - Event: 4 commands
 - Introspection: 2 commands
 - Network: 2 commands
 - Test: 2 commands
-- Other categories: ~20 commands
+- Core/Default/Ensemble/Delegate/Alias/Nop: 9 commands
 
 ---
 
@@ -133,6 +137,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 | [`apply`](#cmd-apply) | Apply lambda expression | [Procedures](#procedures) |
 | [`array`](#cmd-array) | Array operations | [Arrays](#arrays) |
 | [`automatic`](#cmd-automatic) | Automatic command mapping wrapper (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
+| [`base64`](#cmd-base64) | Base64 encoding/decoding | [Strings](#strings) |
 | [`bgerror`](#cmd-bgerror) | Background error handler | [Core and Miscellaneous](#core-and-miscellaneous) |
 | [`break`](#cmd-break) | Break out of loop | [Control Flow](#control-flow) |
 | [`callback`](#cmd-callback) | Callback queue (enqueue/dequeue/execute) | [Event Management](#event-management) |
@@ -229,6 +234,8 @@ Quick reference to all Eagle commands with links to their detailed documentation
 | [`switch`](#cmd-switch) | Pattern matching and branching | [Control Flow](#control-flow) |
 | [`tcl`](#cmd-tcl) | Tcl integration | [Tcl Integration](#tcl-integration) |
 | [`tell`](#cmd-tell) | Get channel position | [I/O and Channels](#io-and-channels) |
+| [`test1`](#cmd-test1) | Basic test command | [Testing](#testing) |
+| [`test2`](#cmd-test2) | Advanced test command | [Testing](#testing) |
 | [`throw`](#cmd-throw) | Throw an exception | [Control Flow](#control-flow) |
 | [`time`](#cmd-time) | Time script execution | [Time and Clock](#time-and-clock) |
 | [`truncate`](#cmd-truncate) | Truncate channel | [I/O and Channels](#io-and-channels) |
@@ -1232,12 +1239,12 @@ String commands belong to ObjectGroup: "string"
 
 - **append** - Append to string variable (see Variables)
 
+<a id="cmd-base64"></a>
 - **base64** - Base64 encoding/decoding
   - `base64 decode ?options? string` - Decode a Base64-encoded string back to its original binary/text form
   - `base64 encode ?options? string` - Encode a string or binary data to Base64 format
   - **Options**:
     - `-encoding name` - Character encoding to use (default: utf-8)
-    - `-strict` - Strict mode; error on invalid input
   - **Returns**: The encoded or decoded string.
   - **Example**:
     ```tcl
@@ -2932,6 +2939,7 @@ Test commands belong to ObjectGroup: "test"
 
 Eagle provides built-in test commands for unit testing. These commands integrate with the test framework infrastructure and support constraints, setup/cleanup, and result comparison.
 
+<a id="cmd-test1"></a>
 - **test1** - Basic test command (Eagle-specific)
   - `test1 name description constraints body result`
   - Defines and executes a simple test case.
@@ -2954,6 +2962,7 @@ Eagle provides built-in test commands for unit testing. These commands integrate
   } {4}
   ```
 
+<a id="cmd-test2"></a>
 - **test2** - Advanced test command (Eagle-specific)
   - `test2 name description ?options?`
   - Defines and executes an advanced test case with full options.
