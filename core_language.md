@@ -2465,187 +2465,305 @@ Object commands belong to ObjectGroup: "managedEnvironment"
 
 Debug command belongs to ObjectGroup: "debug"
 
-The `debug` command provides comprehensive debugging capabilities for Eagle scripts and the interpreter itself. It includes breakpoint management, execution control, memory analysis, and script bundling.
+The `debug` command provides comprehensive debugging capabilities for Eagle scripts and the interpreter itself. It is an ensemble command with 78 sub-commands covering breakpoint management, execution control, memory analysis, script bundling, tracing, and runtime configuration. Many sub-commands require the `DEBUGGER` compile-time flag; others require `DEBUGGER_BREAKPOINTS`, `SHELL`, `DATA`, `HISTORY`, `NATIVE`, or `PREVIOUS_RESULT`.
 
 <a id="cmd-debug"></a>
 - **debug** - Debugging operations
 
   #### Debugger Control
 
-  - `debug enable ?enabled?` - Enables or disables the debugger. Without argument, returns current state.
-  - `debug interactive ?enabled?` - Enables or disables interactive debugging mode. When enabled, the debugger will prompt for commands at breakpoints.
-  - `debug setup ?create? ?isolated? ?createFlags? ?initializeFlags? ?scriptFlags? ?interpreterFlags?` - Initializes or configures the debugger. With *create*, creates a debug interpreter.
-  - `debug status` - Returns the current status of the debugger (enabled, breakpoints, watches, etc.).
-  - `debug ready ?isolated?` - Returns 1 if the debugger is ready for use.
-  - `debug self ?debug? ?force?` - Enables debugging of the debugger itself (for advanced troubleshooting).
+  - `debug enable ?enabled?` - Enables or disables the debugger. Without an argument, **toggles** the current state (not a query). With a boolean argument, sets the state explicitly. Writes a status line to the interactive host upon success. Requires `DEBUGGER`.
+  - `debug interactive ?enabled?` - Gets or sets the interpreter's interactive mode flag. Unlike the `on*` sub-commands, this does not toggle by default; without an argument it returns the current value. With a boolean argument, sets the value.
+  - `debug setup ?create? ?isolated? ?createFlags? ?initializeFlags? ?scriptFlags? ?interpreterFlags?` - Initializes or configures the debugger. All six arguments are optional and positional. With *create* true, creates a debugger interpreter. With *isolated* true, creates it in isolation. The remaining four arguments are flag enumerations (`CreateFlags`, `InitializeFlags`, `ScriptFlags`, `InterpreterFlags`) controlling the created interpreter's configuration. Without arguments, initializes the default debugger. Requires `DEBUGGER`.
+  - `debug status` - Returns a list describing the current debugger state: whether a debugger is available, whether it is enabled, the current header flags, and whether an isolated debugger interpreter is available. Requires `DEBUGGER`.
+  - `debug ready ?isolated?` - Returns `True` if the debugger is ready for use. With *isolated* true, also requires an isolated debugger interpreter to be available. Requires `DEBUGGER`.
+  - `debug self ?debug? ?force?` - Triggers a managed debugger break (via `Debugger.Break()`). *debug* defaults to true only when a managed debugger is attached (`DebugOps.IsAttached()`). *force* defaults to false; when true, breaks even on release builds. Uses relaxed argument count checking. This is for debugging the interpreter itself, not scripts.
 
   #### Breakpoints and Execution Control
 
-  - `debug break ?options?` - Triggers a breakpoint, pausing execution and entering the interactive debugger.
-    - **Options**: `-condition expr` (break only if expression is true)
-  - `debug breakpoints ?pattern?` - Lists all breakpoints matching *pattern*.
-  - `debug step ?enabled?` - Enables or disables single-stepping mode. When enabled, execution pauses after each command.
-  - `debug steps ?integer?` - Sets the number of steps to execute before pausing.
-  - `debug suspend` - Suspends script execution at the current point.
-  - `debug resume` - Resumes suspended script execution.
-  - `debug halt ?result?` - Halts execution immediately, optionally with *result* as the return value.
+  - `debug break ?options?` - Triggers a demand breakpoint, entering the nested interactive debugger loop. Requires `DEBUGGER`.
+    - **Options**:
+      - `-interpreter interp` - Use a specific interpreter (default: current)
+      - `-ignoreenabled` - Ignore whether the debugger is currently enabled
+      - `-complain` - Report errors if the debugger check fails (overrides `-nocomplain`)
+      - `-nocomplain` - Suppress errors if the debugger is not available
+      - `-noerror` - Convert any error result to success (ReturnCode.Ok)
+    - The breakpoint fires by setting the `Demand` flag on `BreakpointType` and invoking `Debugger.Breakpoint()`, which enters a nested interactive loop where the user can inspect state and issue commands.
+  - `debug breakpoints ?pattern?` - Lists all breakpoints. With *pattern*, only those matching the glob pattern are returned. Requires `DEBUGGER` and `DEBUGGER_BREAKPOINTS`.
+  - `debug step ?enabled?` - Enables or disables single-stepping mode. Without an argument, **toggles** the current state. Requires the interpreter to be in interactive mode (`debug interactive true`) or an error is returned. When enabled, execution pauses after each command. Requires `DEBUGGER`.
+  - `debug steps ?integer?` - Gets or sets the step counter. *integer* is a wide (64-bit) integer specifying the number of steps to execute before pausing. Requires interactive mode to set. Requires `DEBUGGER`.
+  - `debug suspend` - Suspends the debugger, saving its current context. This allows script evaluation to proceed without debugger interception. Uses a dual-context array for save/restore. Requires `DEBUGGER`.
+  - `debug resume` - Resumes a previously suspended debugger, restoring its context. Requires `DEBUGGER`.
+  - `debug halt ?result?` - Halts script evaluation immediately via `Engine.HaltEvaluate()` with `CancelFlags.DebugHalt`. Optionally provides *result* as the return value.
 
-  **Example**:
+  **Example** - Setting up the debugger and breaking:
   ```tcl
-  debug enable true        ;# Enable the debugger
-  debug step true          ;# Enable single-stepping
-  debug break              ;# Break into debugger here
-  debug resume             ;# Continue execution
+  debug enable true          ;# Explicitly enable the debugger
+  debug interactive true     ;# Enable interactive mode (required for stepping)
+  debug step true            ;# Enable single-stepping
+  debug break                ;# Enter the interactive debugger here
+  debug resume               ;# Continue execution
+  ```
+
+  **Example** - Breaking into the debugger only when it is available:
+  ```tcl
+  debug break -nocomplain -noerror   ;# Silently skip if no debugger
   ```
 
   #### Call Stack and Variables
 
-  - `debug levels` - Returns information about all call stack levels.
-  - `debug stack ?force?` - Returns a formatted stack trace. With *force*, includes internal frames.
-  - `debug variable ?options? varName` - Returns detailed information about variable *varName*.
-  - `debug watch ?varName? ?types?` - Sets a watchpoint on *varName*. *types* specifies what to watch (read, write, unset).
-  - `debug lockvar enabled name` - Locks or unlocks a variable for debugging.
-  - `debug lockloop enabled` - Enables or disables loop debugging.
+  - `debug levels` - Returns a key-value list of maximum nesting depths: `maximumLevels`, `maximumScriptLevels`, `maximumScriptFileLevels`, `maximumParserLevels`, `maximumExpressionLevels`.
+  - `debug stack ?force?` - Returns stack space information as a key-value list: `threadId`, `used`, `allocated`, `extra`, `margin`, `maximum`, `reserve`, `commit`. With *force* true, refreshes native stack pointers and performs a stack check before reporting. Partially requires `NATIVE`.
+  - `debug variable ?options? varName` - Returns detailed introspection information about variable *varName* via the host's `BuildLinkedVariableInfoList`.
+    - **Options**: `-searches` (include search history), `-elements` (include array elements), `-links` (follow variable links), `-empty` (include empty content)
+  - `debug watch ?varName? ?types?` - Manages variable watchpoints. Without arguments, lists all watched variables in the current call frame. With *varName*, gets watchpoint flags for that variable. With *types*, sets the watchpoint flags using `VariableFlags` (e.g., `BreakOnGet`, `BreakOnSet`, `BreakOnUnset`, `Mutable`). Does not require the debugger, but watchpoints only fire when a debugger is available.
+  - `debug lockvar enabled name` - Locks or unlocks a variable for thread-exclusive access. *enabled* is a nullable boolean: true locks, false unlocks, null queries the current lock state (returns `{locked threadId}` or `{False {}}`).
+  - `debug lockloop enabled` - Acquires or releases the interactive loop semaphore. When true, cancels pending interactive input reads and acquires the semaphore (with retries), preventing other threads from obtaining interactive input. When false, releases the semaphore. Requires `SHELL`.
 
-  **Example**:
+  **Example** - Watchpoints and variable inspection:
   ```tcl
-  debug watch myVar write  ;# Break when myVar is written
-  debug levels             ;# Show call stack
-  debug variable myVar     ;# Show variable details
+  debug watch myVar BreakOnSet       ;# Break when myVar is written
+  debug watch myVar                  ;# Query watch flags on myVar
+  debug variable -elements myArray   ;# Inspect array variable details
+  debug levels                       ;# Show nesting depth limits
   ```
 
   #### Script Evaluation in Debug Context
 
-  - `debug eval arg ?arg ...?` - Evaluates a script in the debug context, with access to debug state.
-  - `debug run arg ?arg ...?` - Runs a script under debugger control.
-  - `debug invoke ?level? cmd ?arg ...?` - Invokes a command at the specified stack level.
-  - `debug subst ?-nobackslashes? ?-nocommands? ?-novariables? string` - Performs substitution with debug context.
-  - `debug secureeval ?options? path arg ?arg ...?` - Evaluates a script securely in a child interpreter.
+  - `debug eval arg ?arg ...?` - Evaluates a script in the **debugger interpreter** (not the main interpreter). Pushes a tracking call frame with `Debugger` flag. On error, copies error information back to the main interpreter. Requires `DEBUGGER`.
+  - `debug run arg ?arg ...?` - Evaluates a script with the **debugger suspended** ("eval without debugging" / "run at full speed"). Suspends the debugger, evaluates the script in the main interpreter, then resumes the debugger in a finally block. Requires `DEBUGGER`.
+  - `debug invoke ?level? cmd ?arg ...?` - Invokes a command in the **debugger interpreter** at the specified stack level. Supports Tcl-style level specifiers (e.g., `#0` for global, `1` for one level up). Requires `DEBUGGER`.
+  - `debug subst ?-nobackslashes? ?-nocommands? ?-novariables? string` - Performs string substitution in the **debugger interpreter**. Options selectively disable backslash, command, or variable substitution. Requires `DEBUGGER`.
+  - `debug secureeval ?options? path arg ?arg ...?` - Evaluates a script securely in a child interpreter identified by *path*.
+    - **Options**:
+      - `-timeout integer` - Timeout in milliseconds; queues a script timeout thread
+      - `-nocancel boolean` - Reset cancel flags after evaluation
+      - `-globalcancel boolean` - Include global cancel flag in reset
+      - `-stoponerror boolean` - Set `StopOnError` in event wait flags
+      - `-file boolean` - Treat *arg* as a file path to evaluate
+      - `-trusted boolean` - Temporarily mark the child interpreter as trusted (safe interpreters only)
+      - `-events boolean` - Enable/disable event processing (defaults to `!trusted`)
+      - `-noisolatedplugins boolean` - Disable isolated plugin support during evaluation (requires `ISOLATED_PLUGINS`)
+
+  **Example** - Running code at full speed during a debug session:
+  ```tcl
+  debug run {
+    # This code runs without debugger interception
+    set result [expensive_computation]
+  }
+  ```
+
+  **Example** - Secure evaluation with timeout:
+  ```tcl
+  interp create -safe child
+  debug secureeval -timeout 5000 -stoponerror true child {expr {2 + 2}}
+  ```
 
   #### Interactive Debugger
 
-  - `debug shell ?options? ?arg ...?` - Starts an interactive debug shell.
-  - `debug icommand ?command?` - Gets or sets the interactive command handler.
-  - `debug iqueue ?options? ?command?` - Manages the interactive command queue.
-  - `debug iresult ?result?` - Gets or sets the interactive result.
+  - `debug shell ?options? ?arg ...?` - Starts an interactive debug shell. Requires `SHELL`.
+    - **Options**:
+      - `-interpreter interp` - Use a specific interpreter for the shell
+      - `-initialize boolean` - Whether to initialize the shell (default behavior)
+      - `-loop boolean` - Whether to enter the interactive loop (default behavior)
+      - `-asynchronous boolean` - When true, creates the shell on a new background thread; returns immediately
+  - `debug icommand ?command?` - Gets or sets the debugger's one-time interactive command. When set, the command is consumed (set to null) after being used by the interactive loop. Setting to an empty string clears the command. Requires `DEBUGGER`.
+  - `debug iqueue ?options? ?command?` - Manages the interactive command queue. Requires `DEBUGGER`.
+    - **Options**: `-dump` (display queued commands), `-clear` (clear the queue)
+    - With *command*, enqueues a command for the interactive loop to execute.
+  - `debug iresult ?result?` - Gets or sets the debugger's one-time interactive result. Like `icommand`, this value is consumed after use. Setting to an empty string clears the result. Requires `DEBUGGER`.
 
-  #### Event Handlers
-
-  These sub-commands enable or disable automatic breakpoints on specific events:
-
-  - `debug oncancel ?enabled?` - Break when script is canceled.
-  - `debug onerror ?enabled?` - Break when an error occurs.
-  - `debug onexecute ?enabled?` - Break on command execution.
-  - `debug onexit ?enabled?` - Break when interpreter exits.
-  - `debug onreturn ?enabled?` - Break on procedure return.
-  - `debug ontest ?enabled?` - Break during test execution.
-  - `debug ontoken ?enabled?` - Break on token processing.
-
-  **Example**:
+  **Example** - Programmatic debugger interaction:
   ```tcl
-  debug onerror true   ;# Break into debugger on any error
-  debug onreturn true  ;# Break when procedures return
+  debug icommand "info vars"         ;# Queue a command for the debugger
+  debug iqueue -dump                 ;# Show queued commands
+  debug shell -asynchronous true     ;# Start a shell on a background thread
+  ```
+
+  #### Event Handlers (Break-On Triggers)
+
+  These sub-commands enable or disable automatic breakpoints on specific events. All follow the same pattern: **without an argument, the current value is toggled** (not queried). With a boolean argument, the value is set explicitly. Each writes a status message to the interactive host. All require `DEBUGGER` (and `ontoken` additionally requires `DEBUGGER_BREAKPOINTS`).
+
+  - `debug oncancel ?enabled?` - Break when script execution is canceled. Toggles `debugger.BreakOnCancel`.
+  - `debug onerror ?enabled?` - Break when an error occurs. Toggles `debugger.BreakOnError`.
+  - `debug onexecute ?enabled?` - Break on command execution. Toggles `debugger.BreakOnExecute`.
+  - `debug onexit ?enabled?` - Break when the interpreter exits. Toggles `debugger.BreakOnExit`.
+  - `debug onreturn ?enabled?` - Break when a procedure returns. Toggles `debugger.BreakOnReturn`.
+  - `debug ontest ?enabled?` - Break during test execution. Toggles `debugger.BreakOnTest`.
+  - `debug ontoken ?enabled?` - Break on token processing. Toggles `debugger.BreakOnToken`. Requires `DEBUGGER_BREAKPOINTS`.
+
+  **Example** - Toggle-by-default behavior:
+  ```tcl
+  debug onerror         ;# Toggle: if currently off, turns on; if on, turns off
+  debug onerror true    ;# Explicitly enable break-on-error
+  debug onerror false   ;# Explicitly disable break-on-error
   ```
 
   #### Debug Hooks
 
-  - `debug hook ?options? ?pattern? ?script?` - Manages debug hooks that execute at specific points.
+  - `debug hook ?options? ?pattern? ?script?` - Manages debug hooks (test hooks) that execute when test names match a pattern.
+    - **Options**:
+      - `-type TestHookType` - The hook type (default: `Default`). Determines when the hook fires (e.g., `Before`, `After`).
+      - `-unset boolean` - When true with a *pattern*, removes the hook instead of setting it.
     - Without arguments, lists all hooks.
-    - With *script*, sets a hook for events matching *pattern*.
-
-  #### Logging and Output
-
-  - `debug log ?options? message` - Logs a debug message with optional options for filtering and formatting.
-  - `debug output message ?priority?` - Outputs a debug message with specified priority.
-  - `debug write message ?priority?` - Writes a debug message to the debug output.
-  - `debug trace ?options? ?message?` - Traces execution with optional message.
-  - `debug vout ?channelId? ?enabled?` - Configures verbose debug output channel.
+    - With *pattern* only, lists hooks matching the pattern.
+    - With *pattern* and *script*, sets a hook that executes *script* for matching test names.
 
   **Example**:
   ```tcl
-  debug log "Entering critical section"
-  debug trace -commands "Processing item $i"
+  debug hook -type Before "mytest-*" {puts "About to run: $name"}
+  debug hook                          ;# List all hooks
+  debug hook -unset true "mytest-*"   ;# Remove the hook
+  ```
+
+  #### Logging and Output
+
+  - `debug log ?options? message` - Logs a debug message via `DebugOps.Log()`.
+    - **Options**: `-level integer` (log level, default 0), `-category string` (category name, default: system default)
+  - `debug output message ?priority?` - Outputs a debug message to the native debug output (e.g., `OutputDebugString` on Windows). *priority* is a `DebugPriority` flags value. Requires `NATIVE`.
+  - `debug write message ?priority?` - Writes a debug message through multiple channels (native output, trace, and host), controlled by `DebugPriority` flags. Flags `NoViaOutput`, `NoViaTrace`, `NoViaHost` selectively disable channels.
+  - `debug trace ?options? ?message?` - Comprehensive trace configuration and messaging. Without *message*, queries current trace status. With *message*, writes a trace message. Has extensive options for configuring trace listeners, priorities, and categories.
+    - **Key options**: `-priority TracePriority`, `-priorities TracePriority`, `-category string`, `-debug boolean` (use debug output vs trace), `-raw boolean` (raw write vs formatted), `-log boolean` (enable/disable log file listener), `-logname string`, `-logfilename string`, `-logflags LogFlags`, `-default boolean`, `-console boolean`, `-native boolean`, `-statusform boolean`, `-resetsystem boolean`, `-resetlisteners boolean`, `-forceenabled boolean`, `-overrideenvironment boolean`, `-noresult boolean`, `-statetypes TraceStateType`, `-enabledcategories list`, `-disabledcategories list`, `-penaltycategories list`, `-bonuscategories list`
+  - `debug vout ?channelId? ?enabled?` - Manages virtual output on a channel. *channelId* defaults to stdout. With *enabled* true, enables virtual output buffering on the channel. Without *enabled*, returns the accumulated virtual output.
+
+  **Example** - Basic logging:
+  ```tcl
+  debug log -category "MyApp" "Entering critical section"
+  debug trace -priority High "Processing item $i"
+  ```
+
+  **Example** - Configuring trace listeners:
+  ```tcl
+  debug trace -log true -logfilename "/tmp/eagle_trace.log"  ;# Enable log file
+  debug trace                                                  ;# Query trace status
   ```
 
   #### Memory and Garbage Collection
 
-  - `debug memory` - Returns detailed information about managed memory usage.
-  - `debug sysmemory` - Returns system memory information.
-  - `debug gcmemory ?collect?` - Returns garbage collection memory statistics. With *collect*, forces a GC.
-  - `debug collect ?flags?` - Forces garbage collection with specified flags.
-  - `debug cleanup ?flags?` - Cleans up debug resources with specified flags.
-  - `debug purge` - Purges all debug information and resources.
+  - `debug memory` - Returns a detailed key-value list of managed memory statistics: `gcTotalMemory`, `gcMaxGeneration`, per-generation `gcCollectionCount`, `isServerGC`, `gcLatencyMode` (when available), and native memory status (when `NATIVE` is enabled).
+  - `debug sysmemory` - Returns system (native) memory information via `NativeOps.GetMemoryStatus()`. Requires `NATIVE`.
+  - `debug gcmemory ?collect?` - Returns `GC.GetTotalMemory()`. With *collect* true, forces a full garbage collection first.
+  - `debug collect ?flags?` - Forces garbage collection via `ObjectOps.CollectGarbage()`. *flags* is a `GarbageFlags` value (default: `ForCommand`).
+  - `debug cleanup ?flags?` - Cleans up the current call frame and interpreter caches. *flags* is a `CacheFlags` value (default: `Default`). Returns a list of `{frameCleanupCount cacheCleanupCount gcTotalMemory}`. Requires cache-related compile-time flags.
+  - `debug purge` - Purges all call frame information via `CallFrameOps.Purge()`.
 
   **Example**:
   ```tcl
   puts "Memory: [debug memory]"
-  debug collect                ;# Force garbage collection
-  puts "After GC: [debug gcmemory]"
+  debug collect                    ;# Force garbage collection
+  puts "After GC: [debug gcmemory true]"
+  debug cleanup                    ;# Clean up caches and frames
   ```
 
   #### Script Bundling and Mounting
 
-  - `debug bundle fileName ?password? ?pattern?` - Creates a script bundle (encrypted archive) containing scripts matching *pattern*.
-  - `debug mount fileName ?password?` - Mounts a script bundle, making its scripts available.
-  - `debug unmount fileName` - Unmounts a previously mounted bundle.
-  - `debug mounts ?pattern?` - Lists mounted bundles matching *pattern*.
+  - `debug bundle fileName ?password? ?pattern?` - Reads and parses a script bundle file. *password* is a Base64-encoded encryption key. *pattern* filters which scripts to include. Returns a list of script metadata. Requires `DATA`.
+  - `debug mount fileName ?password?` - Mounts a script bundle, making its scripts available to the interpreter's source mechanism. *password* is Base64-encoded. Requires `DATA`.
+  - `debug unmount fileName` - Unmounts a previously mounted script bundle. Requires `DATA`.
+  - `debug mounts ?pattern?` - Lists mounted bundles. With *pattern*, only those matching are returned. Requires `DATA`.
 
   **Example**:
   ```tcl
-  debug bundle "scripts.bundle" "secret" "*.tcl"  ;# Create bundle
-  debug mount "scripts.bundle" "secret"            ;# Mount it
-  source "bundled_script.tcl"                       ;# Use bundled script
-  debug unmount "scripts.bundle"                    ;# Unmount
+  debug mount "scripts.bundle" "c2VjcmV0"  ;# Mount with Base64 password
+  source "bundled_script.tcl"                ;# Use bundled script
+  debug mounts                               ;# List all mounts
+  debug unmount "scripts.bundle"             ;# Unmount
   ```
 
-  #### Command and Function Control
+  #### Command and Function Breakpoints
 
-  - `debug execute name ?enabled?` - Enables or disables execution of command *name*.
-  - `debug function name ?enabled?` - Enables or disables expression function *name*.
-  - `debug operator name ?enabled?` - Enables or disables expression operator *name*.
-  - `debug procedureflags procName ?flags?` - Gets or sets procedure flags for debugging.
-  - `debug undelete ?pattern?` - Restores deleted commands matching *pattern*.
+  - `debug execute name ?enabled?` - Gets or sets the execution breakpoint on command *name*. Without *enabled*, queries the current state. With a boolean, enables or disables the breakpoint. Requires `DEBUGGER`.
+  - `debug function name ?enabled?` - Gets or sets the execution breakpoint on expression function *name*. Requires `DEBUGGER`.
+  - `debug operator name ?enabled?` - Gets or sets the execution breakpoint on expression operator *name*. Requires `DEBUGGER`.
+  - `debug procedureflags procName ?flags?` - Gets or sets `ProcedureFlags` for procedure *procName*. *flags* is parsed as a combinable flags enumeration.
+  - `debug test ?name? ?enabled?` - Manages test breakpoints. Without arguments, lists all test breakpoints. With *name* only, queries the breakpoint state for that test. With both, enables or disables the breakpoint. Requires `DEBUGGER`.
+  - `debug token fileName startLine endLine ?enabled?` - Manages token-level (source location) breakpoints. Specifies a file and line range. Without *enabled*, queries whether a breakpoint matches. With a boolean, sets or clears the breakpoint. Requires `DEBUGGER` and `DEBUGGER_BREAKPOINTS`.
+  - `debug undelete ?pattern?` - Restores (un-deletes) variables matching *pattern* in the current call frame by clearing the "undefined" flag.
+
+  **Example** - Per-command breakpoints:
+  ```tcl
+  debug execute puts true            ;# Break whenever [puts] is called
+  debug function rand true           ;# Break on rand() in expressions
+  debug test "mytest-1.0" true       ;# Break on specific test
+  debug token "script.tcl" 10 20 true  ;# Break on lines 10-20 of script.tcl
+  ```
 
   #### History and Caching
 
-  - `debug history ?enabled?` - Enables or disables command history tracking.
-  - `debug cacheconfiguration ?settings? ?level?` - Configures debug caching behavior.
-  - `debug refreshautopath ?verbose?` - Refreshes the auto-path configuration.
+  - `debug history ?enabled?` - Gets or sets command history tracking. Without an argument, returns the current state. With a boolean, enables or disables history. Requires `HISTORY`.
+  - `debug cacheconfiguration ?settings? ?level?` - Configures interpreter caches. *settings* is a configuration string (null/empty to use defaults). *level* is an integer controlling initialization depth. Without arguments, returns current cache state and settings. Requires cache-related compile-time flags.
+  - `debug refreshautopath ?verbose?` - Refreshes the global auto-path list. With *verbose* true, produces additional output during refresh.
 
   #### Runtime Options
 
-  - `debug runtimeoption add name` - Adds a runtime option.
-  - `debug runtimeoption clear` - Clears all runtime options.
-  - `debug runtimeoption get` - Gets current runtime options.
-  - `debug runtimeoption has name` - Checks if runtime option exists.
-  - `debug runtimeoption remove name` - Removes a runtime option.
-  - `debug runtimeoption set list` - Sets runtime options from a list.
-  - `debug runtimeoverride name` - Overrides a runtime option.
+  - `debug runtimeoption operation ?arg?` - Manages interpreter runtime options. *operation* is one of:
+    - `has name` - Returns true if the named runtime option exists.
+    - `get` - Returns the current set of runtime options.
+    - `clear` - Clears all runtime options. Returns the previous options.
+    - `add name` - Adds a runtime option. Returns the updated options.
+    - `remove name` - Removes a runtime option. Returns the updated options.
+    - `set list` - Replaces all runtime options with those in *list*.
+  - `debug runtimeoverride name` - Sets a manual runtime override. *name* must be a valid `RuntimeName` enumeration value.
+
+  **Example**:
+  ```tcl
+  debug runtimeoption add "noGc"     ;# Add a runtime option
+  debug runtimeoption has "noGc"     ;# Check if it exists -> True
+  debug runtimeoption get            ;# List all runtime options
+  debug runtimeoption remove "noGc"  ;# Remove it
+  ```
 
   #### Path and Configuration
 
-  - `debug paths ?flags?` - Returns various interpreter paths.
-  - `debug testpath ?path?` - Gets or sets the test path.
-  - `debug types ?types?` - Gets or sets the debug types enabled.
-  - `debug readonly kind enabled ?pattern?` - Sets readonly mode for specific resources.
+  - `debug paths ?flags?` - Returns interpreter paths as a key-value list. *flags* is a `DebugPathFlags` value controlling which paths to include and how to filter them (e.g., `GetAll`, `UseFilter`, `ExistingOnly`, `UniqueOnly`).
+  - `debug testpath ?path?` - Gets or sets the test path for the interpreter.
+  - `debug types ?types?` - Gets or sets the `BreakpointType` flags that determine which breakpoint types are active. *types* is parsed as a combinable flags enumeration. Requires `DEBUGGER`.
+  - `debug readonly kind enabled ?pattern?` - Sets or queries read-only mode for identifiers. *kind* is an `IdentifierKind`: `Command`, `Procedure`, or `Variable`. *enabled* is a nullable boolean: true locks, false unlocks, null queries. *pattern* filters which identifiers are affected.
+
+  **Example**:
+  ```tcl
+  debug readonly Command true "puts"  ;# Lock the puts command
+  debug readonly Variable null "*"    ;# Query read-only state of all variables
+  debug types                         ;# Show active breakpoint types
+  ```
 
   #### Plugin Debugging
 
-  - `debug pluginexecute name request` - Executes a plugin command for debugging.
-  - `debug pluginflags ?flags?` - Gets or sets plugin debugging flags.
+  - `debug pluginexecute name request` - Executes a plugin's `Execute` method. *name* identifies the plugin. *request* is a list of arguments passed as a string array to the plugin. Returns the plugin's response as a string.
+  - `debug pluginflags ?flags?` - Gets or sets `PluginFlags` on the interpreter. *flags* is parsed as a combinable flags enumeration.
+
+  #### Exception Handling
+
+  - `debug exception ?options?` - Retrieves the exception from the previous result as an opaque object handle. Supports standard object return value options (`-objectname`, `-alias`, etc. via `ObjectOps.GetExceptionOptions()`). Requires `PREVIOUS_RESULT`.
+  - `debug result` - Returns the full string representation of the current or previous result, including stack traces (via `Result.FullString` and `Result.WithStackTraces()`). Falls back to the previous result if the current result is null. Requires `PREVIOUS_RESULT` for fallback.
+  - `debug complaint` - Returns the current complaint string from `DebugOps.SafeGetComplaint()`. Complaints are internal diagnostic messages recorded when non-critical errors occur.
+
+  **Example**:
+  ```tcl
+  catch {error "something went wrong"}
+  debug result     ;# See full error details including stack trace
+  debug exception  ;# Get exception object handle (if available)
+  ```
+
+  #### Emergency Mode
+
+  - `debug emergency ?options? ?level?` - Enters emergency debugging mode for critical troubleshooting. This is the most complex sub-command, performing multiple phases controlled by the `DebugEmergencyLevel` flags enumeration.
+    - **Options**: Same as `debug break` (`-interpreter`, `-ignoreenabled`, `-nocomplain`, `-noerror`)
+    - *level* is a `DebugEmergencyLevel` flags value (default: `Default`). Flags include `Enabled`, `Disabled`, and various phase-control flags that determine which emergency operations are performed (e.g., enabling/disabling the debugger, entering interactive mode, setting breakpoint types).
 
   #### Other Operations
 
-  - `debug callback ?{}|arg ...?` - Manages debug callbacks.
-  - `debug complaint` - Reports a complaint (internal diagnostic).
-  - `debug emergency ?options? ?level?` - Enters emergency mode for critical debugging.
-  - `debug keyring` - Accesses the security keyring.
-  - `debug null` - No-operation (for testing).
-  - `debug result` - Returns the last debug result.
-  - `debug restore ?strict? ?verbose?` - Restores debug state.
-  - `debug set ?options? varName object` - Sets a debug variable.
-  - `debug test ?name? ?enabled?` - Enables or disables specific tests.
-  - `debug token fileName startLine endLine ?enabled?` - Enables token-level debugging for specific source locations.
+  - `debug callback ?{}|arg ...?` - Manages debugger callback arguments. Without arguments, returns the current callback arguments. With an empty list `{}`, clears the callback. With arguments, sets the callback arguments and triggers `CheckCallbacks()`. Requires `DEBUGGER`.
+  - `debug null` - Forces a null result. Ignores all arguments, sets the result to empty, and applies `ResultFlags.ForceNullMask` to force the engine to treat the result as null.
+  - `debug set ?options? varName object` - Sets a variable to the value of an opaque object handle.
+    - **Options**: `-reference integer` (adjust reference count: positive adds, negative removes), `-convert boolean` (convert object value to string representation)
+  - `debug keyring` - Fetches and merges the security keyring via `ScriptOps.FetchAndMergeKeyRing()`.
+  - `debug restore ?strict? ?verbose?` - Restores the core plugin to its default state via `interpreter.RestoreCorePlugin()`.
+
+  **Example** - Using debug null for testing:
+  ```tcl
+  set x [debug null]   ;# x will be set but the engine treats the result as null
+  ```
 
 ---
 
