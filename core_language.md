@@ -2174,6 +2174,9 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
         # port defaults to 80, timeout to 30
     }
     ```
+  - **Annotations**: The procedure body may contain annotations (e.g.,
+    `<<private>>`, `<<fast>>`, `<<atomic>>`, `<<inline>>`) that control
+    procedure behavior.  See [Procedure Body Annotations](#procedure-body-annotations).
 
 <a id="cmd-nproc"></a>
 - **nproc** - Create procedure with named arguments (Eagle extension)
@@ -2208,6 +2211,9 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
     # Lambda with namespace context
     apply {{} {variable counter; incr counter}} {} ::myns
     ```
+  - **Annotations**: The lambda body may contain annotations (e.g.,
+    `<<fast>>`, `<<atomic>>`, `<<inline>>`) that control execution
+    behavior.  See [Procedure Body Annotations](#procedure-body-annotations).
 
 <a id="cmd-napply"></a>
 - **napply** - Apply lambda with named arguments (Eagle extension)
@@ -6386,6 +6392,556 @@ apply $lambda 21  ;# Returns: 42
 
 # Use with lmap for functional programming
 lmap x {1 2 3 4} {apply {{n} {expr {$n * $n}}} $x}  ;# {1 4 9 16}
+```
+
+<a id="procedure-body-annotations"></a>
+
+### Procedure Body Annotations
+
+Eagle provides a procedure annotation system that allows developers to embed
+declarative metadata directly in procedure and lambda bodies using specially
+formatted comments.  Annotations control how the interpreter creates, calls,
+and manages procedures, enabling fine-grained control over visibility, call
+frame handling, concurrency, caching, and argument lifecycle.
+
+Annotations are recognized by the `[proc]`, `[nproc]`, `[apply]`, and
+`[napply]` commands.  They are processed at definition time (for `proc`
+and `nproc`) or at first evaluation time (for `apply` and `napply`), not
+during each call.
+
+**Important**: Annotations are only processed when the interpreter is NOT
+in safe mode (`interp issafe` returns false).  In safe interpreters, all
+annotations are silently ignored.  This ensures that untrusted code cannot
+use annotations to escalate privileges or modify execution semantics.
+
+#### Annotation Syntax
+
+Annotations are embedded in Tcl comments within the procedure body using
+double angle bracket delimiters:
+
+```
+# <<annotationName>>
+# <<annotationName:value>>
+```
+
+The canonical placement is on the opening brace line of the body, after a
+semicolon (which terminates the empty first command):
+
+```tcl
+proc myProc {} {; # <<private>>
+    # procedure body
+}
+```
+
+**Regex patterns** used for detection:
+
+| Pattern | Format | Example |
+|---------|--------|---------|
+| `#\s+<<(\w+)>>\s+` | Bare annotation (no value) | `# <<private>>` |
+| `#\s+<<(\w+):(\w+(?: \w+)*)>>\s+` | Annotation with value | `# <<private:true>>` |
+
+Annotations are extracted via case-insensitive regex matching against the
+entire body text.  Multiple annotations can appear on the same line or on
+separate lines:
+
+```tcl
+proc example {} {; # <<private>> <<fast>>
+    # both private and fast
+}
+
+proc example2 {} {
+    # <<atomic>>
+    # <<matchTypes>>
+    # body here
+}
+```
+
+#### Annotation Value Semantics
+
+For boolean annotations (`private`, `fast`, `atomic`, `inline`,
+`nonCaching`, `matchTypes`), the value logic is:
+
+| Annotation Form | Result | Rationale |
+|-----------------|--------|-----------|
+| Not present | `false` | Opt-in by default |
+| `<<name>>` (bare) | `true` | Presence implies enablement |
+| `<<name:true>>` or `<<name:1>>` or `<<name:yes>>` | `true` | Explicit enablement |
+| `<<name:false>>` or `<<name:0>>` or `<<name:no>>` | `false` | Explicit disablement |
+
+Value parsing uses `Value.GetBoolean2` with `ValueFlags.AnyBoolean`, so
+all standard boolean representations are accepted (`true`, `false`, `1`,
+`0`, `yes`, `no`, `on`, `off`).
+
+This design enables conditional annotation: a code generator can emit
+`<<private:0>>` to explicitly mark a procedure as non-private even though
+the annotation is present, which is useful for template-based code generation
+where the annotation structure is fixed but the value varies.
+
+#### Available Annotations
+
+##### `<<private>>` - Namespace-Private Procedures
+
+Restricts the procedure so it can only be called from within its own
+namespace.  Calls from the global namespace, from other namespaces, or
+via fully-qualified name from outside the namespace are rejected with an
+error.
+
+- **ProcedureFlags set**: `Private` (0x800)
+- **Applies to**: `proc`, `nproc` only (ignored by `apply`/`napply`)
+- **Enforcement**: At call time, `ScriptOps.MaybeCheckProcedureCaller`
+  verifies the caller's namespace matches the procedure's namespace.
+
+```tcl
+namespace eval ::MyLib {
+    proc publicApi {x} {; # (no annotation)
+        return [helper $x]
+    }
+
+    proc helper {x} {; # <<private>>
+        # Only callable from within ::MyLib
+        return [expr {$x * 2}]
+    }
+}
+
+::MyLib::publicApi 5     ;# OK - returns 10
+::MyLib::helper 5        ;# ERROR - private procedure
+```
+
+This is Eagle's answer to access control without requiring complex policy
+systems.  Unlike Tcl's convention of `_`-prefixed "private" names, Eagle's
+`<<private>>` annotation provides enforced encapsulation.
+
+##### `<<fast>>` - Disable Variable Traces
+
+Disables variable traces and watchpoints on local variables within the
+procedure's call frame.  This eliminates the overhead of trace checking
+on every variable read/write operation.
+
+- **ProcedureFlags set**: `Fast` (0x10000)
+- **CallFrameFlags set**: `Fast` (on the procedure's call frame)
+- **Applies to**: `proc`, `nproc`, `apply`, `napply`
+- **Incompatible with**: `<<inline>>` (mutual exclusion enforced)
+
+```tcl
+proc computeIntensive {data} {; # <<fast>>
+    # No variable traces will fire within this procedure.
+    # Useful for tight loops where trace overhead is measurable.
+    set sum 0
+    foreach item $data {
+        set sum [expr {$sum + $item}]
+    }
+    return $sum
+}
+```
+
+Use `<<fast>>` for procedures that are called frequently in performance-
+critical paths and do not rely on variable traces for their correctness.
+
+##### `<<atomic>>` - Interpreter Lock
+
+Holds the interpreter's internal lock for the entire duration of the
+procedure body evaluation.  This prevents concurrent access to interpreter
+state from other threads.
+
+- **ProcedureFlags set**: `Atomic` (0x20000)
+- **Applies to**: `proc`, `nproc`, `apply`, `napply`
+- **Mechanism**: Uses `interpreter.InternalHardTryLock` before body
+  evaluation; if the lock cannot be acquired, returns an error:
+  `"could not lock interpreter"`.
+
+```tcl
+proc updateSharedState {key value} {; # <<atomic>>
+    # Entire body executes under interpreter lock.
+    # Safe for concurrent access from multiple threads.
+    variable sharedData
+    set sharedData($key) $value
+    return [array size sharedData]
+}
+```
+
+**Caution**: Atomic procedures hold the interpreter lock for their entire
+execution.  Keep atomic procedure bodies short to avoid blocking other
+threads.  Do not call other atomic procedures from within an atomic
+procedure (deadlock risk).
+
+##### `<<inline>>` - No Call Frame Push
+
+Skips creating and pushing a new procedure call frame.  Instead, the
+procedure body executes in the caller's variable frame.  Arguments are
+set as local variables in the calling frame, and after execution, those
+variables are unset and any previously existing variables with the same
+names are restored.
+
+- **ProcedureFlags set**: `NoPushFrame` (0x2000000)
+- **Applies to**: `proc`, `nproc`, `apply`, `napply`
+- **Incompatible with**: `<<fast>>` and `<<matchTypes>>` (mutual exclusion
+  enforced)
+- **Implicit behavior**: When `inline` is active, the `Library` flag is
+  suppressed (even if the interpreter has `ProcedureFlags.Library` set).
+
+```tcl
+proc setLocal {varName value} {; # <<inline>>
+    # Executes in the caller's frame - $varName is set there
+    set $varName $value
+}
+
+proc example {} {
+    setLocal myVar 42
+    puts $myVar   ;# 42 - set by the inline procedure
+}
+```
+
+The inline mechanism works as follows:
+
+1. **Save**: Before evaluation, existing variables that conflict with the
+   procedure's formal arguments are saved from the caller's frame via
+   `frame.Save`.
+2. **Bind**: Arguments are bound as variables in the caller's frame (using
+   `VariableFlags.None` instead of `VariableFlags.Argument`).
+3. **Evaluate**: The body executes in the caller's frame.
+4. **Clean**: Arguments specified in the `<<clean>>` annotation are unset
+   from the caller's frame.
+5. **Restore**: Previously saved variables are restored via `frame.Restore`.
+
+The save/restore count is verified; a mismatch generates a diagnostic
+error.
+
+##### `<<nonCaching>>` - Disable Body Caching
+
+Disables argument caching and parse caching for the procedure body
+evaluation.  This forces the interpreter to re-parse the body on each
+invocation rather than reusing cached parse trees.
+
+- **ProcedureFlags set**: `NonCaching` (0x800000)
+- **Applies to**: `proc`, `nproc`, `apply`, `napply`
+- **Compile-time**: Requires `ARGUMENT_CACHE` or `PARSE_CACHE` feature.
+- **Implicit activation**: Automatically enabled when the interpreter's
+  `Library` flag is set on the procedure (library procedures are always
+  non-caching).
+
+```tcl
+proc dynamicBody {code} {; # <<nonCaching>>
+    # Body re-parsed each time.
+    # Useful when the body text may be modified between calls
+    # or when caching interferes with debugging.
+    eval $code
+}
+```
+
+##### `<<matchTypes>>` - Enforce Argument Type Restrictions
+
+Enables type restriction enforcement on local variables within the
+procedure's call frame.  When set, the call frame checks variable
+assignments against declared type constraints.
+
+- **ProcedureFlags set**: `MatchTypes` (0x1000000)
+- **CallFrameFlags set**: `MatchTypes` (on the procedure's call frame)
+- **Applies to**: `proc`, `nproc`, `apply`, `napply`
+- **Incompatible with**: `<<inline>>` (mutual exclusion enforced)
+
+```tcl
+proc typedExample {x y} {; # <<matchTypes>>
+    # Type constraints on variables are enforced
+    return [expr {$x + $y}]
+}
+```
+
+##### `<<overwrite:argList>>` - Overwrite Arguments
+
+Specifies a list of argument names that should be excluded from the
+save/restore cycle during inline procedure execution.  When an inline
+procedure runs, it normally saves the caller's variables that share
+names with the procedure's formal arguments and restores them afterward.
+Arguments listed in `<<overwrite>>` are removed from this protection,
+meaning the inline procedure's values for those arguments will persist
+in the caller's frame after the procedure returns.
+
+- **Value**: A Tcl list of argument names (parsed via `Parser.SplitList`)
+- **Applies to**: `proc`, `nproc` (stored in `IProcedureData`);
+  extracted but not used by `apply`/`napply`
+- **Most useful with**: `<<inline>>`
+
+```tcl
+proc setVars {a b c} {; # <<inline>> <<overwrite:a b c>>
+    # All three arguments persist in the caller's frame
+    # (none are saved/restored)
+    set a [expr {$a + 1}]
+    set b [expr {$b + 1}]
+    set c [expr {$c + 1}]
+}
+
+proc example {} {
+    set a 10; set b 20; set c 30
+    setVars $a $b $c
+    # After return: a=11, b=21, c=31 (overwritten, not restored)
+}
+```
+
+The `GetFinalArguments` method removes the overwrite arguments from the
+list of arguments to save, so `frame.Save` does not preserve them.
+
+##### `<<clean:argList>>` - Clean Arguments After Execution
+
+Specifies a list of argument names that should be unset from the call
+frame after procedure body execution completes.  This is the counterpart
+to `<<overwrite>>`: while overwrite controls the save phase, clean
+controls the cleanup phase.
+
+- **Value**: A Tcl list of argument names (parsed via `Parser.SplitList`)
+- **Applies to**: `proc`, `nproc` (stored in `IProcedureData`);
+  extracted but not used by `apply`/`napply`
+- **Most useful with**: `<<inline>>`
+
+```tcl
+proc withTemp {input} {; # <<inline>> <<clean:input>>
+    # 'input' will be unset from the caller's frame after return
+    set result [string toupper $input]
+}
+
+proc example {} {
+    set input "hello"
+    withTemp $input
+    # $result is "HELLO" (set by inline)
+    # $input is restored to "hello" (saved/restored normally)
+    # If 'input' were in the clean list AND overwrite list,
+    # it would be unset and not restored.
+}
+```
+
+The `UnsetArgumentsOrComplain` method iterates the clean arguments and
+calls `interpreter.UnsetVariable2` for each one that exists in the
+procedure's formal argument list.  Any errors during unset are reported
+via `DebugOps.Complain` but do not affect the procedure's return value.
+
+##### `<<signature>>` - Script Signature Block
+
+The `signature` annotation is defined in the annotation constants but is
+NOT processed by `ShouldProcedureHaveFlags`.  Instead, it is used by the
+separate script signing and verification subsystem
+(`Value.ExtractSignedData`) as a delimiter to separate script text from
+its embedded RSA signature block.  It is included here for completeness
+but does not affect procedure behavior.
+
+#### Annotation Compatibility Matrix
+
+Not all annotations can be combined.  The `SanityCheckAndModifyProcedureFlags`
+method enforces the following constraints:
+
+| Annotation | `private` | `fast` | `atomic` | `inline` | `nonCaching` | `matchTypes` | `overwrite` | `clean` |
+|------------|-----------|--------|----------|----------|--------------|--------------|-------------|---------|
+| `private` | - | OK | OK | OK | OK | OK | OK | OK |
+| `fast` | OK | - | OK | **NO** | OK | OK | OK | OK |
+| `atomic` | OK | OK | - | OK | OK | OK | OK | OK |
+| `inline` | OK | **NO** | OK | - | OK | **NO** | OK | OK |
+| `nonCaching` | OK | OK | OK | OK | - | OK | OK | OK |
+| `matchTypes` | OK | OK | OK | **NO** | OK | - | OK | OK |
+| `overwrite` | OK | OK | OK | OK | OK | OK | - | OK |
+| `clean` | OK | OK | OK | OK | OK | OK | OK | - |
+
+The incompatibilities are:
+- **`<<inline>>` + `<<fast>>`**: Inline procedures do not push a new call
+  frame, so there is no dedicated frame on which to set the `Fast` flag.
+- **`<<inline>>` + `<<matchTypes>>`**: Similarly, type matching requires a
+  dedicated call frame with the `MatchTypes` flag.
+
+Attempting to use an incompatible combination produces an error:
+`cannot use the procedure annotations <<fast>> or <<matchTypes>> with the <<inline>> procedure annotation.`
+
+#### Additional Flag Interactions
+
+Beyond the explicit annotations, several `ProcedureFlags` are set
+implicitly:
+
+| Flag | Source | Description |
+|------|--------|-------------|
+| `PositionalArguments` | `proc`, `apply` | Arguments are positional (set automatically) |
+| `NamedArguments` | `nproc`, `napply` | Arguments are named `-key value` pairs (set automatically) |
+| `Library` | Interpreter default | Set when the interpreter's `ProcedureFlags` includes `Library`, unless `<<inline>>` is active |
+| `NonCaching` | Implicit | Automatically set when `Library` is true, even without `<<nonCaching>>` annotation |
+
+The procedure's flags are composed by merging:
+1. The interpreter's default `ProcedureFlags` (via `interpreter.ProcedureFlags`)
+2. The annotation-derived flags (via `SanityCheckAndModifyProcedureFlags`)
+3. The positional/named argument mode flag
+
+#### Processing Pipeline
+
+The annotation processing pipeline is identical across all four commands:
+
+```
+proc/nproc/apply/napply
+  |
+  v
+Is interpreter safe?
+  |
+  +--[yes]--> Skip all annotation processing
+  |
+  +--[no]---> ScriptOps.ShouldProcedureHaveFlags(body text)
+                |
+                v
+              Value.ExtractAnnotations(body, regex patterns)
+                |
+                v
+              For each annotation keyword:
+                HaveAnnotation(annotations, name) --> boolean
+                |
+                v
+              Parse overwrite/clean as argument lists
+                |
+                v
+              SanityCheckAndModifyProcedureFlags()
+                |
+                +-- Validate: inline NOT with fast or matchTypes
+                +-- Set ProcedureFlags bits
+                |
+                v
+              Create procedure/lambda with flags
+```
+
+#### Annotation Scope by Command
+
+| Feature | `proc` | `nproc` | `apply` | `napply` |
+|---------|--------|---------|---------|----------|
+| `<<private>>` | Enforced | Enforced | Ignored | Ignored |
+| `<<fast>>` | Enforced | Enforced | Enforced | Enforced |
+| `<<atomic>>` | Enforced | Enforced | Enforced | Enforced |
+| `<<inline>>` | Enforced | Enforced | Enforced | Enforced |
+| `<<nonCaching>>` | Enforced | Enforced | Enforced | Enforced |
+| `<<matchTypes>>` | Enforced | Enforced | Enforced | Enforced |
+| `<<overwrite:...>>` | Stored | Stored | Extracted | Extracted |
+| `<<clean:...>>` | Stored | Stored | Extracted | Extracted |
+
+For `proc` and `nproc`, the `overwrite` and `clean` argument lists are
+stored in the `IProcedureData` object and applied at every call via the
+procedure's execution engine (`Procedures/PositionalArguments.cs` or
+`Procedures/NamedArguments.cs`).  For `apply` and `napply`, they are
+extracted from the body at evaluation time and used for the current
+invocation via the lambda's execution engine
+(`Lambdas/PositionalArguments.cs` or `Lambdas/NamedArguments.cs`).
+
+#### Idiomatic Usage Examples
+
+##### Private Utility Procedures in a Namespace
+
+```tcl
+namespace eval ::http {
+    proc get {url} {
+        return [formatResponse [rawGet $url]]
+    }
+
+    proc rawGet {url} {; # <<private>>
+        # Internal implementation detail - not part of public API
+        # Cannot be called from outside ::http
+        set ch [socket $url 80]
+        # ... read response ...
+        close $ch
+        return $response
+    }
+
+    proc formatResponse {raw} {; # <<private>>
+        # Also private - only ::http::get should call this
+        return [string map {\r\n \n} $raw]
+    }
+}
+
+::http::get "http://example.com"   ;# OK
+::http::rawGet "http://example.com" ;# ERROR: private
+```
+
+##### High-Performance Inner Loop
+
+```tcl
+proc processLargeDataset {records} {; # <<fast>>
+    # Disable variable traces for maximum throughput.
+    # No trace callbacks will fire for any variable
+    # operations within this procedure.
+    set result [list]
+    foreach record $records {
+        lappend result [transformRecord $record]
+    }
+    return $result
+}
+```
+
+##### Thread-Safe Shared State Update
+
+```tcl
+namespace eval ::counter {
+    variable count 0
+
+    proc increment {} {; # <<atomic>>
+        variable count
+        incr count
+    }
+
+    proc get {} {; # <<atomic>>
+        variable count
+        return $count
+    }
+}
+```
+
+##### Inline Variable Injection
+
+```tcl
+# Inject computed variables into the caller's scope
+proc withDefaults {args} {; # <<inline>> <<overwrite:args>>
+    if {![info exists host]} { set host "localhost" }
+    if {![info exists port]} { set port 8080 }
+    if {![info exists timeout]} { set timeout 30 }
+}
+
+proc connectToServer {} {
+    withDefaults
+    # $host, $port, $timeout are now set in this frame
+    puts "Connecting to $host:$port (timeout: $timeout)"
+}
+```
+
+##### Combined Annotations
+
+```tcl
+namespace eval ::cache {
+    variable store
+
+    proc put {key value} {; # <<private>> <<atomic>>
+        # Private to namespace AND atomic for thread safety
+        variable store
+        set store($key) $value
+    }
+
+    proc get {key} {; # <<private>> <<atomic>> <<fast>>
+        # Private, atomic, and fast (no traces)
+        variable store
+        if {[info exists store($key)]} {
+            return $store($key)
+        }
+        return ""
+    }
+
+    proc lookup {key} {
+        # Public API - delegates to private internals
+        return [get $key]
+    }
+}
+```
+
+##### Lambda with Annotations
+
+```tcl
+# Fast lambda for use in tight loops
+set transform {{x} {; # <<fast>>
+    expr {$x * $x + 1}
+}}
+
+# Apply the fast lambda to each element
+set results [lmap item $data {apply $transform $item}]
+
+# Atomic lambda for thread-safe operations
+apply {{key value} {; # <<atomic>>
+    upvar #0 sharedArray arr
+    set arr($key) $value
+}} "myKey" "myValue"
 ```
 
 ### Tcl Integration (Native Tcl Interop)
