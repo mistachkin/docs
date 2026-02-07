@@ -65,8 +65,7 @@ The following commands are Eagle-specific extensions not found in standard Tcl 8
 | `debug` | Debugging | 70+ sub-commands for interpreter debugging |
 | `do` | Loop | Do-while / do-until loop |
 | `downlevel` | Control Flow | Execute script in the pre-uplevel call frame |
-| `fpclassify` | Expression | Classify floating-point value (normal, zero, infinite, nan, ...) |
-| `getf` | Variables | Get variable with internal flags (obsolete diagnostic) |
+| `getf` | Variables | Get variable with internal flags **(obsolete)** |
 | `guid` | Strings | GUID/UUID generation, validation, comparison |
 | `hash` | Strings | Cryptographic hashing (MD5, SHA-1, SHA-256, SHA-512, ...) |
 | `host` | Managed Env | Interactive console host control (colors, input, screens) |
@@ -81,12 +80,12 @@ The following commands are Eagle-specific extensions not found in standard Tcl 8
 | `object` | .NET Interop | Full .NET object system (create, invoke, dispose, ...) |
 | `parse` | Strings | Parse scripts, expressions, and options |
 | `scope` | Variables | Persistent variable scopes across procedure calls |
-| `setf` | Variables | Set variable with internal flags (obsolete diagnostic) |
+| `setf` | Variables | Set variable with internal flags **(obsolete)** |
 | `sql` | Database | SQLite/ADO.NET database operations |
 | `tcl` | Tcl Integration | Bridge to native Tcl interpreter |
 | `test1` | Testing | Basic test command |
 | `test2` | Testing | Advanced test command |
-| `unsetf` | Variables | Unset variable with internal flags (obsolete diagnostic) |
+| `unsetf` | Variables | Unset variable with internal flags **(obsolete)** |
 | `uri` | Network | URI operations and HTTP client |
 | `version` | Introspection | Eagle version information |
 | `xml` | XML | XML serialization, deserialization, validation |
@@ -170,7 +169,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 | [`foreach`](#cmd-foreach) | Iterate over lists | [Control Flow](#control-flow) |
 | [`format`](#cmd-format) | Format string (like sprintf) | [Strings](#strings) |
 | [`fpclassify`](#cmd-fpclassify) | Classify floating-point value (normal/zero/infinite/nan) | [Expression Evaluation](#expression-evaluation) |
-| [`getf`](#cmd-getf) | Get variable with flags | [Variables](#variables) |
+| [`getf`](#cmd-getf) | Get variable with flags **(obsolete)** | [Variables](#variables) |
 | [`gets`](#cmd-gets) | Read line from channel | [I/O and Channels](#io-and-channels) |
 | [`glob`](#cmd-glob) | Glob for files | [File System](#file-system) |
 | [`global`](#cmd-global) | Declare global variables | [Variables](#variables) |
@@ -222,7 +221,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 | [`scope`](#cmd-scope) | Variable scope operations | [Variables](#variables) |
 | [`seek`](#cmd-seek) | Set channel position | [I/O and Channels](#io-and-channels) |
 | [`set`](#cmd-set) | Set variable value | [Variables](#variables) |
-| [`setf`](#cmd-setf) | Set variable with flags | [Variables](#variables) |
+| [`setf`](#cmd-setf) | Set variable with flags **(obsolete)** | [Variables](#variables) |
 | [`socket`](#cmd-socket) | Socket operations | [Network and URI](#network-and-uri) |
 | [`source`](#cmd-source) | Source script file | [Engine Operations](#engine-operations) |
 | [`split`](#cmd-split) | Split string into list | [Strings](#strings) |
@@ -242,7 +241,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 | [`try`](#cmd-try) | Try/finally exception handling | [Control Flow](#control-flow) |
 | [`unload`](#cmd-unload) | Unload binary plugin/extension | [Managed Environment](#managed-environment) |
 | [`unset`](#cmd-unset) | Unset variables | [Variables](#variables) |
-| [`unsetf`](#cmd-unsetf) | Unset variable with flags | [Variables](#variables) |
+| [`unsetf`](#cmd-unsetf) | Unset variable with flags **(obsolete)** | [Variables](#variables) |
 | [`update`](#cmd-update) | Process events | [Event Management](#event-management) |
 | [`uplevel`](#cmd-uplevel) | Execute script at higher call stack level | [Control Flow](#control-flow) |
 | [`upvar`](#cmd-upvar) | Link variable to upper scope | [Variables](#variables) |
@@ -3517,7 +3516,7 @@ Expression commands belong to ObjectGroup: "expression"
   - `expr arg ?arg ...?`
 
 <a id="cmd-fpclassify"></a>
-- **fpclassify** - Classify floating-point value (normal/zero/infinite/nan) (Eagle extension)
+- **fpclassify** - Classify floating-point value (normal/zero/infinite/nan) (Tcl 8.6+)
   - `fpclassify value`
   - Classifies a floating-point *value* into one of the following categories:
     - `normal` — A normal (non-zero, finite) number
@@ -6570,7 +6569,13 @@ Skips creating and pushing a new procedure call frame.  Instead, the
 procedure body executes in the caller's variable frame.  Arguments are
 set as local variables in the calling frame, and after execution, those
 variables are unset and any previously existing variables with the same
-names are restored.
+names are restored.  This is functionally equivalent to what other
+languages call a **macro**: the body is evaluated as though it were
+textually expanded at the call site, sharing the caller's scope rather
+than introducing its own.  Unlike textual macros in C or Lisp, however,
+inline procedures still go through normal argument binding and the
+save/restore discipline ensures the caller's pre-existing variables are
+not permanently clobbered (unless `<<overwrite>>` is used).
 
 - **ProcedureFlags set**: `NoPushFrame` (0x2000000)
 - **Applies to**: `proc`, `nproc`, `apply`, `napply`
