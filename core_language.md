@@ -48,6 +48,7 @@ This document provides a comprehensive catalog the Eagle scripting language, org
 - [Advanced: Automatic Command Mapping Subsystem](#advanced-automatic-command-mapping-subsystem)
 - [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure)
 - [Advanced: Complaint Subsystem](#complaint-subsystem)
+- [Advanced: Tracing Subsystem](#tracing-subsystem)
 - [Eagle Shell Command Line Options](#eagle-shell-command-line-options)
 - [Interactive Commands](#interactive-commands)
 - [Environment Variables](#environment-variables)
@@ -11850,6 +11851,929 @@ The complaint subsystem adapts to the build configuration through conditional co
 - `FormatOps.Complaint()` — Complaint message formatting
 - `Delegates.cs` — `ComplainCallback` delegate definition
 - `Enumerations.cs` — `TracePriority.ComplainError`, `HostFlags.Complain`, `HeaderFlags.ComplaintInfo`, `EventFlags.NoComplain`
+
+---
+
+## Advanced: Tracing Subsystem
+
+<a id="tracing-subsystem"></a>
+
+The tracing subsystem is the primary diagnostic output facility for the Eagle interpreter runtime. It provides structured, priority-filtered, category-aware trace message routing through configurable listeners with rate limiting, custom formatting, managed code filter callbacks, and per-interpreter or global configuration. The full implementation spans `TraceOps.cs` (core pipeline), `DebugOps.cs` (listener management), `TraceLimits.cs` (rate limiting), `Delegates.cs` (filter callback delegate), and `Default.cs` (test listener implementations). Script-level access is provided by the `debug trace` command.
+
+### Design Philosophy
+
+Eagle's tracing subsystem is designed around several core principles:
+
+1. **Never interfere with normal operation.** Tracing is a diagnostic overlay. A failure in the tracing subsystem itself (listener exception, lock contention, format error) must never propagate to the caller. All trace write paths are wrapped in exception handlers so that a misbehaving listener or format string cannot crash the interpreter.
+
+2. **Structured severity, not free-form logging.** Every trace message carries a `TracePriority` value that encodes both a **priority level** (how important) and a **message type** (what kind of event). This enables filtering at multiple granularities: suppress everything below a threshold, suppress entire message types, or boost/penalize specific categories.
+
+3. **Rate limiting by default.** Without limits, debug-level tracing can produce thousands of messages per second in hot paths. The `TraceLimits` subsystem provides per-category and per-message throttling with configurable time windows, so that enabling tracing in production does not immediately overwhelm the output channel.
+
+4. **Multiple output channels.** Messages can be routed to .NET `System.Diagnostics.Trace` listeners, the interpreter host, native debugger output (`OutputDebugString`), log files, databases, or arbitrary script callbacks — simultaneously or selectively.
+
+5. **Environment-driven defaults.** The subsystem reads environment variables at initialization time to configure priorities, categories, format strings, and enablement. This allows tracing to be configured before any script code runs, which is essential for diagnosing startup issues.
+
+6. **Thread safety with bounded recursion.** All shared state is protected by a lock, and recursive trace calls (e.g., a trace listener that itself triggers a trace) are bounded by configurable maximum nesting levels. Per-thread `traceLevels` and `writeLevels` counters prevent unbounded recursion.
+
+7. **Compile-time elision.** Many trace call sites are guarded by `#if DEBUG_TRACE` or `#if MAYBE_TRACE` conditional compilation directives. In release builds, these call sites compile to nothing, eliminating both the string formatting overhead and the method call overhead entirely. The `DebugTrace` methods (conditional) vs. `DebugTraceAlways` methods (unconditional) reflect this distinction.
+
+---
+
+### Architecture Overview
+
+```
+   Script: debug trace -priority Notice "message"
+                         |
+                         v
+            ┌─────────────────────────┐
+            │  Debug.cs (command)     │  Parse options, extract priority/
+            │  "debug trace" handler  │  category/message, call TraceOps
+            └────────────┬────────────┘
+                         |
+                         v
+            ┌─────────────────────────┐
+            │  TraceOps.DebugTrace    │  Conditional (#if DEBUG_TRACE)
+            │  TraceOps.DebugTrace-   │  Unconditional (always compiled)
+            │    Always               │
+            └────────────┬────────────┘
+                         |
+              ┌──────────┴──────────┐
+              │ 1. isTracePossible? │  Global kill switch
+              │ 2. isTraceEnabled?  │  Runtime enable/disable
+              │ 3. traceLevels      │  Recursion guard (max 2)
+              └──────────┬──────────┘
+                         |
+              ┌──────────┴──────────┐
+              │ 4. TraceLimits      │  Per-category/message throttle
+              │    .IsTripped()     │  (skipped if NoLimits flag set)
+              └──────────┬──────────┘
+                         |
+              ┌──────────┴──────────┐
+              │ 5. Priority check   │  Message priority vs. tracePriorities
+              │    (mask filter)    │  mask and globalPriorities
+              └──────────┬──────────┘
+                         |
+              ┌──────────┴──────────┐
+              │ 6. Category check   │  enabled/disabled category dicts
+              │    + penalty/bonus  │  Adjust priority if category listed
+              └──────────┬──────────┘
+                         |
+              ┌──────────┴──────────┐
+              │ 7. TraceFilter-     │  Managed callback (global or
+              │    Callback         │  per-interpreter); can modify
+              │    (if set)         │  message, category, and priority
+              │                     │  Returns true = suppress message
+              └──────────┬──────────┘
+                         |
+              ┌──────────┴──────────┐
+              │ 8. Format message   │  Apply format string with
+              │    (String.Format)  │  {0}..{11} parameters
+              └──────────┬──────────┘
+                         |
+           ┌─────────────┼─────────────┐
+           v             v             v
+   ┌─────────────┐ ┌──────────┐ ┌──────────────┐
+   │ Trace       │ │ Host     │ │ Stats        │
+   │ Listeners   │ │ Output   │ │ traceWritten │
+   │ (Trace.     │ │ (interp  │ │ traceLogged  │
+   │  Write*)    │ │  host)   │ │ traceDropped │
+   └─────────────┘ └──────────┘ └──────────────┘
+```
+
+---
+
+### The `debug trace` Command
+
+The `debug trace` command is the script-level interface to the tracing subsystem. It serves three roles: writing trace messages, querying trace status, and configuring the trace subsystem at runtime.
+
+**Syntax:**
+
+```
+debug trace ?options? ?message?
+```
+
+When called **with a message argument**, the command writes the message through the trace pipeline with the specified priority and category, then returns trace status information (unless `-noresult` is specified).
+
+When called **without a message argument**, the command returns a key-value list of current trace configuration and status.
+
+**Requires:** `DEBUGGER`
+
+#### Options
+
+**Boolean options** (accept `true` / `false`):
+
+| Option | Description |
+|--------|-------------|
+| `-noresult` | Suppress result output; return empty string instead of status. |
+| `-default` | Add or remove the `DefaultTraceListener` from the active listener collection. |
+| `-console` | Add or remove a console-based trace listener. Requires: `CONSOLE`. |
+| `-native` | Add or remove the native debugger trace listener (`OutputDebugString`). Requires: `NATIVE`. |
+| `-statusform` | Add or remove the WinForms status form trace listener. Requires: `WINFORMS`, `TEST`. |
+| `-debug` | When `true`, route output through `Debug` listeners instead of `Trace` listeners. |
+| `-raw` | When `true`, write the message verbatim (no timestamp, priority, or format string applied). |
+| `-log` | Enable or disable the test log file listener. Requires: `TEST`. |
+| `-resetsystem` | Reset trace system status (counters, state flags). |
+| `-resetlisteners` | Clear all trace listeners from the active collection. |
+| `-forceenabled` | Force the global trace enabled/disabled state. |
+| `-overrideenvironment` | Override environment variable settings during state changes. |
+
+**Category options** (accept a Tcl list value):
+
+| Option | Description |
+|--------|-------------|
+| `-enabledcategories` | List of category names to enable for tracing. |
+| `-disabledcategories` | List of category names to disable from tracing. |
+| `-penaltycategories` | List of category names that receive a priority penalty (effectively lowered). |
+| `-bonuscategories` | List of category names that receive a priority bonus (effectively raised). |
+
+**Enumeration options**:
+
+| Option | Description |
+|--------|-------------|
+| `-statetypes` | `TraceStateType` flags controlling which aspects of the subsystem to modify. Default: `TraceCommand`. |
+| `-priority` | `TracePriority` value for this trace message. Default: `Medium \| Demand`. |
+| `-priorities` | Set the global `TracePriority` mask controlling which priorities are accepted. |
+
+**String options**:
+
+| Option | Description |
+|--------|-------------|
+| `-category` | Category name for this trace message. Default: the `DebugOps.DefaultCategory`. |
+| `-logname` | Symbolic name for the log file. Requires: `TEST`. |
+| `-logfilename` | Explicit file path for the log file. Requires: `TEST`. |
+| `-logflags` | `LogFlags` enumeration controlling log file behavior. Requires: `TEST`. |
+
+---
+
+### TracePriority Enumeration
+
+<a id="trace-priority"></a>
+
+`TracePriority` is a `[Flags]` enumeration backed by `ulong`. Each value is a single bit (or a named combination of bits). A `TracePriority` value carried by a trace message typically combines exactly one **priority level**, one **message type**, and zero or more **flags**.
+
+#### Core Priority Levels
+
+These encode the relative importance of a message. The subsystem compares the message priority level against the configured `tracePriorities` mask to decide whether to accept or drop the message.
+
+| Name | Value | Short Name | Description |
+|------|-------|------------|-------------|
+| `None` | `0x0` | — | No priority (zero value). |
+| `Invalid` | `0x1` | — | Invalid sentinel; do not use. |
+| `Never` | `0x2` | N1 | Unconditionally suppressed. Messages at this level are never emitted regardless of configuration. |
+| `Lowest` | `0x4` | L3 | Lowest operational priority. Used for extremely high-volume diagnostic events (e.g., inner-loop tracing, per-element iteration). |
+| `Lower` | `0x8` | L2 | Lower priority. Used for detailed subsystem activity (e.g., shell events, cache operations). |
+| `Low` | `0x10` | L1 | Low priority. Used for routine per-operation diagnostics (e.g., individual add/remove events, per-script debug points). |
+| `MediumLow` | `0x20` | M3 | Medium-low priority. Used for subsystem-level events (e.g., cleanup cycles, startup phases, native interop calls). |
+| `Medium` | `0x40` | M2 | Medium priority (**default level**). Used for significant operational events (e.g., assembly loads, platform detection, file system operations, marshalling). |
+| `MediumHigh` | `0x80` | M1 | Medium-high priority. Used for important subsystem events (e.g., package loading, native calls, thread lifecycle, test framework events). |
+| `High` | `0x100` | H3 | High priority. Used for events that typically warrant attention (e.g., engine errors, event processing failures, handle operations, rule evaluation). |
+| `Higher` | `0x200` | H2 | Higher priority. Used for critical operational events (e.g., lock failures, thread errors, network failures, process management). |
+| `Highest` | `0x400` | H1 | Highest operational priority. Used for events that should almost always be visible (e.g., security events, startup/shutdown, namespace errors, test failures, plugin errors). |
+| `Always` | `0x800` | A1 | Unconditionally emitted. Messages at this level are never suppressed by priority filtering. |
+
+#### Core Message Types
+
+These classify the nature of the event. A message typically combines one priority level with one message type.
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `Audit` | `0x1000` | Security or action audit; administrative alert. |
+| `Emergency` | `0x2000` | System-level error requiring immediate attention. |
+| `Fatal` | `0x4000` | Unrecoverable error or fatal exception. |
+| `Error` | `0x8000` | Recoverable error or caught exception. |
+| `Warning` | `0x10000` | Warning or unusual condition that may indicate a problem. |
+| `Inform` | `0x20000` | Informational message about normal operation. |
+| `Debug` | `0x40000` | Debug or diagnostic message; useful during development. |
+| `Verbose` | `0x80000` | Extra-verbose debug output; typically high-volume. |
+| `Demand` | `0x100000` | On-demand trace produced by a script command (e.g., `debug trace`). |
+| `External` | `0x200000` | Message originating from outside the Eagle library (e.g., a plugin or SDK consumer). |
+
+#### Formatting and Metadata Flags
+
+These flags are OR'd into the `TracePriority` value to control per-message formatting and metadata inclusion.
+
+| Name | Value | Effect |
+|------|-------|--------|
+| `ExtraSkipFrame` | `0x400000` | Skip an extra stack frame when resolving the caller method name (used when the trace call bounces through a wrapper). |
+| `EnableDateTimeFlag` | `0x800000` | Include `DateTime.Now` (ISO-8601) in the formatted output. |
+| `EnablePriorityFlag` | `0x1000000` | Include the `TracePriority` value (hexadecimal) in the formatted output. |
+| `EnableServerNameFlag` | `0x2000000` | Include the server/AppDomain name in the formatted output. |
+| `EnableTestNameFlag` | `0x4000000` | Include the current test name in the formatted output. |
+| `EnableAppDomainFlag` | `0x8000000` | Include the `AppDomain.Id` in the formatted output. |
+| `EnableInterpreterFlag` | `0x10000000` | Include the `Interpreter.Id` in the formatted output. |
+| `DisableInterpreterFlag` | `0x20000000` | Suppress the `Interpreter.Id` even if the format string includes it. |
+| `EnableThreadIdFlag` | `0x40000000` | Include the `Thread.ManagedThreadId` in the formatted output. |
+| `EnableMethodFlag` | `0x80000000` | Include the caller method name in the formatted output. |
+| `EnableStackFlag` | `0x100000000` | Include the full stack trace in the formatted output. |
+| `EnableExtraNewLinesFlag` | `0x200000000` | Surround the message with extra blank lines for visual separation. |
+
+#### Format Selection Flags
+
+These flags select a predefined format string template for the message. At most one should be set; if none is set, the subsystem uses its default format (Medium).
+
+| Name | Value | Selects Format |
+|------|-------|----------------|
+| `EnableMinimumFormatFlag` | `0x400000000` | Minimum format: prefix + message. |
+| `EnableMediumLowFormatFlag` | `0x800000000` | MediumLow format: prefix + DateTime + message. |
+| `EnableMediumFormatFlag` | `0x1000000000` | Medium format: prefix + ThreadId + message + stack. |
+| `EnableMediumHighFormatFlag` | `0x2000000000` | MediumHigh format: all metadata fields except DateTime. |
+| `EnableMaximumFormatFlag` | `0x4000000000` | Maximum format: all metadata fields including DateTime. |
+
+#### Category Flags
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `CategoryPenalty` | `0x8000000000` | When set, a message in a category listed in the penalty dictionary has its effective priority decreased by the penalty weight. |
+| `CategoryBonus` | `0x10000000000` | When set, a message in a category listed in the bonus dictionary has its effective priority increased by the bonus weight. |
+| `DenyNullCategory` | `0x20000000000` | Suppress messages that have a null or empty category. |
+| `AllowNullCategory` | `0x40000000000` | Explicitly allow messages with a null or empty category (overrides `DenyNullCategory`). |
+
+#### User-Defined Values
+
+Ten bits are reserved for third-party use. Plugins, SDK consumers, and application-specific code can use these to define custom message types without conflicting with the core enumeration.
+
+| Name | Value |
+|------|-------|
+| `User0` | `0x80000000000` |
+| `User1` | `0x100000000000` |
+| `User2` | `0x200000000000` |
+| `User3` | `0x400000000000` |
+| `User4` | `0x800000000000` |
+| `User5` | `0x1000000000000` |
+| `User6` | `0x2000000000000` |
+| `User7` | `0x4000000000000` |
+| `User8` | `0x8000000000000` |
+| `User9` | `0x10000000000000` |
+
+#### Behavioral Flags
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `SimpleFormatting` | `0x20000000000000` | Use simpler trace formatting (fewer metadata fields). |
+| `UseEllipsis` | `0x40000000000000` | Truncate overly long values with an ellipsis. |
+| `NoEllipsis` | `0x80000000000000` | Do not truncate values (overrides `UseEllipsis`). |
+| `FromPlugin` | `0x100000000000000` | Indicates the caller is an external binary plugin. |
+| `FromSdk` | `0x200000000000000` | Indicates the caller is an external SDK integration. |
+| `ViaWrapper` | `0x400000000000000` | Indicates the caller is a wrapper around `DebugTrace`. |
+| `NoLimits` | `0x800000000000000` | Skip `TraceLimits` rate-limiting checks for this message. |
+| `ForceFlush` | `0x1000000000000000` | Flush all listeners after writing this message. |
+| `ForException` | `0x2000000000000000` | Internal flag: message is for an exception caught by the engine. |
+
+#### Conditional Values
+
+These values are defined differently depending on compile-time configuration, allowing debug-level tracing to be compiled out of release builds.
+
+| Name | Debug/Force Build | Release Build |
+|------|-------------------|---------------|
+| `MaybeDebug` | `Debug` (`0x40000`) | `None` (`0x0`) |
+| `MaybeVerbose` | `Verbose` (`0x80000`) | `None` (`0x0`) |
+
+#### Semantic Composite Values — Error
+
+These named composites are used throughout the Eagle codebase. Each combines a priority level with the `Error` message type. They are organized by subsystem so that filtering can target specific areas.
+
+| Name | Composition | Subsystem |
+|------|-------------|-----------|
+| `FailSafeFatal` | `Highest \| Fatal` | Fail-safe abort |
+| `StateError` | `Always \| Error` | Interpreter state |
+| `LockError3` | `Always \| Error` | Locking (critical) |
+| `DisposedError` | `Always \| Error \| ForException` | Disposed-object access |
+| `GeneralError` | `Always \| Error \| ForException` | General engine exception |
+| `ScriptError3` | `Highest \| Error` | Script evaluation |
+| `DataError3` | `Highest \| Error` | Data operations |
+| `EnumError` | `Highest \| Error` | Enumeration handling |
+| `TimeError` | `Highest \| Error` | Time/clock operations |
+| `HostError2` | `Highest \| Error` | Host interaction |
+| `NamespaceError` | `Highest \| Error` | Namespace management |
+| `TestError` | `Highest \| Error` | Test framework |
+| `InstallError` | `Highest \| Error` | Installation/setup |
+| `CleanupError` | `Highest \| Error` | Cleanup/disposal |
+| `StartupError` | `Highest \| Error` | Interpreter startup |
+| `ShellError` | `Highest \| Error` | Interactive shell |
+| `SecurityError` | `Highest \| Error` | Security subsystem |
+| `ComplainError` | `Highest \| Error` | Complaint subsystem |
+| `StatusError` | `Highest \| Error` | Status reporting |
+| `PluginError` | `Highest \| Error` | Plugin loading |
+| `HealthError` | `Highest \| Error` | Health monitoring |
+| `InternalError3` | `Highest \| Error` | Internal operations |
+| `PackageError3` | `Highest \| Error` | Package management |
+| `PerformanceError2` | `Highest \| Error` | Performance monitoring |
+| `ProcessError2` | `Highest \| Error` | Process management |
+| `NativeError4` | `Highest \| Error` | Native interop |
+| `AnnotationError` | `Highest \| Error` | Script annotations |
+| `EntityError` | `Highest \| Error` | Entity management |
+| `TraceError` | `Highest \| Error` | Tracing subsystem itself |
+| `LockError` | `Higher \| Error` | Locking |
+| `ThreadError` | `Higher \| Error` | Thread management |
+| `ScriptThreadError` | `Higher \| Error` | Script thread |
+| `NetworkError` | `Higher \| Error` | Network I/O |
+| `ProcessError` | `Higher \| Error` | Process management |
+| `EngineError2` | `High \| Error` | Engine operations |
+| `EventError` | `High \| Error` | Event processing |
+| `HandleError` | `High \| Error` | Handle management |
+| `ConversionError` | `High \| Error` | Type conversion |
+| `PackageError2` | `High \| Error` | Package management |
+| `RuleError` | `High \| Error` | Rule evaluation |
+| `InteractiveError` | `High \| Error` | Interactive mode |
+| `SetupError` | `High \| Error` | Setup operations |
+| `MarshalError` | `MediumHigh \| Error` | Marshalling |
+| `NativeError` | `MediumHigh \| Error` | Native interop |
+| `ScriptError2` | `MediumHigh \| Error` | Script evaluation |
+| `PerformanceError` | `MediumHigh \| Error` | Performance |
+| `PackageError` | `MediumHigh \| Error` | Package management |
+| `HostError` | `MediumLow \| Error` | Host interaction |
+| `ConsoleError` | `MediumLow \| Error` | Console I/O |
+| `ScriptError` | `MediumLow \| Error` | Script evaluation |
+| `InterpreterError` | `MediumLow \| Error` | Interpreter management |
+
+#### Semantic Composite Values — Warning
+
+| Name | Composition | Subsystem |
+|------|-------------|-----------|
+| `SecurityWarning` | `Highest \| Warning` | Security |
+| `CleanupWarning` | `Highest \| Warning` | Cleanup |
+| `NetworkWarning` | `Highest \| Warning` | Network |
+| `LockWarning` | `High \| Warning` | Locking |
+| `NativeWarning` | `MediumHigh \| Warning` | Native interop |
+| `FileSystemWarning` | `Medium \| Warning` | File system |
+| `MarshalWarning` | `Medium \| Warning` | Marshalling |
+| `TimeoutWarning` | `Medium \| Warning` | Timeout events |
+
+#### Semantic Composite Values — Debug
+
+| Name | Composition | Subsystem |
+|------|-------------|-----------|
+| `StateDebug` | `Always \| Debug` | Interpreter state |
+| `InputDebug` | `Always \| Debug` | Input processing |
+| `SecurityDebug` | `Highest \| Debug` | Security |
+| `NetworkDebug` | `Highest \| Debug` | Network |
+| `CreateDebug` | `Highest \| Debug` | Object creation |
+| `EnvironmentDebug` | `Highest \| Debug` | Environment |
+| `CleanupDebug2` | `Highest \| Debug` | Cleanup |
+| `TestDebug2` | `Highest \| Debug` | Test framework |
+| `PackageDebug5` | `Highest \| Debug` | Package management |
+| `ThreadDebug3` | `Highest \| Debug` | Thread management |
+| `TestDebug` | `MediumHigh \| Debug` | Test framework |
+| `ThreadDebug` | `MediumHigh \| Debug` | Thread management |
+| `ScriptThreadDebug` | `MediumHigh \| Debug` | Script threads |
+| `SetupDebug` | `MediumHigh \| Debug` | Setup operations |
+| `ProcessDebug` | `MediumHigh \| Debug` | Process management |
+| `PackageDebug` | `High \| Debug` | Package management |
+| `RuleDebug` | `High \| Debug` | Rule evaluation |
+| `MarshalDebug` | `Medium \| Debug` | Marshalling |
+| `NativeDebug` | `Medium \| Debug` | Native interop |
+| `PlatformDebug` | `Medium \| Debug` | Platform detection |
+| `DisposalDebug` | `Medium \| Debug` | Disposal lifecycle |
+| `HostDebug` | `Lower \| Debug` | Host interaction |
+| `ShellDebug` | `Lower \| Debug` | Interactive shell |
+| `CacheDebug` | `Lower \| Debug` | Cache operations |
+| `ConsoleDebug` | `Lowest \| Debug` | Console I/O |
+| `LoopDebug` | `Lowest \| Debug` | Inner-loop events |
+| `EngineDebug` | `Lowest \| Debug` | Engine operations |
+
+#### Semantic Composite Values — Other
+
+| Name | Composition | Description |
+|------|-------------|-------------|
+| `Command` | `Medium \| Demand` | Script-initiated trace via `debug trace`. |
+| `CommandDebug` | `MediumLow \| Debug \| Demand` | Script-initiated debug trace. |
+| `CommandError` | `MediumHigh \| Error \| Demand` | Script-initiated error trace. |
+| `PolicyTrace` | `High \| Inform \| Demand` | Policy evaluation trace. |
+| `PolicyError` | `Highest \| Error \| Demand` | Policy evaluation error. |
+| `StartupInform` | `MediumHigh \| Inform \| SimpleFormatting` | Startup informational (simple format). |
+| `StartupInform2` | `Highest \| Inform` | Startup informational (full format). |
+
+#### Priority Mask Composites
+
+These pre-built masks are used to configure `tracePriorities` (the acceptance filter).
+
+| Name | Includes |
+|------|----------|
+| `HighAndUpMask` | `High \| Higher \| Highest` |
+| `MediumAndUpMask` | `Medium \| MediumHigh \| High \| Higher \| Highest` |
+| `LowAndUpMask` | `Low \| MediumLow \| Medium \| ... \| Highest` |
+| `LowestAndUpMask` | `Lowest \| Lower \| Low \| ... \| Highest` |
+| `DefaultMask` | `Never \| Always \| MediumAndUpMask \| MaybeAnyTypeMask` |
+| `DefaultLimitMask` | `LowAndDownMask` (used for rate-limiting threshold) |
+| `LowPrioritiesMask` | `Never \| Always \| LowAndUpMask \| AnyCoreTypeMask` |
+| `MediumPrioritiesMask` | `Never \| Always \| MediumAndUpMask \| AnyCoreTypeMask` |
+| `HighPrioritiesMask` | `Never \| Always \| HighAndUpMask \| AnyCoreTypeMask` |
+| `TroubleshootingMask` | `EnableStackFlag \| EnableMaximumFormatFlag` |
+| `AnyPriorityOrTypeMask` | All priority levels + all message types |
+
+#### Default Value
+
+The `Default` composite is `Medium`, which means a plain `debug trace "message"` emits at `Medium | Demand` priority.
+
+---
+
+### Trace Format Strings
+
+The subsystem formats each trace message using `String.Format` with 12 positional parameters. A format string template selects which parameters appear in the output and in what order.
+
+#### Format Parameters
+
+| Index | Content | Example Value |
+|-------|---------|---------------|
+| `{0}` | Subsystem prefix | `[NESTED] ` (or empty) |
+| `{1}` | `DateTime.Now` (ISO-8601) | `2024-07-15T10:30:45.1234567` |
+| `{2}` | `TracePriority` (hex) | `0x0000000000040040` |
+| `{3}` | Server name | `null` (non-web contexts) |
+| `{4}` | Test name | `string-length-1.1` (or `null`) |
+| `{5}` | `AppDomain.Id` | `1` |
+| `{6}` | `Interpreter.Id` | `0` |
+| `{7}` | `Thread.ManagedThreadId` | `1` |
+| `{8}` | Caller method name | `Execute` |
+| `{9}` | Stack trace | (full trace or empty) |
+| `{10}` | Message body | `my trace message` |
+| `{11}` | `Environment.NewLine` | `\r\n` or `\n` |
+
+#### Predefined Format Templates
+
+| Name | Index | Template | Includes |
+|------|-------|----------|----------|
+| Bare | 1 | `{10}{11}` | Message only |
+| Minimum | 2 | `{0}{10}{11}` | Prefix + message |
+| MediumLow | 3 | `{0}{1} {10}{11}` | Prefix + DateTime + message |
+| **Medium** | 4 | `{0}{7}: {10}{9}{11}` | Prefix + ThreadId + message + stack (**default**) |
+| MediumHigh | 5 | `{0}[p:{2}] [s:{3}] [x:{4}] [a:{5}] [i:{6}] [t:{7}] [m:{8}]: {10}{9}{11}` | All metadata except DateTime |
+| Maximum | 6 | `{0}[d:{1}] [p:{2}] [s:{3}] [x:{4}] [a:{5}] [i:{6}] [t:{7}] [m:{8}]: {10}{9}{11}` | All metadata |
+
+The format can be selected by:
+- Setting the `TraceFormat` environment variable to a custom format string before startup.
+- Using a `TracePriority` format selection flag (`EnableMinimumFormatFlag`, etc.) on a per-message basis.
+- Setting the `traceFormatString` or `traceFormatIndex` fields via `[object invoke]` at runtime (see [Internal Tunable Parameters](#trace-internal-tunables)).
+
+---
+
+### Trace Listeners
+
+Listeners are the output endpoints for trace messages. Eagle supports several listener types, managed through `DebugOps`.
+
+#### TraceListenerType Enumeration
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `None` | `0x0` | No listener. |
+| `Invalid` | `0x1` | Invalid sentinel; do not use. |
+| `Default` | `0x1000` | `System.Diagnostics.DefaultTraceListener` (outputs to debugger). |
+| `Console` | `0x2000` | Console-based listener (`ConsoleTraceListener` or `TextWriterTraceListener` to stdout). Requires: `CONSOLE`. |
+| `Native` | `0x4000` | Native debugger output via `OutputDebugString`. Requires: `NATIVE`. |
+| `RawLogFile` | `0x8000` | `TextWriterTraceListener` writing to a raw log file. |
+| `TestLogFile` | `0x10000` | Test log file listener (managed by the test framework). Requires: `TEST`. |
+| `Buffered` | `0x20000` | Buffered listener that accumulates messages for batch output (see [BufferedTraceListener](#buffered-trace-listener)). |
+| `StatusForm` | `0x40000` | WinForms status form listener. Requires: `WINFORMS`, `NATIVE_UI`. |
+| `Automatic` | `0x80000` | Automatic listener detection (selects based on available infrastructure). |
+
+**Composite masks:**
+- `CoreMask` = `Default | Console`
+- `TestMask` = `Native | TestLogFile | Buffered`
+
+#### Managing Listeners from Script
+
+```tcl
+# Add the console listener
+debug trace -console true
+
+# Add the native debugger listener (requires NATIVE build)
+debug trace -native true
+
+# Remove the default listener
+debug trace -default false
+
+# Clear all listeners
+debug trace -resetlisteners true
+
+# Query current trace status (shows active listeners)
+debug trace
+```
+
+---
+
+### TraceFilterCallback — Managed Code Callbacks
+
+<a id="trace-filter-callback"></a>
+
+The `TraceFilterCallback` delegate provides a managed-code hook into the trace pipeline. When set, it is invoked for every trace message **after** rate limiting but **before** formatting and output. The callback can inspect, modify, or suppress any trace message.
+
+#### Delegate Signature
+
+```csharp
+public delegate bool TraceFilterCallback(
+    Interpreter interpreter,       // Current interpreter (may be null)
+    ref string message,            // Trace message (modifiable)
+    ref string category,           // Trace category (modifiable)
+    ref TracePriority priority     // Trace priority (modifiable)
+);
+```
+
+**Return value:**
+- `true` — Suppress the message (it will not be written to any listener).
+- `false` — Allow the message to proceed through the pipeline.
+
+**Key properties:**
+- All three `ref` parameters can be modified by the callback, allowing message rewriting, category reclassification, and priority escalation/de-escalation.
+- The callback can be set at two scopes: globally via `TraceOps.SetTraceFilterCallback()`, or per-interpreter via the `Interpreter.InternalTraceFilterCallback` property.
+- If the callback itself throws an exception, the trace subsystem catches it and increments the `traceException` counter; the original message proceeds to output.
+
+#### Setting from Script (via `[object invoke]`)
+
+```tcl
+# The TraceFilterCallback is not directly settable from script via
+# debug trace options.  It must be set via managed code or via
+# [object invoke] on the interpreter or TraceOps:
+
+# Per-interpreter:
+object invoke $interp InternalTraceFilterCallback $myCallback
+
+# Global (static):
+object invoke Eagle._Components.Private.TraceOps \
+    SetTraceFilterCallback $myCallback
+```
+
+#### Test Callback Implementations (Default.cs)
+
+The `Default.cs` test infrastructure class provides six pre-built `TraceFilterCallback` implementations that demonstrate the full range of callback capabilities. These are selected via the `TestSetTraceFilterCallback` method using an index parameter.
+
+**Index -1: None** — Clears the callback (sets it to `null`).
+
+**Index 0: TestTraceFilterStubCallback** — A controllable stub for testing the callback mechanism itself. Its behavior is governed by the `traceFilterStubSetting` field:
+- Setting `1`: Returns `true` (suppresses all messages).
+- Setting `2`: Throws a `ScriptException`, testing the subsystem's exception handling.
+- Setting `3`: Emits a diagnostic trace from within the callback (testing recursion handling).
+- Default: Returns `false` (allows all messages through).
+
+**Index 1: TestTraceFilterMessageCallback** — Filters by **message content**. Uses `StringOps.Match` with a configurable pattern and match mode (`Glob`, `Exact`, or `RegExp`). Returns `true` (suppress) when the message does **not** match the pattern, effectively creating a whitelist.
+
+**Index 2: TestTraceFilterCategoryCallback** — Filters by **category name**. Same matching logic as Index 1, but applied to the category string instead of the message.
+
+**Index 3: TestTraceFilterCaptureCallback** — Captures trace output to a `StringBuilder` for later retrieval. Appends the interpreter reference, category, message, and priority as separate lines. Always returns `false` (allows all messages through), making it a passive monitor.
+
+**Index 4: TestTraceFilterMessageSpyCallback** — Hybrid capture-and-pass filter. Captures messages that match a pattern (or all messages if the pattern is null) while allowing them to proceed. Combines Index 1's pattern matching with Index 3's capture behavior.
+
+**Index 5: TestTraceFilterCategorySpyCallback** — Same as Index 4, but matches on category instead of message content.
+
+---
+
+### Trace Listeners in Default.cs
+
+The `Default.cs` test infrastructure class provides several specialized `TraceListener` implementations that demonstrate advanced tracing patterns.
+
+#### StatusFormTraceListener
+
+Routes trace output to the interpreter's UI status form via `interpreter.ReportStatus()`. Primarily used during interactive testing with WinForms UI.
+
+- Requires: `NATIVE_UI`
+- Thread-safe: yes
+- `Write()` / `WriteLine()` call `ReportStatus()` on the interpreter
+- `Flush()` clears the status display
+- `Close()` stops the status display
+
+#### NativeTraceListener
+
+Routes trace output directly to the Windows native debugger output (`OutputDebugString`) via `NativeOps.OutputDebugMessage()`.
+
+- Requires: `NATIVE`
+- Thread-safe: yes
+- Useful for capturing Eagle traces in tools like DebugView or Visual Studio's Output window
+
+#### BufferedTraceListener
+
+<a id="buffered-trace-listener"></a>
+
+A sophisticated buffering wrapper that can be installed around any existing `TraceListener`. It accumulates messages in an internal buffer and writes them to the inner listener in controlled batches.
+
+**Key capabilities:**
+- **Configurable capacity**: `InitialCapacity` (default 10) and `MaximumCapacity` (-1 = unlimited) control buffer sizing.
+- **Duplicate coalescing**: The `CoalesceDuplicates` and `ConsecutiveDuplicates` flags detect repeated messages and replace them with `(repeated N times) message` summaries.
+- **Controlled flush**: Messages are flushed to the inner listener on `Flush()`, `Close()`, or when capacity is exceeded (depending on flags).
+- **Dump to file**: The `Dump()` method writes buffered messages to a file with configurable encoding and append mode.
+- **Factory installation**: `BufferedTraceListener.Install()` wraps an existing listener in-place; `Uninstall()` removes the wrapper.
+
+**Behavioral flags** (`BufferedTraceFlags`):
+- `TakeOwnership` — Dispose the inner listener on close.
+- `EmptyOnClose` — Flush all buffered messages on `Close()`.
+- `NeverFlush` — Disable all automatic flushing.
+- `FlushOnClose` — Call `Flush()` on the inner listener after emptying.
+- `EmptyOnFlush` — Clear the buffer on explicit `Flush()`.
+- `BufferingDisabled` — Pass-through mode (no buffering; immediate forwarding).
+- `CoalesceDuplicates` — Track and coalesce all duplicate messages.
+- `ConsecutiveDuplicates` — Track and coalesce only consecutive duplicates.
+- `FormatWithId` — Prefix each message with a numeric ID.
+
+#### ScriptTraceListener
+
+Evaluates an Eagle script on each trace event (`Write`, `WriteLine`, `Flush`, `Close`). This enables fully dynamic, script-defined trace handling.
+
+**Script context objects** (available via the object dictionary passed to the script):
+- `listener` — The `ScriptTraceListener` instance.
+- `argument` — User-supplied context argument.
+- `methodName` — Which listener method was called (`Write`, `WriteLine`, `Flush`, `Close`).
+- `message` — The trace message (for `Write`/`WriteLine`).
+
+**Safety features:**
+- Re-entrancy protection via `traceLevels` counter.
+- Interpreter soft-lock during script evaluation.
+- `Disabled` property for quick enable/disable without removing the listener.
+- Errors are routed to the complaint subsystem (never thrown).
+
+#### ThrowTraceListener
+
+A test-only listener that throws `TraceException` from configurable methods. Used to verify that the trace subsystem correctly handles listener failures.
+
+**Configurable throw points** (each is an independent boolean property):
+- `ThrowOnClose`
+- `ThrowOnFlush`
+- `ThrowOnWrite`
+- `ThrowOnWriteLine`
+
+#### DatabaseTraceListener
+
+Persists trace messages to a SQL database via parameterized `INSERT` statements. Supports transactions, auto-flush, and auto-commit.
+
+- Requires: `DATA`
+- Configurable: `DbConnectionType`, connection string, table name, column names, isolation level
+- Uses parameterized SQL (`@message`, `@category`) to prevent injection
+- Supports buffered writes with configurable capacity (20 KB default)
+- Thread-safe with re-entrancy protection
+- Errors routed to complaint subsystem
+
+---
+
+### Rate Limiting (TraceLimits)
+
+The `TraceLimits` class provides automatic rate limiting to prevent high-volume trace categories from overwhelming output channels.
+
+#### Throttling Mechanism
+
+When a trace message arrives, `TraceLimits.IsTripped()` checks three dimensions:
+
+1. **Per-message deduplication**: If `checkMessage` is enabled, identical messages within the time window are counted. When the count exceeds `MaximumPerCategoryCount`, subsequent duplicates are suppressed.
+
+2. **Per-category throttling**: If `checkCategory` is enabled, messages in the same category are counted within the time window. When the category count exceeds the threshold, further messages in that category are suppressed.
+
+3. **Per-priority throttling**: If `checkPriority` is enabled, messages at the same priority level are counted. This prevents a flood of same-priority messages from dominating the output.
+
+Messages suppressed by rate limiting increment the `traceTripped` counter.
+
+#### Default Thresholds
+
+| Parameter | Default Value | Description |
+|-----------|---------------|-------------|
+| `MaximumPerCategoryCount` | 10 | Maximum messages per category within the time window before throttling begins. |
+| `MaximumPerCategoryTime` | 60 seconds | Rolling time window for per-category counting. |
+| `MaximumMessageCount` | 100 | Maximum unique messages tracked in the cache (requires `CACHE_DICTIONARY`). |
+| `DefaultPriorityMask` | `LowAndDownMask` | Only messages at `Low` priority or below are subject to rate limiting. Higher-priority messages are never throttled. |
+
+#### Bypassing Rate Limits
+
+- Set the `NoLimits` flag on a `TracePriority` value to exempt a specific message.
+- Set the `NoTraceLimits` environment variable to disable rate limiting globally.
+- Use `debug trace -statetypes ResetLimits` to reset the rate limiting state.
+
+---
+
+### Categories
+
+Trace categories are free-form strings that group related messages. The subsystem maintains four independent category dictionaries:
+
+| Dictionary | Effect | Set Via |
+|------------|--------|---------|
+| **Enabled** | Only messages in listed categories are accepted (whitelist). When empty, all categories are accepted. | `debug trace -enabledcategories {cat1 cat2}` |
+| **Disabled** | Messages in listed categories are suppressed (blacklist). | `debug trace -disabledcategories {cat1 cat2}` |
+| **Penalty** | Messages in listed categories have their effective priority decreased by the penalty weight (default: -1 level). | `debug trace -penaltycategories {cat1 cat2}` |
+| **Bonus** | Messages in listed categories have their effective priority increased by the bonus weight (default: +1 level). | `debug trace -bonuscategories {cat1 cat2}` |
+
+The `CategoryPenalty` and `CategoryBonus` flags in `TracePriority` control whether penalty/bonus adjustments are applied.
+
+Categories can also be configured via environment variables before startup:
+
+| Environment Variable | Description |
+|---------------------|-------------|
+| `TraceCategories` | Comma-separated list of enabled categories. |
+| `NoTraceCategories` | Comma-separated list of disabled categories. |
+| `PenaltyTraceCategories` | Comma-separated list of penalty categories. |
+| `BonusTraceCategories` | Comma-separated list of bonus categories. |
+
+---
+
+### Environment Variables
+
+The tracing subsystem reads the following environment variables at initialization time. These provide a way to configure tracing before any script code runs — essential for diagnosing startup issues.
+
+| Variable | Description |
+|----------|-------------|
+| `Trace` | If set, explicitly enables tracing. |
+| `NoTrace` | If set, completely disables tracing globally. |
+| `NoTraceLimits` | If set, disables rate limiting. |
+| `TraceFormat` | Custom trace format string (see [Format Parameters](#trace-format-strings)). |
+| `TraceCategories` | Enabled categories. |
+| `NoTraceCategories` | Disabled categories. |
+| `PenaltyTraceCategories` | Penalty categories. |
+| `BonusTraceCategories` | Bonus categories. |
+| `TracePriority` | Default trace priority for messages that do not specify one. |
+| `TracePriorities` | Enabled trace priorities mask (which priority levels to accept). |
+| `GlobalPriorities` | Global priority overrides. |
+| `TracePriorityLimits` | Priority-based rate limiting threshold. |
+| `TraceStack` | If set, always include stack traces in trace output. |
+| `TraceToHost` | If set, route trace output to the interpreter host. |
+| `TraceToListeners` | If set, route trace output to .NET trace listeners. |
+| `ComplainViaTrace` | If set, use the trace subsystem for complaint output. |
+| `ClearTrace` | If set, clear trace state on startup. |
+| `SetupTrace` | If set, trace the setup/initialization process itself. |
+
+---
+
+### Internal Tunable Parameters
+
+<a id="trace-internal-tunables"></a>
+
+The following parameters are not exposed through `debug trace` options but can be read or modified at runtime via `[object invoke]` on the `TraceOps` class (or, in some cases, on the `Interpreter` instance). These are internal implementation details and may change between releases.
+
+#### Global State Fields (TraceOps)
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `isTracePossible` | `bool` | `true` | Master kill switch. When `false`, all trace calls return immediately without any processing. |
+| `isWritePossible` | `bool` | `true` | Secondary kill switch for the write path specifically. |
+| `isTraceEnabled` | `bool?` | `null` (resolves to `true`) | Runtime enable/disable. When `null`, falls back to `isTraceEnabledByDefault`. |
+| `isTraceEnabledByDefault` | `bool?` | `null` (resolves to `true`) | Default enabled state, read from `NoTrace`/`Trace` environment variables at initialization. |
+| `traceFormatString` | `string` | `null` (uses format index) | Custom format string. When non-null, overrides the format index selection. |
+| `traceFormatIndex` | `int?` | `null` (uses default = Medium) | Index into the predefined format array (0=Default through 6=Maximum). |
+| `traceDateTime` | `bool` | `false` | Include `DateTime.Now` in all messages (equivalent to setting `EnableDateTimeFlag` globally). |
+| `tracePriority` | `bool` | `false` | Include the `TracePriority` hex value in all messages. |
+| `traceServerName` | `bool` | `false` | Include the server/AppDomain name in all messages. |
+| `traceTestName` | `bool` | `false` | Include the current test name in all messages. |
+| `traceAppDomain` | `bool` | `false` | Include the `AppDomain.Id` in all messages. |
+| `traceInterpreter` | `bool` | `false` | Include the `Interpreter.Id` in all messages. |
+| `traceThreadId` | `bool` | `false` | Include the `Thread.ManagedThreadId` in all messages. |
+| `traceMethod` | `bool` | `false` | Include the caller method name in all messages. |
+| `traceStack` | `bool` | `false` | Include the full stack trace in all messages. |
+| `traceExtraNewLines` | `bool` | `false` | Surround all messages with extra blank lines. |
+| `defaultTracePriority` | `TracePriority` | (varies) | Default priority for trace methods that do not specify one explicitly. |
+| `tracePriorities` | `TracePriority` | `DefaultMask` | Bitmask of accepted priority levels. Messages whose priority level is not in this mask are dropped. |
+| `globalPriorities` | `TracePriority` | (varies) | Global priority overrides, consulted in addition to `tracePriorities`. |
+| `FallbackTraceFormat` | `string` | `MediumTraceFormat` | Format string used when no other format is configured. |
+| `UseFallbackTraceFormat` | `bool` | `true` | Whether to use the fallback format when no format is explicitly configured. |
+| `DefaultMaximumTraceLevels` | `int` | `2` | Maximum recursive nesting depth for `DebugTrace` calls. Prevents infinite recursion when a trace listener itself triggers tracing. |
+| `DefaultMaximumWriteLevels` | `int` | `2` | Maximum recursive nesting depth for `DebugWriteTo` calls. |
+| `DefaultCategoryPenalty` | `int` | `-1` | Weight applied to penalty-category messages (negative = lower priority). |
+| `DefaultCategoryBonus` | `int` | `1` | Weight applied to bonus-category messages (positive = higher priority). |
+
+**Note:** Many of the "Default" fields above are deliberately declared as non-readonly (`static` without `readonly`) and are annotated with `/* HACK */` comments in the source. This is intentional — it allows advanced users and the test harness to modify these defaults at runtime via reflection or `[object invoke]`, while keeping the fields non-public to signal that they are not part of the stable API surface.
+
+#### Per-Interpreter Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `PolicyTrace` | `bool` | Enable policy evaluation tracing for this interpreter. |
+| `InternalTraceFilterCallback` | `TraceFilterCallback` | Per-interpreter trace filter callback (takes precedence over the global callback). |
+| `TraceTextWriter` | `TextWriter` | Custom `TextWriter` for trace output from this interpreter. |
+| `DefaultTraceStack` | `bool` (static) | Default value for stack tracing across all interpreters. |
+
+#### TraceLimits Internal Parameters
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `trackRawPriority` | `bool` | `false` | Track raw (non-masked) priorities instead of masked ones. |
+| `checkMessage` | `bool` | `true` | Enable per-message duplicate detection. |
+| `checkCategory` | `bool` | `true` | Enable per-category throttling. |
+| `checkPriority` | `bool` | `true` | Enable per-priority throttling. |
+| `trackMessage` | `bool` | `true` | Track message counts for statistics. |
+| `trackCategory` | `bool` | `true` | Track category usage for statistics. |
+| `trackPriority` | `bool` | `true` | Track priority usage for statistics. |
+
+---
+
+### TraceStateType Enumeration
+
+`TraceStateType` is a `[Flags]` enumeration that controls which aspects of the tracing subsystem are modified when calling `ForceEnabledOrDisabled()` or when using the `-statetypes` option of `debug trace`. Each flag corresponds to one configurable dimension of the subsystem.
+
+| Name | Value | Controls |
+|------|-------|----------|
+| `Initialized` | `0x10` | One-time initialization state. |
+| `ForceListeners` | `0x20` | Force listener configuration. |
+| `Possible` | `0x40` | Set `isTracePossible`. |
+| `ResetPossible` | `0x80` | Reset `isTracePossible` to default. |
+| `Enabled` | `0x100` | Set `isTraceEnabled`. |
+| `ResetEnabled` | `0x200` | Reset `isTraceEnabled` to default. |
+| `FilterCallback` | `0x400` | Set or clear the `TraceFilterCallback`. |
+| `Limits` | `0x800` | Configure rate limiting. |
+| `ResetLimits` | `0x1000` | Reset rate limiting state. |
+| `Priorities` | `0x2000` | Set `tracePriorities` mask. |
+| `ResetPriorities` | `0x4000` | Reset `tracePriorities` to default. |
+| `Priority` | `0x8000` | Set `defaultTracePriority`. |
+| `ResetPriority` | `0x10000` | Reset `defaultTracePriority`. |
+| `Categories` | `0x20000` | Configure category dictionaries. |
+| `EnabledCategories` | `0x40000` | Set enabled categories. |
+| `DisabledCategories` | `0x80000` | Set disabled categories. |
+| `PenaltyCategories` | `0x100000` | Set penalty categories. |
+| `BonusCategories` | `0x200000` | Set bonus categories. |
+| `NullCategories` | `0x400000` | Configure null-category handling. |
+| `ResetNullCategories` | `0x800000` | Reset null-category handling. |
+| `Format` | `0x1000000` | Configure output format. |
+| `ResetFormat` | `0x2000000` | Reset output format. |
+| `FormatString` | `0x4000000` | Set custom format string. |
+| `ResetFormatString` | `0x8000000` | Reset format string. |
+| `FormatIndex` | `0x10000000` | Set format index. |
+| `ResetFormatIndex` | `0x20000000` | Reset format index. |
+| `FormatFlags` | `0x40000000` | Set format flags. |
+| `ResetFormatFlags` | `0x80000000` | Reset format flags. |
+| `VerboseFlags` | `0x100000000` | Enable verbose format flags. |
+| `FullContext` | `0x200000000` | Include full context in output. |
+| `ResetFullContext` | `0x400000000` | Reset full context. |
+| `FallbackFormat` | `0x800000000` | Set fallback format. |
+| `ResetFallbackFormat` | `0x1000000000` | Reset fallback format. |
+| `Indicators` | `0x2000000000` | Configure trace indicators. |
+| `ResetIndicators` | `0x4000000000` | Reset trace indicators. |
+| `RawIndicators` | `0x8000000000` | Use raw (unformatted) indicators. |
+| `SeeListeners` | `0x10000000000` | Include listener info in status queries. |
+| `Environment` | `0x20000000000` | Read configuration from environment variables. |
+| `Force` | `0x40000000000` | Force state changes (override safety checks). |
+| `Reset` | `0x80000000000` | Reset all state. |
+| `OverrideEnvironment` | `0x100000000000` | Override environment-derived settings. |
+| `ForCommand` | `0x200000000000` | State change initiated by `debug trace` command. |
+| `ForSdk` | `0x400000000000` | State change initiated by SDK consumer. |
+| `ForDefault` | `0x800000000000` | Default state type (used internally). |
+
+**Useful composite masks:**
+- `TraceCommand` = `(Default | ForCommand) & ~ForDefault` — Used as the default `-statetypes` value by `debug trace`.
+- `SdkEnableMask` / `SdkDisableMask` — For SDK consumers enabling/disabling tracing.
+- `NormalMask` — All non-reset, non-special flags.
+- `ResetMask` — All reset flags.
+
+---
+
+### TraceCategoryType Enumeration
+
+Controls which category dictionary is being configured.
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `None` | `0x0` | No category type. |
+| `Invalid` | `0x1` | Invalid sentinel. |
+| `Enabled` | `0x2` | Category is enabled (whitelist). |
+| `Disabled` | `0x4` | Category is disabled (blacklist). |
+| `Penalty` | `0x8` | Category has a priority penalty. |
+| `Bonus` | `0x10` | Category has a priority bonus. |
+| `ForDefault` | `0x20` | Default (legacy) category type. |
+
+**Composite:** `Default` = `Enabled | ForDefault`.
+
+---
+
+### Statistics and Monitoring
+
+The tracing subsystem maintains the following performance counters, accessible via `debug trace` (no arguments) or via `[object invoke]` on `TraceOps`:
+
+| Counter | Description |
+|---------|-------------|
+| `traceImpossible` | Messages attempted when `isTracePossible` was `false`. |
+| `traceDisabled` | Messages attempted when `isTraceEnabled` was `false`. |
+| `traceTripped` | Messages suppressed by `TraceLimits` rate limiting. |
+| `traceFiltered` | Messages suppressed by a `TraceFilterCallback` returning `true`. |
+| `traceException` | Exceptions caught within the trace pipeline itself. |
+| `traceWritten` | Messages successfully written to at least one output. |
+| `traceLogged` | Messages recorded in the log (includes host output). |
+| `traceDropped` | Messages that were processed but not written to any output. |
+| `traceLockWarnings` | Lock acquisition timeouts (non-fatal). |
+| `traceLockErrors` | Lock acquisition failures (potential data loss). |
+
+---
+
+### Compile-Time Flags
+
+The tracing subsystem's compiled behavior depends on several conditional compilation symbols:
+
+| Symbol | Effect |
+|--------|--------|
+| `DEBUG_TRACE` | Enables `DebugTrace` methods (conditional trace calls). Without this, conditional trace call sites compile to nothing. |
+| `MAYBE_TRACE` | Similar to `DEBUG_TRACE`; guards additional conditional trace blocks. |
+| `FORCE_TRACE` | Forces `MaybeDebug` and `MaybeVerbose` to resolve to their real values (instead of `None`) even in release builds. |
+| `VERBOSE` | Combined with `DEBUG` or `FORCE_TRACE`, enables `MaybeVerbose` resolution. |
+| `POLICY_TRACE` | Enables policy evaluation tracing via `MaybeWritePolicyTrace()`. |
+| `CONSOLE` | Enables console-related trace output and the console trace listener. |
+| `NATIVE` | Enables native debugger output (`OutputDebugString`) and the `NativeTraceListener`. |
+| `TEST` | Enables test-specific listeners (log file, buffered) and test-specific `debug trace` options. |
+| `WINFORMS` / `NATIVE_UI` | Enables the `StatusFormTraceListener`. |
+| `DATA` | Enables the `DatabaseTraceListener`. |
+| `CACHE_DICTIONARY` | Enables the message deduplication cache in `TraceLimits`. |
+
+---
+
+### See Also
+
+- [`debug trace`](#cmd-debug) — Script-level access to the tracing subsystem
+- [Advanced: Complaint Subsystem](#complaint-subsystem) — Related error-reporting subsystem that can route through tracing
+- [Interpreter Customization Hooks](#advanced-interpreter-customization-hooks) — Related interpreter lifecycle hooks
+- `TraceOps.cs` — Core tracing pipeline implementation
+- `DebugOps.cs` — Listener management and debug output
+- `TraceLimits.cs` — Rate limiting implementation
+- `Default.cs` — Test listener implementations (`BufferedTraceListener`, `ScriptTraceListener`, `NativeTraceListener`, `StatusFormTraceListener`, `ThrowTraceListener`, `DatabaseTraceListener`)
+- `Delegates.cs` — `TraceFilterCallback` delegate definition
+- `Enumerations.cs` — `TracePriority`, `TraceFormatType`, `TraceListenerType`, `TraceStateType`, `TraceCategoryType`
+- `EnvVars.cs` — Trace-related environment variable names
 
 ---
 
