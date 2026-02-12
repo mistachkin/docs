@@ -5844,7 +5844,7 @@ The `info` command is the primary means for querying the state of the interprete
 
   ---
 
-  - `info appdomain` - Returns the current application domain name.
+  - `info appdomain` - Returns the current application domain identifier.
 
   ---
 
@@ -10483,8 +10483,8 @@ Each ensemble command object exposes three key properties for sub-command manage
 | Property | Description |
 |----------|-------------|
 | `SubCommands` | Dictionary of available sub-commands (name → ISubCommand or null) |
-| `AllowedSubCommands` | Whitelist of sub-commands (if set, only these are allowed) |
-| `DisallowedSubCommands` | Blacklist of sub-commands (these are explicitly denied) |
+| `AllowedSubCommands` | List of allowed sub-commands (if set, only these are allowed) |
+| `DisallowedSubCommands` | list of disallowed sub-commands (these are explicitly denied) |
 
 ---
 
@@ -12058,7 +12058,7 @@ These flags are OR'd into the `TracePriority` value to control per-message forma
 | `ExtraSkipFrame` | `0x400000` | Skip an extra stack frame when resolving the caller method name (used when the trace call bounces through a wrapper). |
 | `EnableDateTimeFlag` | `0x800000` | Include `DateTime.Now` (ISO-8601) in the formatted output. |
 | `EnablePriorityFlag` | `0x1000000` | Include the `TracePriority` value (hexadecimal) in the formatted output. |
-| `EnableServerNameFlag` | `0x2000000` | Include the server/AppDomain name in the formatted output. |
+| `EnableServerNameFlag` | `0x2000000` | Include the server name in the formatted output. |
 | `EnableTestNameFlag` | `0x4000000` | Include the current test name in the formatted output. |
 | `EnableAppDomainFlag` | `0x8000000` | Include the `AppDomain.Id` in the formatted output. |
 | `EnableInterpreterFlag` | `0x10000000` | Include the `Interpreter.Id` in the formatted output. |
@@ -12404,7 +12404,7 @@ The `Default.cs` test infrastructure class provides six pre-built `TraceFilterCa
 - Setting `3`: Emits a diagnostic trace from within the callback (testing recursion handling).
 - Default: Returns `false` (allows all messages through).
 
-**Index 1: TestTraceFilterMessageCallback** — Filters by **message content**. Uses `StringOps.Match` with a configurable pattern and match mode (`Glob`, `Exact`, or `RegExp`). Returns `true` (suppress) when the message does **not** match the pattern, effectively creating a whitelist.
+**Index 1: TestTraceFilterMessageCallback** — Filters by **message content**. Uses `StringOps.Match` with a configurable pattern and match mode (`Glob`, `Exact`, or `RegExp`). Returns `true` (suppress) when the message does **not** match the pattern, effectively creating an **allowed list**.
 
 **Index 2: TestTraceFilterCategoryCallback** — Filters by **category name**. Same matching logic as Index 1, but applied to the category string instead of the message.
 
@@ -12540,8 +12540,8 @@ Trace categories are free-form strings that group related messages. The subsyste
 
 | Dictionary | Effect | Set Via |
 |------------|--------|---------|
-| **Enabled** | Only messages in listed categories are accepted (whitelist). When empty, all categories are accepted. | `debug trace -enabledcategories {cat1 cat2}` |
-| **Disabled** | Messages in listed categories are suppressed (blacklist). | `debug trace -disabledcategories {cat1 cat2}` |
+| **Enabled** | Only messages in listed categories are accepted (allow list). When empty, all categories are accepted. | `debug trace -enabledcategories {cat1 cat2}` |
+| **Disabled** | Messages in listed categories are suppressed (deny list). | `debug trace -disabledcategories {cat1 cat2}` |
 | **Penalty** | Messages in listed categories have their effective priority decreased by the penalty weight (default: -1 level). | `debug trace -penaltycategories {cat1 cat2}` |
 | **Bonus** | Messages in listed categories have their effective priority increased by the bonus weight (default: +1 level). | `debug trace -bonuscategories {cat1 cat2}` |
 
@@ -12713,8 +12713,8 @@ Controls which category dictionary is being configured.
 |------|-------|-------------|
 | `None` | `0x0` | No category type. |
 | `Invalid` | `0x1` | Invalid sentinel. |
-| `Enabled` | `0x2` | Category is enabled (whitelist). |
-| `Disabled` | `0x4` | Category is disabled (blacklist). |
+| `Enabled` | `0x2` | Category is enabled (allow list). |
+| `Disabled` | `0x4` | Category is disabled (deny list). |
 | `Penalty` | `0x8` | Category has a priority penalty. |
 | `Bonus` | `0x10` | Category has a priority bonus. |
 | `ForDefault` | `0x20` | Default (legacy) category type. |
