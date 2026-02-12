@@ -48,6 +48,7 @@ This document provides a comprehensive catalog the Eagle scripting language, org
 - [Advanced: Automatic Command Mapping Subsystem](#advanced-automatic-command-mapping-subsystem)
 - [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure)
 - [Advanced: Complaint Subsystem](#complaint-subsystem)
+- [Advanced: Security Policy Subsystem](#security-policy-subsystem)
 - [Advanced: Tracing Subsystem](#tracing-subsystem)
 - [Eagle Shell Command Line Options](#eagle-shell-command-line-options)
 - [Interactive Commands](#interactive-commands)
@@ -11851,6 +11852,635 @@ The complaint subsystem adapts to the build configuration through conditional co
 - `FormatOps.Complaint()` — Complaint message formatting
 - `Delegates.cs` — `ComplainCallback` delegate definition
 - `Enumerations.cs` — `TracePriority.ComplainError`, `HostFlags.Complain`, `HeaderFlags.ComplaintInfo`, `EventFlags.NoComplain`
+
+---
+
+## Advanced: Security Policy Subsystem
+
+<a id="security-policy-subsystem"></a>
+
+The security policy subsystem is the primary access-control facility for the Eagle interpreter. It provides a voting-based, callback-driven policy evaluation pipeline that governs which commands, sub-commands, files, streams, URIs, types, and assemblies may be accessed from script code — particularly within safe (sandboxed) interpreters. The full implementation spans `PolicyOps.cs` (core policy implementations), `PolicyContext.cs` (vote aggregation), `Interpreter.cs` (policy management and checking), `Engine.cs` (policy integration points), `Utility.cs` (public API wrappers), and `ScriptPolicy.cs` (script-based policy class). Script-level access is provided by `interp policy`, `interp nopolicy`, `interp makesafe`, and `interp marktrusted`.
+
+### Design Philosophy
+
+Eagle's security policy subsystem is designed around several core principles:
+
+1. **Deny by default.** The `PolicyDecision` enumeration's `Default` value is `Denied`. If no policy votes to approve an operation, it is rejected. This ensures that new commands or operations added to the interpreter are automatically restricted in safe interpreters until explicitly allowed.
+
+2. **Voting, not gating.** Policies cast votes (`Approved`, `Denied`, `Undecided`) rather than making binary allow/deny decisions. Multiple policies can participate in a single decision, and the `PolicyContext` aggregates their votes using a well-defined algorithm. This enables layered security where different policies can address different concerns independently.
+
+3. **Deny veto.** A single `Denied` vote overrides all `Approved` votes regardless of count. This ensures that a restrictive policy cannot be overridden by a permissive one, providing a strong security guarantee.
+
+4. **Separation of mechanism and policy.** The checking infrastructure (`CheckPolicies`, `PolicyContext`) is entirely generic. Specific security rules are implemented as callbacks (`ExecuteCallback` delegates) that can be replaced, supplemented, or removed. The default core policies in `PolicyOps.cs` implement reasonable safe-interpreter restrictions, but embedders can install entirely different policies.
+
+5. **Per-interpreter configuration.** Each interpreter maintains its own policy collection. Policies are typically installed during `interp makesafe` or `interp create -safe`, but can be added or removed at any time via `interp policy` and `interp nopolicy`.
+
+6. **Multiple check dimensions.** The subsystem supports policy checking at six different levels: sub-command filtering, URI validation, directory validation, type validation, managed callback invocation, and script evaluation. Each dimension is implemented by a dedicated `CheckVia*` method in `PolicyOps`.
+
+7. **Fail-safe operation.** Policy callbacks are wrapped in exception handlers. A policy that throws an exception is recorded in `failedPolicies` and does not crash the interpreter. The `ReturnCode.Ok` return from a policy callback means "the check executed successfully" — it does not mean "approved". The vote is recorded separately on the `IPolicyContext`.
+
+---
+
+### Architecture Overview
+
+```
+   Script: interp eval $safe {file exists /etc/passwd}
+                         |
+                         v
+            ┌─────────────────────────┐
+            │  Engine (evaluation)    │  About to execute [file]
+            │  Before command check   │  command in safe interp
+            └────────────┬────────────┘
+                         |
+                         v
+            ┌─────────────────────────┐
+            │  Interpreter            │
+            │  CheckCommandPolicies() │  EngineBeforeCommand flags
+            └────────────┬────────────┘
+                         |
+                         v
+            ┌─────────────────────────┐
+            │  CheckPolicies()        │  Core policy loop:
+            │  - Copy policy list     │  iterate all IPolicy
+            │  - Create PolicyContext │  objects, invoke each
+            │  - Invoke each policy   │  callback with context
+            └────────────┬────────────┘
+                         |
+              ┌──────────┴──────────┐
+              │ PolicyContext       │  Vote aggregation:
+              │ - undecidedCount    │  1. Any Denied → Denied
+              │ - deniedCount       │  2. Approved > Undecided → Approved
+              │ - approvedCount     │  3. Any Undecided → Undecided
+              └──────────┬──────────┘  4. Otherwise → None
+                         |
+              ┌──────────┴──────────┐
+              │ FileCommandCallback │  Default [file] policy:
+              │ → CheckViaSubCommand│  Only allow sub-commands
+              │   (allowed list)    │  in AllowedFileSubCommandNames
+              └──────────┬──────────┘
+                         |
+              ┌──────────┴──────────┐
+              │ Decision:           │
+              │ "exists" is in the  │  → Approved (sub-command
+              │ allowed list        │    is permitted)
+              └─────────────────────┘
+```
+
+---
+
+### Policy Check Integration Points
+
+The policy subsystem is invoked by the interpreter at several key points during execution. Each integration point corresponds to a specific `PolicyFlags` value and a wrapper method on the `Interpreter` class.
+
+| Integration Point | PolicyFlags | Wrapper Method | When Invoked |
+|-------------------|-------------|----------------|--------------|
+| Before command | `EngineBeforeCommand` | `CheckCommandPolicies()` | Before executing any command in a safe interpreter. |
+| Before sub-command | `EngineBeforeSubCommand` | `CheckSubCommandPolicies()` | Before executing a sub-command (for ensemble commands). |
+| Before file | `EngineBeforeFile` | `CheckBeforeFilePolicies()` | Before reading a script file via `source`. |
+| After file | `EngineAfterFile` | `CheckAfterFilePolicies()` | After reading a script file (with hash verification). |
+| Before stream | `EngineBeforeStream` | `CheckBeforeStreamPolicies()` | Before reading a script stream. |
+| After stream | `EngineAfterStream` | `CheckAfterStreamPolicies()` | After reading a script stream (with hash verification). |
+| Before script | `EngineBeforeScript` | `CheckScriptPolicies()` | Before evaluating an `IScript` object from an external source. |
+| Before plugin | `EngineBeforePlugin` | `CheckPluginPolicies()` | Before loading a plugin assembly. |
+| Before procedure | `EngineBeforeProcedure` | `CheckProcedurePolicies()` | Before executing a procedure (if enabled). |
+
+**Hash verification**: For file and stream checks, the subsystem computes a cryptographic hash of the content (unless `BeforeNoHash` is set in `PolicyFlags`). This hash is included in the `IPolicyContext` and can be verified against trusted hash lists.
+
+**Recursion prevention**: `CheckPolicies()` checks `HasPendingPolicies()` and `PolicyLevels` to prevent recursive policy evaluation (e.g., when a policy callback itself evaluates a command).
+
+---
+
+### Vote Aggregation (PolicyContext)
+
+The `PolicyContext` class maintains three thread-safe counters (using `Interlocked.Increment`):
+
+| Counter | Incremented By |
+|---------|----------------|
+| `undecidedCount` | `policyContext.Undecided()` |
+| `deniedCount` | `policyContext.Denied()` |
+| `approvedCount` | `policyContext.Approved()` |
+
+The aggregated `Decision` property applies the following rules in order:
+
+```
+1. if (deniedCount > 0)           → PolicyDecision.Denied
+2. else if (approvedCount > undecidedCount) → PolicyDecision.Approved
+3. else if (undecidedCount > 0)   → PolicyDecision.Undecided
+4. else                           → PolicyDecision.None
+```
+
+**Key implications:**
+- A single `Denied` vote vetoes all approvals. This is the fundamental security guarantee.
+- `Approved` requires a strict majority over `Undecided` votes.
+- When no policy votes at all (`None`), the decision is treated as denied by the engine (since `Default = Denied`).
+- A policy returning `ReturnCode.Break` from `CheckViaCallback` or `CheckViaScript` casts **no vote** (abstains).
+- A policy returning `ReturnCode.Continue` casts an `Undecided` vote.
+- A policy returning `ReturnCode.Error`, `ReturnCode.Return`, or any unexpected code casts a `Denied` vote.
+
+---
+
+### Policy Implementation Types (CheckVia* Methods)
+
+`PolicyOps` provides six policy implementation methods, each designed for a specific type of access control check. All follow the same pattern: extract the `IPolicyContext` from the `clientData`, verify the command type matches, then cast a vote based on the check result.
+
+#### CheckViaSubCommand — Sub-Command Filtering
+
+```csharp
+public static ReturnCode CheckViaSubCommand(
+    PolicyFlags policyFlags,
+    Type commandType, long commandToken,
+    StringDictionary subCommandNames, bool allowed,
+    Interpreter interpreter, IClientData clientData,
+    ArgumentList arguments, ref Result result)
+```
+
+Filters ensemble commands by sub-command name. When `allowed` is `true`, the sub-command must be in the `subCommandNames` dictionary to be approved (allow list). When `allowed` is `false`, the sub-command must **not** be in the dictionary (deny list).
+
+#### CheckViaUri — URI Validation
+
+```csharp
+public static ReturnCode CheckViaUri(
+    PolicyFlags policyFlags,
+    Type commandType, long commandToken,
+    Uri uri, UriDictionary<object> uris, bool allowed,
+    Interpreter interpreter, IClientData clientData,
+    ArgumentList arguments, ref Result result)
+```
+
+Validates URIs by scheme and server against a trusted URI dictionary. Uses `ContainsSchemeAndServer()` for matching, so `https://example.com/any/path` matches a trusted entry for `https://example.com`.
+
+#### CheckViaDirectory — Directory Validation
+
+```csharp
+public static ReturnCode CheckViaDirectory(
+    PolicyFlags policyFlags,
+    Type commandType, long commandToken,
+    string fileName, PathDictionary<object> directories, bool allowed,
+    Interpreter interpreter, IClientData clientData,
+    ArgumentList arguments, ref Result result)
+```
+
+Validates file operations by checking whether the file's parent directory is in a trusted directory list. Extracts the directory from the file path using `Path.GetDirectoryName()`.
+
+#### CheckViaType — Type Validation
+
+```csharp
+public static ReturnCode CheckViaType(
+    PolicyFlags policyFlags,
+    Type commandType, long commandToken,
+    Type objectType, TypeList types, bool allowed,
+    Interpreter interpreter, IClientData clientData,
+    ArgumentList arguments, ref Result result)
+```
+
+Validates .NET type access by checking the type against a trusted types list. Used to control which .NET types can be instantiated or invoked from safe interpreters.
+
+#### CheckViaCallback — Managed Callback
+
+```csharp
+public static ReturnCode CheckViaCallback(
+    PolicyFlags policyFlags,
+    Type commandType, long commandToken,
+    ICallback callback,
+    Interpreter interpreter, IClientData clientData,
+    ArgumentList arguments, ref Result result)
+```
+
+Delegates the policy decision to a user-provided `ICallback` object. The callback receives the command arguments and returns a `ReturnCode` that is mapped to a vote:
+
+| Callback Return | Vote |
+|----------------|------|
+| `ReturnCode.Ok` | `Approved` |
+| `ReturnCode.Break` | No vote (abstain) |
+| `ReturnCode.Continue` | `Undecided` |
+| `ReturnCode.Error` | `Denied` |
+| `ReturnCode.Return` | `Denied` |
+| Any other code | `Denied` |
+
+#### CheckViaScript — Script Evaluation
+
+```csharp
+public static ReturnCode CheckViaScript(
+    PolicyFlags policyFlags,
+    Type commandType, long commandToken,
+    Interpreter policyInterpreter, string text,
+    Interpreter interpreter, IClientData clientData,
+    ArgumentList arguments, ref Result result)
+```
+
+Evaluates a script in the `policyInterpreter` to make the policy decision. The script receives the command arguments (when `PolicyFlags.Arguments` is set) and its return code is mapped to a vote using the same table as `CheckViaCallback`. Empty scripts (`""`) are explicitly allowed; only `null` scripts cause the check to be skipped.
+
+---
+
+### Default Core Command Policies
+
+When a safe interpreter is created (via `interp create -safe` or `interp makesafe`), the `SetupPolicies` method installs eight default command policy callbacks from the `PolicyOps.CommandCallbacks` array. Each callback restricts a specific command to a safe subset of its sub-commands or validated resources.
+
+#### Summary Table
+
+| Command | Callback | Check Method | Mode | Strategy |
+|---------|----------|--------------|------|----------|
+| `clock` | `ClockCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
+| `file` | `FileCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
+| `info` | `InfoCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
+| `interp` | `InterpCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
+| `object` | `ObjectCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
+| `package` | `PackageCommandCallback` | `CheckViaSubCommand` | Deny list | All except dangerous sub-commands |
+| `source` | `SourceCommandCallback` | `CheckViaUri` / `CheckViaDirectory` | Allow list | URI or directory validation |
+| `uri` | `UriCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
+
+#### Allowed Sub-Command Lists
+
+**`clock`** — `buildnumber`, `days`, `duration`, `filetime`, `format`, `isvalid`, `monthdays`, `scan`, `seconds`
+
+**`file`** — `channels`, `dirname`, `join`, `split`, `validname`
+
+**`info`** — `appdomain`, `args`, `body`, `commands`, `complete`, `context`, `default`, `engine`, `ensembles`, `exists`, `functions`, `globals`, `level`, `library`, `locals`, `nprocs`, `objects`, `operands`, `operators`, `patchlevel`, `procs`, `script`, `subcommands`, `tclversion`, `vars`
+
+**`interp`** — `alias`, `aliases`, `cancel`, `children`, `exists`, `issafe`, `issdk`, `rename`
+
+**`object`** — `dispose`, `exists`, `invoke`, `invokeall`, `invokeraw`, `isnull`, `isoftype`
+
+**`uri`** — `get`, `isvalid`, `post`
+
+#### Disallowed Sub-Command List
+
+**`package`** (deny list) — `alias`, `aliases`, `indexes`, `relativefilename`, `reset`, `scan`, `vloaded`
+
+All other `package` sub-commands are permitted.
+
+#### The `source` Command Policy
+
+The `source` command policy uses a hybrid approach:
+
+1. If the file name is a **remote URI** (`PathOps.IsRemoteUri()`), the policy delegates to `CheckViaUri` with a list of trusted URIs built by `AddTrustedUris()`.
+2. If the file name is a **local path**, the policy delegates to `CheckViaDirectory` with a list of trusted directories built by `AddTrustedDirectories()`.
+
+This ensures that safe interpreters can only source scripts from known-good locations.
+
+---
+
+### Trust Model
+
+The policy subsystem maintains several trust validation methods in `PolicyOps` for checking whether specific resources are permitted in safe interpreters. These are called by the engine and command implementations (not by the policy callbacks themselves).
+
+#### IsTrustedObject
+
+```csharp
+public static bool IsTrustedObject(
+    Interpreter interpreter, string text,
+    ObjectFlags objectFlags, object @object,
+    ref Result error)
+```
+
+Returns `true` if the object has the `ObjectFlags.Safe` flag set. Objects not marked as safe produce the error: `"permission denied: safe interpreter cannot use object from {text}"`.
+
+#### IsTrustedType
+
+```csharp
+public static bool IsTrustedType(
+    Interpreter interpreter, string text,
+    Type type, ValueFlags valueFlags,
+    ref Result error)
+```
+
+A type is trusted if any of the following conditions are met (checked in order):
+
+1. The type's `FullName` is in the interpreter's internal trusted types dictionary (populated by `AddTrustedTypes()`).
+2. Unless `ValueFlags.TrustedOnly` is set: the type has the `ObjectFlags.Safe` attribute.
+3. Unless `ValueFlags.TrustedOnly` is set: the type has `CommandFlags.Safe` but not `CommandFlags.Unsafe`.
+
+#### IsTrustedUri
+
+```csharp
+public static bool IsTrustedUri(
+    Interpreter interpreter, Uri uri,
+    ref Result error)
+```
+
+Returns `true` if the URI's scheme and server match an entry in the trusted URI dictionary (populated by `AddTrustedUris()`). Matching uses `ContainsSchemeAndServer()`, which compares scheme (e.g., `https`) and host (e.g., `example.com`) but ignores path, query, and fragment.
+
+#### IsTrustedFile
+
+```csharp
+public static bool IsTrustedFile(
+    Interpreter interpreter, StringList trustedHashes,
+    string fileName, ref Result error)
+```
+
+Validates a file by computing its cryptographic hash and comparing it against a list of trusted hash values. Each trusted hash entry includes a `PolicyType`, hash algorithm name, and expected hash value. The method iterates through all trusted hashes and returns `true` if any match is found using the first `HashCount` (3) hash algorithms.
+
+---
+
+### PolicyDecision Enumeration
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `None` | `0` | No decision has been made. |
+| `Undecided` | `1` | The policy is explicitly undecided. |
+| `Denied` | `2` | The operation is denied. |
+| `Approved` | `3` | The operation is approved. |
+| `Continue` | `4` | Continue with further evaluation. |
+| `Pending` | `5` | A decision is pending. |
+| `Stop` | `6` | Stop further evaluation. |
+| `Success` | `7` | The policy check succeeded (informational). |
+| `Unknown` | `8` | The decision is unknown (initial state). |
+| `Failure` | `9` | The policy check failed (informational). |
+| `Default` | `Denied` | **Default value is Denied** — operations are denied unless explicitly approved. |
+
+---
+
+### PolicyFlags Enumeration
+
+`PolicyFlags` is a `[Flags]` enumeration that controls when a policy is invoked and what kind of check it performs.
+
+#### Lifecycle Flags
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `None` | `0x0` | Unspecified policy type; use default handling. |
+| `Invalid` | `0x1` | Invalid sentinel; do not use. |
+| `ReadOnly` | `0x2` | The policy cannot be removed. |
+| `Disabled` | `0x4` | The policy is disabled and will not be invoked. |
+| `NoToken` | `0x8` | Skip handling of the policy token via the associated plugin. |
+| `ForEngine` | `0x10` | The policy is being invoked by the engine. |
+
+#### Before Invocation Flags
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `BeforePlugin` | `0x20` | Invoked prior to loading a plugin assembly. |
+| `BeforeScript` | `0x40` | Invoked prior to returning an `IScript` object from an external source. |
+| `BeforeFile` | `0x80` | Invoked prior to reading a script file. |
+| `BeforeStream` | `0x100` | Invoked prior to reading a script stream. |
+| `BeforeCommand` | `0x200` | Invoked prior to executing a command. |
+| `BeforeSubCommand` | `0x400` | Invoked prior to executing a sub-command. |
+| `BeforeProcedure` | `0x800` | Invoked prior to executing a procedure. |
+
+#### After Invocation Flags
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `AfterFile` | `0x1000` | Invoked after reading a script file (with content hash). |
+| `AfterStream` | `0x2000` | Invoked after reading a script stream (with content hash). |
+
+#### Hash Control Flags
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `BeforeNoHash` | `0x4000` | Skip hashing of file/stream content before the policy check. |
+| `AfterNoHash` | `0x8000` | Skip hashing of file/stream content after the policy check. |
+
+#### Policy Type Flags
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `Callback` | `0x10000` | The policy invokes a user callback. |
+| `Directory` | `0x20000` | The policy checks a directory against a list. |
+| `Script` | `0x40000` | The policy evaluates a user script. |
+| `SubCommand` | `0x80000` | The policy checks a sub-command against a list. |
+| `Type` | `0x100000` | The policy checks a type against a list. |
+| `Uri` | `0x200000` | The policy checks a URI against a list. |
+| `SplitList` | `0x400000` | The policy script is a Tcl list (split before evaluation). |
+| `Arguments` | `0x800000` | Append command arguments to the policy script before evaluation. |
+
+#### Engine Composite Flags
+
+| Name | Composition | Description |
+|------|-------------|-------------|
+| `EngineBeforePlugin` | `ForEngine \| BeforePlugin` | Engine invoking before plugin load. |
+| `EngineBeforeScript` | `ForEngine \| BeforeScript` | Engine invoking before script object. |
+| `EngineBeforeFile` | `ForEngine \| BeforeFile \| BeforeNoHash` | Engine invoking before file read. |
+| `EngineBeforeStream` | `ForEngine \| BeforeStream \| BeforeNoHash` | Engine invoking before stream read. |
+| `EngineBeforeCommand` | `ForEngine \| BeforeCommand` | Engine invoking before command execution. |
+| `EngineBeforeSubCommand` | `ForEngine \| BeforeSubCommand` | Engine invoking before sub-command execution. |
+| `EngineBeforeProcedure` | `ForEngine \| BeforeProcedure` | Engine invoking before procedure execution. |
+| `EngineAfterFile` | `ForEngine \| AfterFile` | Engine invoking after file read. |
+| `EngineAfterStream` | `ForEngine \| AfterStream` | Engine invoking after stream read. |
+
+---
+
+### PolicyDecisionType Enumeration
+
+`PolicyDecisionType` is a `[Flags]` enumeration that classifies policy decisions by the type of operation being checked and whether it is an initial or final check.
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `None` | `0x0` | No type. |
+| `Invalid` | `0x1` | Invalid sentinel. |
+| `Command` | `0x10` | Decision relates to a command. |
+| `Script` | `0x20` | Decision relates to a script. |
+| `File` | `0x40` | Decision relates to a file. |
+| `Stream` | `0x80` | Decision relates to a stream. |
+| `Initial` | `0x100` | This is the initial policy check. |
+| `Final` | `0x200` | This is the final policy check. |
+
+**Composite masks:**
+- `QueryMask` = `Command | Script | File | Stream`
+- `FlagMask` = `Initial | Final`
+- `Default` = `File | Final | ForDefault`
+
+The interpreter maintains separate `InitialDecision` and `FinalDecision` properties for each decision type (`Command`, `Script`, `File`, `Stream`), allowing the engine to query and record decisions at both stages of a policy check.
+
+---
+
+### PolicyType Enumeration
+
+`PolicyType` classifies the nature of the resource being protected by a policy.
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `None` | `0x0` | No policy type. |
+| `Invalid` | `0x1` | Invalid sentinel. |
+| `Unknown` | `0x2` | Unknown type. |
+| `Script` | `0x1000` | Script content. |
+| `File` | `0x2000` | File content. |
+| `Stream` | `0x4000` | Stream content. |
+| `License` | `0x8000` | License data. |
+| `KeyPair` | `0x10000` | Cryptographic key pair. |
+| `Trace` | `0x20000` | Trace data. |
+| `Other` | `0x40000` | Other resource type. |
+
+---
+
+### Script-Level Interface
+
+#### `interp policy` — Add a Policy
+
+```
+interp policy ?options? path script
+```
+
+Adds a policy to the interpreter identified by `path`. The script is evaluated when a policy check occurs. Required option: either `-type` or `-token` must be specified to identify the command the policy applies to.
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `-type typeName` | The .NET type of the command this policy applies to. |
+| `-token commandToken` | The token of the command this policy applies to. |
+| `-flags policyFlags` | `PolicyFlags` value controlling when the policy is invoked. Default: `Script`. |
+
+#### `interp nopolicy` — Remove a Policy
+
+```
+interp nopolicy path name
+```
+
+Removes a named policy from the interpreter identified by `path`.
+
+#### `interp makesafe` — Make an Interpreter Safe
+
+Makes the interpreter safe by installing the default core command policies (the eight callbacks described above), hiding dangerous commands, and applying other safety restrictions. This is the primary mechanism for creating sandboxed interpreters.
+
+#### `interp marktrusted` — Mark an Interpreter as Trusted
+
+Marks the interpreter as trusted, effectively bypassing policy checks. This is used when a safe interpreter needs temporary elevated privileges (e.g., during initialization). The `TrustFlags` enumeration controls the behavior of trusted evaluation.
+
+---
+
+### TrustFlags Enumeration
+
+Controls the behavior of trusted (elevated) evaluation within safe interpreters.
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `None` | `0x0` | Use default handling. |
+| `Shared` | `0x2` | Allow other threads to use the interpreter during evaluation (**dangerous**). |
+| `WithEvents` | `0x4` | Allow asynchronous events during evaluation (**dangerous**). |
+| `MarkTrusted` | `0x8` | Temporarily mark the interpreter as trusted. |
+| `AllowUnsafe` | `0x10` | Permit trusted evaluation even for already-trusted interpreters. |
+| `NoIgnoreHidden` | `0x20` | Do not enable execution of hidden commands. |
+| `ViaCoreLibrary` | `0x40` | For use by the core library only. |
+| `UseSecurityLevels` | `0x80` | Increment/decrement `SecurityLevels` during evaluation. |
+
+---
+
+### Public API (Utility.cs)
+
+The `Utility` class provides public wrapper methods for each `PolicyOps.CheckVia*` method. These are the intended API for embedders and plugin authors who need to implement custom policies.
+
+| Method | Wraps | Description |
+|--------|-------|-------------|
+| `Utility.SubCommandPolicy()` | `PolicyOps.CheckViaSubCommand()` | Check a sub-command against an allow/deny list. |
+| `Utility.DirectoryPolicy()` | `PolicyOps.CheckViaDirectory()` | Check a file path against trusted directories. |
+| `Utility.UriPolicy()` | `PolicyOps.CheckViaUri()` | Check a URI against trusted URIs. |
+| `Utility.CallbackPolicy()` | `PolicyOps.CheckViaCallback()` | Delegate the decision to a managed callback. |
+| `Utility.ScriptPolicy()` | `PolicyOps.CheckViaScript()` | Delegate the decision to a policy script. |
+| `Utility.TypePolicy()` | `PolicyOps.CheckViaType()` | Check a .NET type against trusted types. |
+
+All methods share the same return convention: `ReturnCode.Ok` means the policy check infrastructure executed correctly. The actual allow/deny decision is recorded in the `IPolicyContext` via the voting mechanism.
+
+---
+
+### IPolicyContext Interface
+
+The `IPolicyContext` interface provides the complete context for a policy decision. It is passed to policy callbacks via the `IClientData` wrapper.
+
+#### Key Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `Flags` | `PolicyFlags` | Flags indicating when and why this check is occurring. |
+| `Execute` | `IExecute` | The command being checked (for command policies). |
+| `Arguments` | `ArgumentList` | The command arguments. |
+| `FileName` | `string` | The file name (for file policies). |
+| `Text` | `string` | The script text (for script policies). |
+| `Bytes` | `byte[]` | Raw byte content (for file/stream policies). |
+| `Encoding` | `Encoding` | Content encoding. |
+| `HashValue` | `byte[]` | Cryptographic hash of the content. |
+| `HashAlgorithmName` | `string` | Hash algorithm name (e.g., `SHA256`). |
+| `Result` | `Result` | Informational result (for diagnostics only — **not** for making decisions). |
+| `OriginalDecision` | `PolicyDecision` | The decision before this policy check began. |
+| `Decision` | `PolicyDecision` | The current aggregated decision (read-only, computed from vote counts). |
+
+#### Voting Methods
+
+| Method | Effect |
+|--------|--------|
+| `Approved()` | Increment `approvedCount` (with optional `Result reason`). |
+| `Denied()` | Increment `deniedCount` (with optional `Result reason`). |
+| `Undecided()` | Increment `undecidedCount` (with optional `Result reason`). |
+
+#### Query Methods
+
+| Method | Returns |
+|--------|---------|
+| `IsApproved()` | `true` if current decision is `Approved`. |
+| `IsDenied()` | `true` if current decision is `Denied`. |
+| `IsUndecided()` | `true` if current decision is `Undecided`. |
+
+---
+
+### Internal Tunable Parameters
+
+<a id="policy-internal-tunables"></a>
+
+The following parameters are not exposed through script commands but can be read or modified at runtime via `[object invoke]`. These are internal implementation details and may change between releases.
+
+#### PolicyOps Static Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `CommandCallbacks` | `IEnumerable<ExecuteCallback>` | Array of the eight default command policy callbacks. Modifiable at runtime to add/remove/reorder default policies. |
+| `AllowedClockSubCommandNames` | `StringDictionary` | Allowed `clock` sub-commands in safe interpreters. |
+| `AllowedFileSubCommandNames` | `StringDictionary` | Allowed `file` sub-commands in safe interpreters. |
+| `AllowedInfoSubCommandNames` | `StringDictionary` | Allowed `info` sub-commands in safe interpreters. |
+| `AllowedInterpSubCommandNames` | `StringDictionary` | Allowed `interp` sub-commands in safe interpreters. |
+| `AllowedObjectSubCommandNames` | `StringDictionary` | Allowed `object` sub-commands in safe interpreters. |
+| `AllowedUriSubCommandNames` | `StringDictionary` | Allowed `uri` sub-commands in safe interpreters. |
+| `DisallowedPackageSubCommandNames` | `StringDictionary` | Disallowed `package` sub-commands in safe interpreters. |
+| `DecisionTypes` | `PolicyDecisionType[]` | Array of decision types checked during `QueryDecisions()`. Default: `{ Command, Script, File, Stream }`. |
+| `HashCount` | `int` | Number of hash algorithms to try when verifying trusted files. Default: `3`. |
+
+#### Interpreter Policy Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `PolicyLevels` | `int` | Current policy nesting level (prevents recursive policy checking). |
+| `PolicyTrace` | `bool` | Enable policy evaluation tracing (diagnostic output via `TracePriority.PolicyTrace`). |
+| `InitialCommandDecision` | `PolicyDecision` | Cached initial decision for command checks. |
+| `FinalCommandDecision` | `PolicyDecision` | Cached final decision for command checks. |
+| `InitialScriptDecision` | `PolicyDecision` | Cached initial decision for script checks. |
+| `FinalScriptDecision` | `PolicyDecision` | Cached final decision for script checks. |
+| `InitialFileDecision` | `PolicyDecision` | Cached initial decision for file checks. |
+| `FinalFileDecision` | `PolicyDecision` | Cached final decision for file checks. |
+| `InitialStreamDecision` | `PolicyDecision` | Cached initial decision for stream checks. |
+| `FinalStreamDecision` | `PolicyDecision` | Cached final decision for stream checks. |
+
+#### IPolicyEnsemble Interface
+
+Commands that implement `IPolicyEnsemble` expose their allowed/disallowed sub-command dictionaries, allowing the policy subsystem to filter sub-commands dynamically:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `AllowedSubCommands` | `EnsembleDictionary` | Dictionary of sub-commands allowed in safe interpreters. |
+| `DisallowedSubCommands` | `EnsembleDictionary` | Dictionary of sub-commands disallowed in safe interpreters. |
+
+---
+
+### Compile-Time Flags
+
+| Symbol | Effect |
+|--------|--------|
+| `POLICY_TRACE` | Enables `MaybeWritePolicyTrace()` calls that write diagnostic output during policy evaluation. |
+
+---
+
+### See Also
+
+- [`interp policy`](#cmd-interp) — Add a policy to an interpreter
+- [`interp nopolicy`](#cmd-interp) — Remove a policy from an interpreter
+- [`interp makesafe`](#cmd-interp) — Make an interpreter safe (installs default policies)
+- [`interp marktrusted`](#cmd-interp) — Mark an interpreter as trusted
+- [Advanced: Tracing Subsystem](#tracing-subsystem) — Tracing subsystem (includes `PolicyTrace` and `PolicyError` priorities)
+- `PolicyOps.cs` — Core policy implementation (CheckVia* methods, default callbacks, trust model)
+- `PolicyContext.cs` — Vote aggregation and decision logic
+- `Interpreter.cs` — Policy management (`SetupPolicies`, `CheckPolicies`, `AddPolicy`)
+- `Utility.cs` — Public API wrappers (`SubCommandPolicy`, `DirectoryPolicy`, `UriPolicy`, `CallbackPolicy`, `ScriptPolicy`, `TypePolicy`)
+- `ScriptPolicy.cs` — `IScriptPolicy` implementation class
+- `Delegates.cs` — `ExecuteCallback` delegate definition
+- `Enumerations.cs` — `PolicyDecision`, `PolicyFlags`, `PolicyType`, `PolicyDecisionType`, `TrustFlags`, `ExecutionPolicy`
 
 ---
 
