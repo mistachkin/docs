@@ -3281,10 +3281,10 @@ debug types "Demand|Execute"             ;# Set active types
 #### Read-Only Locking
 
 ```tcl
-debug readonly Command true puts         ;# Lock puts command
-debug readonly Command false puts        ;# Unlock puts command
-debug readonly Variable null *           ;# Query all variable locks
-debug readonly Procedure true myProc     ;# Lock a procedure
+debug readonly {} Command true puts         ;# Lock puts command
+debug readonly {} Command false puts        ;# Unlock puts command
+debug readonly {} Variable null *           ;# Query all variable locks
+debug readonly {} Procedure true myProc     ;# Lock a procedure
 ```
 
 #### Exception and Result Inspection

@@ -3630,12 +3630,12 @@ The `debug` command provides comprehensive debugging capabilities for Eagle scri
 
   ---
 
-  - `debug readonly kind enabled ?pattern?` - Sets or queries read-only mode for identifiers. *kind* is an `IdentifierKind`: `Command`, `Procedure`, or `Variable`. *enabled* is a nullable boolean: true locks, false unlocks, null queries. *pattern* filters which identifiers are affected.
+  - `debug readonly path kind enabled ?pattern?` - Sets or queries read-only mode for identifiers. *kind* is an `IdentifierKind`: `Command`, `Procedure`, or `Variable`. *enabled* is a nullable boolean: true locks, false unlocks, null queries. *pattern* filters which identifiers are affected.
 
   **Example**:
   ```tcl
-  debug readonly Command true "puts"  ;# Lock the puts command
-  debug readonly Variable null "*"    ;# Query read-only state of all variables
+  debug readonly {} Command true "puts"  ;# Lock the puts command
+  debug readonly {} Variable null "*"    ;# Query read-only state of all variables
   debug types                         ;# Show active breakpoint types
   ```
 
