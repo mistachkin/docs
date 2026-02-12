@@ -34,7 +34,8 @@ pitfalls** when working with Eagle.
 | File | What it contains | When you use it |
 |------|------------------|-----------------|
 | `core_language.md` | Eagle command catalog (built-ins), organized by category; includes advanced topics | When you need command syntax, options, behavior, or Eagle-only extensions |
-| `core_script_library.md` | 580+ library procedures (script-level utilities), organized by package and source file | When you need helper procedures, test utilities, file helpers, platform detection, etc. |
+| `core_examples.md` | Contains 500+ worked examples for every command and sub-command, organized by category | When you need usage examples, idiomatic patterns, or practical demonstrations |
+| `core_script_library.md` | Contains 580+ library procedures (script-level utilities), organized by package and source file | When you need helper procedures, test utilities, file helpers, platform detection, etc. |
 | `garuda.md` | The Eagle Native Package for Tcl (Garuda) reference | When you need to integrate with Eagle via a native Tcl environment |
 | `AGENTS.md` | You are here | How to navigate and answer accurately |
 
@@ -45,11 +46,11 @@ pitfalls** when working with Eagle.
 ### Step 1 — Identify the thing you need
 Ask yourself:
 
-- “Is this a **built-in command** like `exec`, `object`, `info`, `string`?”
-  → Go to `core_language.md`.
+- "Is this a **built-in command** like `exec`, `object`, `info`, `string`?"
+  → Go to `core_language.md` for syntax; `core_examples.md` for usage examples.
 
-- “Is this a **procedure** like `getDictionaryValue`, `readFile`,
-  `execShell`, `isWindows`?”
+- "Is this a **procedure** like `getDictionaryValue`, `readFile`,
+  `execShell`, `isWindows`?"
   → Go to `core_script_library.md`.
 
 If you’re unsure:
@@ -244,22 +245,29 @@ When asked “How do I…?” or “Does Eagle support…?”:
 1. **Find the relevant command/procedure entry** by name.
 2. **Confirm syntax** (positional args vs options, option names, return values).
 3. **Check for Eagle-specific notes** (unsupported Tcl behavior, enhanced flags).
-4. **Include a minimal working example** only if it is directly supported by the
-   documentation section you read.
+4. **Include a minimal working example** from `core_examples.md` (use `#ex-NAME`
+   anchors) or from the documentation section you read.
 5. If the question is cross-cutting (e.g., “safe interpreter + exec + object”),
    **link together the exact relevant sections** rather than guessing behavior.
 
 ---
 
-## If you need examples beyond these documents
+## Examples
 
-This repository is the reference, but deeper examples (especially for testing
-and real-world harness patterns) often live in the Eagle source repository,
-including its test suites.
+`core_examples.md` contains **500+ worked examples** covering every command and
+sub-command in the Eagle language. Examples are organized by category (mirroring
+`core_language.md`) and use `#ex-NAME` anchors for fast lookup.
 
-When you move from “what is the syntax?” to “what is the idiomatic pattern?”:
-- Start here in the documentation,
-- then consult the Eagle source repo’s `Library/Tests/` and other examples.
+When you need a usage example:
+- Go to: `core_examples.md#ex-COMMAND` (e.g., `core_examples.md#ex-exec`,
+  `core_examples.md#ex-object`, `core_examples.md#ex-string`)
+- Browse the **Table of Contents** for category-based navigation.
+- The **Practical Patterns** section at the end shows idiomatic multi-command
+  recipes combining commands with script library procedures.
+
+For deeper examples beyond this repository (especially for testing and
+real-world harness patterns), consult the Eagle source repo's `Library/Tests/`
+and other examples.
 
 ---
 
