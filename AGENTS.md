@@ -186,6 +186,10 @@ These are common sources of “looks like Tcl but isn’t” errors.
 - **No `fileevent`.**
   Use polling with `after` / event processing, or CLR async patterns.
 
+- **No `scan` command.**
+  The Tcl `scan` command (C-style `sscanf` string parsing) is not implemented
+  in Eagle. Use `regexp` or `string` operations for equivalent functionality.
+
 - **No user-facing `namespace ensemble` creation.**
   Eagle has ensembles internally; verify what is supported at script level.
 

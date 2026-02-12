@@ -94,6 +94,9 @@ The following commands are Eagle-specific extensions not found in standard Tcl 8
 **Eagle-enhanced Tcl commands** (present in Tcl but with significant Eagle additions):
 `exec` (30+ Eagle options), `for` (optional *end* script), `regexp`/`regsub` (Eagle-specific switches), `vwait` (timeout option), `load`/`unload` (.NET assembly support).
 
+**Standard Tcl 8.6 commands not implemented in Eagle:**
+`dict`, `fileevent`, `scan`.
+
 ---
 
 ## Command Count Summary
@@ -1436,10 +1439,12 @@ String commands belong to ObjectGroup: "string"
   - `hash mac ?options? algorithm string ?key?` - Compute HMAC (keyed-hash message authentication code)
   - `hash list ?type?` - List available hash algorithms
   - **Algorithms**: `md5`, `sha1`, `sha256`, `sha384`, `sha512`, and others
-  - **Options**:
+  - **Options** (apply to `normal`, `keyed`, and `mac` sub-commands):
     - `-encoding name` - Text encoding (default: utf-8)
-    - `-binary` - Return raw bytes instead of hex string
-  - **Returns**: Hexadecimal hash string (or byte array with `-binary`).
+    - `-filename` - Treat the *string* argument as a filename and hash the file contents instead. Cannot be combined with `-object`. **(Unsafe)**
+    - `-object` - Treat the *string* argument as an opaque object handle referring to a byte array. Cannot be combined with `-filename` or `-encoding`.
+    - `-raw` - Return raw bytes instead of hex string
+  - **Returns**: Hexadecimal hash string (or byte array with `-raw`).
   - **Example**:
     ```tcl
     hash normal sha256 "Hello"
