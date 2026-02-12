@@ -85,22 +85,22 @@ This companion file to [`core_language.md`](core_language.md) provides at least 
 # Basic conditional
 set x 15
 if {$x > 10} {
-    set result "large"
+    set result large
 } elseif {$x > 5} {
-    set result "medium"
+    set result medium
 } else {
-    set result "small"
+    set result small
 }
 ;# Returns: large
 ```
 
 ```tcl
 # Using 'then' keyword for readability
-set mode "read"
+set mode read
 if {$mode eq "read"} then {
-    set access "r"
+    set access r
 } else {
-    set access "w"
+    set access w
 }
 ;# Returns: r
 ```
@@ -115,7 +115,7 @@ set sign [if {$x >= 0} {expr {1}} else {expr {-1}}]
 # Chained elseif
 set code 404
 if {$code == 200} {
-    set msg "OK"
+    set msg OK
 } elseif {$code == 301} {
     set msg "Moved Permanently"
 } elseif {$code == 404} {
@@ -123,7 +123,7 @@ if {$code == 200} {
 } elseif {$code == 500} {
     set msg "Internal Server Error"
 } else {
-    set msg "Unknown"
+    set msg Unknown
 }
 ;# Returns: Not Found
 ```
@@ -135,51 +135,51 @@ if {$code == 200} {
 
 ```tcl
 # Exact matching (default)
-set fruit "banana"
+set fruit banana
 switch $fruit {
-    apple  { set color "red" }
-    banana { set color "yellow" }
-    grape  { set color "purple" }
-    default { set color "unknown" }
+    apple  { set color red }
+    banana { set color yellow }
+    grape  { set color purple }
+    default { set color unknown }
 }
 ;# Returns: yellow
 ```
 
 ```tcl
 # Glob matching
-set filename "report.pdf"
+set filename report.pdf
 switch -glob $filename {
-    *.txt  { set type "text" }
-    *.pdf  { set type "document" }
+    *.txt  { set type text }
+    *.pdf  { set type document }
     *.jpg -
-    *.png  { set type "image" }
-    default { set type "other" }
+    *.png  { set type image }
+    default { set type other }
 }
 ;# Returns: document
 ```
 
 ```tcl
 # Fall-through with '-' body
-set day "Saturday"
+set day Saturday
 switch $day {
     Monday -
     Tuesday -
     Wednesday -
     Thursday -
-    Friday    { set kind "weekday" }
+    Friday    { set kind weekday }
     Saturday -
-    Sunday    { set kind "weekend" }
+    Sunday    { set kind weekend }
 }
 ;# Returns: weekend
 ```
 
 ```tcl
 # Case-insensitive regexp matching
-set input "YES"
+set input YES
 switch -nocase -regexp $input {
     {^y(es)?$} { set answer true }
     {^no?$}    { set answer false }
-    default    { set answer "invalid" }
+    default    { set answer invalid }
 }
 ;# Returns: true
 ```
@@ -219,16 +219,16 @@ set found [while {$i < 100} {
 ```tcl
 # Basic error catching
 if {[catch {expr {1 / 0}} result]} {
-    set msg "Error: $result"
+    set msg [appendArgs "Error: " $result]
 } else {
-    set msg "Result: $result"
+    set msg [appendArgs "Result: " $result]
 }
 ;# Returns: Error: divide by zero
 ```
 
 ```tcl
 # Capture return code and options
-set code [catch {error "oops" "" {MYAPP ERROR}} result opts]
+set code [catch {error oops "" {MYAPP ERROR}} result opts]
 ;# code is 1 (TCL_ERROR)
 ;# result is "oops"
 ;# opts contains -code, -errorinfo, -errorcode
@@ -236,7 +236,7 @@ set code [catch {error "oops" "" {MYAPP ERROR}} result opts]
 
 ```tcl
 # Safe file open pattern
-set filename "nonexistent.txt"
+set filename nonexistent.txt
 if {[catch {open $filename r} fh]} {
     set data "default value"
 } else {
@@ -247,7 +247,7 @@ if {[catch {open $filename r} fh]} {
 
 ```tcl
 # Distinguishing return codes
-proc mayReturn {} { return -code return "done" }
+proc mayReturn {} { return -code return done }
 set code [catch {mayReturn} result]
 ;# code is 2 (TCL_RETURN), result is "done"
 ```
@@ -311,7 +311,7 @@ list [deepdown] $a
 catch {
     error "something went wrong"
 } msg
-;# msg is "something went wrong"
+;# msg is: something went wrong
 ```
 
 ```tcl
@@ -326,7 +326,7 @@ catch {
 # Validation pattern
 proc positiveInt {n} {
     if {![string is integer -strict $n] || $n <= 0} {
-        error "expected positive integer, got \"$n\"" "" {MYAPP BADARG}
+        error [appendArgs "expected positive integer, got \"" $n \"] "" {MYAPP BADARG}
     }
     return $n
 }
@@ -342,9 +342,9 @@ catch {positiveInt -5} msg
 ```tcl
 # Simple return
 proc greet {name} {
-    return "Hello, $name!"
+    return [appendArgs "Hello, " $name !]
 }
-greet "Eagle"
+greet Eagle
 ;# Returns: Hello, Eagle!
 ```
 
@@ -425,7 +425,7 @@ try {
 proc setInCaller {varName value} {
     uplevel 1 [list set $varName $value]
 }
-setInCaller myVar "Hello"
+setInCaller myVar Hello
 ;# myVar is "Hello" in the calling scope
 ```
 
@@ -434,14 +434,14 @@ setInCaller myVar "Hello"
 proc setGlobal {varName value} {
     uplevel #0 [list set $varName $value]
 }
-setGlobal ::config "production"
+setGlobal ::config production
 ```
 
 ```tcl
 # Assert utility using uplevel for expression context
 proc assert {expr {msg ""}} {
     if {![uplevel 1 [list expr $expr]]} {
-        if {$msg eq ""} { set msg "Assertion failed: $expr" }
+        if {$msg eq ""} { set msg [appendArgs "Assertion failed: " $expr] }
         error $msg
     }
 }
@@ -630,8 +630,8 @@ while {[lindex $items $i] ne "END"} {
 
 ```tcl
 # Build a string incrementally
-set msg "Hello"
-append msg ", " "World" "!"
+set msg Hello
+append msg ", " World !
 ;# msg is "Hello, World!"
 ```
 
@@ -734,7 +734,7 @@ scope destroy myScope
 ```tcl
 # scope set/unset — manipulate variables without opening
 scope create temp
-scope set temp color "blue"
+scope set temp color blue
 scope set temp size 42
 scope set temp color      ;# Returns: blue
 scope vars temp           ;# Returns: {color size}
@@ -783,8 +783,8 @@ accumulate 5    ;# Returns: 35
 
 ```tcl
 # Set and read a variable
-set name "Alice"
-set greeting "Hello, $name"
+set name Alice
+set greeting [appendArgs "Hello, " $name]
 ;# greeting is "Hello, Alice"
 ```
 
@@ -796,8 +796,8 @@ puts [set x]   ;# Prints: 42
 
 ```tcl
 # Array element access
-set data(key1) "value1"
-set data(key2) "value2"
+set data(key1) value1
+set data(key2) value2
 set v [set data(key1)]
 ;# v is "value1"
 ```
@@ -809,7 +809,7 @@ set v [set data(key1)]
 
 ```tcl
 # Remove a variable
-set temp "temporary"
+set temp temporary
 unset temp
 ;# Reading $temp now would produce an error
 ```
@@ -860,7 +860,7 @@ proc addElement {listName element} {
     lappend myList $element
 }
 set fruits {apple banana}
-addElement fruits "cherry"
+addElement fruits cherry
 ;# fruits is {apple banana cherry}
 ```
 
@@ -870,7 +870,7 @@ proc readGlobal {varName} {
     upvar #0 $varName val
     return $val
 }
-set ::greeting "Hello"
+set ::greeting Hello
 readGlobal greeting
 ;# Returns: Hello
 ```
@@ -884,7 +884,7 @@ readGlobal greeting
 # Declare namespace variables
 namespace eval myns {
     variable counter 0
-    variable name "default"
+    variable name default
 
     proc increment {} {
         variable counter
@@ -1298,7 +1298,7 @@ concat {1 2} {3} {4 5 6}  ;# Returns: {1 2 3 4 5 6}
 
 ```tcl
 # Convert to UTF-8
-encoding convertto utf-8 "Hello"
+encoding convertto utf-8 Hello
 ```
 
 ```tcl
@@ -1315,7 +1315,7 @@ encoding system
 
 ```tcl
 # Eagle extension — get string from byte array object
-# encoding getstring $byteArrayObj utf-8
+encoding getstring $byteArrayObj utf-8
 ```
 
 ---
@@ -1325,7 +1325,7 @@ encoding system
 
 ```tcl
 # String and integer
-format "Name: %s, Age: %d" "Alice" 30
+format "Name: %s, Age: %d" Alice 30
 ;# Returns: Name: Alice, Age: 30
 ```
 
@@ -1343,8 +1343,8 @@ format "%10.4f" 3.14159              ;# Returns:     3.1416
 
 ```tcl
 # Left-justified, right-justified
-format "%-10s|" "Hi"                  ;# Returns: Hi        |
-format "%10s|" "Hi"                   ;# Returns:         Hi|
+format "%-10s|" Hi                    ;# Returns: Hi        |
+format "%10s|" Hi                     ;# Returns:         Hi|
 ```
 
 ```tcl
@@ -1354,7 +1354,7 @@ format "%c" 65                        ;# Returns: A
 
 ```tcl
 # Multiple format specifiers
-format "%s scored %d%% on the %s exam" "Bob" 95 "math"
+format "%s scored %d%% on the %s exam" Bob 95 math
 ;# Returns: Bob scored 95% on the math exam
 ```
 
@@ -1372,7 +1372,7 @@ set id [guid new]
 ```tcl
 # Validate GUID format
 guid isvalid $id              ;# Returns: 1
-guid isvalid "not-a-guid"    ;# Returns: 0
+guid isvalid not-a-guid      ;# Returns: 0
 ```
 
 ```tcl
@@ -1396,19 +1396,19 @@ guid compare $a $b            ;# Returns: -1 or 1
 
 ```tcl
 # Eagle extension — SHA-256 hash
-hash normal sha256 "Hello"
+hash normal sha256 Hello
 ;# Returns: 185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969
 ```
 
 ```tcl
 # MD5 hash
-hash normal md5 "Hello"
+hash normal md5 Hello
 ;# Returns: 8b1a9953c4611296a827abf8c47804d7
 ```
 
 ```tcl
 # HMAC (keyed hash)
-hash mac sha256 "message" "secret-key"
+hash mac sha256 message secret-key
 ```
 
 ```tcl
@@ -1419,7 +1419,7 @@ hash list normal   ;# Only non-keyed algorithms
 
 ```tcl
 # Hash a file's contents
-# hash normal -filename sha256 "myfile.txt"   # Requires: UNSAFE
+# hash normal -filename sha256 myfile.txt     # Requires: UNSAFE
 ```
 
 ---
@@ -1486,8 +1486,8 @@ parse script {
 
 ```tcl
 # Simple match test
-regexp {^[A-Z]} "Hello"                ;# Returns: 1
-regexp {^[A-Z]} "hello"                ;# Returns: 0
+regexp {^[A-Z]} Hello                  ;# Returns: 1
+regexp {^[A-Z]} hello                  ;# Returns: 0
 ```
 
 ```tcl
@@ -1498,12 +1498,12 @@ regexp {(\d+)-(\d+)} "Phone: 123-456" all area number
 
 ```tcl
 # Count all matches
-regexp -all {\d+} "a1b2c3"            ;# Returns: 3
+regexp -all {\d+} a1b2c3              ;# Returns: 3
 ```
 
 ```tcl
 # Return all matches inline
-regexp -inline -all {\d+} "a1b22c333"
+regexp -inline -all {\d+} a1b22c333
 ;# Returns: {1 22 333}
 ```
 
@@ -1530,13 +1530,13 @@ regexp -compiled -nocase {pattern} "Some Pattern"
 
 ```tcl
 # Simple substitution
-regsub {world} "Hello world" "Eagle"
+regsub {world} "Hello world" Eagle
 ;# Returns: Hello Eagle
 ```
 
 ```tcl
 # Replace all occurrences
-regsub -all {[aeiou]} "Hello" "*"
+regsub -all {[aeiou]} Hello *
 ;# Returns: H*ll*
 ```
 
@@ -1548,19 +1548,19 @@ regsub {(\w+) (\w+)} "John Doe" {\2, \1}
 
 ```tcl
 # Store in variable, return count
-regsub -all {\d} "a1b2c3" "X" result
+regsub -all {\d} a1b2c3 X result
 ;# result is "aXbXcX", returns 3
 ```
 
 ```tcl
 # Eagle extension — command-based replacement (TIP #463)
-regsub -all -command {\d+} "a1b22c333" {string length}
+regsub -all -command {\d+} a1b22c333 {string length}
 ;# Returns: a1b2c3  (each number replaced by its character length)
 ```
 
 ```tcl
 # Literal replacement (no special chars)
-regsub -literal {.} "a.b" {$1}
+regsub -literal {.} a.b {$1}
 ;# Returns: a$1b
 ```
 
@@ -1581,7 +1581,7 @@ split "a,b,c" ","          ;# Returns: {a b c}
 
 ```tcl
 # Split into individual characters
-split "abc" ""             ;# Returns: {a b c}
+split abc ""               ;# Returns: {a b c}
 ```
 
 ```tcl
@@ -1596,7 +1596,7 @@ split "a::b" ":"           ;# Returns: {a {} b}
 
 ```tcl
 # Split path
-split "/usr/local/bin" "/"
+split /usr/local/bin /
 ;# Returns: {{} usr local bin}
 ```
 
@@ -1608,69 +1608,69 @@ split "/usr/local/bin" "/"
 #### String Measurement and Access
 
 ```tcl
-string length "Hello"              ;# Returns: 5
-string length ""                   ;# Returns: 0
+string length Hello                ;# Returns: 5
+string length ""                   ;# Returns: 0 (quotes needed: empty string)
 ```
 
 ```tcl
-string index "Hello" 0            ;# Returns: H
-string index "Hello" end          ;# Returns: o
-string index "Hello" 10           ;# Returns: (empty string)
+string index Hello 0              ;# Returns: H
+string index Hello end            ;# Returns: o
+string index Hello 10             ;# Returns: (empty string)
 ```
 
 ```tcl
-string range "Hello, World" 0 4   ;# Returns: Hello
-string range "Hello" 1 end        ;# Returns: ello
+string range "Hello, World" 0 4   ;# Returns: Hello (quotes needed: whitespace)
+string range Hello 1 end          ;# Returns: ello
 ```
 
 ```tcl
 # Eagle extension — Unicode code point
-string ordinal "A" 0              ;# Returns: 65
+string ordinal A 0                ;# Returns: 65
 string character 65               ;# Returns: A
 ```
 
 ```tcl
-string bytelength "Hello"         ;# Returns: 10 (UTF-16, 2 bytes per char)
-string bytelength "Hello" ascii   ;# Returns: 5 (ASCII, 1 byte each)
+string bytelength Hello           ;# Returns: 10 (UTF-16, 2 bytes per char)
+string bytelength Hello ascii     ;# Returns: 5 (ASCII, 1 byte each)
 ```
 
 #### String Comparison
 
 ```tcl
-string compare "abc" "abd"            ;# Returns: -1
-string compare "abc" "abc"            ;# Returns: 0
-string compare "abd" "abc"            ;# Returns: 1
+string compare abc abd                ;# Returns: -1
+string compare abc abc                ;# Returns: 0
+string compare abd abc                ;# Returns: 1
 ```
 
 ```tcl
-string equal "Hello" "Hello"          ;# Returns: 1
-string equal "Hello" "hello"          ;# Returns: 0
-string equal -nocase "Hello" "HELLO"  ;# Returns: 1
+string equal Hello Hello              ;# Returns: 1
+string equal Hello hello              ;# Returns: 0
+string equal -nocase Hello HELLO      ;# Returns: 1
 ```
 
 ```tcl
 # Compare only first N characters
-string equal -length 3 "Hello" "Help"  ;# Returns: 1
+string equal -length 3 Hello Help      ;# Returns: 1
 ```
 
 #### String Searching
 
 ```tcl
-string first "l" "Hello"              ;# Returns: 2
-string last "l" "Hello"               ;# Returns: 3
-string first "xyz" "Hello"            ;# Returns: -1
+string first l Hello                  ;# Returns: 2
+string last l Hello                   ;# Returns: 3
+string first xyz Hello                ;# Returns: -1
 ```
 
 ```tcl
 # Start search at offset
-string first "l" "Hello" 3            ;# Returns: 3
+string first l Hello 3                ;# Returns: 3
 ```
 
 ```tcl
 # Glob matching
-string match "*.txt" "file.txt"       ;# Returns: 1
-string match {[A-Z]*} "Hello"         ;# Returns: 1
-string match -nocase "hello" "HELLO"  ;# Returns: 1
+string match *.txt file.txt           ;# Returns: 1
+string match {[A-Z]*} Hello           ;# Returns: 1
+string match -nocase hello HELLO      ;# Returns: 1
 ```
 
 ```tcl
@@ -1681,92 +1681,92 @@ string wordend "Hello World" 7        ;# Returns: 11
 #### String Modification
 
 ```tcl
-string cat "Hello" ", " "World"        ;# Returns: Hello, World
-string repeat "ab" 3                   ;# Returns: ababab
-string replace "Hello" 1 3 "XYZ"       ;# Returns: HXYZo
-string reverse "Hello"                 ;# Returns: olleH
+string cat Hello ", " World            ;# Returns: Hello, World
+string repeat ab 3                     ;# Returns: ababab
+string replace Hello 1 3 XYZ           ;# Returns: HXYZo
+string reverse Hello                   ;# Returns: olleH
 ```
 
 ```tcl
 # String mapping
-string map {a A e E} "hello"           ;# Returns: hEllo
+string map {a A e E} hello             ;# Returns: hEllo
 string map {foo bar baz qux} "foo is baz"
 ;# Returns: bar is qux
 ```
 
 ```tcl
 # Format via string command
-string format "%05d" 42               ;# Returns: 00042
+string format %05d 42                 ;# Returns: 00042
 ```
 
 #### Case Conversion and Trimming
 
 ```tcl
-string tolower "HELLO"                 ;# Returns: hello
-string toupper "hello"                 ;# Returns: HELLO
-string totitle "hello world"           ;# Returns: Hello world
+string tolower HELLO                   ;# Returns: hello
+string toupper hello                   ;# Returns: HELLO
+string totitle "hello world"           ;# Returns: Hello world (quotes needed: whitespace)
 ```
 
 ```tcl
 # Partial range conversion
-string toupper "hello" 0 0            ;# Returns: Hello
+string toupper hello 0 0              ;# Returns: Hello
 ```
 
 ```tcl
 string trim "  hello  "               ;# Returns: hello
-string trimleft "xxhello" "x"         ;# Returns: hello
-string trimright "helloxx" "x"        ;# Returns: hello
-string trim "###text###" "#"          ;# Returns: text
+string trimleft xxhello x             ;# Returns: hello
+string trimright helloxx x            ;# Returns: hello
+string trim "###text###" "#"          ;# Returns: text (quotes needed: hash is comment char)
 ```
 
 #### Prefix/Suffix Testing (Eagle extensions)
 
 ```tcl
-string starts "Hello" "Hello, World"      ;# Returns: 1
-string starts "Bye" "Hello, World"        ;# Returns: 0
-string ends ".txt" "readme.txt"           ;# Returns: 1
-string ends -nocase ".TXT" "file.txt"     ;# Returns: 1
+string starts Hello "Hello, World"        ;# Returns: 1
+string starts Bye "Hello, World"          ;# Returns: 0
+string ends .txt readme.txt              ;# Returns: 1
+string ends -nocase .TXT file.txt        ;# Returns: 1
 ```
 
 #### String Classification
 
 ```tcl
 # Standard Tcl character classes
-string is alpha "Hello"               ;# Returns: 1
-string is alpha "Hello123"            ;# Returns: 0
-string is alnum "Hello123"            ;# Returns: 1
-string is digit "123"                 ;# Returns: 1
+string is alpha Hello                 ;# Returns: 1
+string is alpha Hello123              ;# Returns: 0
+string is alnum Hello123              ;# Returns: 1
+string is digit 123                   ;# Returns: 1
 string is space "  \t\n"             ;# Returns: 1
-string is upper "HELLO"              ;# Returns: 1
-string is lower "hello"              ;# Returns: 1
-string is ascii "Hello"              ;# Returns: 1
-string is print "Hello"              ;# Returns: 1
-string is graph "Hello"              ;# Returns: 1
-string is punct ".,;!"               ;# Returns: 1
-string is control "\x01\x02"        ;# Returns: 1
-string is wordchar "hello_123"      ;# Returns: 1
-string is xdigit "1a2F"             ;# Returns: 1
+string is upper HELLO                ;# Returns: 1
+string is lower hello                ;# Returns: 1
+string is ascii Hello                ;# Returns: 1
+string is print Hello                ;# Returns: 1
+string is graph Hello                ;# Returns: 1
+string is punct ".,;!"              ;# Returns: 1 (quotes needed: semicolon)
+string is control "\x01\x02"        ;# Returns: 1 (quotes needed: backslash escapes)
+string is wordchar hello_123        ;# Returns: 1
+string is xdigit 1a2F               ;# Returns: 1
 ```
 
 ```tcl
 # Numeric type testing
-string is integer "123"                ;# Returns: 1
-string is integer "12.3"              ;# Returns: 0
-string is wideinteger "9999999999"    ;# Returns: 1 (64-bit)
-string is entier "12345678901234567890" ;# Returns: 1 (arbitrary precision)
-string is double "3.14"               ;# Returns: 1
-string is boolean "yes"               ;# Returns: 1
+string is integer 123                  ;# Returns: 1
+string is integer 12.3                ;# Returns: 0
+string is wideinteger 9999999999      ;# Returns: 1 (64-bit)
+string is entier 12345678901234567890 ;# Returns: 1 (arbitrary precision)
+string is double 3.14                 ;# Returns: 1
+string is boolean yes                 ;# Returns: 1
 ```
 
 ```tcl
 # Eagle extension — additional numeric classes
-string is decimal "3.14"              ;# Returns: 1
-string is byte "255"                  ;# Returns: 1
-string is byte "256"                  ;# Returns: 0
-string is single "3.14"              ;# Returns: 1 (single-precision float)
-string is hexadecimal "FF00"         ;# Returns: 1
-string is real "3.14159"             ;# Returns: 1
-string is number "42"                ;# Returns: 1
+string is decimal 3.14                ;# Returns: 1
+string is byte 255                    ;# Returns: 1
+string is byte 256                    ;# Returns: 0
+string is single 3.14                ;# Returns: 1 (single-precision float)
+string is hexadecimal FF00           ;# Returns: 1
+string is real 3.14159               ;# Returns: 1
+string is number 42                  ;# Returns: 1
 ```
 
 ```tcl
@@ -1777,7 +1777,7 @@ string is alpha -strict ""            ;# Returns: 0
 
 ```tcl
 # Fail index
-string is integer -failindex idx "12x4"
+string is integer -failindex idx 12x4
 ;# Returns: 0, idx is 2
 ```
 
@@ -1785,53 +1785,53 @@ string is integer -failindex idx "12x4"
 # List and dict validation
 string is list {a b c}               ;# Returns: 1
 string is list "a {b"                 ;# Returns: 0
-string is element "hello"            ;# Returns: 1
+string is element hello              ;# Returns: 1
 string is dict {a 1 b 2}            ;# Returns: 1 (Eagle extension)
 ```
 
 ```tcl
 # Eagle extension — file and path validation
-# string is file "/tmp/data.txt"     ;# Returns: 1 if file exists
-# string is directory "/tmp"         ;# Returns: 1 if directory exists
-# string is path "/some/path"        ;# Returns: 1 if valid path syntax
+string is file /tmp/data.txt         ;# Returns: 1 if file exists
+string is directory /tmp             ;# Returns: 1 if directory exists
+string is path /some/path            ;# Returns: 1 if valid path syntax
 ```
 
 ```tcl
 # Eagle extension — format validation classes
-string is guid "550e8400-e29b-41d4-a716-446655440000"  ;# Returns: 1
-string is uri "https://example.com"                     ;# Returns: 1
-string is version "1.2.3"                               ;# Returns: 1
-string is versionrange "1.0-2.0"                        ;# Returns: 1
-# string is inetaddr "192.168.1.1"                      ;# Returns: 1
-# string is cidr "192.168.1.0/24"                       ;# Returns: 1
-# string is datetime "2024-01-15"                       ;# Returns: 1
-# string is timespan "01:30:00"                         ;# Returns: 1
-# string is xml "<root/>"                               ;# Returns: 1
-# string is base64 "SGVsbG8="                           ;# Returns: 1
+string is guid 550e8400-e29b-41d4-a716-446655440000    ;# Returns: 1
+string is uri https://example.com                       ;# Returns: 1
+string is version 1.2.3                                 ;# Returns: 1
+string is versionrange 1.0-2.0                          ;# Returns: 1
+string is inetaddr 192.168.1.1                          ;# Returns: 1
+string is cidr 192.168.1.0/24                           ;# Returns: 1
+string is datetime 2024-01-15                           ;# Returns: 1
+string is timespan 01:30:00                             ;# Returns: 1
+string is xml <root/>                                   ;# Returns: 1
+string is base64 SGVsbG8=                               ;# Returns: 1
 ```
 
 ```tcl
 # Eagle extension — interpreter/object validation
-# string is command "puts"            ;# Returns: 1 if command exists
-# string is object $handle            ;# Returns: 1 if valid object handle
-# string is type "System.String"      ;# Returns: 1 if valid .NET type
-# string is encoding "utf-8"          ;# Returns: 1 if valid encoding
-# string is identifier "myCmd"        ;# Returns: 1 if valid identifier
-# string is interpreter $interp       ;# Returns: 1 if valid interpreter
+string is command puts                ;# Returns: 1 if command exists
+string is object $handle              ;# Returns: 1 if valid object handle
+string is type System.String          ;# Returns: 1 if valid .NET type
+string is encoding utf-8              ;# Returns: 1 if valid encoding
+string is identifier myCmd            ;# Returns: 1 if valid identifier
+string is interpreter $interp         ;# Returns: 1 if valid interpreter
 ```
 
 ```tcl
 # Eagle extension — boolean specifics
-string is true "yes"                  ;# Returns: 1
-string is false "no"                  ;# Returns: 1
+string is true yes                    ;# Returns: 1
+string is false no                    ;# Returns: 1
 string is none ""                     ;# Returns: 1 (Eagle extension)
 ```
 
 ```tcl
 # Eagle extension — ASCII-restricted classes
-string is asciialnum "Hello123"       ;# Returns: 1 (ASCII only)
-string is asciialpha "Hello"          ;# Returns: 1 (ASCII letters only)
-string is asciidigit "123"            ;# Returns: 1 (ASCII digits only)
+string is asciialnum Hello123         ;# Returns: 1 (ASCII only)
+string is asciialpha Hello            ;# Returns: 1 (ASCII letters only)
+string is asciidigit 123              ;# Returns: 1 (ASCII digits only)
 ```
 
 ```tcl
@@ -1911,7 +1911,7 @@ array for {key value} data {
 # Eagle extension — array foreach (iterates over keys)
 array set rgb {red 255 green 128 blue 0}
 array foreach key rgb {
-    puts "$key = $rgb($key)"
+    puts [appendArgs $key " = " $rgb($key)]
 }
 ```
 
@@ -1960,8 +1960,8 @@ array set data {a 1 b 2 c 3 d 4}
 ### close
 
 ```tcl
-set fh [open "example.txt" w]
-puts $fh "Hello"
+set fh [open example.txt w]
+puts $fh Hello
 close $fh
 ```
 
@@ -1971,7 +1971,7 @@ close $fh
 ### eof
 
 ```tcl
-set fh [open "data.txt" r]
+set fh [open data.txt r]
 while {![eof $fh]} {
     set line [gets $fh]
     # Process line
@@ -1997,23 +1997,23 @@ close $fh
 
 ```tcl
 # Set channel encoding and translation
-set fh [open "data.txt" r]
+set fh [open data.txt r]
 fconfigure $fh -encoding utf-8 -translation lf
 ```
 
 ```tcl
 # Non-blocking socket I/O
-# fconfigure $sock -blocking 0
+fconfigure $sock -blocking 0
 ```
 
 ```tcl
 # Mixed input/output translation
-# fconfigure $fh -translation {auto lf}  ;# Accept any input, output LF
+fconfigure $fh -translation {auto lf}  ;# Accept any input, output LF
 ```
 
 ```tcl
 # Query current encoding
-set fh [open "data.txt" r]
+set fh [open data.txt r]
 set enc [fconfigure $fh -encoding]
 close $fh
 ```
@@ -2025,8 +2025,8 @@ close $fh
 
 ```tcl
 # Copy entire file
-set src [open "source.txt" r]
-set dst [open "dest.txt" w]
+set src [open source.txt r]
+set dst [open dest.txt w]
 fcopy $src $dst
 close $src
 close $dst
@@ -2034,7 +2034,7 @@ close $dst
 
 ```tcl
 # Copy limited bytes
-# fcopy $input $output -size 1024
+fcopy $input $output -size 1024
 ```
 
 ---
@@ -2044,7 +2044,7 @@ close $dst
 
 ```tcl
 # Force buffered data to be written
-set fh [open "log.txt" a]
+set fh [open log.txt a]
 puts $fh "Log entry"
 flush $fh
 close $fh
@@ -2063,14 +2063,14 @@ flush stdout
 
 ```tcl
 # Read line, return content
-set fh [open "data.txt" r]
+set fh [open data.txt r]
 set firstLine [gets $fh]
 close $fh
 ```
 
 ```tcl
 # Read line into variable, return char count
-set fh [open "data.txt" r]
+set fh [open data.txt r]
 while {[gets $fh line] >= 0} {
     # Process $line
 }
@@ -2079,7 +2079,7 @@ close $fh
 
 ```tcl
 # Eagle extension — keep end-of-line characters
-# gets -keepeol true $fh line
+gets -keepeol true $fh line
 ```
 
 ---
@@ -2089,28 +2089,28 @@ close $fh
 
 ```tcl
 # Read mode (default)
-set fh [open "data.txt" r]
+set fh [open data.txt r]
 set contents [read $fh]
 close $fh
 ```
 
 ```tcl
 # Write mode (create or truncate)
-set fh [open "output.txt" w]
+set fh [open output.txt w]
 puts $fh "Hello, World!"
 close $fh
 ```
 
 ```tcl
 # Append mode
-set fh [open "log.txt" a]
+set fh [open log.txt a]
 puts $fh "New log entry"
 close $fh
 ```
 
 ```tcl
 # Eagle extension — exclusive access with auto-flush
-# set fh [open "log.txt" a -share None -autoflush]
+set fh [open log.txt a -share None -autoflush]
 ```
 
 ---
@@ -2131,7 +2131,7 @@ puts -nonewline "Enter name: "
 
 ```tcl
 # Write to file channel
-set fh [open "output.txt" w]
+set fh [open output.txt w]
 puts $fh "Line 1"
 puts $fh "Line 2"
 close $fh
@@ -2149,21 +2149,21 @@ puts stderr "Warning: something unexpected"
 
 ```tcl
 # Read entire file
-set fh [open "data.txt" r]
+set fh [open data.txt r]
 set contents [read $fh]
 close $fh
 ```
 
 ```tcl
 # Read specific number of characters
-set fh [open "data.txt" r]
+set fh [open data.txt r]
 set chunk [read $fh 1024]
 close $fh
 ```
 
 ```tcl
 # Read without trailing newline
-set fh [open "data.txt" r]
+set fh [open data.txt r]
 set data [read -nonewline $fh]
 close $fh
 ```
@@ -2174,7 +2174,7 @@ close $fh
 ### seek
 
 ```tcl
-set fh [open "data.txt" r]
+set fh [open data.txt r]
 seek $fh 0 start      ;# Go to beginning
 seek $fh 0 end        ;# Go to end
 seek $fh -10 current  ;# Back 10 characters
@@ -2187,7 +2187,7 @@ close $fh
 ### tell
 
 ```tcl
-set fh [open "data.txt" r]
+set fh [open data.txt r]
 read $fh 100
 set pos [tell $fh]     ;# Returns offset after reading 100 chars
 close $fh
@@ -2200,7 +2200,7 @@ close $fh
 
 ```tcl
 # Eagle extension — truncate file at current position
-# set fh [open "data.txt" r+]
+# set fh [open data.txt r+]
 # seek $fh 100 start
 # truncate $fh            ;# File is now 100 bytes
 # close $fh
@@ -2229,122 +2229,122 @@ close $fh
 #### Path Manipulation
 
 ```tcl
-file dirname "/usr/local/bin/eagle"      ;# Returns: /usr/local/bin
-file tail "/usr/local/bin/eagle"         ;# Returns: eagle
-file rootname "document.txt"             ;# Returns: document
-file extension "document.txt"            ;# Returns: .txt
+file dirname /usr/local/bin/eagle         ;# Returns: /usr/local/bin
+file tail /usr/local/bin/eagle           ;# Returns: eagle
+file rootname document.txt               ;# Returns: document
+file extension document.txt              ;# Returns: .txt
 ```
 
 ```tcl
-file join "/usr" "local" "bin"           ;# Returns: /usr/local/bin
-file split "/usr/local/bin"              ;# Returns: {/ usr local bin}
+file join /usr local bin                 ;# Returns: /usr/local/bin
+file split /usr/local/bin                ;# Returns: {/ usr local bin}
 ```
 
 ```tcl
 # Normalize path (resolve . and ..)
-file normalize "/usr/local/../lib"
+file normalize /usr/local/../lib
 ;# Returns: /usr/lib
 ```
 
 ```tcl
 file separator                           ;# Returns: / (on Unix) or \\ (on Windows)
-file pathtype "/usr"                     ;# Returns: absolute
-file pathtype "relative/path"            ;# Returns: relative
+file pathtype /usr                       ;# Returns: absolute
+file pathtype relative/path              ;# Returns: relative
 ```
 
 #### File Tests
 
 ```tcl
-file exists "/tmp"                       ;# Returns: 1
-file isdirectory "/tmp"                  ;# Returns: 1
-file isfile "/tmp"                       ;# Returns: 0
+file exists /tmp                         ;# Returns: 1
+file isdirectory /tmp                    ;# Returns: 1
+file isfile /tmp                         ;# Returns: 0
 ```
 
 ```tcl
 # Permission tests
-# file readable "data.txt"              ;# Returns: 1 or 0
-# file writable "data.txt"              ;# Returns: 1 or 0
-# file executable "/usr/bin/eagle"      ;# Returns: 1 or 0
+file readable data.txt                   ;# Returns: 1 or 0
+file writable data.txt                   ;# Returns: 1 or 0
+file executable /usr/bin/eagle           ;# Returns: 1 or 0
 ```
 
 ```tcl
 # Eagle extension — ownership check
-# file owned "data.txt"                 ;# Returns: 1 if owned by current user
+file owned data.txt                      ;# Returns: 1 if owned by current user
 ```
 
 ```tcl
-file type "/tmp"                         ;# Returns: directory
-file pathtype "/usr"                     ;# Returns: absolute
-file pathtype "relative/path"            ;# Returns: relative
+file type /tmp                           ;# Returns: directory
+file pathtype /usr                       ;# Returns: absolute
+file pathtype relative/path              ;# Returns: relative
 ```
 
 ```tcl
 # Eagle extension — compare paths
-# file same "/tmp/a" "/tmp/../tmp/a"    ;# Returns: 1
+file same /tmp/a /tmp/../tmp/a           ;# Returns: 1
 ```
 
 #### File Information
 
 ```tcl
 # Get file size
-# file size "data.txt"                  ;# Returns: size in bytes
+file size data.txt                       ;# Returns: size in bytes
 ```
 
 ```tcl
 # Get file status
-# file stat "data.txt" info
-# set fileSize $info(size)
-# set fileType $info(type)
+file stat data.txt info
+set fileSize $info(size)
+set fileType $info(type)
 ```
 
 ```tcl
 # Symbolic link status
-# file lstat "link.txt" info           ;# Info about the link itself
+file lstat link.txt info                 ;# Info about the link itself
 ```
 
 ```tcl
 # Get file times
-# set mtime [file mtime "data.txt"]
-# set atime [file atime "data.txt"]
-# clock format $mtime -format "%Y-%m-%d"
+set mtime [file mtime data.txt]
+set atime [file atime data.txt]
+clock format $mtime -format "%Y-%m-%d"
 ```
 
 ```tcl
 # Eagle extension — creation time
-# set ctime [file ctime "data.txt"]
+set ctime [file ctime data.txt]
 ```
 
 ```tcl
 # File attributes (platform-specific)
-# file attributes "data.txt"            ;# Returns all attributes
+file attributes data.txt                 ;# Returns all attributes
 ```
 
 ```tcl
 # Eagle extension — detailed file information
-# file information "data.txt"
-# file information -directory true "/tmp"
+file information data.txt
+file information -directory true /tmp
 ```
 
 ```tcl
 # Eagle extension — file version (executables/DLLs)
-# file version "program.exe"
+file version program.exe
 ```
 
 ```tcl
 # Eagle extension — file magic number/type
-# file magic "data.bin"
+file magic data.bin
 ```
 
 ```tcl
 # Eagle extension — security descriptor (Windows)
-# file sddl "data.txt"                  ;# Get SDDL string
-# file rights "data.txt"                ;# Get access rights
+file sddl data.txt                       ;# Get SDDL string
+file rights data.txt                     ;# Get access rights
 ```
 
 ```tcl
 # Eagle extension — code signing verification
-# file trusted "program.exe"            ;# Check trust status
-# file verified "program.exe"           ;# Check signature verification
+file trusted program.exe                 ;# Check trust status
+file verified program.exe                ;# Check signature verification
 ```
 
 #### File Operations
@@ -2386,13 +2386,13 @@ file pathtype "relative/path"            ;# Returns: relative
 
 ```tcl
 # List directory contents (Eagle extension)
-# file list /tmp *.log
+file list /tmp *.log
 ```
 
 ```tcl
 # Eagle extension — temporary file/path
-# set tmpFile [file tempname]
-# set tmpDir [file temppath]
+set tmpFile [file tempname]
+set tmpDir [file temppath]
 ```
 
 ```tcl
@@ -2402,7 +2402,7 @@ file channels                            ;# Returns: stdin stdout stderr ...
 
 ```tcl
 # List volumes (Windows)
-# file volumes                          ;# Returns: {C:/ D:/}
+file volumes                          ;# Returns: {C:/ D:/}
 ```
 
 ---
@@ -2412,22 +2412,22 @@ file channels                            ;# Returns: stdin stdout stderr ...
 
 ```tcl
 # Find all .txt files
-# glob *.txt
+glob *.txt
 ```
 
 ```tcl
 # Search in specific directory
-# glob -directory /tmp *.log
+glob -directory /tmp *.log
 ```
 
 ```tcl
 # Only regular files
-# glob -types f -nocomplain /var/log/*
+glob -types f -nocomplain /var/log/*
 ```
 
 ```tcl
 # Return only tails (no directory prefix)
-# glob -tails -directory /usr/local/bin *
+glob -tails -directory /usr/local/bin *
 ```
 
 ```tcl
@@ -2456,20 +2456,20 @@ set cwd [pwd]
 ```tcl
 # Simple procedure
 proc greet {name} {
-    return "Hello, $name!"
+    return [appendArgs "Hello, " $name !]
 }
-greet "World"
+greet World
 ;# Returns: Hello, World!
 ```
 
 ```tcl
 # Default argument values
 proc connect {host {port 80} {timeout 30}} {
-    return "Connecting to $host:$port (timeout=$timeout)"
+    return [appendArgs "Connecting to " $host : $port " (timeout=" $timeout )]
 }
-connect "localhost"          ;# port=80, timeout=30
-connect "localhost" 8080     ;# timeout=30
-connect "localhost" 443 60   ;# All specified
+connect localhost            ;# port=80, timeout=30
+connect localhost 8080       ;# timeout=30
+connect localhost 443 60     ;# All specified
 ```
 
 ```tcl
@@ -2487,9 +2487,9 @@ sum 1 2 3 4 5
 # Mixed required, default, and variable arguments
 proc log {level message args} {
     set extra [join $args " "]
-    return "\[$level\] $message $extra"
+    return [appendArgs "\[" $level "\] " $message " " $extra]
 }
-log "INFO" "Server started" "port=8080" "host=localhost"
+log INFO "Server started" port=8080 host=localhost
 ;# Returns: [INFO] Server started port=8080 host=localhost
 ```
 
@@ -2511,7 +2511,7 @@ factorial 5
 ```tcl
 # Eagle extension — named (keyword) arguments
 nproc connect {host port timeout} {
-    return "Connecting to $host:$port (timeout=$timeout)"
+    return [appendArgs "Connecting to " $host : $port " (timeout=" $timeout )]
 }
 connect -host localhost -port 8080 -timeout 60
 ;# Returns: Connecting to localhost:8080 (timeout=60)
@@ -2544,7 +2544,7 @@ apply {{} {clock seconds}}
 ```tcl
 # Use as callback
 set transform {{s} {string toupper $s}}
-set result [apply $transform "hello"]
+set result [apply $transform hello]
 ;# Returns: HELLO
 ```
 
@@ -2574,7 +2574,7 @@ namespace eval mylib {
     variable version 1.0
 
     proc greet {name} {
-        return "Hello from mylib, $name!"
+        return [appendArgs "Hello from mylib, " $name !]
     }
 
     proc getVersion {} {
@@ -2582,7 +2582,7 @@ namespace eval mylib {
         return $version
     }
 }
-mylib::greet "World"         ;# Returns: Hello from mylib, World!
+mylib::greet World           ;# Returns: Hello from mylib, World!
 mylib::getVersion            ;# Returns: 1.0
 ```
 
@@ -2599,8 +2599,8 @@ namespace exists nosuch      ;# Returns: 0
 
 ```tcl
 # Eagle extension — enable/disable namespace support
-# namespace enable            ;# Query current state
-# namespace enable true       ;# Enable namespace support
+namespace enable            ;# Query current state
+namespace enable true       ;# Enable namespace support
 ```
 
 #### Information
@@ -2624,18 +2624,18 @@ namespace children ::parent
 
 ```tcl
 # Eagle extension — recursive descendants
-# namespace descendants ::parent
+namespace descendants ::parent
 ```
 
 ```tcl
 # Eagle extension — namespace info and rename
-# namespace info ::myns      ;# Detailed namespace info
-# namespace rename ::myns ::mylib  ;# Rename namespace
+namespace info ::myns      ;# Detailed namespace info
+namespace rename ::myns ::mylib  ;# Rename namespace
 ```
 
 ```tcl
 # Eagle extension — namespace mappings
-# namespace mappings         ;# Returns mapping information
+namespace mappings         ;# Returns mapping information
 ```
 
 #### Path and Name Manipulation
@@ -2676,7 +2676,7 @@ namespace forget mathlib::*
 
 ```tcl
 namespace eval myns {
-    variable data "secret"
+    variable data secret
     proc showData {} {
         variable data
         return $data
@@ -2695,13 +2695,13 @@ namespace inscope ::myns showData
 
 ```tcl
 # Unknown command handler for a namespace
-# namespace unknown myUnknownHandler
-# namespace unknown                   ;# Query current handler
+namespace unknown myUnknownHandler
+namespace unknown                   ;# Query current handler
 ```
 
 ```tcl
 # Resolve original command through import chain
-# namespace origin add               ;# Returns: ::mathlib::add
+namespace origin add               ;# Returns: ::mathlib::add
 ```
 
 ---
@@ -2715,7 +2715,7 @@ namespace inscope ::myns showData
 
 ```tcl
 # Create a StringBuilder
-set sb [object create System.Text.StringBuilder "Initial"]
+set sb [object create System.Text.StringBuilder Initial]
 ```
 
 ```tcl
@@ -2733,7 +2733,7 @@ set dt [object create -parametertypes {int int int} System.DateTime 2024 1 15]
 ```tcl
 # Instance methods
 set sb [object create System.Text.StringBuilder]
-object invoke $sb Append "Hello"
+object invoke $sb Append Hello
 object invoke $sb Append ", World!"
 set result [object invoke $sb ToString]
 ;# result is "Hello, World!"
@@ -2746,7 +2746,7 @@ set now [object invoke System.DateTime Now]
 
 ```tcl
 # Property access
-set sb [object create System.Text.StringBuilder "Test"]
+set sb [object create System.Text.StringBuilder Test]
 set length [object invoke $sb Length]
 ;# length is 4
 ```
@@ -2765,12 +2765,12 @@ set result [object invoke System.Math Sqrt 144.0]
 ```tcl
 # Invoke multiple members in sequence
 set sb [object create System.Text.StringBuilder]
-# object invokeall $sb {Append "Hello"} {Append " World"} {ToString}
+object invokeall $sb {Append Hello} {Append " World"} {ToString}
 ```
 
 ```tcl
 # Raw invocation (no automatic type conversion)
-# object invokeraw $sb Append "test"
+object invokeraw $sb Append test
 ```
 
 #### Object Information
@@ -2779,7 +2779,7 @@ set sb [object create System.Text.StringBuilder]
 set sb [object create System.Text.StringBuilder]
 object exists $sb              ;# Returns: 1
 object isnull $sb              ;# Returns: 0
-# object isdisposed $sb       ;# Returns: 0 (not yet disposed)
+object isdisposed $sb       ;# Returns: 0 (not yet disposed)
 ```
 
 ```tcl
@@ -2796,8 +2796,8 @@ object isoftype $list System.Collections.IList
 
 ```tcl
 # Object flags and reference counting
-# object flags $sb              ;# Query object flags
-# object referencecount $sb     ;# Returns reference count
+object flags $sb              ;# Query object flags
+object referencecount $sb     ;# Returns reference count
 ```
 
 #### Object Lifecycle
@@ -2820,8 +2820,8 @@ object cleanup
 
 ```tcl
 # Manual reference management
-# object addreference $obj      ;# Prevent automatic cleanup
-# object removereference $obj   ;# Allow cleanup again
+object addreference $obj      ;# Prevent automatic cleanup
+object removereference $obj   ;# Allow cleanup again
 ```
 
 #### Collections and Iteration
@@ -2829,9 +2829,9 @@ object cleanup
 ```tcl
 # Build and iterate a collection
 set list [object create System.Collections.ArrayList]
-object invoke $list Add "one"
-object invoke $list Add "two"
-object invoke $list Add "three"
+object invoke $list Add one
+object invoke $list Add two
+object invoke $list Add three
 
 object foreach item $list {
     # Prints: one, two, three
@@ -2855,8 +2855,8 @@ object assemblies *System*
 
 ```tcl
 # Load an assembly by name or path
-# object load System.Data
-# object load "MyAssembly.dll"
+object load System.Data
+object load MyAssembly.dll
 ```
 
 ```tcl
@@ -2866,13 +2866,13 @@ object types *StringBuilder*
 
 ```tcl
 # Search for a specific type
-# object search System.Text.StringBuilder
+object search System.Text.StringBuilder
 ```
 
 ```tcl
 # List .NET namespaces and interfaces
-# object namespaces *System*
-# object interfaces *IDisposable*
+object namespaces *System*
+object interfaces *IDisposable*
 ```
 
 #### Namespace Import and Type Declarations
@@ -2886,43 +2886,43 @@ object unimport
 
 ```tcl
 # Register type name mapping
-# object type SB System.Text.StringBuilder
-# set sb [object create SB]
-# object untype
+object type SB System.Text.StringBuilder
+set sb [object create SB]
+object untype
 ```
 
 #### Aliases
 
 ```tcl
 # Create named alias for object
-set sb [object create System.Text.StringBuilder "Hello"]
+set sb [object create System.Text.StringBuilder Hello]
 object alias -aliasname mySB $sb
 # Can now use mySB as a command
 ```
 
 ```tcl
 # Remove alias
-# object unalias mySB
+object unalias mySB
 ```
 
 ```tcl
 # List alias namespaces and all object handles
-# object aliasnamespaces
-# object list                  ;# List all object handles
-# object list *String*         ;# List matching handles
+object aliasnamespaces
+object list                  ;# List all object handles
+object list *String*         ;# List matching handles
 ```
 
 #### Type Conversion and Variable Access
 
 ```tcl
 # Register custom type converters
-# object type fromTypeName toTypeName
-# object untype                ;# Remove custom converters
+object type fromTypeName toTypeName
+object untype                ;# Remove custom converters
 ```
 
 ```tcl
 # Get object reference from a variable
-# object fromvar myObjectVar
+object fromvar myObjectVar
 ```
 
 ---
@@ -2936,104 +2936,104 @@ object alias -aliasname mySB $sb
 
 ```tcl
 # Requires: DEBUGGER
-# debug enable true          ;# Enable the debugger
-# debug enable false         ;# Disable the debugger
-# debug enable               ;# Toggle (NOT a query)
+debug enable true            ;# Enable the debugger
+debug enable false           ;# Disable the debugger
+debug enable                 ;# Toggle (NOT a query)
 ```
 
 ```tcl
-# debug interactive true     ;# Enable interactive mode
-# debug interactive          ;# Query current interactive state (returns value)
+debug interactive true       ;# Enable interactive mode
+debug interactive            ;# Query current interactive state (returns value)
 ```
 
 ```tcl
 # Requires: DEBUGGER
-# debug status               ;# Returns human-readable debugger status string
-# debug ready                ;# Returns: True if debugger is ready
-# debug ready true           ;# Also check for isolated debugger interpreter
+debug status                 ;# Returns human-readable debugger status string
+debug ready                  ;# Returns: True if debugger is ready
+debug ready true             ;# Also check for isolated debugger interpreter
 ```
 
 ```tcl
 # Managed debugger break (for debugging the interpreter itself)
-# debug self                  ;# Break if managed debugger is attached
-# debug self true true        ;# Force break even on release builds
+debug self                   ;# Break if managed debugger is attached
+debug self true true         ;# Force break even on release builds
 ```
 
 #### Breakpoints and Execution Control
 
 ```tcl
 # Requires: DEBUGGER
-# debug break                           ;# Demand breakpoint
-# debug break -nocomplain -noerror      ;# Silent if no debugger
+debug break                            ;# Demand breakpoint
+debug break -nocomplain -noerror       ;# Silent if no debugger
 ```
 
 ```tcl
 # Requires: DEBUGGER, DEBUGGER_BREAKPOINTS
-# debug breakpoints                     ;# List all breakpoints
-# debug breakpoints "my*"               ;# List matching breakpoints
+debug breakpoints                      ;# List all breakpoints
+debug breakpoints my*                  ;# List matching breakpoints
 ```
 
 ```tcl
 # Single-stepping
 # Requires: DEBUGGER
-# debug step true                       ;# Enable single-stepping
-# debug step                            ;# Toggle stepping mode
-# debug steps 100                       ;# Execute 100 steps then pause
-# debug steps                           ;# Query current step counter
+debug step true                        ;# Enable single-stepping
+debug step                             ;# Toggle stepping mode
+debug steps 100                        ;# Execute 100 steps then pause
+debug steps                            ;# Query current step counter
 ```
 
 ```tcl
 # Suspend and resume debugger
 # Requires: DEBUGGER
-# debug suspend                         ;# Suspend debugger (save context)
-# debug resume                          ;# Resume debugger (restore context)
+debug suspend                          ;# Suspend debugger (save context)
+debug resume                           ;# Resume debugger (restore context)
 ```
 
 ```tcl
 # Halt script evaluation immediately
-# debug halt "stopped by user"          ;# Halt with custom result
+debug halt "stopped by user"           ;# Halt with custom result
 ```
 
 #### Call Stack and Variables
 
 ```tcl
 # Nesting depth limits
-# debug levels              ;# Returns: maximumLevels N maximumScriptLevels N ...
+debug levels                 ;# Returns: maximumLevels N maximumScriptLevels N ...
 ```
 
 ```tcl
 # Stack space information
-# debug stack               ;# Returns: threadId N used N allocated N ...
-# debug stack true          ;# Force refresh of native stack pointers
+debug stack                  ;# Returns: threadId N used N allocated N ...
+debug stack true             ;# Force refresh of native stack pointers
 ```
 
 ```tcl
 # Variable introspection
-# debug variable myVar               ;# Basic variable info
-# debug variable -elements myArray   ;# Include array elements
-# debug variable -links myVar       ;# Follow variable links
+debug variable myVar                 ;# Basic variable info
+debug variable -elements myArray     ;# Include array elements
+debug variable -links myVar          ;# Follow variable links
 ```
 
 ```tcl
 # Variable watchpoints
-# debug watch myVar BreakOnSet       ;# Break when myVar is written
-# debug watch myVar BreakOnGet       ;# Break when myVar is read
-# debug watch myVar                  ;# Query watch flags
-# debug watch                        ;# List all watched variables
+debug watch myVar BreakOnSet         ;# Break when myVar is written
+debug watch myVar BreakOnGet         ;# Break when myVar is read
+debug watch myVar                    ;# Query watch flags
+debug watch                          ;# List all watched variables
 ```
 
 ```tcl
 # Variable locking (thread-exclusive access)
-# debug lockvar true myVar           ;# Lock variable
-# debug lockvar false myVar          ;# Unlock variable
-# debug lockvar null myVar           ;# Query lock state
+debug lockvar true myVar             ;# Lock variable
+debug lockvar false myVar            ;# Unlock variable
+debug lockvar null myVar             ;# Query lock state
 ```
 
 ```tcl
 # Interactive loop semaphore
 # Requires: SHELL
-# debug lockloop true                ;# Acquire interactive loop lock
-# debug lockloop false               ;# Release interactive loop lock
+debug lockloop true                  ;# Acquire interactive loop lock
+debug lockloop false                 ;# Release interactive loop lock
 ```
 
 #### Script Evaluation in Debug Context
@@ -3041,61 +3041,61 @@ object alias -aliasname mySB $sb
 ```tcl
 # Evaluate in the debugger interpreter (not main)
 # Requires: DEBUGGER
-# debug eval {info vars}             ;# Run in debugger interp
+debug eval {info vars}               ;# Run in debugger interp
 ```
 
 ```tcl
 # Run code without debugger interception ("full speed")
 # Requires: DEBUGGER
-# debug run {
-#     set result [expensive_computation]
-# }
+debug run {
+    set result [expensive_computation]
+}
 ```
 
 ```tcl
 # Invoke command in debugger interpreter at a specific level
 # Requires: DEBUGGER
-# debug invoke #0 info vars          ;# At global level of debugger interp
+debug invoke #0 info vars            ;# At global level of debugger interp
 ```
 
 ```tcl
 # Substitution in debugger interpreter
 # Requires: DEBUGGER
-# debug subst {Value is $myVar}
-# debug subst -novariables {Literal $dollar}
+debug subst {Value is $myVar}
+debug subst -novariables {Literal $dollar}
 ```
 
 ```tcl
 # Secure evaluation in a child interpreter
-# debug secureeval -timeout 5000 child {expr {2 + 2}}
-# debug secureeval -trusted true -stoponerror true child {source "safe.tcl"}
+debug secureeval -timeout 5000 child {expr {2 + 2}}
+debug secureeval -trusted true -stoponerror true child {source safe.tcl}
 ```
 
 #### Interactive Debugger
 
 ```tcl
 # Requires: SHELL
-# debug shell                         ;# Start interactive debug shell
-# debug shell -asynchronous true      ;# Start on background thread
+debug shell                          ;# Start interactive debug shell
+debug shell -asynchronous true       ;# Start on background thread
 ```
 
 ```tcl
 # Requires: DEBUGGER
-# debug icommand "info vars"          ;# Set one-time command for debugger loop
-# debug icommand                      ;# Query current one-time command
+debug icommand {info vars}           ;# Set one-time command for debugger loop
+debug icommand                       ;# Query current one-time command
 ```
 
 ```tcl
 # Requires: DEBUGGER
-# debug iqueue "set x 1"             ;# Enqueue command
-# debug iqueue -dump                  ;# Show queued commands
-# debug iqueue -clear                 ;# Clear the queue
+debug iqueue {set x 1}              ;# Enqueue command
+debug iqueue -dump                   ;# Show queued commands
+debug iqueue -clear                  ;# Clear the queue
 ```
 
 ```tcl
 # Requires: DEBUGGER
-# debug iresult "custom result"       ;# Set one-time result
-# debug iresult                        ;# Query current one-time result
+debug iresult "custom result"        ;# Set one-time result
+debug iresult                        ;# Query current one-time result
 ```
 
 #### Event Handlers (Break-On Triggers)
@@ -3103,228 +3103,230 @@ object alias -aliasname mySB $sb
 ```tcl
 # Requires: DEBUGGER
 # All toggle without arguments; explicitly set with boolean:
-# debug onerror true                   ;# Break on errors
-# debug onerror                        ;# Toggle break-on-error
-# debug oncancel true                  ;# Break on script cancellation
-# debug onexecute true                 ;# Break on command execution
-# debug onexit true                    ;# Break on interpreter exit
-# debug onreturn true                  ;# Break on procedure return
-# debug ontest true                    ;# Break during test execution
+debug onerror true                    ;# Break on errors
+debug onerror                         ;# Toggle break-on-error
+debug oncancel true                   ;# Break on script cancellation
+debug onexecute true                  ;# Break on command execution
+debug onexit true                     ;# Break on interpreter exit
+debug onreturn true                   ;# Break on procedure return
+debug ontest true                     ;# Break during test execution
 ```
 
 ```tcl
 # Requires: DEBUGGER, DEBUGGER_BREAKPOINTS
-# debug ontoken true                   ;# Break on token processing
+debug ontoken true                    ;# Break on token processing
 ```
 
 #### Debug Hooks
 
 ```tcl
-# debug hook -type Before "mytest-*" {puts "About to run: $name"}
-# debug hook                           ;# List all hooks
-# debug hook "mytest-*"                ;# List hooks matching pattern
-# debug hook -unset true "mytest-*"    ;# Remove hook
+debug hook -type Before mytest-* {puts [appendArgs "About to run: " $name]}
+debug hook                            ;# List all hooks
+debug hook mytest-*                   ;# List hooks matching pattern
+debug hook -unset true mytest-*       ;# Remove hook
 ```
 
 #### Logging and Output
 
 ```tcl
-# debug log -category "MyApp" "Processing started"
-# debug log -level 2 "Detailed message"
+debug log -category MyApp "Processing started"
+debug log -level 2 "Detailed message"
 ```
 
 ```tcl
 # Native debug output (e.g., OutputDebugString on Windows)
 # Requires: NATIVE
-# debug output "Native debug message"
-# debug output "Notice priority" Notice  ;# Uses DebugPriority enum
+debug output "Native debug message"
+debug output "Notice priority" Notice    ;# Uses DebugPriority enum
 ```
 
 ```tcl
 # Multi-channel debug write
-# debug write "Message to all channels"
-# debug write "Output only" NoViaTrace
+debug write "Message to all channels"
+debug write "Output only" NoViaTrace
 ```
 
 ```tcl
 # Trace configuration and messaging
-# debug trace -priority Notice "Item $i processed"  ;# Uses DebugPriority enum
-# debug trace -log true -logfilename "/tmp/eagle.log"  ;# Requires: TEST
-# debug trace                          ;# Query current trace status
+debug trace -priority Notice [appendArgs "Item " $i " processed"]
+# Requires: TEST
+debug trace -log true -logfilename /tmp/eagle.log
+debug trace                              ;# Query current trace status
 ```
 
 ```tcl
 # Virtual output buffering
-# debug vout stdout true               ;# Enable virtual output on stdout
+debug vout stdout true                   ;# Enable virtual output on stdout
 # ... output operations ...
-# set captured [debug vout stdout]     ;# Get accumulated output
+set captured [debug vout stdout]         ;# Get accumulated output
 ```
 
 #### Memory and GC
 
 ```tcl
-# debug memory                          ;# Detailed memory statistics
-# debug sysmemory                       ;# Native/system memory info (Requires: NATIVE)
-# debug gcmemory                        ;# GC total memory
-# debug gcmemory true                   ;# GC total memory (force collection first)
-# debug collect                         ;# Force garbage collection
-# debug cleanup                         ;# Clean up caches and call frames
-# debug purge                           ;# Purge all call frame information
+debug memory                             ;# Detailed memory statistics
+# Requires: NATIVE
+debug sysmemory                          ;# Native/system memory info
+debug gcmemory                           ;# GC total memory
+debug gcmemory true                      ;# GC total memory (force collection first)
+debug collect                            ;# Force garbage collection
+debug cleanup                            ;# Clean up caches and call frames
+debug purge                              ;# Purge all call frame information
 ```
 
 #### Script Bundles
 
 ```tcl
 # Requires: DATA
-# debug bundle "scripts.db"                   ;# Parse and list bundle contents
-# debug bundle "scripts.db" "c2VjcmV0"        ;# With Base64 password
-# debug bundle "scripts.db" "" "util*"         ;# Filter by pattern
+debug bundle scripts.db                  ;# Parse and list bundle contents
+debug bundle scripts.db c2VjcmV0         ;# With Base64 password
+debug bundle scripts.db "" util*         ;# Filter by pattern
 ```
 
 ```tcl
 # Requires: DATA
-# debug mount "scripts.bundle" "c2VjcmV0"  ;# Mount with Base64 password
-# debug mounts                              ;# List mounted bundles
-# debug mounts "script*"                    ;# List matching mounts
-# debug unmount "scripts.bundle"            ;# Unmount
+debug mount scripts.bundle c2VjcmV0     ;# Mount with Base64 password
+debug mounts                             ;# List mounted bundles
+debug mounts script*                     ;# List matching mounts
+debug unmount scripts.bundle             ;# Unmount
 ```
 
 #### Command and Function Breakpoints
 
 ```tcl
 # Requires: DEBUGGER
-# debug execute puts true               ;# Break on puts
-# debug execute puts                     ;# Query breakpoint state
-# debug function rand true              ;# Break on rand() in expressions
-# debug operator + true                 ;# Break on + operator
+debug execute puts true                  ;# Break on puts
+debug execute puts                       ;# Query breakpoint state
+debug function rand true                 ;# Break on rand() in expressions
+debug operator + true                    ;# Break on + operator
 ```
 
 ```tcl
 # Procedure flags
-# debug procedureflags myProc           ;# Query flags
-# debug procedureflags myProc "Breakpoint"  ;# Set flags
+debug procedureflags myProc              ;# Query flags
+debug procedureflags myProc Breakpoint   ;# Set flags
 ```
 
 ```tcl
 # Test breakpoints
 # Requires: DEBUGGER
-# debug test "mytest-1.0" true          ;# Break on specific test
-# debug test "mytest-1.0"               ;# Query breakpoint state
-# debug test                            ;# List all test breakpoints
+debug test mytest-1.0 true               ;# Break on specific test
+debug test mytest-1.0                    ;# Query breakpoint state
+debug test                               ;# List all test breakpoints
 ```
 
 ```tcl
 # Token-level breakpoints (source location)
 # Requires: DEBUGGER, DEBUGGER_BREAKPOINTS
-# debug token "script.tcl" 10 20 true  ;# Break on lines 10-20
-# debug token "script.tcl" 10 20       ;# Query breakpoint match
+debug token script.tcl 10 20 true        ;# Break on lines 10-20
+debug token script.tcl 10 20             ;# Query breakpoint match
 ```
 
 ```tcl
 # Restore deleted variables
-# debug undelete "my*"                  ;# Restore matching variables
+debug undelete my*                       ;# Restore matching variables
 ```
 
 #### History and Caching
 
 ```tcl
 # Requires: HISTORY
-# debug history                         ;# Query history tracking state
-# debug history true                    ;# Enable history tracking
+debug history                            ;# Query history tracking state
+debug history true                       ;# Enable history tracking
 ```
 
 ```tcl
 # Cache configuration
-# debug cacheconfiguration              ;# Query current cache state
-# debug refreshautopath                 ;# Refresh auto-path list
-# debug refreshautopath true            ;# Refresh with verbose output
+debug cacheconfiguration                 ;# Query current cache state
+debug refreshautopath                    ;# Refresh auto-path list
+debug refreshautopath true               ;# Refresh with verbose output
 ```
 
 #### Runtime Options
 
 ```tcl
-# debug runtimeoption add "noGc"       ;# Add option
-# debug runtimeoption has "noGc"       ;# Check -> True
-# debug runtimeoption get              ;# List all
-# debug runtimeoption remove "noGc"    ;# Remove
-# debug runtimeoption clear            ;# Clear all
-# debug runtimeoption set {opt1 opt2}  ;# Replace all
+debug runtimeoption add noGc             ;# Add option
+debug runtimeoption has noGc             ;# Check -> True
+debug runtimeoption get                  ;# List all
+debug runtimeoption remove noGc          ;# Remove
+debug runtimeoption clear                ;# Clear all
+debug runtimeoption set {opt1 opt2}      ;# Replace all
 ```
 
 ```tcl
 # Runtime override
-# debug runtimeoverride "Default"      ;# Set manual runtime override
+debug runtimeoverride Default            ;# Set manual runtime override
 ```
 
 #### Path and Configuration
 
 ```tcl
-# debug paths                           ;# All interpreter paths
-# debug paths GetAll                    ;# Get all paths
-# debug paths ExistingOnly             ;# Only existing paths
+debug paths                              ;# All interpreter paths
+debug paths GetAll                       ;# Get all paths
+debug paths ExistingOnly                 ;# Only existing paths
 ```
 
 ```tcl
-# debug testpath                        ;# Query current test path
-# debug testpath "/path/to/tests"       ;# Set test path
+debug testpath                           ;# Query current test path
+debug testpath /path/to/tests            ;# Set test path
 ```
 
 ```tcl
 # Breakpoint types
 # Requires: DEBUGGER
-# debug types                           ;# Query active breakpoint types
-# debug types "Demand|Execute"          ;# Set active types
+debug types                              ;# Query active breakpoint types
+debug types "Demand|Execute"             ;# Set active types
 ```
 
 #### Read-Only Locking
 
 ```tcl
-# debug readonly Command true "puts"        ;# Lock puts command
-# debug readonly Command false "puts"       ;# Unlock puts command
-# debug readonly Variable null "*"          ;# Query all variable locks
-# debug readonly Procedure true "myProc"    ;# Lock a procedure
+debug readonly Command true puts         ;# Lock puts command
+debug readonly Command false puts        ;# Unlock puts command
+debug readonly Variable null *           ;# Query all variable locks
+debug readonly Procedure true myProc     ;# Lock a procedure
 ```
 
 #### Exception and Result Inspection
 
 ```tcl
-# catch {error "something went wrong"}
-# debug result                          ;# Full result with stack traces
-# debug exception                       ;# Get exception as object handle
-# debug complaint                       ;# Get internal diagnostic messages
+catch {error "something went wrong"}
+debug result                             ;# Full result with stack traces
+debug exception                          ;# Get exception as object handle
+debug complaint                          ;# Get internal diagnostic messages
 ```
 
 #### Plugin Debugging
 
 ```tcl
-# debug pluginexecute MyPlugin {arg1 arg2}  ;# Execute plugin method
-# debug pluginflags                          ;# Query plugin flags
-# debug pluginflags "SomeFlag"               ;# Set plugin flags
+debug pluginexecute MyPlugin {arg1 arg2} ;# Execute plugin method
+debug pluginflags                        ;# Query plugin flags
+debug pluginflags SomeFlag               ;# Set plugin flags
 ```
 
 #### Other Operations
 
 ```tcl
-# debug null                            ;# Force null result
-# debug set myVar $objectHandle         ;# Set variable to object value
-# debug set -convert true myVar $obj    ;# Convert object to string
-# debug keyring                         ;# Fetch and merge security keyring
-# debug restore                         ;# Restore core plugin to defaults
-# debug restore true true               ;# Strict and verbose restore
+debug null                               ;# Force null result
+debug set myVar $objectHandle            ;# Set variable to object value
+debug set -convert true myVar $obj       ;# Convert object to string
+debug keyring                            ;# Fetch and merge security keyring
+debug restore                            ;# Restore core plugin to defaults
+debug restore true true                  ;# Strict and verbose restore
 ```
 
 ```tcl
 # Emergency debugging mode
-# debug emergency                       ;# Enter emergency mode (default level)
-# debug emergency -nocomplain Default   ;# With options
+debug emergency                          ;# Enter emergency mode (default level)
+debug emergency -nocomplain Default      ;# With options
 ```
 
 ```tcl
 # Debugger callback management
 # Requires: DEBUGGER
-# debug callback arg1 arg2             ;# Set callback arguments
-# debug callback                        ;# Query callback arguments
-# debug callback {}                     ;# Clear callback
+debug callback arg1 arg2                 ;# Set callback arguments
+debug callback                           ;# Query callback arguments
+debug callback {}                        ;# Clear callback
 ```
 
 ---
@@ -3360,9 +3362,9 @@ interp issafe mySafe           ;# Returns: 1
 ```tcl
 set child [interp create]
 interp eval $child {
-    proc greet {name} { return "Hello, $name!" }
+    proc greet {name} { return [appendArgs "Hello, " $name !] }
 }
-set result [interp eval $child {greet "World"}]
+set result [interp eval $child {greet World}]
 ;# result is "Hello, World!"
 interp delete $child
 ```
@@ -3377,13 +3379,13 @@ interp delete $child
 
 ```tcl
 # Source a file in child interpreter
-# interp source $child "config.eagle"
+# interp source $child config.eagle
 ```
 
 ```tcl
 # String substitution in child
 set child [interp create]
-interp set $child name "World"
+interp set $child name World
 set result [interp subst $child {Hello, $name!}]
 ;# result is "Hello, World!"
 interp delete $child
@@ -3391,14 +3393,14 @@ interp delete $child
 
 ```tcl
 # Queue a script for later evaluation
-# interp queue $child {puts "deferred execution"}
+interp queue $child {puts "deferred execution"}
 ```
 
 #### Variable Access
 
 ```tcl
 set child [interp create]
-interp set $child myVar "value"
+interp set $child myVar value
 set v [interp set $child myVar]
 ;# v is "value"
 interp unset $child myVar      ;# Remove the variable
@@ -3417,9 +3419,9 @@ interp eval $child {safeLog "Message from child"}
 
 ```tcl
 # Query alias target
-# interp alias $child safeLog  ;# Returns: target info
-# interp aliases $child        ;# List all aliases
-# interp target $child safeLog ;# Returns target interpreter
+interp alias $child safeLog  ;# Returns: target info
+interp aliases $child        ;# List all aliases
+interp target $child safeLog ;# Returns target interpreter
 interp delete $child
 ```
 
@@ -3439,13 +3441,13 @@ interp exposed $safe           ;# List exposed commands
 
 ```tcl
 # Invoke hidden commands directly (trusted operations)
-# interp invokehidden $safe source "trusted.tcl"
+interp invokehidden $safe source trusted.tcl
 ```
 
 ```tcl
 # Hide and expose commands
-# interp hide $safe puts          ;# Hide puts in safe interp
-# interp expose $safe puts        ;# Re-expose puts
+interp hide $safe puts          ;# Hide puts in safe interp
+interp expose $safe puts        ;# Re-expose puts
 interp delete $safe
 ```
 
@@ -3454,30 +3456,30 @@ interp delete $safe
 ```tcl
 set child [interp create]
 interp issafe $child           ;# Returns: 0 (not safe)
-# interp makesafe $child       ;# Convert to safe mode
-# interp issafe $child         ;# Returns: 1
+interp makesafe $child       ;# Convert to safe mode
+interp issafe $child         ;# Returns: 1
 ```
 
 ```tcl
 # Standard mode
-# interp makestandard $child
-# interp isstandard $child     ;# Returns: 1
+interp makestandard $child
+interp isstandard $child     ;# Returns: 1
 ```
 
 ```tcl
 # Trust and policy management
-# interp marktrusted $child
-# interp policy $child -type "SomeType" {puts "Policy check for: $args"}
-# interp nopolicy $child policyName
+interp marktrusted $child
+interp policy $child -type SomeType {puts [appendArgs "Policy check for: " $args]}
+interp nopolicy $child policyName
 ```
 
 ```tcl
 # Isolation and immutability
-# interp isolated $child       ;# Returns: 0 or 1
-# interp immutable $child true ;# Make immutable
-# interp readonly $child true  ;# Make read-only
-# interp enabled $child false  ;# Disable interpreter
-# interp issdk $child          ;# Check SDK mode
+interp isolated $child       ;# Returns: 0 or 1
+interp immutable $child true ;# Make immutable
+interp readonly $child true  ;# Make read-only
+interp enabled $child false  ;# Disable interpreter
+interp issdk $child          ;# Check SDK mode
 interp delete $child
 ```
 
@@ -3491,16 +3493,16 @@ interp iterationlimit $child 10000    ;# Limit loop iterations
 
 ```tcl
 # Additional resource limits
-# interp proclimit $child 500         ;# Max procedures
-# interp varlimit $child 1000         ;# Max variables
-# interp namespacelimit $child 50     ;# Max namespaces
-# interp scopelimit $child 100        ;# Max scopes
-# interp resultlimit $child 1048576   ;# Max result size (Requires: RESULT_LIMITS)
-# interp callbacklimit $child 100     ;# Max callbacks (Requires: CALLBACK_QUEUE)
-# interp eventlimit $child 1000       ;# Max events
-# interp execlimit $child 100000      ;# Max operation limit
-# interp readylimit $child 100        ;# Max ready operations
-# interp childlimit $child 10         ;# Max child interpreters
+interp proclimit $child 500         ;# Max procedures
+interp varlimit $child 1000         ;# Max variables
+interp namespacelimit $child 50     ;# Max namespaces
+interp scopelimit $child 100        ;# Max scopes
+interp resultlimit $child 1048576   ;# Max result size (Requires: RESULT_LIMITS)
+interp callbacklimit $child 100     ;# Max callbacks (Requires: CALLBACK_QUEUE)
+interp eventlimit $child 1000       ;# Max events
+interp execlimit $child 100000      ;# Max operation limit
+interp readylimit $child 100        ;# Max ready operations
+interp childlimit $child 10         ;# Max child interpreters
 interp delete $child
 ```
 
@@ -3509,20 +3511,20 @@ interp delete $child
 ```tcl
 set child [interp create -safe]
 interp timeout $child 5000            ;# 5 second execution timeout
-# interp finallytimeout $child 2000   ;# 2 second finally block timeout
-# interp sleeptime $child 100         ;# 100ms between timeout checks
+interp finallytimeout $child 2000   ;# 2 second finally block timeout
+interp sleeptime $child 100         ;# 100ms between timeout checks
 ```
 
 ```tcl
 # Cancel execution
-# interp cancel $child "Time limit exceeded"
-# interp cancel -unwind $child        ;# Cancel and unwind stack
-# interp resetcancel $child           ;# Reset cancel flag
+interp cancel $child "Time limit exceeded"
+interp cancel -unwind $child        ;# Cancel and unwind stack
+interp resetcancel $child           ;# Reset cancel flag
 ```
 
 ```tcl
 # Watchdog timer for automatic cancellation
-# interp watchdog $child true         ;# Enable watchdog
+interp watchdog $child true         ;# Enable watchdog
 interp delete $child
 ```
 
@@ -3530,43 +3532,43 @@ interp delete $child
 
 ```tcl
 # Add commands to child interpreter
-# interp addcommands $child "string*"
+interp addcommands $child string*
 ```
 
 ```tcl
 # Rename commands in child
-# interp rename $child oldCmd newCmd
+interp rename $child oldCmd newCmd
 ```
 
 ```tcl
 # Create stub commands
-# interp stub $child myStub
+interp stub $child myStub
 ```
 
 ```tcl
 # Add sub-commands to an ensemble in child
-# interp subcommand $child string mysubcmd {myImplementation}
+interp subcommand $child string mysubcmd {myImplementation}
 ```
 
 #### Object Sharing
 
 ```tcl
 # Share .NET objects between interpreters
-# set obj [object create System.Text.StringBuilder]
-# interp shareobject $child $obj      ;# Share object with child
+set obj [object create System.Text.StringBuilder]
+interp shareobject $child $obj      ;# Share object with child
 ```
 
 ```tcl
 # Share interpreter as an object
-# interp shareinterp $child interpObj
+interp shareinterp $child interpObj
 ```
 
 #### Background Error Handling
 
 ```tcl
 # Set background error handler for child
-# interp bgerror $child myBgErrorHandler
-# interp bgerror $child               ;# Query current handler
+interp bgerror $child myBgErrorHandler
+interp bgerror $child               ;# Query current handler
 ```
 
 ---
@@ -3580,60 +3582,60 @@ interp delete $child
 
 ```tcl
 # Require a package (loads if not present)
-# package require http 2.0
+package require http 2.0
 
 # Require exact version
-# package require -exact json 1.0
+package require -exact json 1.0
 ```
 
 ```tcl
 # Check if already loaded (no loading)
-# package present http 2.0
+package present http 2.0
 ```
 
 #### Providing Packages
 
 ```tcl
 # In your package script:
-# package provide mypackage 1.0
-# proc mypackage::init {} { ... }
+package provide mypackage 1.0
+proc mypackage::init {} { ... }
 ```
 
 #### Package Index
 
 ```tcl
 # Register a package script
-# package ifneeded mypackage 1.0 \
-#     [list source [file join $dir mypackage.tcl]]
+package ifneeded mypackage 1.0 \
+    [list source [file join $dir mypackage.tcl]]
 ```
 
 ```tcl
 # Scan directories for packages
-# package scan /usr/local/lib/eagle
+package scan /usr/local/lib/eagle
 ```
 
 ```tcl
 # Get/set unknown package handler
-# package unknown               ;# Query current handler
-# package unknown myHandler     ;# Set custom handler
+package unknown               ;# Query current handler
+package unknown myHandler     ;# Set custom handler
 ```
 
 ```tcl
 # List package index files
-# package indexes              ;# All known indexes
-# package indexes "*.eagle"    ;# Matching pattern
+package indexes              ;# All known indexes
+package indexes *.eagle      ;# Matching pattern
 ```
 
 #### Querying Information
 
 ```tcl
 package names                ;# List all known packages
-# package names "http*"     ;# Matching pattern
-# package versions http     ;# List versions of http
-# package loaded             ;# List loaded packages
-# package vloaded            ;# Loaded with version info
-# package pending            ;# Packages currently being loaded
-# package info http          ;# Detailed info about a package
+package names http*          ;# Matching pattern
+package versions http        ;# List versions of http
+package loaded               ;# List loaded packages
+package vloaded              ;# Loaded with version info
+package pending              ;# Packages currently being loaded
+package info http            ;# Detailed info about a package
 ```
 
 #### Version Comparison
@@ -3644,29 +3646,29 @@ package vcompare 2.1 2.1      ;# Returns: 0
 package vcompare 3.0 2.0      ;# Returns: 1
 package vsatisfies 2.5 2.0    ;# Returns: 1
 package vsatisfies 1.5 2.0    ;# Returns: 0
-# package vsort 2.0 1.0       ;# Sort two versions
+package vsort 2.0 1.0       ;# Sort two versions
 ```
 
 #### Package State
 
 ```tcl
-# package forget mypackage      ;# Remove from known list
-# package withdraw mypackage 1.0  ;# Withdraw a specific version
-# package absent mypackage      ;# Mark as explicitly absent
-# package reset                 ;# Reset package management state
+package forget mypackage      ;# Remove from known list
+package withdraw mypackage 1.0  ;# Withdraw a specific version
+package absent mypackage      ;# Mark as explicitly absent
+package reset                 ;# Reset package management state
 ```
 
 #### Package Aliases
 
 ```tcl
 # Create alias for a package
-# package alias myAlias mypackage 1.0
-# package aliases              ;# List all package aliases
+package alias myAlias mypackage 1.0
+package aliases              ;# List all package aliases
 ```
 
 ```tcl
 # Relative filename in package context
-# package relativefilename "lib/helper.eagle"
+package relativefilename lib/helper.eagle
 ```
 
 ---
@@ -3678,19 +3680,19 @@ package vsatisfies 1.5 2.0    ;# Returns: 0
 
 ```tcl
 # Eagle extension — basic test command
-test1 "string-length-1.1" "Test string length" {} {
-    string length "hello"
+test1 string-length-1.1 "Test string length" {} {
+    string length hello
 } {5}
 ```
 
 ```tcl
-test1 "math-1.1" "Test basic arithmetic" {} {
+test1 math-1.1 "Test basic arithmetic" {} {
     expr {2 + 2}
 } {4}
 ```
 
 ```tcl
-test1 "list-1.1" "Test list creation" {} {
+test1 list-1.1 "Test list creation" {} {
     list a b c
 } {a b c}
 ```
@@ -3702,7 +3704,7 @@ test1 "list-1.1" "Test list creation" {} {
 
 ```tcl
 # Eagle extension — advanced test with setup/cleanup
-test2 "file-read-1.1" "Test file reading" \
+test2 file-read-1.1 "Test file reading" \
     -setup {
         set tmpFile [file tempname]
         set fh [open $tmpFile w]
@@ -3724,7 +3726,7 @@ test2 "file-read-1.1" "Test file reading" \
 
 ```tcl
 # Test expected error
-test2 "error-1.1" "Test error handling" \
+test2 error-1.1 "Test error handling" \
     -body {
         error "expected error"
     } \
@@ -3734,7 +3736,7 @@ test2 "error-1.1" "Test error handling" \
 
 ```tcl
 # Test with constraints
-test2 "platform-1.1" "Unix-only test" \
+test2 platform-1.1 "Unix-only test" \
     -constraints {unix} \
     -body {
         file exists /dev/null
@@ -3744,7 +3746,7 @@ test2 "platform-1.1" "Unix-only test" \
 
 ```tcl
 # Test with glob match
-test2 "version-1.1" "Test version format" \
+test2 version-1.1 "Test version format" \
     -body {
         version
     } \
@@ -3813,9 +3815,9 @@ test2 "version-1.1" "Test version format" \
 # sql hasbegun $trans           ;# Returns: 1
 # try {
 #     sql execute $conn "INSERT INTO users (name) VALUES (@n)" \
-#         {n String "Alice"}
+#         {n String Alice}
 #     sql execute $conn "INSERT INTO users (name) VALUES (@n)" \
-#         {n String "Bob"}
+#         {n String Bob}
 #     sql transaction commit $trans
 # } finally {
 #     catch {sql transaction rollback $trans}
@@ -3863,93 +3865,243 @@ test2 "version-1.1" "Test version format" \
 
 ```tcl
 # Eagle extension — create URI from components
-# uri create https example.com -port 8080 -path "/api/data"
+uri create https example.com -port 8080 -path /api/data
 ```
 
 ```tcl
 # Parse URI into components
-# set parts [uri parse "https://example.com:8080/path?q=test"]
+set parts [uri parse https://example.com:8080/path?q=test]
 ;# Returns dictionary with scheme, host, port, path, query
 ```
 
 ```tcl
 # Validate individual components
-# uri host "example.com"                     ;# Validates hostname (returns type)
-# uri scheme "https"                         ;# Validates scheme name (returns boolean)
+uri host example.com                        ;# Validates hostname (returns type)
+uri scheme https                            ;# Validates scheme name (returns boolean)
 ```
 
 ```tcl
 # Join URI path components
-# uri join "/api" "v1" "users"              ;# Returns: /api/v1/users
+uri join /api v1 users                      ;# Returns: /api/v1/users
 ```
 
 #### Validation and Comparison
 
 ```tcl
 # Validate URI
-# uri isvalid "https://example.com"   ;# Returns: 1
-# uri isvalid "not a uri"             ;# Returns: 0
-# uri isvalid "relative/path" relative  ;# Check as relative URI
+uri isvalid https://example.com             ;# Returns: 1
+uri isvalid "not a uri"                     ;# Returns: 0 (quotes needed: whitespace)
+uri isvalid relative/path relative          ;# Check as relative URI
 ```
 
 ```tcl
 # Compare two URIs
-# uri compare "https://a.com" "https://b.com"  ;# Returns: -1, 0, or 1
+uri compare https://a.com https://b.com     ;# Returns: -1, 0, or 1
 ```
 
 #### Encoding
 
 ```tcl
 # URL-encode a string
-# set encoded [uri escape Data "hello world"]  ;# Uses UriEscapeType enum
+set encoded [uri escape Data "hello world"] ;# Uses UriEscapeType enum
 ;# Returns: hello%20world
 
 # URL-decode
-# set decoded [uri unescape "hello%20world"]
+set decoded [uri unescape hello%20world]
 ;# Returns: hello world
 ```
 
 #### HTTP Operations
 
+> **Note**: `uri get` is an alias for `uri download -inline` and
+> `uri post` is an alias for `uri upload -inline`. All four sub-commands
+> share the same implementation; the difference is that `get`/`post`
+> default to inline mode (return data) while `download`/`upload` default
+> to file mode (read/write disk). All require the `NETWORK` compile flag.
+
+##### uri download / uri get — Downloading Data
+
 ```tcl
-# GET request
-# set html [uri get "https://example.com/"]
+# Requires: NETWORK
+# Download file to disk (default file mode)
+uri download https://example.com/file.zip /tmp/file.zip
+;# Returns: "" (empty string on success)
 ```
 
 ```tcl
-# POST with data
-# set response [uri post -data {name=value} \
-#     "https://api.example.com/data"]
+# Requires: NETWORK
+# Download with explicit timeout (milliseconds)
+uri download -timeout 30000 -- https://example.com/large.zip /tmp/large.zip
 ```
 
 ```tcl
-# Download and upload files
-# uri download "https://example.com/file.zip" "/tmp/file.zip"
-# uri upload "https://example.com/upload" "/tmp/data.txt"
+# Requires: NETWORK
+# Download with timeout type (uses interpreter's network timeout)
+uri download -timeouttype network -- https://example.com/file.zip /tmp/file.zip
+```
+
+```tcl
+# Requires: NETWORK
+# Download with retry on failure
+uri download -retries 3 -timeout 10000 -- \
+    https://example.com/file.zip /tmp/file.zip
+```
+
+```tcl
+# Requires: NETWORK
+# Download inline — return content as string instead of saving to file
+set html [uri download -inline -- https://example.com/]
+;# html contains the page content
+```
+
+```tcl
+# Requires: NETWORK
+# uri get is shorthand for uri download -inline
+set html [uri get https://example.com/]
+;# Equivalent to: uri download -inline -- https://example.com/
+```
+
+```tcl
+# Requires: NETWORK
+# Inline download with network timeout
+set data [uri download -timeouttype network -inline -- $uri]
+```
+
+```tcl
+# Requires: NETWORK
+# Specify response encoding
+set text [uri download -inline -encoding utf-8 -- https://example.com/data.txt]
+```
+
+```tcl
+# Requires: NETWORK
+# Asynchronous download with callback
+uri download -inline -callback {myDownloadHandler} -- https://example.com/data
+;# myDownloadHandler is called when download completes
+;# Note: -trusted cannot be used with -callback
+```
+
+##### uri upload / uri post — Uploading Data
+
+```tcl
+# Requires: NETWORK
+# Upload a file to server (default file mode)
+uri upload https://example.com/upload /tmp/data.txt
+;# Returns: server response as string
+```
+
+```tcl
+# Requires: NETWORK
+# Upload file with explicit HTTP method
+uri upload -method PUT -- https://example.com/files/doc.txt /tmp/doc.txt
+```
+
+```tcl
+# Requires: NETWORK
+# Upload file with timeout and retries
+uri upload -timeout 60000 -retries 3 -- \
+    https://example.com/upload /tmp/large-file.zip
+```
+
+```tcl
+# Requires: NETWORK
+# POST form data inline (name-value pairs, URL-encoded automatically)
+set response [uri upload -inline -data {username admin password secret} -- \
+    https://example.com/login]
+;# Data sent as: username=admin&password=secret (form-encoded)
+;# Returns: server response as string
+```
+
+```tcl
+# Requires: NETWORK
+# uri post is shorthand for uri upload -inline
+set response [uri post -data {var1 val1 var2 val2} -- \
+    https://example.com/api]
+;# Equivalent to: uri upload -inline -data {var1 val1 var2 val2} -- ...
+```
+
+```tcl
+# Requires: NETWORK
+# POST form data with network timeout type
+set response [uri upload -timeouttype network -inline \
+    -data {key1 value1 key2 value2} -- $uri]
+```
+
+```tcl
+# Requires: NETWORK
+# POST raw bytes (not form-encoded) with -raw flag
+set response [uri upload -inline -raw \
+    -data {72 101 108 108 111} -- https://example.com/raw]
+;# Sends raw byte values (not form-encoded name-value pairs)
+```
+
+```tcl
+# Requires: NETWORK
+# POST raw data with custom HTTP method
+set response [uri upload -inline -raw -method PATCH \
+    -data {48 49 50} -- https://example.com/resource/1]
+```
+
+```tcl
+# Requires: NETWORK
+# Asynchronous upload with callback
+uri upload -inline -callback {myUploadHandler} \
+    -data {field1 data1} -- https://example.com/submit
+;# myUploadHandler is called when upload completes
+;# Note: -trusted cannot be used with -callback
+```
+
+```tcl
+# Requires: NETWORK
+# Upload with custom WebClient configuration
+set script [object create String {
+    if {[getStringFromObjectHandle methodName] eq "GetWebRequest"} then {
+        webRequest KeepAlive false
+        webRequest Timeout 30000
+        webRequest UserAgent MyApp/1.0
+    }
+}]
+set response [uri upload -timeouttype network -inline \
+    -webclientdata $script -data {key value} -- $uri]
+```
+
+##### Inline Mode Override
+
+```tcl
+# Requires: NETWORK
+# Force file mode on get (override default inline behavior)
+uri get -noinline https://example.com/data.json /tmp/data.json
+;# Saves to file instead of returning inline
+
+# Force inline mode on download (override default file behavior)
+set data [uri download -inline -- https://example.com/data.json]
+;# Returns content instead of saving to file
 ```
 
 #### Network Utilities
 
 ```tcl
 # Ping host
-# uri ping "example.com" 5000     ;# 5 second timeout, returns {status roundtripTime ms}
+uri ping example.com 5000         ;# 5 second timeout, returns {status roundtripTime ms}
 ```
 
 ```tcl
 # Get network time
-# uri time                         ;# Returns current time from network source
+uri time                           ;# Returns current time from network source
 ```
 
 ```tcl
 # Check/set offline mode
-# uri offline                     ;# Query current mode
-# uri offline true                ;# Disable network operations
+uri offline                        ;# Query current mode
+uri offline true                   ;# Disable network operations
 ```
 
 ```tcl
 # Security and update information
-# uri security                     ;# Returns TLS/security settings info
-# uri softwareupdates              ;# Check for software updates
+uri security                       ;# Returns TLS/security settings info
+uri softwareupdates                ;# Returns current software update trust status
+# uri softwareupdates true         ;# Enable implicit trust of built-in update keys
+# uri softwareupdates false        ;# Disable implicit trust of built-in update keys
 ```
 
 ---
@@ -3963,33 +4115,33 @@ test2 "version-1.1" "Test version format" \
 
 ```tcl
 # Serialize .NET object to XML
-# set xmlStr [xml serialize MyNamespace.Person $personObj]
+set xmlStr [xml serialize MyNamespace.Person $personObj]
 ```
 
 ```tcl
 # Deserialize XML to .NET object
-# set person [xml deserialize MyNamespace.Person $xmlStr]
+set person [xml deserialize MyNamespace.Person $xmlStr]
 ```
 
 #### Iteration
 
 ```tcl
 # Iterate over XML elements
-# set xmlData "<items><item>A</item><item>B</item></items>"
-# xml foreach node $xmlData {
-#     puts "Element: $node"
-# }
+set xmlData <items><item>A</item><item>B</item></items>
+xml foreach node $xmlData {
+    puts [appendArgs "Element: " $node]
+}
 ```
 
 #### Validation
 
 ```tcl
 # Validate XML against XSD schema
-# set schema {<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-#     <xs:element name="root" type="xs:string"/>
-# </xs:schema>}
-# set doc {<root>Hello</root>}
-# xml validate $schema $doc   ;# Returns: 1 if valid
+set schema {<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="root" type="xs:string"/>
+</xs:schema>}
+set doc {<root>Hello</root>}
+xml validate $schema $doc   ;# Returns: 1 if valid
 ```
 
 ---
@@ -4003,139 +4155,139 @@ test2 "version-1.1" "Test version format" \
 
 ```tcl
 # Load native Tcl library
-# tcl load
-# tcl load "/usr/lib/libtcl8.6.so"    ;# With specific path
+tcl load
+tcl load /usr/lib/libtcl8.6.so    ;# With specific path
 ```
 
 ```tcl
 # Unload Tcl library
-# tcl unload
+tcl unload
 ```
 
 #### Availability and Discovery
 
 ```tcl
 # Check without loading
-# tcl available                         ;# Returns: 1 if Tcl is available
-# tcl find                              ;# Find Tcl installations
-# tcl find "/usr/local/lib" "8.6*"      ;# Search specific path and pattern
-# tcl select                            ;# Select a Tcl installation
+tcl available                         ;# Returns: 1 if Tcl is available
+tcl find                              ;# Find Tcl installations
+tcl find /usr/local/lib 8.6*          ;# Search specific path and pattern
+tcl select                            ;# Select a Tcl installation
 ```
 
 ```tcl
 # Tcl build and module information
-# tcl build                              ;# Returns Tcl build info
-# tcl module                             ;# Returns loaded module info
-# tcl module true                        ;# Returns full module info
+tcl build                              ;# Returns Tcl build info
+tcl module                             ;# Returns loaded module info
+tcl module true                        ;# Returns full module info
 ```
 
 #### Creating and Managing Interpreters
 
 ```tcl
 # Create and use Tcl interpreter
-# tcl load
-# set interp [tcl create]
-# tcl exists $interp                    ;# Returns: 1
-# tcl ready $interp                     ;# Returns: 1 if ready
+tcl load
+set interp [tcl create]
+tcl exists $interp                    ;# Returns: 1
+tcl ready $interp                     ;# Returns: 1 if ready
 ```
 
 ```tcl
 # Evaluate code in Tcl
-# tcl eval $interp {
-#     proc greet {name} { return "Hello from Tcl, $name!" }
-# }
-# set greeting [tcl eval $interp {greet "Eagle"}]
-# ;# greeting is "Hello from Tcl, Eagle!"
+tcl eval $interp {
+    proc greet {name} { return [appendArgs "Hello from Tcl, " $name !] }
+}
+set greeting [tcl eval $interp {greet Eagle}]
+;# greeting is "Hello from Tcl, Eagle!"
 ```
 
 ```tcl
 # Expression and substitution in Tcl
-# tcl expr $interp {2 + 2}              ;# Returns: 4
-# tcl subst $interp {Value: $myVar}
+tcl expr $interp {2 + 2}              ;# Returns: 4
+tcl subst $interp {Value: $myVar}
 ```
 
 ```tcl
 # Source a file in Tcl
-# tcl source $interp "tclscript.tcl"
+tcl source $interp tclscript.tcl
 ```
 
 ```tcl
 # Get last result
-# tcl result $interp
+tcl result $interp
 ```
 
 ```tcl
 # List interpreters
-# tcl interps                            ;# List all Tcl interpreters
-# tcl primary                            ;# Returns primary interpreter handle
-# tcl active $interp                     ;# Get/set active interpreter
+tcl interps                            ;# List all Tcl interpreters
+tcl primary                            ;# Returns primary interpreter handle
+tcl active $interp                     ;# Get/set active interpreter
 ```
 
 ```tcl
 # Reference counting
-# tcl preserve $interp                   ;# Increment ref count
-# tcl release $interp                    ;# Decrement ref count
+tcl preserve $interp                   ;# Increment ref count
+tcl release $interp                    ;# Decrement ref count
 ```
 
 ```tcl
 # Delete interpreter
-# tcl delete $interp
+tcl delete $interp
 ```
 
 #### Variable Access
 
 ```tcl
 # Get/set variables in Tcl interpreter
-# tcl set $interp myVar "Hello"
-# set val [tcl set $interp myVar]
-# tcl unset $interp myVar
+tcl set $interp myVar Hello
+set val [tcl set $interp myVar]
+tcl unset $interp myVar
 ```
 
 #### Command Bridging
 
 ```tcl
 # Create bridge: Eagle -> Tcl
-# tcl command create eagleCmd $interp tclCmd
-# tcl command exists $interp tclCmd    ;# Returns: 1
-# tcl command list                     ;# List all bridges
-# tcl command list "my*"               ;# List matching bridges
-# tcl command delete $interp tclCmd    ;# Remove bridge
+tcl command create eagleCmd $interp tclCmd
+tcl command exists $interp tclCmd    ;# Returns: 1
+tcl command list                     ;# List all bridges
+tcl command list my*                 ;# List matching bridges
+tcl command delete $interp tclCmd    ;# Remove bridge
 ```
 
 #### Execution Control
 
 ```tcl
 # Cancel Tcl execution
-# tcl cancel $interp "Canceling execution"
-# tcl canceled $interp                  ;# Returns: 1 if canceled
-# tcl resetcancel $interp               ;# Reset cancel state
+tcl cancel $interp "Canceling execution"
+tcl canceled $interp                  ;# Returns: 1 if canceled
+tcl resetcancel $interp               ;# Reset cancel state
 ```
 
 ```tcl
 # Queue script for later execution
-# tcl queue $interp {puts "Deferred Tcl script"}
+tcl queue $interp {puts "Deferred Tcl script"}
 ```
 
 #### Type and Thread Info
 
 ```tcl
 # Check completeness of Tcl command
-# tcl complete "set x {incomplete"       ;# Returns: 0
-# tcl complete "set x 1"                 ;# Returns: 1
+tcl complete "set x {incomplete"       ;# Returns: 0
+tcl complete "set x 1"                 ;# Returns: 1
 ```
 
 ```tcl
 # Type conversion and listing
-# tcl convert $interp "42" int
-# tcl types $interp                      ;# List available Tcl types
+tcl convert $interp 42 int
+tcl types $interp                      ;# List available Tcl types
 ```
 
 ```tcl
 # Thread and version info
-# tcl threads                            ;# List Tcl threads
-# tcl versionrange                       ;# Supported Tcl version range
-# tcl errorline $interp                  ;# Get error line number
-# tcl exceptions                         ;# Get/set exception handling
+tcl threads                            ;# List Tcl threads
+tcl versionrange                       ;# Supported Tcl version range
+tcl errorline $interp                  ;# Get error line number
+tcl exceptions                         ;# Get/set exception handling
 ```
 
 ---
@@ -4486,8 +4638,8 @@ set ticksMs [clock clicks -milliseconds]
 
 ```tcl
 # Eagle extension — high-resolution ticks
-# set ticks [clock now]              ;# Returns DateTime.Ticks (long integer)
-# set utcTicks [clock now -gmt true] ;# UTC DateTime.Ticks
+set ticks [clock now]              ;# Returns DateTime.Ticks (long integer)
+set utcTicks [clock now -gmt true] ;# UTC DateTime.Ticks
 ```
 
 #### Formatting Time
@@ -4522,51 +4674,51 @@ clock format $now -format "%I:%M %p"
 
 ```tcl
 # Parse ISO-style date
-# clock scan "2024-01-15"
+clock scan 2024-01-15
 ```
 
 ```tcl
 # Parse relative expressions
-# clock scan "tomorrow"
-# clock scan "+1 week" -base [clock seconds]
+clock scan tomorrow
+clock scan "+1 week" -base [clock seconds]
 ```
 
 #### Validation and Date Queries (Eagle extensions)
 
 ```tcl
 # Validate date strings
-# clock isvalid "2024-01-15"    ;# Returns: 1
-# clock isvalid "not-a-date"    ;# Returns: 0
+clock isvalid 2024-01-15    ;# Returns: 1
+clock isvalid not-a-date    ;# Returns: 0
 ```
 
 ```tcl
 # Days in a month
-# clock monthdays 2             ;# Returns: 28 or 29 (February)
-# clock monthdays 12            ;# Returns: 31
+clock monthdays 2             ;# Returns: 28 or 29 (February)
+clock monthdays 12            ;# Returns: 31
 ```
 
 ```tcl
 # Day-related information
-# clock days "2024-01-15"
+clock days 2024-01-15
 ```
 
 ```tcl
 # Duration between two dates
-# clock duration "2024-01-01" "2024-12-31"
+clock duration 2024-01-01 2024-12-31
 ```
 
 ```tcl
 # Windows FILETIME conversion
-# clock filetime $fileTimeValue
+clock filetime $fileTimeValue
 ```
 
 #### Performance Timing (Eagle extension)
 
 ```tcl
 # High-resolution profiling
-# set start [clock start]
+set start [clock start]
 # ... code to measure ...
-# set elapsed [clock stop $start]
+set elapsed [clock stop $start]
 ```
 
 ---
@@ -4589,7 +4741,7 @@ time {lsort $data} 1000
 ```tcl
 # Compare two implementations
 set list {5 3 1 4 2}
-puts "lsort: [time {lsort -integer $list} 10000]"
+puts [appendArgs "lsort: " [time {lsort -integer $list} 10000]]
 ```
 
 ---
@@ -4616,7 +4768,7 @@ after idle {puts "Idle processing"}
 
 ```tcl
 # Cancel scheduled event
-set id [after 5000 {puts "Hello"}]
+set id [after 5000 {puts Hello}]
 after cancel $id
 ```
 
@@ -4627,18 +4779,18 @@ set pending [after info]
 
 ```tcl
 # Eagle extension — cancel all events
-# after clear
+after clear
 ```
 
 ```tcl
 # Eagle extension — event queue management
-# after active            ;# Returns: 1 or 0 (events pending?)
-# after counts            ;# Returns event statistics
-# after dump              ;# Dump event queue for debugging
-# after enable            ;# Query event processing state
-# after enable true       ;# Enable event processing
-# after flags             ;# Get event processing flags
-# after flags "SomeFlag"  ;# Set event processing flags
+after active            ;# Returns: 1 or 0 (events pending?)
+after counts            ;# Returns event statistics
+after dump              ;# Dump event queue for debugging
+after enable            ;# Query event processing state
+after enable true       ;# Enable event processing
+after flags             ;# Get event processing flags
+after flags SomeFlag    ;# Set event processing flags
 ```
 
 ---
@@ -4691,14 +4843,14 @@ update idletasks
 
 ```tcl
 # Wait for variable change
-after 1000 {set result "completed"}
+after 1000 {set result completed}
 vwait result
-;# result is "completed" (waited ~1 second)
+;# result is completed (waited ~1 second)
 ```
 
 ```tcl
 # Eagle extension — wait with timeout
-# vwait -timeout 5000 result
+vwait -timeout 5000 result
 ```
 
 ---
@@ -4711,8 +4863,8 @@ vwait result
 #### Procedure Introspection
 
 ```tcl
-proc greet {name {greeting "Hello"}} {
-    return "$greeting, $name!"
+proc greet {name {greeting Hello}} {
+    return [appendArgs $greeting ", " $name !]
 }
 info args greet              ;# Returns: {name greeting}
 info args greet true         ;# Returns: {name {}} {greeting Hello}
@@ -4730,13 +4882,13 @@ info procs *greet*           ;# Returns: greet
 namespace eval ::myns {
     proc helper {} { return 1 }
 }
-# info nprocs                ;# Procs with NamedArguments flag
+info nprocs                  ;# Procs with NamedArguments flag
 ```
 
 ```tcl
 # Source location of a procedure
-# info source greet          ;# Returns: fileName (where proc was defined)
-# info source greet true     ;# Returns full path info
+info source greet            ;# Returns: fileName (where proc was defined)
+info source greet true       ;# Returns full path info
 ```
 
 #### Variable Introspection
@@ -4750,8 +4902,8 @@ info globals *path*          ;# Globals matching pattern
 
 ```tcl
 proc example {} {
-    set local1 "a"
-    set local2 "b"
+    set local1 a
+    set local2 b
     return [info locals]
 }
 example
@@ -4774,7 +4926,7 @@ info sysvars                ;# Returns: system-defined variables
 ```tcl
 # Variable links (upvar tracking)
 proc outer {} {
-    set data "hello"
+    set data hello
     inner data
 }
 proc inner {varName} {
@@ -4785,7 +4937,7 @@ proc inner {varName} {
 
 ```tcl
 # Variable link information
-# info varlinks             ;# Returns info about all variable links
+info varlinks               ;# Returns info about all variable links
 ```
 
 #### Command Introspection
@@ -4795,8 +4947,8 @@ info commands string*        ;# Returns: string
 info commands *puts*         ;# Returns: puts
 info cmdtype puts            ;# Returns: native
 info cmdtype greet           ;# Returns: proc (if greet is a proc)
-info complete "set x 1"     ;# Returns: True
-info complete "set x {"     ;# Returns: False (unclosed brace)
+info complete {set x 1}     ;# Returns: True
+info complete "set x {"     ;# Returns: False (quotes needed: unclosed brace)
 ```
 
 ```tcl
@@ -4825,8 +4977,8 @@ info undefined               ;# Returns: list of undefined variables
 
 ```tcl
 proc inner {} {
-    puts "Level: [info level]"        ;# e.g., 2
-    puts "Caller: [info level 1]"     ;# Returns: outer
+    puts [appendArgs "Level: " [info level]]     ;# e.g., 2
+    puts [appendArgs "Caller: " [info level 1]] ;# Returns: outer
     return [info level]
 }
 proc outer {} { inner }
@@ -4849,13 +5001,14 @@ proc showLevelId {} {
 #### Script and Interpreter
 
 ```tcl
-# info script               ;# Returns current script file path
-# info argv                 ;# Returns command-line arguments
-# info cmdline              ;# Returns full command line string
-# info interactive          ;# Returns: 1 (interactive) or 0
-# info library              ;# Returns Eagle library directory path
-# info context              ;# Returns current execution context info
-# info lastinput            ;# Returns tick count of last input (Requires: NATIVE, WINDOWS)
+info script                  ;# Returns current script file path
+info argv                    ;# Returns command-line arguments
+info cmdline                 ;# Returns full command line string
+info interactive             ;# Returns: 1 (interactive) or 0
+info library                 ;# Returns Eagle library directory path
+info context                 ;# Returns current execution context info
+# Requires: NATIVE, WINDOWS
+info lastinput               ;# Returns tick count of last input
 ```
 
 #### Environment and System
@@ -4877,7 +5030,7 @@ info administrator           ;# Returns: 1 if admin/root, 0 otherwise
 ```tcl
 # Parent process and previous PID
 info ppid                    ;# Returns parent process ID
-# info previouspid           ;# Returns previous PID (fork detection)
+info previouspid             ;# Returns previous PID (fork detection)
 ```
 
 ```tcl
@@ -4902,15 +5055,15 @@ info sharedlibextension      ;# Returns: ".dll", ".so", or ".dylib"
 
 ```tcl
 # Other system info
-# info shelllibrary          ;# Returns shell library path
+info shelllibrary            ;# Returns shell library path
 info newline                 ;# Returns platform newline ("\r\n" or "\n")
 info whitespace              ;# Returns whitespace chars recognized by parser
 ```
 
 ```tcl
 # Path queries by type
-# info path temp             ;# Returns temp directory
-# info path home             ;# Returns home directory
+info path temp               ;# Returns temp directory
+info path home               ;# Returns home directory
 ```
 
 #### .NET/CLR
@@ -4922,40 +5075,40 @@ info tclversion              ;# Returns Tcl compatibility version
 
 ```tcl
 # CLR and framework info
-# info clr                  ;# Alias for info framework
-# info framework            ;# Returns .NET Framework version
-# info frameworkextra        ;# Returns additional framework details
-# info runtime              ;# Returns runtime info (Mono, .NET Core, etc.)
-# info runtimeversion        ;# Returns runtime version string
-# info runtimeversion true   ;# With refresh from runtime
+info clr                     ;# Alias for info framework
+info framework               ;# Returns .NET Framework version
+info frameworkextra           ;# Returns additional framework details
+info runtime                 ;# Returns runtime info (Mono, .NET Core, etc.)
+info runtimeversion           ;# Returns runtime version string
+info runtimeversion true      ;# With refresh from runtime
 ```
 
 ```tcl
 # Application domain
-# info appdomain             ;# Returns current AppDomain name
+info appdomain               ;# Returns current AppDomain name
 ```
 
 ```tcl
 # Assembly information
-# info assembly              ;# Returns loaded assembly info
-# info assembly true         ;# Returns entry assembly info
+info assembly                ;# Returns loaded assembly info
+info assembly true           ;# Returns entry assembly info
 ```
 
 #### Engine and Version
 
 ```tcl
-# info engine                ;# Returns Eagle engine information
-# info engine Version        ;# Returns specific attribute
-# info setup                 ;# Returns setup/configuration info
-# info setup true            ;# Returns verbose setup info
+info engine                  ;# Returns Eagle engine information
+info engine Version          ;# Returns specific attribute
+info setup                   ;# Returns setup/configuration info
+info setup true              ;# Returns verbose setup info
 ```
 
 #### Objects, Types, and Functions
 
 ```tcl
-# info objects *             ;# List all opaque object handles
-# info delegates *           ;# List delegate objects
-# info ensembles             ;# List ensemble commands
+info objects *               ;# List all opaque object handles
+info delegates *             ;# List delegate objects
+info ensembles               ;# List ensemble commands
 ```
 
 ```tcl
@@ -4966,63 +5119,63 @@ info operands +              ;# Returns operand count for + operator
 ```
 
 ```tcl
-# info bindertypes           ;# List available binder types
-# info callbacks             ;# List registered callbacks
-# info policies              ;# List security policies
+info bindertypes             ;# List available binder types
+info callbacks               ;# List registered callbacks
+info policies                ;# List security policies
 ```
 
 #### Channels and Connections
 
 ```tcl
 info channels                ;# Returns: stdin stdout stderr ...
-# info connections           ;# List database connections
-# info transactions          ;# List active database transactions
+info connections             ;# List database connections
+info transactions            ;# List active database transactions
 ```
 
 #### Interpreter Management
 
 ```tcl
-# info interps               ;# List interpreters (all for non-safe, children for safe)
-# info interps * true        ;# List all interpreters
-# info loaded                ;# List loaded plugins
-# info modules               ;# List loaded modules
-# info externals             ;# Returns externals directory path
+info interps                 ;# List interpreters (all for non-safe, children for safe)
+info interps * true          ;# List all interpreters
+info loaded                  ;# List loaded plugins
+info modules                 ;# List loaded modules
+info externals               ;# Returns externals directory path
 ```
 
 ```tcl
 # Plugin information
-# info plugin MyPlugin       ;# Info about specific plugin
-# info pluginflags MyPlugin  ;# Plugin flags
+info plugin MyPlugin         ;# Info about specific plugin
+info pluginflags MyPlugin    ;# Plugin flags
 ```
 
 #### Culture
 
 ```tcl
-# info culture              ;# Current culture info
-# info culture en-US        ;# Set interpreter culture to en-US
-# info cultures *en*        ;# Cultures matching pattern
+info culture                 ;# Current culture info
+# info culture en-US        ;# Set interpreter culture to en-US (modifies state)
+info cultures *en*           ;# Cultures matching pattern
 ```
 
 #### Identifier and Decision
 
 ```tcl
-# info identifier myCmd     ;# Identifier info
-# info decision             ;# Type decision info
+info identifier myCmd        ;# Identifier info
+info decision                ;# Type decision info
 ```
 
 #### Windows-Specific
 
 ```tcl
 # Windows only
-# info windows              ;# List windows
-# info hwnd $handle         ;# Window handle info
-# info windowtext $handle   ;# Window title text
+info windows                 ;# List windows
+info hwnd $handle            ;# Window handle info
+info windowtext $handle      ;# Window title text
 ```
 
 #### Activity Tracking
 
 ```tcl
-# info active               ;# List active interpreters
+info active                  ;# List active interpreters
 ```
 
 ---
@@ -5037,7 +5190,7 @@ puts [version]               ;# e.g., "1.0.0.0"
 
 ```tcl
 # Version with additional flags
-# version Default            ;# Base version only
+version Default            ;# Base version only
 ```
 
 ---
@@ -5049,8 +5202,8 @@ puts [version]               ;# e.g., "1.0.0.0"
 
 ```tcl
 # Dynamic command execution
-set cmd "puts"
-set msg "Hello"
+set cmd puts
+set msg Hello
 eval $cmd [list $msg]
 ;# Prints: Hello
 ```
@@ -5079,7 +5232,7 @@ eval {
 
 ```tcl
 # Eagle extension — invoke at global level
-invoke #0 set globalVar "value"
+invoke #0 set globalVar value
 ```
 
 ```tcl
@@ -5096,35 +5249,35 @@ proc foo {} {
 
 ```tcl
 # Source a script file
-# source "config.eagle"
+source config.eagle
 ```
 
 ```tcl
 # Source with explicit encoding
-# source -encoding utf-8 "unicode_script.eagle"
+source -encoding utf-8 unicode_script.eagle
 ```
 
 ```tcl
 # Source with timing information
-# source -time true "benchmark.eagle"
+source -time true benchmark.eagle
 ```
 
 ```tcl
 # Source a script bundle database
 # Requires: DATA
-# source "myScripts.db"
+source myScripts.db
 ```
 
 ```tcl
 # Source an encrypted bundle
 # Requires: DATA
-# source -bundle true -password $key "secure.db"
+source -bundle true -password $key secure.db
 ```
 
 ```tcl
 # Source with bundle flags
 # Requires: DATA
-# source -bundleflags {StopOnError|RequireKeyRing} "production.db"
+source -bundleflags {StopOnError|RequireKeyRing} production.db
 ```
 
 ---
@@ -5133,7 +5286,7 @@ proc foo {} {
 ### subst
 
 ```tcl
-set name "World"
+set name World
 subst {Hello, $name!}
 ;# Returns: Hello, World!
 ```
@@ -5294,7 +5447,7 @@ subst -novariables -nocommands {Tab:\tNewline:\n}
 ```tcl
 # Check architecture compatibility
 # Requires: NATIVE, TCL
-# library matcharchitecture "mylib.dll"    ;# Returns: True or False
+# library matcharchitecture mylib.dll    ;# Returns: True or False
 ```
 
 ```tcl
@@ -5313,7 +5466,7 @@ subst -novariables -nocommands {Tab:\tNewline:\n}
 ### pid
 
 ```tcl
-puts "My PID: [pid]"
+puts [appendArgs "My PID: " [pid]]
 ```
 
 ---
@@ -5326,104 +5479,104 @@ puts "My PID: [pid]"
 #### Screen Control
 
 ```tcl
-# host clear                     ;# Clear console screen
-# host title "My Application"    ;# Set window title
-# set title [host title]         ;# Get current title
-# set pos [host position]        ;# Get cursor position {col row}
-# host position -x 10 -y 5      ;# Set cursor position
-# host size                      ;# Get console window size
-# host size -width 120 -height 40  ;# Set console size
+host clear                           ;# Clear console screen
+host title "My Application"          ;# Set window title
+set title [host title]               ;# Get current title
+set pos [host position]              ;# Get cursor position {col row}
+host position -x 10 -y 5            ;# Set cursor position
+host size                            ;# Get console window size
+host size -width 120 -height 40     ;# Set console size
 ```
 
 #### Colors and Styles
 
 ```tcl
-# host color -foreground Green -background Black
-# host color                     ;# Get current colors
-# host namedcolor -name Red      ;# Get named color value
+host color -foreground Green -background Black
+host color                           ;# Get current colors
+host namedcolor -name Red            ;# Get named color value
 ```
 
 ```tcl
 # Box and output styles
-# host boxstyle                  ;# Get current box style
-# host boxstyle 1                ;# Set box drawing style (integer index)
-# host outputstyle               ;# Get output style
-# host outputstyle "Normal"      ;# Set output style
+host boxstyle                        ;# Get current box style
+host boxstyle 1                      ;# Set box drawing style (integer index)
+host outputstyle                     ;# Get output style
+host outputstyle Normal              ;# Set output style
 ```
 
 #### Input
 
 ```tcl
-# host readchar                  ;# Read single character
-# host readkey                   ;# Read key press (with echo)
-# host readkey true              ;# Read key without echo (intercept)
-# set name [host readline]       ;# Read line of input
-# host readline true             ;# Allow null/empty input
-# host pause                     ;# Press any key...
+host readchar                        ;# Read single character
+host readkey                         ;# Read key press (with echo)
+host readkey true                    ;# Read key without echo (intercept)
+set name [host readline]             ;# Read line of input
+host readline true                   ;# Allow null/empty input
+host pause                           ;# Press any key...
 ```
 
 #### Output
 
 ```tcl
-# host write "Processing..." false   ;# No newline
-# host write " Done!\n"
-# host writebox "Important Message"  ;# Write text in decorative box
-# host beep                          ;# Sound alert
-# host beep -frequency 800 -duration 200  ;# Custom beep
+host write Processing... false        ;# No newline
+host write " Done!\n"
+host writebox "Important Message"    ;# Write text in decorative box
+host beep                            ;# Sound alert
+host beep -frequency 800 -duration 200  ;# Custom beep
 ```
 
 #### Screen Buffers
 
 ```tcl
 # Requires: NATIVE, WINDOWS
-# set screen [host screen create]     ;# Create new screen
-# host screen exists $screen          ;# Check if screen exists
-# host screen list                    ;# List all screens
-# host screen push $screen            ;# Activate it
-# host screen active                  ;# Get active screen
-# host screen peek                    ;# Peek at top of stack
-# host write "On secondary screen"
-# host screen pop                     ;# Return to previous
-# host screen delete $screen
+set screen [host screen create]      ;# Create new screen
+host screen exists $screen           ;# Check if screen exists
+host screen list                     ;# List all screens
+host screen push $screen             ;# Activate it
+host screen active                   ;# Get active screen
+host screen peek                     ;# Peek at top of stack
+host write "On secondary screen"
+host screen pop                      ;# Return to previous
+host screen delete $screen
 ```
 
 #### Channel Management
 
 ```tcl
-# host inchan                         ;# Get input channel
-# host outchan                        ;# Get output channel
-# host errchan                        ;# Get error channel
-# host redirected Output              ;# Check if stdout is redirected (ChannelType)
-# host mode Output                    ;# Get channel mode (ChannelType)
-# host echo false                     ;# Disable input echo (for passwords)
+host inchan                          ;# Get input channel
+host outchan                         ;# Get output channel
+host errchan                         ;# Get error channel
+host redirected Output               ;# Check if stdout is redirected (ChannelType)
+host mode Output                     ;# Get channel mode (ChannelType)
+host echo false                      ;# Disable input echo (for passwords)
 ```
 
 #### Host Lifecycle
 
 ```tcl
-# host open                           ;# Open host for interaction
-# host isopen                         ;# Returns: 1 if open
-# host close                          ;# Close host
+host open                            ;# Open host for interaction
+host isopen                          ;# Returns: 1 if open
+host close                           ;# Close host
 ```
 
 ```tcl
-# host cancel                         ;# Cancel current operation
-# host exit                           ;# Exit host
-# host reset                          ;# Reset to default state
+host cancel                          ;# Cancel current operation
+host exit                            ;# Exit host
+host reset                           ;# Reset to default state
 ```
 
 ```tcl
-# host flags                          ;# Returns capability flags
-# host query                          ;# Query host information
-# host result 0 "OK"                  ;# Set host result
-# host sleep 1000                     ;# Sleep for 1 second
+host flags                           ;# Returns capability flags
+host query                           ;# Query host information
+host result 0 OK                     ;# Set host result
+host sleep 1000                      ;# Sleep for 1 second
 ```
 
 ```tcl
 # Font settings
 # Requires: CONSOLE, NATIVE, WINDOWS
-# host font                           ;# Get current font info
-# host font -facename "Consolas" -fontsize 12 ;# Set console font
+host font                            ;# Get current font info
+host font -facename Consolas -fontsize 12 ;# Set console font
 ```
 
 ---
@@ -5433,7 +5586,7 @@ puts "My PID: [pid]"
 
 ```tcl
 # Load a compiled extension
-# load "myextension.dll" MyPackage
+load myextension.dll MyPackage
 ```
 
 ---
@@ -5443,8 +5596,8 @@ puts "My PID: [pid]"
 
 ```tcl
 # Unload a previously loaded extension
-# unload "myextension.dll" MyPackage
-# unload -nocomplain "myextension.dll"
+unload myextension.dll MyPackage
+unload -nocomplain myextension.dll
 ```
 
 ---
@@ -5457,8 +5610,8 @@ puts "My PID: [pid]"
 ```tcl
 # Define custom background error handler
 proc bgerror {message} {
-    puts stderr "Background error: $message"
-    puts stderr "Stack trace: $::errorInfo"
+    puts stderr [appendArgs "Background error: " $message]
+    puts stderr [appendArgs "Stack trace: " $::errorInfo]
 }
 ```
 
@@ -5496,7 +5649,7 @@ time {nop} 100000
 
 ```tcl
 # Rename a procedure
-proc myproc {} { return "hello" }
+proc myproc {} { return hello }
 rename myproc my_new_proc
 my_new_proc
 ;# Returns: hello
@@ -5504,7 +5657,7 @@ my_new_proc
 
 ```tcl
 # Delete a command
-proc temp {} { return "temporary" }
+proc temp {} { return temporary }
 rename temp {}
 ;# temp no longer exists
 ```
@@ -5514,7 +5667,7 @@ rename temp {}
 rename puts _original_puts
 proc puts {args} {
     set timestamp [clock format [clock seconds] -format "%H:%M:%S"]
-    eval _original_puts [list "\[$timestamp\]"] $args
+    eval _original_puts [list [appendArgs \[ $timestamp \]]] $args
 }
 # Now all puts calls include a timestamp prefix
 ```
@@ -5537,8 +5690,8 @@ The following examples reference procedures from the Eagle script library
 
 ```tcl
 # Using readFile / writeFile from file1.eagle
-# writeFile "output.txt" "Hello, World!"
-# set contents [readFile "output.txt"]
+# writeFile output.txt "Hello, World!"
+# set contents [readFile output.txt]
 ```
 
 #### Platform Detection
@@ -5548,7 +5701,7 @@ The following examples reference procedures from the Eagle script library
 # if {[isWindows]} {
 #     set pathSep ";"
 # } else {
-#     set pathSep ":"
+#     set pathSep :
 # }
 
 # if {[isDotNetCore]} {
@@ -5598,7 +5751,7 @@ proc safeOperation {args} {
     switch $code {
         0 { return $result }
         1 {
-            puts stderr "Error: $msg"
+            puts stderr [appendArgs "Error: " $msg]
             return ""
         }
         default {
@@ -5649,8 +5802,8 @@ object dispose $sb
 ```tcl
 # Using .NET collections
 set dict [object create "System.Collections.Generic.Dictionary\`2\[System.String,System.Int32\]"]
-object invoke $dict Add "one" 1
-object invoke $dict Add "two" 2
+object invoke $dict Add one 1
+object invoke $dict Add two 2
 set count [object invoke $dict Count]
 ;# count is 2
 object dispose $dict
@@ -5658,8 +5811,8 @@ object dispose $dict
 
 ```tcl
 # File operations via .NET
-set contents [object invoke System.IO.File ReadAllText "config.txt"]
-object invoke System.IO.File WriteAllText "output.txt" "Hello from Eagle"
+set contents [object invoke System.IO.File ReadAllText config.txt]
+object invoke System.IO.File WriteAllText output.txt "Hello from Eagle"
 ```
 
 ```tcl
@@ -5695,7 +5848,7 @@ scope destroy myAcc
 ```tcl
 # Parameterized test pattern
 foreach {n expected} {0 1  1 1  5 120  10 3628800} {
-    test1 "factorial-$n" "factorial($n) == $expected" {} {
+    test1 [appendArgs factorial- $n] [appendArgs factorial( $n ") == " $expected] {} {
         proc fact {n} {
             if {$n <= 1} {return 1}
             expr {$n * [fact [expr {$n - 1}]]}
@@ -5707,10 +5860,10 @@ foreach {n expected} {0 1  1 1  5 120  10 3628800} {
 
 ```tcl
 # Test with temporary files
-test2 "tempfile-1.1" "Write and read temp file" \
+test2 tempfile-1.1 "Write and read temp file" \
     -setup {
         set tmpDir [file temppath]
-        set tmpFile [file join $tmpDir "eagle_test_[pid].txt"]
+        set tmpFile [file join $tmpDir [appendArgs eagle_test_ [pid] .txt]]
     } \
     -body {
         set fh [open $tmpFile w]
