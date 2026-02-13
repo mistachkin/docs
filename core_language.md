@@ -12693,7 +12693,7 @@ These flags are OR'd into the `TracePriority` value to control per-message forma
 | `EnableAppDomainFlag` | `0x8000000` | Include the `AppDomain.Id` in the formatted output. |
 | `EnableInterpreterFlag` | `0x10000000` | Include the `Interpreter.Id` in the formatted output. |
 | `DisableInterpreterFlag` | `0x20000000` | Suppress the `Interpreter.Id` even if the format string includes it. |
-| `EnableThreadIdFlag` | `0x40000000` | Include the `Thread.ManagedThreadId` in the formatted output. |
+| `EnableThreadIdFlag` | `0x40000000` | Include the thread ID in the formatted output. This is the native thread ID when `NATIVE_THREAD_ID` is defined (the default); otherwise, `Thread.ManagedThreadId`. |
 | `EnableMethodFlag` | `0x80000000` | Include the caller method name in the formatted output. |
 | `EnableStackFlag` | `0x100000000` | Include the full stack trace in the formatted output. |
 | `EnableExtraNewLinesFlag` | `0x200000000` | Surround the message with extra blank lines for visual separation. |
@@ -12913,7 +12913,7 @@ The subsystem formats each trace message using `String.Format` with 12 positiona
 | `{4}` | Test name | `string-length-1.1` (or `null`) |
 | `{5}` | `AppDomain.Id` | `1` |
 | `{6}` | `Interpreter.Id` | `0` |
-| `{7}` | `Thread.ManagedThreadId` | `1` |
+| `{7}` | Thread ID (native when `NATIVE_THREAD_ID` is defined; otherwise, managed) | `1` |
 | `{8}` | Caller method name | `Execute` |
 | `{9}` | Stack trace | (full trace or empty) |
 | `{10}` | Message body | `my trace message` |
@@ -13237,7 +13237,7 @@ The following parameters are not exposed through `debug trace` options but can b
 | `traceTestName` | `bool` | `false` | Include the current test name in all messages. |
 | `traceAppDomain` | `bool` | `false` | Include the `AppDomain.Id` in all messages. |
 | `traceInterpreter` | `bool` | `false` | Include the `Interpreter.Id` in all messages. |
-| `traceThreadId` | `bool` | `false` | Include the `Thread.ManagedThreadId` in all messages. |
+| `traceThreadId` | `bool` | `false` | Include the thread ID in all messages. This is the native thread ID when `NATIVE_THREAD_ID` is defined (the default); otherwise, `Thread.ManagedThreadId`. |
 | `traceMethod` | `bool` | `false` | Include the caller method name in all messages. |
 | `traceStack` | `bool` | `false` | Include the full stack trace in all messages. |
 | `traceExtraNewLines` | `bool` | `false` | Surround all messages with extra blank lines. |
