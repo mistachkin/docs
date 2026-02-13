@@ -141,10 +141,10 @@ Type `exit` or press Ctrl+C to leave the interactive shell. For a full list of i
 
 ### Running a Script File
 
-Pass a script filename as the first argument:
+Use `-file` to specify a script file to evaluate:
 
 ```
-EagleShell.exe myscript.eagle
+EagleShell.exe -file myscript.eagle
 ```
 
 ### Evaluating from the Command Line
@@ -153,12 +153,6 @@ Use the `-evaluate` option to evaluate a script directly:
 
 ```
 EagleShell.exe -evaluate "puts {Hello from the command line!}"
-```
-
-Use `-file` to explicitly specify a script file:
-
-```
-EagleShell.exe -file myscript.eagle
 ```
 
 For a complete list of shell options, see the Eagle Shell Command Line Options section in [core_language.md](core_language.md).
@@ -262,20 +256,20 @@ Use `array names`, `array get`, `array set`, and `array size` to work with array
 ```tcl
 set x 15
 if {$x > 10} then {
-    set result large
+  set result large
 } elseif {$x > 5} then {
-    set result medium
+  set result medium
 } else {
-    set result small
+  set result small
 }
-;# result is "large"
+;# result is large
 ```
 
 #### for (C-style loop)
 
 ```tcl
 for {set i 0} {$i < 5} {incr i} {
-    puts $i
+  puts $i
 }
 # Prints: 0 1 2 3 4
 ```
@@ -284,7 +278,7 @@ for {set i 0} {$i < 5} {incr i} {
 
 ```tcl
 foreach fruit {apple banana cherry} {
-    puts $fruit
+  puts $fruit
 }
 # Prints: apple banana cherry
 ```
@@ -294,8 +288,8 @@ foreach fruit {apple banana cherry} {
 ```tcl
 set i 0
 while {$i < 3} {
-    puts $i
-    incr i
+  puts $i
+  incr i
 }
 # Prints: 0 1 2
 ```
@@ -308,7 +302,7 @@ Use `proc` to define reusable procedures:
 
 ```tcl
 proc greet {name} {
-    return [appendArgs "Hello, " $name !]
+  return [appendArgs "Hello, " $name !]
 }
 greet World
 ;# Returns: Hello, World!
@@ -318,7 +312,7 @@ Procedures can have default argument values and variable arguments:
 
 ```tcl
 proc connect {host {port 80} {timeout 30}} {
-    return [appendArgs "Connecting to " $host : $port " (timeout=" $timeout )]
+  return [appendArgs "Connecting to " $host : $port " (timeout=" $timeout )]
 }
 connect localhost            ;# port=80, timeout=30
 connect localhost 8080       ;# timeout=30
@@ -329,9 +323,9 @@ Use `args` as the last parameter to accept a variable number of arguments:
 
 ```tcl
 proc sum {args} {
-    set total 0
-    foreach n $args { incr total $n }
-    return $total
+  set total 0
+  foreach n $args { incr total $n }
+  return $total
 }
 sum 1 2 3 4 5
 ;# Returns: 15
@@ -359,7 +353,7 @@ lappend colors yellow
 
 # Iterate
 foreach c $colors {
-    puts $c
+  puts $c
 }
 
 # Search
@@ -379,7 +373,7 @@ The `string` command provides a wide range of string operations:
 
 ```tcl
 # Length
-string length "Eagle"
+string length Eagle
 ;# Returns: 5
 
 # Substring
@@ -387,11 +381,11 @@ string range "Hello, World!" 0 4
 ;# Returns: Hello
 
 # Case conversion
-string toupper "eagle"
+string toupper eagle
 ;# Returns: EAGLE
 
 # Pattern matching
-string match "*.txt" "report.txt"
+string match *.txt report.txt
 ;# Returns: 1
 
 # String mapping (search and replace)
@@ -458,7 +452,7 @@ Use `object create` to instantiate .NET types:
 
 ```tcl
 # Create a StringBuilder
-set sb [object create System.Text.StringBuilder "Initial"]
+set sb [object create System.Text.StringBuilder Initial]
 
 # Create with alias (generates a command you can call directly)
 set form [object create -alias System.Windows.Forms.Form]
@@ -477,7 +471,7 @@ Use `object invoke` to call methods and access properties:
 set sb [object create System.Text.StringBuilder]
 
 # Call methods
-object invoke $sb Append "Hello"
+object invoke $sb Append Hello
 object invoke $sb Append ", World!"
 
 # Read a property
@@ -508,14 +502,14 @@ Always clean up .NET objects when you are done with them, especially objects tha
 
 ```tcl
 try {
-    set stream [object create System.IO.MemoryStream]
+  set stream [object create System.IO.MemoryStream]
 
-    object invoke $stream WriteByte 65
-    object invoke $stream WriteByte 66
+  object invoke $stream WriteByte 65
+  object invoke $stream WriteByte 66
 } finally {
-    if {[info exists stream]} then {
-        object dispose $stream
-    }
+  if {[info exists stream]} then {
+    object dispose $stream
+  }
 }
 ```
 
@@ -523,13 +517,13 @@ For multiple resources:
 
 ```tcl
 try {
-    set reader [object create System.IO.StreamReader $filename]
+  set reader [object create System.IO.StreamReader $filename]
 
-    set content [object invoke $reader ReadToEnd]
+  set content [object invoke $reader ReadToEnd]
 } finally {
-    if {[info exists reader]} then {
-        object dispose $reader
-    }
+  if {[info exists reader]} then {
+    object dispose $reader
+  }
 }
 ```
 
@@ -553,7 +547,7 @@ proc centerButton {} {
 object load -import System.Windows.Forms
 set form [object create -alias Form]
 
-$form Text "[info engine] Test 'ex_winForms.eagle' Form Title"
+$form Text [appendArgs [info engine] " Test 'ex_winForms.eagle' Form Title"]
 $form TopMost true
 $form Show
 

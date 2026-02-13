@@ -65,11 +65,11 @@ The `appendArgs` library procedure concatenates all its arguments into a single 
 
 ```tcl
 # concat can introduce unwanted spaces and treats values as list elements
-concat "Hello," " World!"
+concat Hello, " World!"
 ;# Returns: Hello, World!  (note: handled as list elements)
 
 # appendArgs concatenates exactly what you pass
-appendArgs "Hello," " World!"
+appendArgs Hello, " World!"
 ;# Returns: Hello, World!
 ```
 
@@ -77,18 +77,18 @@ The difference matters most when building strings that contain special character
 
 ```tcl
 # Building a path-like string
-set base "/api"
-set version "v1"
-set endpoint "users"
+set base /api
+set version v1
+set endpoint users
 appendArgs $base / $version / $endpoint
 ;# Returns: /api/v1/users
 
 # Building error messages
 proc positiveInt {n} {
-    if {![string is integer -strict $n] || $n <= 0} then {
-        error [appendArgs "expected positive integer, got \"" $n \"]
-    }
-    return $n
+  if {![string is integer -strict $n] || $n <= 0} then {
+    error [appendArgs "expected positive integer, got \"" $n \"]
+  }
+  return $n
 }
 ```
 
@@ -114,7 +114,7 @@ object load System.Data
 object import System.Text System.IO
 
 # 3. Create an instance
-set sb [object create StringBuilder "Hello"]
+set sb [object create StringBuilder Hello]
 
 # 4. Call methods and properties
 object invoke $sb Append ", World!"
@@ -143,18 +143,18 @@ $form Show
 
 ```tcl
 set list [object create System.Collections.ArrayList]
-object invoke $list Add "one"
-object invoke $list Add "two"
-object invoke $list Add "three"
+object invoke $list Add one
+object invoke $list Add two
+object invoke $list Add three
 
 # foreach over IEnumerable
 object foreach item $list {
-    puts $item
+  puts $item
 }
 
 # lmap to collect transformed results
 set upper [object lmap item $list {
-    string toupper $item
+  string toupper $item
 }]
 ;# Returns: {ONE TWO THREE}
 ```
@@ -192,33 +192,39 @@ object types *DataTable*
 
 ### Object Lifecycle: try/finally + dispose
 
-.NET objects that implement `IDisposable` must be cleaned up. The canonical pattern uses `try`/`finally` to guarantee `object dispose` runs even if an error occurs:
+.NET objects that implement `IDisposable` must be cleaned up. The canonical pattern acquires resources inside `try` and uses `[info exists]` in the `finally` block to guard cleanup:
 
 ```tcl
 # Single resource
-set stream [object create System.IO.MemoryStream]
 try {
-    object invoke $stream WriteByte 65
-    object invoke $stream WriteByte 66
+  set stream [object create System.IO.MemoryStream]
+
+  object invoke $stream WriteByte 65
+  object invoke $stream WriteByte 66
 } finally {
+  if {[info exists stream]} then {
     object dispose $stream
+  }
 }
 ```
 
 For multiple resources:
 
 ```tcl
-set resources [list]
 try {
-    lappend resources [object create -alias System.IO.FileStream \
-        $inputFile Read]
-    lappend resources [object create -alias System.IO.FileStream \
-        $outputFile Write]
-    # Use resources...
+  set resources [list]
+
+  lappend resources [object create -alias System.IO.FileStream \
+      $inputFile Read]
+  lappend resources [object create -alias System.IO.FileStream \
+      $outputFile Write]
+  # Use resources...
 } finally {
+  if {[info exists resources]} then {
     foreach resource $resources {
-        catch {object dispose $resource}
+      catch {object dispose $resource}
     }
+  }
 }
 ```
 
@@ -237,18 +243,18 @@ Eagle can compile C# code at runtime using the script library procedures from `c
 ```tcl
 # Check if compilation is available
 if {[doesCompileCSharpWork]} then {
-    # Compile C# source code in memory
-    set source {
-        public class Calculator {
-            public static int Add(int a, int b) { return a + b; }
-        }
-    }
-    set assembly [compileViaCSharpCodeProvider $source true false false \
-        results errors]
+  # Compile C# source code in memory
+  set source {
+      public class Calculator {
+          public static int Add(int a, int b) { return a + b; }
+      }
+  }
+  set assembly [compileViaCSharpCodeProvider $source true false false \
+      results errors]
 
-    # Call the compiled method
-    set result [object invoke Calculator Add 3 4]
-    ;# Returns: 7
+  # Call the compiled method
+  set result [object invoke Calculator Add 3 4]
+  ;# Returns: 7
 }
 ```
 
@@ -276,11 +282,11 @@ Disables variable traces and watchpoints within the procedure, eliminating trace
 
 ```tcl
 proc computeIntensive {data} {; # <<fast>>
-    set sum 0
-    foreach item $data {
-        set sum [expr {$sum + $item}]
-    }
-    return $sum
+  set sum 0
+  foreach item $data {
+    set sum [expr {$sum + $item}]
+  }
+  return $sum
 }
 ```
 
@@ -290,9 +296,9 @@ Holds the interpreter's internal lock for the entire procedure execution, preven
 
 ```tcl
 proc updateSharedState {key value} {; # <<atomic>>
-    variable sharedData
-    set sharedData($key) $value
-    return [array size sharedData]
+  variable sharedData
+  set sharedData($key) $value
+  return [array size sharedData]
 }
 ```
 
@@ -304,12 +310,12 @@ Skips creating a new call frame. The procedure body executes in the caller's var
 
 ```tcl
 proc setLocal {varName value} {; # <<inline>>
-    set $varName $value
+  set $varName $value
 }
 
 proc example {} {
-    setLocal myVar 42
-    puts $myVar   ;# 42 — set by the inline procedure
+  setLocal myVar 42
+  puts $myVar   ;# 42 — set by the inline procedure
 }
 ```
 
@@ -319,13 +325,13 @@ Restricts the procedure so it can only be called from within its own namespace:
 
 ```tcl
 namespace eval ::MyLib {
-    proc publicApi {x} {
-        return [helper $x]
-    }
+  proc publicApi {x} {
+    return [helper $x]
+  }
 
-    proc helper {x} {; # <<private>>
-        return [expr {$x * 2}]
-    }
+  proc helper {x} {; # <<private>>
+    return [expr {$x * 2}]
+  }
 }
 
 ::MyLib::publicApi 5     ;# OK — returns 10
@@ -340,7 +346,7 @@ Enables type restriction enforcement on local variables within the procedure's c
 
 ```tcl
 proc typedExample {x y} {; # <<matchTypes>>
-    return [expr {$x + $y}]
+  return [expr {$x + $y}]
 }
 ```
 
@@ -350,7 +356,7 @@ Forces the interpreter to re-parse the body on each invocation rather than reusi
 
 ```tcl
 proc dynamicBody {code} {; # <<nonCaching>>
-    eval $code
+  eval $code
 }
 ```
 
@@ -360,8 +366,8 @@ Multiple annotations can appear on the same line:
 
 ```tcl
 proc secureHelper {x} {; # <<private>> <<fast>>
-    # Both private and fast
-    return [expr {$x * $x}]
+  # Both private and fast
+  return [expr {$x * $x}]
 }
 ```
 
@@ -379,7 +385,8 @@ Eagle extends Tcl's procedure system with named (keyword) arguments via `nproc` 
 
 ```tcl
 nproc connect {host port timeout} {
-    return [appendArgs "Connecting to " $host : $port " (timeout=" $timeout )]
+  return [appendArgs "Connecting to " $host : $port \
+      " (timeout=" $timeout )]
 }
 
 # Call with named arguments in any order
@@ -411,11 +418,11 @@ The `scope` command creates persistent variable environments that survive across
 
 ```tcl
 proc counter {name} {
-    scope create -open -clone -args $name
-    if {![info exists count]} then {set count 0}
-    incr count
-    return $count
-    # scope close implied on return
+  scope create -open -clone -args $name
+  if {![info exists count]} then {set count 0}
+  incr count
+  return $count
+  # scope close implied on return
 }
 
 counter myCounter  ;# Returns: 1
@@ -436,9 +443,9 @@ How it works:
 ```tcl
 scope create myScope
 scope eval myScope {
-    set x 10
-    set y 20
-    expr {$x + $y}
+  set x 10
+  set y 20
+  expr {$x + $y}
 }
 ;# Returns: 30
 
@@ -453,10 +460,10 @@ scope destroy myScope
 
 ```tcl
 proc accumulate {value} {
-    scope create -open -procedure -args
-    if {![info exists total]} then {set total 0}
-    incr total $value
-    return $total
+  scope create -open -procedure -args
+  if {![info exists total]} then {set total 0}
+  incr total $value
+  return $total
 }
 
 accumulate 10   ;# Returns: 10
@@ -482,8 +489,8 @@ Eagle adds the `do` loop, which executes the body at least once before testing t
 set i 0
 set result [list]
 do {
-    lappend result $i
-    incr i
+  lappend result $i
+  incr i
 } while {$i < 5}
 ;# result is {0 1 2 3 4}
 ```
@@ -495,7 +502,7 @@ The `until` form loops while the condition is **false** (i.e., it stops when the
 ```tcl
 set j 0
 do {
-    incr j
+  incr j
 } until {$j >= 5}
 ;# j is 5
 ```
@@ -512,12 +519,15 @@ Eagle's `try`/`finally` guarantees the finally block runs even if the try block 
 
 ```tcl
 proc readFirstLine {filename} {
+  try {
     set fh [open $filename r]
-    try {
-        return [gets $fh]
-    } finally {
-        close $fh
+
+    return [gets $fh]
+  } finally {
+    if {[info exists fh]} then {
+      close $fh
     }
+  }
 }
 ```
 
@@ -525,14 +535,19 @@ The finally block executes after the `return` but before the value is returned t
 
 ```tcl
 # Error handling with guaranteed cleanup
-set tempFile [file tempname]
-set fh [open $tempFile w]
 try {
-    puts $fh "test data"
-    error "simulated failure"
+  set tempFile [file tempname]
+  set fh [open $tempFile w]
+
+  puts $fh "test data"
+  error "simulated failure"
 } finally {
+  if {[info exists fh]} then {
     close $fh
+  }
+  if {[info exists tempFile]} then {
     file delete -force $tempFile
+  }
 }
 # fh is closed and tempFile deleted even though error occurred
 ```
@@ -575,14 +590,14 @@ set doubled [lmap x {1 2 3 4 5} {expr {$x * 2}}]
 
 # Filter: keep only positive numbers
 set positive [lmap x {-3 -1 0 2 4 -5 7} {
-    if {$x > 0} then {set x} else {continue}
+  if {$x > 0} then {set x} else {continue}
 }]
 ;# Returns: {2 4 7}
 
 # Transform key-value pairs
 set pairs {a 1 b 2 c 3}
 set formatted [lmap {k v} $pairs {
-    format "%s=%s" $k $v
+  appendArgs $k = $v
 }]
 ;# Returns: {a=1 b=2 c=3}
 ```
@@ -710,7 +725,7 @@ Eagle includes a native `base64` command for encoding and decoding:
 base64 encode "Hello, World!"
 ;# Returns: SGVsbG8sIFdvcmxkIQ==
 
-base64 decode "SGVsbG8sIFdvcmxkIQ=="
+base64 decode SGVsbG8sIFdvcmxkIQ==
 ;# Returns: Hello, World!
 
 # Round-trip
@@ -721,7 +736,7 @@ expr {$original eq $decoded}
 ;# Returns: 1
 
 # Specify encoding
-base64 encode -encoding utf-8 "Hello"
+base64 encode -encoding utf-8 Hello
 ```
 
 - **See also**: [core_language.md](core_language.md#cmd-base64) — `base64` command
@@ -734,15 +749,15 @@ The `hash` command provides access to .NET's cryptographic hash algorithms:
 
 ```tcl
 # SHA-256
-hash normal sha256 "Hello"
+hash normal sha256 Hello
 ;# Returns: 185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969
 
 # MD5
-hash normal md5 "Hello"
+hash normal md5 Hello
 ;# Returns: 8b1a9953c4611296a827abf8c47804d7
 
 # HMAC (keyed-hash message authentication code)
-hash mac sha256 "message" "secret-key"
+hash mac sha256 message secret-key
 
 # List available algorithms
 hash list
@@ -761,10 +776,10 @@ Generate and validate GUIDs/UUIDs:
 
 ```tcl
 set id [guid new]
-;# e.g., "550e8400-e29b-41d4-a716-446655440000"
+;# e.g., 550e8400-e29b-41d4-a716-446655440000
 
 guid isvalid $id              ;# Returns: 1
-guid isvalid "not-a-guid"    ;# Returns: 0
+guid isvalid not-a-guid       ;# Returns: 0
 
 guid isnull [guid null]       ;# Returns: 1 (all-zeros GUID)
 guid isnull [guid new]        ;# Returns: 0
@@ -796,7 +811,7 @@ uri isvalid https://example.com    ;# Returns: 1
 # URL encoding/decoding
 set encoded [uri escape Data "hello world"]
 ;# Returns: hello%20world
-set decoded [uri unescape "hello%20world"]
+set decoded [uri unescape hello%20world]
 ;# Returns: hello world
 
 # HTTP GET (returns content as string)
@@ -829,14 +844,15 @@ The `sql` command provides database access through ADO.NET:
 set conn [sql open "Data Source=mydb.sqlite;Version=3;"]
 
 # Scalar query
-set count [sql execute -execute scalar $conn "SELECT COUNT(*) FROM users"]
+set count [sql execute -execute scalar $conn \
+    "SELECT COUNT(*) FROM users"]
 
 # Reader query with results as nested lists
 set results [sql execute -execute reader -format nestedlist $conn \
     "SELECT name, age FROM users"]
 foreach row $results {
-    lassign $row name age
-    puts [appendArgs "Name: " $name ", Age: " $age]
+  lassign $row name age
+  puts [appendArgs "Name: " $name ", Age: " $age]
 }
 
 # Parameterized query (safe from SQL injection)
@@ -853,11 +869,15 @@ sql close $conn
 ```tcl
 set trans [sql transaction begin $conn]
 try {
-    sql execute $conn "INSERT INTO users (name) VALUES (@n)" {n String Alice}
-    sql execute $conn "INSERT INTO users (name) VALUES (@n)" {n String Bob}
-    sql transaction commit $trans
+  sql execute $conn \
+      "INSERT INTO users (name) VALUES (@n)" \
+      {n String Alice}
+  sql execute $conn \
+      "INSERT INTO users (name) VALUES (@n)" \
+      {n String Bob}
+  sql transaction commit $trans
 } finally {
-    catch {sql transaction rollback $trans}
+  catch {sql transaction rollback $trans}
 }
 ```
 
@@ -881,7 +901,7 @@ set person [xml deserialize MyNamespace.Person $xmlStr]
 # Iterate over XML elements
 set xmlData {<items><item>A</item><item>B</item><item>C</item></items>}
 xml foreach node $xmlData {
-    puts [appendArgs "Element: " $node]
+  puts [appendArgs "Element: " $node]
 }
 
 # Validate against XSD schema
@@ -914,7 +934,7 @@ Use this when matching the same pattern against many strings in a loop.
 ```tcl
 # -eval: evaluate the replacement as a script
 regsub -all -eval {\d+} "item1 item2 item3" {
-    expr {[string range $match 0 end] * 10}
+  expr {[string range $match 0 end] * 10}
 }
 ```
 
@@ -986,7 +1006,7 @@ Eagle includes a policy subsystem for fine-grained security control:
 
 ```tcl
 interp policy $safe {
-    # Policy script evaluated for sensitive operations
+  # Policy script evaluated for sensitive operations
 }
 ```
 
@@ -994,7 +1014,7 @@ Hidden commands can be selectively exposed:
 
 ```tcl
 interp hidden $safe              ;# List hidden commands
-interp invokehidden $safe source "trusted_script.tcl"
+interp invokehidden $safe source trusted_script.tcl
 ```
 
 - **See also**: [core_language.md](core_language.md#cmd-interp) — `interp` command; [core_examples.md](core_examples.md#ex-interp) — interp examples
@@ -1010,12 +1030,12 @@ Eagle includes built-in test commands for writing and running tests.
 #### test1: Basic Tests
 
 ```tcl
-test1 "string-length-1.1" "Test string length" {} {
-    string length "hello"
+test1 string-length-1.1 "Test string length" {} {
+  string length hello
 } {5}
 
-test1 "math-1.1" "Test basic arithmetic" {} {
-    expr {2 + 2}
+test1 math-1.1 "Test basic arithmetic" {} {
+  expr {2 + 2}
 } {4}
 ```
 
@@ -1024,21 +1044,21 @@ Arguments: name, description, constraints, body, expected result.
 #### test2: Advanced Tests with Setup/Cleanup
 
 ```tcl
-test2 "file-read-1.1" "Test file reading" \
+test2 file-read-1.1 "Test file reading" \
     -setup {
-        set tmpFile [file tempname]
-        set fh [open $tmpFile w]
-        puts $fh "test data"
-        close $fh
+      set tmpFile [file tempname]
+      set fh [open $tmpFile w]
+      puts $fh "test data"
+      close $fh
     } \
     -body {
-        set fh [open $tmpFile r]
-        set data [read -nonewline $fh]
-        close $fh
-        return $data
+      set fh [open $tmpFile r]
+      set data [read -nonewline $fh]
+      close $fh
+      return $data
     } \
     -cleanup {
-        file delete -force $tmpFile
+      file delete -force $tmpFile
     } \
     -result "test data" \
     -match exact
@@ -1047,9 +1067,9 @@ test2 "file-read-1.1" "Test file reading" \
 #### Testing Expected Errors
 
 ```tcl
-test2 "error-1.1" "Test error handling" \
+test2 error-1.1 "Test error handling" \
     -body {
-        error "expected error"
+      error "expected error"
     } \
     -returnCodes error \
     -result "expected error"
@@ -1061,17 +1081,17 @@ Constraints control when tests run. If a constraint is not satisfied, the test i
 
 ```tcl
 # Platform-specific test
-test2 "platform-1.1" "Unix-only test" \
+test2 platform-1.1 "Unix-only test" \
     -constraints {unix} \
     -body {
-        file exists /dev/null
+      file exists /dev/null
     } \
     -result {1}
 
 # Pattern matching
-test2 "version-1.1" "Test version format" \
+test2 version-1.1 "Test version format" \
     -body {
-        version
+      version
     } \
     -match glob \
     -result {*.*.*.*}
@@ -1149,8 +1169,8 @@ debug memory                       ;# Memory statistics
 
 ```tcl
 debug run {
-    # This code runs at full speed without debugger interception
-    set result [expensive_computation]
+  # This code runs at full speed without debugger interception
+  set result [expensive_computation]
 }
 ```
 
@@ -1166,19 +1186,19 @@ The Eagle script library (`Eagle1.0`) provides commonly used utility procedures.
 
 ```tcl
 if {[isEagle]} then {
-    puts "Running in Eagle"
+  puts "Running in Eagle"
 }
 
 if {[isWindows]} then {
-    set pathSep ";"
+  set pathSep ";"
 } else {
-    set pathSep ":"
+  set pathSep :
 }
 
 if {[isDotNetCore]} then {
-    puts "Running on .NET Core"
+  puts "Running on .NET Core"
 } elseif {[isMono]} then {
-    puts "Running on Mono"
+  puts "Running on Mono"
 }
 ```
 
@@ -1197,7 +1217,7 @@ set data {name Alice age 30 city Boston}
 getDictionaryValue $data name
 ;# Returns: Alice
 
-getDictionaryValue $data country "unknown"
+getDictionaryValue $data country unknown
 ;# Returns: unknown (default when key not found)
 ```
 

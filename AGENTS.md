@@ -39,6 +39,8 @@ pitfalls** when working with Eagle.
 | `core_script_library.md` | Contains 580+ library procedures (script-level utilities), organized by package and source file | When you need helper procedures, test utilities, file helpers, platform detection, etc. |
 | `tips_and_tricks.md` | Eagle-unique features, advanced idioms, and best practices not found in standard Tcl | When looking for Eagle-specific patterns, performance tips, or unique capabilities |
 | `garuda.md` | The Eagle Native Package for Tcl (Garuda) reference | When you need to integrate with Eagle via a native Tcl environment |
+| `integrations.md` | Eagle's four official integration sub-projects: MSBuild, WiX, PowerShell, MonoDevelop | When you need to use Eagle from MSBuild builds, WiX installers, PowerShell, or MonoDevelop |
+| `updater.md` | Eagle Updater (Hippogriff) architecture and design analysis | When you need to understand the update mechanism, its security model, or its configuration |
 | `AGENTS.md` | You are here | How to navigate and answer accurately |
 
 ---
@@ -55,7 +57,14 @@ Ask yourself:
   `execShell`, `isWindows`?"
   → Go to `core_script_library.md`.
 
-If you’re unsure:
+- "How do I use Eagle from **MSBuild**, **WiX**, **PowerShell**, or
+  **MonoDevelop**?"
+  → Go to `integrations.md`.
+
+- "How does the Eagle **updater** work?" or "What is **Hippogriff**?"
+  → Go to `updater.md`.
+
+If you're unsure:
 - Search both by name. Commands are typically shorter / more Tcl-like; library
   procedures are usually more descriptive and live in named `.eagle` modules.
 
@@ -233,10 +242,20 @@ where, rather than duplicating full reference content.
 - Go to: `core_script_library.md` → Test framework (`test.eagle`) and constraints
   (`constraints.eagle`)
 
-### Recipe: Implement “dict-like” data access
+### Recipe: Implement "dict-like" data access
 - Go to: `core_script_library.md`
 - Search for: `getDictionaryValue`
 - Use key-value lists (`{name1 value1 name2 value2 ...}`), not Tcl dicts.
+
+### Recipe: Evaluate an Eagle script from an MSBuild target
+- Go to: `integrations.md` → MSBuild Integration → Examples
+- Look for: EvaluateScript task with Text parameter
+- Key detail: use `__task` object for BuildEngine access
+
+### Recipe: Understand the Eagle update workflow and security model
+- Go to: `updater.md` → Update Workflow (section 4) for the full flow
+- Go to: `updater.md` → Security Model (section 5) for verification layers
+- Key detail: multi-layer verification (Authenticode + strong name + triple hash)
 
 ---
 

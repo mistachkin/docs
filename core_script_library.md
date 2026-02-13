@@ -220,10 +220,10 @@ Detects whether the script is running in Eagle or vanilla Tcl.
 
 - **Example**:
 ```tcl
-if {[isEagle]} {
-    puts "Running in Eagle"
+if {[isEagle]} then {
+  puts "Running in Eagle"
 } else {
-    puts "Running in Tcl"
+  puts "Running in Tcl"
 }
 ```
 
@@ -294,7 +294,7 @@ Sources a script file while preserving location information for procedures defin
 
 - **Example**:
 ```tcl
-sourceWithInfo "mylib.eagle"    ;# Same as source, but tracks procedure locations
+sourceWithInfo mylib.eagle    ;# Same as source, but tracks procedure locations
 ```
 
 ---
@@ -445,8 +445,8 @@ Finds and returns a named value from a dictionary (list of name-value pairs).
 - **Example**:
 ```tcl
 set dict {color red size large}
-set color [getDictionaryValue $dict color "unknown"]  ;# Returns: red
-set shape [getDictionaryValue $dict shape "circle"]   ;# Returns: circle
+set color [getDictionaryValue $dict color unknown]  ;# Returns: red
+set shape [getDictionaryValue $dict shape circle]   ;# Returns: circle
 ```
 
 - **See also**: `lappendArgs`, `appendArgs`
@@ -506,7 +506,7 @@ Prints the contents of an array to stdout, emulating the native Tcl `parray` pro
 
 - **Example**:
 ```tcl
-array set data {name "John" age 30 city "NYC"}
+array set data {name John age 30 city NYC}
 parray data
 # Output:
 # data(age)  = 30
@@ -614,9 +614,9 @@ Gets the value of a database column from a row.
 
 - **Example**:
 ```tcl
-set row {{name "John"} {age 30}}
-set name [getColumnValue $row name "Unknown"]  ;# Returns: John
-set city [getColumnValue $row city "N/A"]      ;# Returns: N/A
+set row {{name John} {age 30}}
+set name [getColumnValue $row name Unknown]  ;# Returns: John
+set city [getColumnValue $row city N/A]      ;# Returns: N/A
 ```
 
 - **See also**: `getRowColumnValue`, `haveColumnValue`
@@ -659,7 +659,7 @@ Appends all arguments as list elements and returns the resulting list.
 
 - **Example**:
 ```tcl
-set items [lappendArgs "a" "b" "c"]  ;# Returns: {a b c}
+set items [lappendArgs a b c]  ;# Returns: {a b c}
 ```
 
 ---
@@ -959,7 +959,7 @@ Reads all data from a binary file.
 
 - **Example**:
 ```tcl
-set data [readFile "image.png"]
+set data [readFile image.png]
 ```
 
 - **See also**: `writeFile`, `appendFile`
@@ -1481,8 +1481,8 @@ Extracts the exit code from `$::errorCode` after an `exec` command.
 
 - **Example**:
 ```tcl
-if {[catch {exec somecommand} result]} {
-    set exitCode [maybeGetExitCode $::errorCode -1]
+if {[catch {exec somecommand} result]} then {
+  set exitCode [maybeGetExitCode $::errorCode -1]
 }
 ```
 
@@ -1640,7 +1640,7 @@ Combines two flag strings and optionally excludes specified flags.
 - **Example**:
 ```tcl
 # Combine .NET enum flags
-set flags [combineFlags "Public" "Instance"]
+set flags [combineFlags Public Instance]
 # Returns: "Public, Instance"
 ```
 
@@ -1799,8 +1799,8 @@ Evaluates a script asynchronously with optional completion notification.
 - **Example**:
 ```tcl
 evalAsync {puts "Done: $context"} {
-    after 1000
-    return "result"
+  after 1000
+  return result
 }
 ```
 
@@ -1876,8 +1876,8 @@ Checks if a runtime option is currently set.
 
 - **Example**:
 ```tcl
-if {[hasRuntimeOption verbose]} {
-    puts "Verbose mode enabled"
+if {[hasRuntimeOption verbose]} then {
+  puts "Verbose mode enabled"
 }
 ```
 
@@ -6036,24 +6036,24 @@ runTestPrologue
 
 # Define test-specific setup/cleanup
 proc testSetup {} {
-    # Create test resources
+  # Create test resources
 }
 
 proc testCleanup {} {
-    # Clean up test resources
+  # Clean up test resources
 }
 
 ###############################################################################
 
 # Standard test with setup and cleanup
 test example-1.1 {description of test} -setup {
-    testSetup
+  testSetup
 } -body {
-    # Test implementation
-    set result [someOperation]
-    return $result
+  # Test implementation
+  set result [someOperation]
+  return $result
 } -cleanup {
-    testCleanup
+  testCleanup
 } -result {expected result}
 
 ###############################################################################
@@ -6066,30 +6066,30 @@ runTestEpilogue
 ```tcl
 # Skip test based on platform
 test platform-1.1 {Windows-only test} -constraints {
-    eagle windows
+  eagle windows
 } -body {
-    # Windows-specific code
+  # Windows-specific code
 }
 
 # Skip test based on runtime
 test runtime-1.1 {Mono-specific test} -constraints {
-    eagle mono
+  eagle mono
 } -body {
-    # Mono-specific code
+  # Mono-specific code
 }
 
 # Skip test based on available features
 test feature-1.1 {requires compilation} -constraints {
-    eagle compileCSharp
+  eagle compileCSharp
 } -body {
-    # Test C# compilation
+  # Test C# compilation
 }
 
 # Multiple constraints (all must be satisfied)
 test multi-1.1 {complex requirements} -constraints {
-    eagle windows administrator compileCSharp
+  eagle windows administrator compileCSharp
 } -body {
-    # Requires all three conditions
+  # Requires all three conditions
 }
 ```
 
@@ -6098,18 +6098,19 @@ test multi-1.1 {complex requirements} -constraints {
 ```tcl
 # Test that expects an error
 test error-1.1 {division by zero} -body {
-    expr {1 / 0}
+  expr {1 / 0}
 } -returnCodes error -result {divide by zero}
 
 # Test with error pattern matching
 test error-1.2 {file not found} -body {
-    open /nonexistent/file r
+  open /nonexistent/file r
 } -returnCodes error -match glob -result {*no such file*}
 
 # Test with regexp error matching
 test error-1.3 {invalid argument} -body {
-    someCommand -invalidoption
-} -returnCodes error -match regexp -result {bad option.*invalidoption}
+  someCommand -invalidoption
+} -returnCodes error -match regexp \
+    -result {bad option.*invalidoption}
 ```
 
 #### Output Verification
@@ -6117,18 +6118,18 @@ test error-1.3 {invalid argument} -body {
 ```tcl
 # Capture and verify output
 test output-1.1 {verify puts output} -body {
-    set output [capture {
-        puts "Hello, World!"
-    }]
-    return $output
+  set output [capture {
+    puts "Hello, World!"
+  }]
+  return $output
 } -result {Hello, World!}
 
 # Verify output pattern
 test output-1.2 {verify log format} -body {
-    set output [capture {
-        tputs $test_channel "Test message"
-    }]
-    string match "*Test message*" $output
+  set output [capture {
+    tputs $test_channel "Test message"
+  }]
+  string match "*Test message*" $output
 } -result {1}
 ```
 
@@ -6139,42 +6140,50 @@ test output-1.2 {verify log format} -body {
 ```tcl
 # Pattern 1: Try/finally for guaranteed cleanup
 proc processFile {filename} {
+  try {
     set fh [open $filename r]
-    try {
-        set content [read $fh]
-        # Process content...
-        return $content
-    } finally {
-        close $fh
+
+    set content [read $fh]
+    # Process content...
+    return $content
+  } finally {
+    if {[info exists fh]} then {
+      close $fh
     }
+  }
 }
 
 # Pattern 2: Object disposal with cleanup
 proc useClrObject {} {
+  try {
     set obj [object create -alias System.IO.MemoryStream]
-    try {
-        $obj Write [encoding convertto utf-8 "Hello"] 0 5
-        $obj Position 0
-        # Use the object...
-    } finally {
-        object dispose $obj
+
+    $obj Write [encoding convertto utf-8 Hello] 0 5
+    $obj Position 0
+    # Use the object...
+  } finally {
+    if {[info exists obj]} then {
+      object dispose $obj
     }
+  }
 }
 
 # Pattern 3: Multiple resources
 proc processWithMultipleResources {} {
-    set resources [list]
-    try {
-        lappend resources [object create -alias System.IO.FileStream \
+  set resources [list]
+  try {
+    lappend resources \
+        [object create -alias System.IO.FileStream \
             $inputFile Read]
-        lappend resources [object create -alias System.IO.FileStream \
+    lappend resources \
+        [object create -alias System.IO.FileStream \
             $outputFile Write]
-        # Use resources...
-    } finally {
-        foreach resource $resources {
-            catch {object dispose $resource}
-        }
+    # Use resources...
+  } finally {
+    foreach resource $resources {
+      catch {object dispose $resource}
     }
+  }
 }
 ```
 
@@ -6183,23 +6192,23 @@ proc processWithMultipleResources {} {
 ```tcl
 # Check reference count before disposal
 proc safeDispose {objVar} {
-    upvar 1 $objVar obj
-    if {[isNonNullObjectHandle $obj]} {
-        set refCount [object refcount $obj]
-        if {$refCount <= 1} {
-            object dispose $obj
-        }
-        unset obj
+  upvar 1 $objVar obj
+  if {[isNonNullObjectHandle $obj]} then {
+    set refCount [object refcount $obj]
+    if {$refCount <= 1} then {
+      object dispose $obj
     }
+    unset obj
+  }
 }
 
 # Cleanup pattern for test procedures
 proc cleanupTestObjects {} {
-    # Remove all test objects matching pattern
-    foreach obj [info objects test_*] {
-        catch {object dispose $obj}
-    }
-    object cleanup -pattern test_*
+  # Remove all test objects matching pattern
+  foreach obj [info objects test_*] {
+    catch {object dispose $obj}
+  }
+  object cleanup -pattern test_*
 }
 ```
 
@@ -6210,37 +6219,37 @@ proc cleanupTestObjects {} {
 ```tcl
 # Execute platform-specific code
 proc getPlatformTempDir {} {
-    if {[isWindows]} {
-        return $env(TEMP)
-    } elseif {[isMacOS]} {
-        return "/tmp"
-    } else {
-        # Linux/Unix
-        if {[info exists env(TMPDIR)]} {
-            return $env(TMPDIR)
-        }
-        return "/tmp"
+  if {[isWindows]} then {
+    return $env(TEMP)
+  } elseif {[isMacOS]} then {
+    return /tmp
+  } else {
+    # Linux/Unix
+    if {[info exists env(TMPDIR)]} then {
+      return $env(TMPDIR)
     }
+    return /tmp
+  }
 }
 
 # Platform-specific path handling
 proc normalizePath {path} {
-    if {[isWindows]} {
-        return [string map {/ \\} $path]
-    } else {
-        return [string map {\\ /} $path]
-    }
+  if {[isWindows]} then {
+    return [string map {/ \\} $path]
+  } else {
+    return [string map {\\ /} $path]
+  }
 }
 
 # Runtime-specific code
 proc getGarbageCollector {} {
-    if {[isMono]} {
-        return "Mono GC"
-    } elseif {[isDotNetCore]} {
-        return "CoreCLR GC"
-    } else {
-        return ".NET Framework GC"
-    }
+  if {[isMono]} then {
+    return "Mono GC"
+  } elseif {[isDotNetCore]} then {
+    return "CoreCLR GC"
+  } else {
+    return ".NET Framework GC"
+  }
 }
 ```
 
@@ -6249,24 +6258,26 @@ proc getGarbageCollector {} {
 ```tcl
 # Check for feature before using it
 proc maybeUseFeature {} {
-    if {[llength [info commands tcl]] > 0 && [tcl ready]} {
-        # Tcl integration available
-        return [tcl eval [tcl primary] {expr {2 + 2}}]
-    } else {
-        # Fallback to Eagle-only implementation
-        return [expr {2 + 2}]
-    }
+  if {[llength [info commands tcl]] > 0 && \
+      [tcl ready]} then {
+    # Tcl integration available
+    return [tcl eval [tcl primary] {expr {2 + 2}}]
+  } else {
+    # Fallback to Eagle-only implementation
+    return [expr {2 + 2}]
+  }
 }
 
 # Check for .NET assembly before using it
 proc maybeUseAssembly {assemblyName} {
-    if {[catch {
-        object invoke System.Reflection.Assembly LoadWithPartialName \
-            $assemblyName
-    } assembly]} {
-        return false
-    }
-    return [expr {$assembly ne ""}]
+  if {[catch {
+    object invoke \
+        System.Reflection.Assembly \
+        LoadWithPartialName $assemblyName
+  } assembly]} then {
+    return false
+  }
+  return [expr {$assembly ne ""}]
 }
 ```
 
@@ -6277,13 +6288,13 @@ proc maybeUseAssembly {assemblyName} {
 ```tcl
 # Filter list elements
 proc lfilter {list condition} {
-    set result [list]
-    foreach item $list {
-        if {[uplevel 1 [list expr $condition]]} {
-            lappend result $item
-        }
+  set result [list]
+  foreach item $list {
+    if {[uplevel 1 [list expr $condition]]} then {
+      lappend result $item
     }
-    return $result
+  }
+  return $result
 }
 
 # Example usage
@@ -6297,15 +6308,17 @@ set doubled [lmap x $numbers {expr {$x * 2}}]
 
 # Reduce/fold pattern
 proc lreduce {list initial script} {
-    set accumulator $initial
-    foreach item $list {
-        set accumulator [uplevel 1 [list apply $script $accumulator $item]]
-    }
-    return $accumulator
+  set accumulator $initial
+  foreach item $list {
+    set accumulator \
+        [uplevel 1 [list apply $script $accumulator $item]]
+  }
+  return $accumulator
 }
 
 # Sum all elements
-set sum [lreduce $numbers 0 {{acc x} {expr {$acc + $x}}}]
+set sum [lreduce $numbers 0 \
+    {{acc x} {expr {$acc + $x}}}]
 ```
 
 #### Key-Value List Operations
@@ -6315,41 +6328,42 @@ set sum [lreduce $numbers 0 {{acc x} {expr {$acc + $x}}}]
 ```tcl
 # Build key-value list from pairs
 proc kvlist_from_pairs {args} {
-    set result [list]
-    foreach {key value} $args {
-        lappend result $key $value
-    }
-    return $result
+  set result [list]
+  foreach {key value} $args {
+    lappend result $key $value
+  }
+  return $result
 }
 
 # Merge multiple key-value lists (later values win)
 proc kvlist_merge {args} {
-    array set result {}
-    foreach kvlist $args {
-        foreach {key value} $kvlist {
-            set result($key) $value
-        }
+  array set result {}
+  foreach kvlist $args {
+    foreach {key value} $kvlist {
+      set result($key) $value
     }
-    return [array get result]
+  }
+  return [array get result]
 }
 
 # Get value from key-value list with default
 # Use getDictionaryValue from auxiliary.eagle
 proc kvlist_get {kvlist key {default ""}} {
-    foreach {k v} $kvlist {
-        if {$k eq $key} {
-            return $v
-        }
+  foreach {k v} $kvlist {
+    if {$k eq $key} then {
+      return $v
     }
-    return $default
+  }
+  return $default
 }
 
 # Iterate over key-value list pairs
 proc kvlist_foreach {kvlist varNames body} {
-    upvar 1 [lindex $varNames 0] key [lindex $varNames 1] value
-    foreach {key value} $kvlist {
-        uplevel 1 $body
-    }
+  upvar 1 [lindex $varNames 0] key \
+      [lindex $varNames 1] value
+  foreach {key value} $kvlist {
+    uplevel 1 $body
+  }
 }
 ```
 
@@ -6360,37 +6374,46 @@ proc kvlist_foreach {kvlist varNames body} {
 ```tcl
 # Extract all matches from string
 proc extractAll {pattern string} {
-    set matches [list]
-    set start 0
-    while {[regexp -start $start -indices -- $pattern $string match]} {
-        lassign $match matchStart matchEnd
-        lappend matches [string range $string $matchStart $matchEnd]
-        set start [expr {$matchEnd + 1}]
-    }
-    return $matches
+  set matches [list]
+  set start 0
+  while {[regexp -start $start -indices -- \
+      $pattern $string match]} then {
+    lassign $match matchStart matchEnd
+    lappend matches \
+        [string range $string $matchStart $matchEnd]
+    set start [expr {$matchEnd + 1}]
+  }
+  return $matches
 }
 
 # Parse key=value pairs into key-value list
-proc parseKeyValuePairs {string {separator "="}} {
-    set result [list]
-    foreach line [split $string \n] {
-        set line [string trim $line]
-        if {$line eq "" || [string index $line 0] eq "#"} continue
-        if {[set pos [string first $separator $line]] > 0} {
-            set key [string trim [string range $line 0 $pos-1]]
-            set value [string trim [string range $line $pos+1 end]]
-            lappend result $key $value
-        }
+proc parseKeyValuePairs {string {separator =}} {
+  set result [list]
+  foreach line [split $string \n] {
+    set line [string trim $line]
+    if {$line eq "" || \
+        [string index $line 0] eq "#"} then {
+      continue
     }
-    return $result
+    if {[set pos [string first $separator \
+        $line]] > 0} then {
+      set key [string trim \
+          [string range $line 0 $pos-1]]
+      set value [string trim \
+          [string range $line $pos+1 end]]
+      lappend result $key $value
+    }
+  }
+  return $result
 }
 
 # Template substitution using key-value list
 proc substituteTemplate {template vars} {
-    foreach {name value} $vars {
-        set template [string map [list \${$name} $value] $template]
-    }
-    return $template
+  foreach {name value} $vars {
+    set template \
+        [string map [list \${$name} $value] $template]
+  }
+  return $template
 }
 ```
 
@@ -6399,22 +6422,26 @@ proc substituteTemplate {template vars} {
 ```tcl
 # Escape for shell usage
 proc shellEscape {string} {
-    if {[isWindows]} {
-        # Windows escaping
-        return [format {"%s"} [string map {\" \\\"} $string]]
-    } else {
-        # Unix shell escaping
-        return [format {'%s'} [string map {' '\''} $string]]
-    }
+  if {[isWindows]} then {
+    # Windows escaping
+    return [format {"%s"} \
+        [string map {\" \\\"} $string]]
+  } else {
+    # Unix shell escaping
+    return [format {'%s'} \
+        [string map {' '\''} $string]]
+  }
 }
 
 # Truncate with ellipsis
-proc truncate {string maxLength {suffix "..."}} {
-    if {[string length $string] <= $maxLength} {
-        return $string
-    }
-    set cutLength [expr {$maxLength - [string length $suffix]}]
-    return "[string range $string 0 $cutLength-1]$suffix"
+proc truncate {string maxLength {suffix ...}} {
+  if {[string length $string] <= $maxLength} then {
+    return $string
+  }
+  set cutLength \
+      [expr {$maxLength - [string length $suffix]}]
+  return [appendArgs \
+      [string range $string 0 $cutLength-1] $suffix]
 }
 ```
 
@@ -6424,32 +6451,37 @@ proc truncate {string maxLength {suffix "..."}} {
 
 ```tcl
 # Retry with exponential backoff
-proc retryWithBackoff {script {maxAttempts 3} {baseDelay 100}} {
-    set attempt 0
-    while {$attempt < $maxAttempts} {
-        incr attempt
-        if {![catch {uplevel 1 $script} result options]} {
-            return $result
-        }
-        if {$attempt < $maxAttempts} {
-            set delay [expr {$baseDelay * (1 << ($attempt - 1))}]
-            after $delay
-        }
+proc retryWithBackoff {script {maxAttempts 3} \
+    {baseDelay 100}} {
+  set attempt 0
+  while {$attempt < $maxAttempts} {
+    incr attempt
+    if {![catch {uplevel 1 $script} \
+        result options]} then {
+      return $result
     }
-    # Re-raise last error
-    return -options $options $result
+    if {$attempt < $maxAttempts} then {
+      set delay \
+          [expr {$baseDelay * (1 << ($attempt - 1))}]
+      after $delay
+    }
+  }
+  # Re-raise last error
+  return -options $options $result
 }
 
 # Multiple fallback strategies
 proc withFallbacks {scripts} {
-    set lastError ""
-    foreach script $scripts {
-        if {![catch {uplevel 1 $script} result]} {
-            return $result
-        }
-        set lastError $result
+  set lastError ""
+  foreach script $scripts {
+    if {![catch {uplevel 1 $script} result]} then {
+      return $result
     }
-    error "All strategies failed. Last error: $lastError"
+    set lastError $result
+  }
+  error [appendArgs \
+      "All strategies failed. Last error: " \
+      $lastError]
 }
 ```
 
@@ -6458,30 +6490,37 @@ proc withFallbacks {scripts} {
 ```tcl
 # Create structured error
 proc raiseStructuredError {code message {details ""}} {
-    set errorCode [list MYAPP $code]
-    if {$details ne ""} {
-        lappend errorCode $details
-    }
-    return -code error -errorcode $errorCode $message
+  set errorCode [list MYAPP $code]
+  if {$details ne ""} then {
+    lappend errorCode $details
+  }
+  return -code error -errorcode $errorCode $message
 }
 
 # Handle structured error
 proc handleStructuredError {script} {
-    if {[catch $script result options]} {
-        # Use getDictionaryValue from auxiliary.eagle
-        set errorCode [getDictionaryValue $options -errorcode]
-        if {[lindex $errorCode 0] eq "MYAPP"} {
-            set code [lindex $errorCode 1]
-            switch $code {
-                "NOT_FOUND" { return [handleNotFound $result] }
-                "PERMISSION" { return [handlePermission $result] }
-                default { return [handleGeneric $result] }
-            }
+  if {[catch $script result options]} then {
+    # Use getDictionaryValue from auxiliary.eagle
+    set errorCode \
+        [getDictionaryValue $options -errorcode]
+    if {[lindex $errorCode 0] eq "MYAPP"} then {
+      set code [lindex $errorCode 1]
+      switch $code {
+        NOT_FOUND {
+          return [handleNotFound $result]
         }
-        # Re-raise non-application errors
-        return -options $options $result
+        PERMISSION {
+          return [handlePermission $result]
+        }
+        default {
+          return [handleGeneric $result]
+        }
+      }
     }
-    return $result
+    # Re-raise non-application errors
+    return -options $options $result
+  }
+  return $result
 }
 ```
 
@@ -6492,28 +6531,33 @@ proc handleStructuredError {script} {
 ```tcl
 # Debug output with level control
 proc debugLog {level message} {
-    global debugLevel
-    if {![info exists debugLevel]} {
-        set debugLevel 0
-    }
-    if {$level <= $debugLevel} {
-        set timestamp [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
-        puts stderr "\[$timestamp\] DEBUG($level): $message"
-    }
+  global debugLevel
+  if {![info exists debugLevel]} then {
+    set debugLevel 0
+  }
+  if {$level <= $debugLevel} then {
+    set timestamp [clock format \
+        [clock seconds] \
+        -format "%Y-%m-%d %H:%M:%S"]
+    puts stderr \
+        "\[$timestamp\] DEBUG($level): $message"
+  }
 }
 
 # Trace procedure execution
 proc traceProc {procName} {
-    trace add execution $procName enter [list traceEnter $procName]
-    trace add execution $procName leave [list traceLeave $procName]
+  trace add execution $procName enter \
+      [list traceEnter $procName]
+  trace add execution $procName leave \
+      [list traceLeave $procName]
 }
 
 proc traceEnter {procName args} {
-    puts "ENTER: $procName [lindex $args 0]"
+  puts "ENTER: $procName [lindex $args 0]"
 }
 
 proc traceLeave {procName args} {
-    puts "LEAVE: $procName -> [lindex $args 1]"
+  puts "LEAVE: $procName -> [lindex $args 1]"
 }
 ```
 
@@ -6522,27 +6566,30 @@ proc traceLeave {procName args} {
 ```tcl
 # Measure execution time
 proc measureTime {script {iterations 1}} {
-    set start [clock microseconds]
-    for {set i 0} {$i < $iterations} {incr i} {
-        uplevel 1 $script
-    }
-    set elapsed [expr {[clock microseconds] - $start}]
-    return [list \
-        total [expr {$elapsed / 1000.0}]ms \
-        per_iteration [expr {$elapsed / 1000.0 / $iterations}]ms]
+  set start [clock microseconds]
+  for {set i 0} {$i < $iterations} {incr i} {
+    uplevel 1 $script
+  }
+  set elapsed \
+      [expr {[clock microseconds] - $start}]
+  return [list \
+      total [expr {$elapsed / 1000.0}]ms \
+      per_iteration \
+          [expr {$elapsed / 1000.0 / $iterations}]ms]
 }
 
 # Memory usage tracking (Eagle-specific)
 proc trackMemory {script} {
-    if {[isEagle]} {
-        set before [debug memory]
-        set result [uplevel 1 $script]
-        set after [debug memory]
-        return [list result $result \
-            memory_delta [expr {$after - $before}]]
-    } else {
-        return [list result [uplevel 1 $script] memory_delta unknown]
-    }
+  if {[isEagle]} then {
+    set before [debug memory]
+    set result [uplevel 1 $script]
+    set after [debug memory]
+    return [list result $result \
+        memory_delta [expr {$after - $before}]]
+  } else {
+    return [list result [uplevel 1 $script] \
+        memory_delta unknown]
+  }
 }
 ```
 
@@ -6555,25 +6602,27 @@ proc trackMemory {script} {
 ```tcl
 # Timer-based polling with timeout
 proc pollUntil {condition timeout interval} {
-    set deadline [expr {[clock milliseconds] + $timeout}]
-    while {[clock milliseconds] < $deadline} {
-        if {[uplevel 1 $condition]} {
-            return true
-        }
-        after $interval
+  set deadline \
+      [expr {[clock milliseconds] + $timeout}]
+  while {[clock milliseconds] < $deadline} {
+    if {[uplevel 1 $condition]} then {
+      return true
     }
-    return false
+    after $interval
+  }
+  return false
 }
 
 # Schedule callback after delay
 proc scheduleOperation {delayMs script} {
-    after $delayMs [list uplevel #0 $script]
+  after $delayMs [list uplevel #0 $script]
 }
 
 # Periodic execution using after
 proc repeatEvery {intervalMs script} {
-    uplevel #0 $script
-    after $intervalMs [list repeatEvery $intervalMs $script]
+  uplevel #0 $script
+  after $intervalMs \
+      [list repeatEvery $intervalMs $script]
 }
 ```
 
@@ -6582,26 +6631,32 @@ proc repeatEvery {intervalMs script} {
 ```tcl
 # Read file synchronously
 proc readFileSync {filename} {
+  try {
     set fh [open $filename r]
-    try {
-        set content [read $fh]
-        return $content
-    } finally {
-        close $fh
+
+    set content [read $fh]
+    return $content
+  } finally {
+    if {[info exists fh]} then {
+      close $fh
     }
+  }
 }
 
 # Process file line by line (memory efficient)
 proc processFileLines {filename callback} {
+  try {
     set fh [open $filename r]
-    try {
-        while {[gets $fh line] >= 0} {
-            # Eagle has no {*} operator - use eval for argument expansion
-            uplevel 1 [concat $callback [list $line]]
-        }
-    } finally {
-        close $fh
+
+    while {[gets $fh line] >= 0} {
+      # Eagle has no {*} operator - use eval
+      uplevel 1 [concat $callback [list $line]]
     }
+  } finally {
+    if {[info exists fh]} then {
+      close $fh
+    }
+  }
 }
 ```
 
@@ -6612,43 +6667,54 @@ proc processFileLines {filename callback} {
 ```tcl
 # Load configuration from file (uses array internally)
 proc loadConfig {filename {defaults {}}} {
-    array set config {}
-    # Load defaults first
-    foreach {key value} $defaults {
-        set config($key) $value
-    }
-    if {[file exists $filename]} {
-        set fh [open $filename r]
-        try {
-            set content [read $fh]
-            foreach line [split $content \n] {
-                set line [string trim $line]
-                # Skip comments and empty lines
-                if {$line eq "" || [string match "#*" $line]} continue
-                if {[regexp {^(\w+)\s*=\s*(.*)$} $line -> key value]} {
-                    set config($key) [string trim $value]
-                }
-            }
-        } finally {
-            close $fh
+  array set config {}
+  # Load defaults first
+  foreach {key value} $defaults {
+    set config($key) $value
+  }
+  if {[file exists $filename]} then {
+    try {
+      set fh [open $filename r]
+
+      set content [read $fh]
+      foreach line [split $content \n] {
+        set line [string trim $line]
+        # Skip comments and empty lines
+        if {$line eq "" || \
+            [string match "#*" $line]} then {
+          continue
         }
+        if {[regexp {^(\w+)\s*=\s*(.*)$} \
+            $line -> key value]} then {
+          set config($key) [string trim $value]
+        }
+      }
+    } finally {
+      if {[info exists fh]} then {
+        close $fh
+      }
     }
-    return [array get config]
+  }
+  return [array get config]
 }
 
 # Save configuration to file (config is key-value list)
 proc saveConfig {filename config} {
+  try {
     set fh [open $filename w]
-    try {
-        puts $fh "# Configuration file"
-        puts $fh "# Generated: [clock format [clock seconds]]"
-        puts $fh ""
-        foreach {key value} $config {
-            puts $fh "$key = $value"
-        }
-    } finally {
-        close $fh
+
+    puts $fh "# Configuration file"
+    puts $fh [appendArgs "# Generated: " \
+        [clock format [clock seconds]]]
+    puts $fh ""
+    foreach {key value} $config {
+      puts $fh [appendArgs $key " = " $value]
     }
+  } finally {
+    if {[info exists fh]} then {
+      close $fh
+    }
+  }
 }
 ```
 
@@ -6657,33 +6723,36 @@ proc saveConfig {filename config} {
 ```tcl
 # Get environment variable with default
 proc getEnv {name {default ""}} {
-    global env
-    if {[info exists env($name)]} {
-        return $env($name)
-    }
-    return $default
+  global env
+  if {[info exists env($name)]} then {
+    return $env($name)
+  }
+  return $default
 }
 
 # Set environment variable if not already set
 proc setEnvDefault {name value} {
-    global env
-    if {![info exists env($name)]} {
-        set env($name) $value
-        return true
-    }
-    return false
+  global env
+  if {![info exists env($name)]} then {
+    set env($name) $value
+    return true
+  }
+  return false
 }
 
 # Expand environment variables in string
 proc expandEnvVars {string} {
-    global env
-    set result $string
-    foreach {match var} [regexp -all -inline {\$(\w+)} $string] {
-        if {[info exists env($var)]} {
-            set result [string map [list $match $env($var)] $result]
-        }
+  global env
+  set result $string
+  foreach {match var} \
+      [regexp -all -inline {\$(\w+)} $string] {
+    if {[info exists env($var)]} then {
+      set result \
+          [string map [list $match $env($var)] \
+              $result]
     }
-    return $result
+  }
+  return $result
 }
 ```
 

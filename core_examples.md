@@ -84,12 +84,12 @@ This companion file to [`core_language.md`](core_language.md) provides at least 
 ```tcl
 # Basic conditional
 set x 15
-if {$x > 10} {
-    set result large
-} elseif {$x > 5} {
-    set result medium
+if {$x > 10} then {
+  set result large
+} elseif {$x > 5} then {
+  set result medium
 } else {
-    set result small
+  set result small
 }
 ;# Returns: large
 ```
@@ -98,32 +98,32 @@ if {$x > 10} {
 # Using 'then' keyword for readability
 set mode read
 if {$mode eq "read"} then {
-    set access r
+  set access r
 } else {
-    set access w
+  set access w
 }
 ;# Returns: r
 ```
 
 ```tcl
 # Compact one-line form
-set sign [if {$x >= 0} {expr {1}} else {expr {-1}}]
+set sign [if {$x >= 0} then {expr {1}} else {expr {-1}}]
 ;# Returns: 1
 ```
 
 ```tcl
 # Chained elseif
 set code 404
-if {$code == 200} {
-    set msg OK
-} elseif {$code == 301} {
-    set msg "Moved Permanently"
-} elseif {$code == 404} {
-    set msg "Not Found"
-} elseif {$code == 500} {
-    set msg "Internal Server Error"
+if {$code == 200} then {
+  set msg OK
+} elseif {$code == 301} then {
+  set msg "Moved Permanently"
+} elseif {$code == 404} then {
+  set msg "Not Found"
+} elseif {$code == 500} then {
+  set msg "Internal Server Error"
 } else {
-    set msg Unknown
+  set msg Unknown
 }
 ;# Returns: Not Found
 ```
@@ -137,10 +137,10 @@ if {$code == 200} {
 # Exact matching (default)
 set fruit banana
 switch $fruit {
-    apple  { set color red }
-    banana { set color yellow }
-    grape  { set color purple }
-    default { set color unknown }
+  apple  { set color red }
+  banana { set color yellow }
+  grape  { set color purple }
+  default { set color unknown }
 }
 ;# Returns: yellow
 ```
@@ -149,11 +149,11 @@ switch $fruit {
 # Glob matching
 set filename report.pdf
 switch -glob $filename {
-    *.txt  { set type text }
-    *.pdf  { set type document }
-    *.jpg -
-    *.png  { set type image }
-    default { set type other }
+  *.txt  { set type text }
+  *.pdf  { set type document }
+  *.jpg -
+  *.png  { set type image }
+  default { set type other }
 }
 ;# Returns: document
 ```
@@ -162,13 +162,13 @@ switch -glob $filename {
 # Fall-through with '-' body
 set day Saturday
 switch $day {
-    Monday -
-    Tuesday -
-    Wednesday -
-    Thursday -
-    Friday    { set kind weekday }
-    Saturday -
-    Sunday    { set kind weekend }
+  Monday -
+  Tuesday -
+  Wednesday -
+  Thursday -
+  Friday    { set kind weekday }
+  Saturday -
+  Sunday    { set kind weekend }
 }
 ;# Returns: weekend
 ```
@@ -177,9 +177,9 @@ switch $day {
 # Case-insensitive regexp matching
 set input YES
 switch -nocase -regexp $input {
-    {^y(es)?$} { set answer true }
-    {^no?$}    { set answer false }
-    default    { set answer invalid }
+  {^y(es)?$} { set answer true }
+  {^no?$}    { set answer false }
+  default    { set answer invalid }
 }
 ;# Returns: true
 ```
@@ -193,8 +193,8 @@ switch -nocase -regexp $input {
 # Exit loop early
 set result ""
 foreach item {a b c STOP d e} {
-    if {$item eq "STOP"} break
-    append result $item
+  if {$item eq "STOP"} then break
+  append result $item
 }
 ;# result is "abc"
 ```
@@ -203,10 +203,10 @@ foreach item {a b c STOP d e} {
 # Break with value
 set i 0
 set found [while {$i < 100} {
-    if {[expr {$i * $i}] > 50} {
-        break $i
-    }
-    incr i
+  if {[expr {$i * $i}] > 50} then {
+    break $i
+  }
+  incr i
 }]
 ;# found is the first i where i*i > 50
 ```
@@ -218,10 +218,10 @@ set found [while {$i < 100} {
 
 ```tcl
 # Basic error catching
-if {[catch {expr {1 / 0}} result]} {
-    set msg [appendArgs "Error: " $result]
+if {[catch {expr {1 / 0}} result]} then {
+  set msg [appendArgs "Error: " $result]
 } else {
-    set msg [appendArgs "Result: " $result]
+  set msg [appendArgs "Result: " $result]
 }
 ;# Returns: Error: divide by zero
 ```
@@ -237,11 +237,11 @@ set code [catch {error oops "" {MYAPP ERROR}} result opts]
 ```tcl
 # Safe file open pattern
 set filename nonexistent.txt
-if {[catch {open $filename r} fh]} {
-    set data "default value"
+if {[catch {open $filename r} fh]} then {
+  set data "default value"
 } else {
-    set data [read $fh]
-    close $fh
+  set data [read $fh]
+  close $fh
 }
 ```
 
@@ -261,8 +261,8 @@ set code [catch {mayReturn} result]
 # Skip odd numbers
 set evens [list]
 for {set i 0} {$i < 10} {incr i} {
-    if {$i % 2 != 0} continue
-    lappend evens $i
+  if {$i % 2 != 0} then continue
+  lappend evens $i
 }
 ;# evens is {0 2 4 6 8}
 ```
@@ -272,8 +272,8 @@ for {set i 0} {$i < 10} {incr i} {
 set lines "one\n\ntwo\n\nthree"
 set nonEmpty [list]
 foreach line [split $lines "\n"] {
-    if {$line eq ""} continue
-    lappend nonEmpty $line
+  if {$line eq ""} then continue
+  lappend nonEmpty $line
 }
 ;# nonEmpty is {one two three}
 ```
@@ -286,14 +286,14 @@ foreach line [split $lines "\n"] {
 ```tcl
 # Eagle extension — execute in the pre-uplevel call frame
 proc deepdown {} {
-    lappend a 1              ;# in deepdown's frame
-    uplevel 1 {
-        lappend a 2          ;# in caller's frame
-        downlevel {
-            lappend a 3      ;# back in deepdown's frame
-        }
+  lappend a 1              ;# in deepdown's frame
+  uplevel 1 {
+    lappend a 2            ;# in caller's frame
+    downlevel {
+      lappend a 3          ;# back in deepdown's frame
     }
-    return $a
+  }
+  return $a
 }
 set a [list]
 list [deepdown] $a
@@ -309,7 +309,7 @@ list [deepdown] $a
 ```tcl
 # Simple error
 catch {
-    error "something went wrong"
+  error "something went wrong"
 } msg
 ;# msg is: something went wrong
 ```
@@ -317,7 +317,7 @@ catch {
 ```tcl
 # Error with machine-readable code
 catch {
-    error "file not found" "" {POSIX ENOENT {no such file}}
+  error "file not found" "" {POSIX ENOENT {no such file}}
 } msg opts
 ;# msg is "file not found"
 ```
@@ -325,10 +325,12 @@ catch {
 ```tcl
 # Validation pattern
 proc positiveInt {n} {
-    if {![string is integer -strict $n] || $n <= 0} {
-        error [appendArgs "expected positive integer, got \"" $n \"] "" {MYAPP BADARG}
-    }
-    return $n
+  if {![string is integer -strict $n] || $n <= 0} then {
+    error [appendArgs \
+        "expected positive integer, got \"" $n \"] \
+        "" {MYAPP BADARG}
+  }
+  return $n
 }
 catch {positiveInt -5} msg
 ;# msg is: expected positive integer, got "-5"
@@ -342,7 +344,7 @@ catch {positiveInt -5} msg
 ```tcl
 # Simple return
 proc greet {name} {
-    return [appendArgs "Hello, " $name !]
+  return [appendArgs "Hello, " $name !]
 }
 greet Eagle
 ;# Returns: Hello, Eagle!
@@ -351,10 +353,12 @@ greet Eagle
 ```tcl
 # Return with error code
 proc divide {a b} {
-    if {$b == 0} {
-        return -code error -errorcode {ARITH DIVZERO} "division by zero"
-    }
-    return [expr {$a / $b}]
+  if {$b == 0} then {
+    return -code error \
+        -errorcode {ARITH DIVZERO} \
+        "division by zero"
+  }
+  return [expr {$a / $b}]
 }
 catch {divide 10 0} msg
 ;# msg is "division by zero"
@@ -363,11 +367,11 @@ catch {divide 10 0} msg
 ```tcl
 # Return from nested uplevel (returning through 2 levels)
 proc outerReturn {} {
-    uplevel 1 {return -level 2 "from deep inside"}
+  uplevel 1 {return -level 2 "from deep inside"}
 }
 proc wrapper {} {
-    outerReturn
-    return "never reached"
+  outerReturn
+  return "never reached"
 }
 ```
 
@@ -379,7 +383,7 @@ proc wrapper {} {
 ```tcl
 # Eagle extension — throw an exception
 catch {
-    throw "connection refused"
+  throw "connection refused"
 } msg
 ;# msg is "connection refused"
 ```
@@ -392,25 +396,29 @@ catch {
 ```tcl
 # Try/finally for resource cleanup
 proc readFirstLine {filename} {
+  try {
     set fh [open $filename r]
-    try {
-        return [gets $fh]
-    } finally {
-        close $fh
+    return [gets $fh]
+  } finally {
+    if {[info exists fh]} then {
+      close $fh
     }
+  }
 }
 ```
 
 ```tcl
 # Error handling with try/finally
 set tempFile [file tempname]
-set fh [open $tempFile w]
 try {
-    puts $fh "test data"
-    error "simulated failure"
+  set fh [open $tempFile w]
+  puts $fh "test data"
+  error "simulated failure"
 } finally {
+  if {[info exists fh]} then {
     close $fh
-    file delete -force $tempFile
+  }
+  file delete -force $tempFile
 }
 # fh is closed and tempFile deleted even though error occurred
 ```
@@ -423,7 +431,7 @@ try {
 ```tcl
 # Execute in caller's scope
 proc setInCaller {varName value} {
-    uplevel 1 [list set $varName $value]
+  uplevel 1 [list set $varName $value]
 }
 setInCaller myVar Hello
 ;# myVar is "Hello" in the calling scope
@@ -432,7 +440,7 @@ setInCaller myVar Hello
 ```tcl
 # Execute at global level
 proc setGlobal {varName value} {
-    uplevel #0 [list set $varName $value]
+  uplevel #0 [list set $varName $value]
 }
 setGlobal ::config production
 ```
@@ -440,10 +448,12 @@ setGlobal ::config production
 ```tcl
 # Assert utility using uplevel for expression context
 proc assert {expr {msg ""}} {
-    if {![uplevel 1 [list expr $expr]]} {
-        if {$msg eq ""} { set msg [appendArgs "Assertion failed: " $expr] }
-        error $msg
+  if {![uplevel 1 [list expr $expr]]} then {
+    if {$msg eq ""} then {
+      set msg [appendArgs "Assertion failed: " $expr]
     }
+    error $msg
+  }
 }
 set x 5
 assert {$x > 0}  ;# Passes
@@ -459,8 +469,8 @@ assert {$x > 0}  ;# Passes
 set i 0
 set result [list]
 do {
-    lappend result $i
-    incr i
+  lappend result $i
+  incr i
 } while {$i < 5}
 ;# result is {0 1 2 3 4}
 ```
@@ -469,7 +479,7 @@ do {
 # do-until loop (loops while condition is FALSE)
 set j 0
 do {
-    incr j
+  incr j
 } until {$j >= 5}
 ;# j is 5
 ```
@@ -477,11 +487,11 @@ do {
 ```tcl
 # Prompt and validate input pattern
 proc getPositive {} {
-    set value 0
-    do {
-        incr value
-    } until {$value > 0}
-    return $value
+  set value 0
+  do {
+    incr value
+  } until {$value > 0}
+  return $value
 }
 ```
 
@@ -494,7 +504,7 @@ proc getPositive {} {
 # Classic counting loop
 set sum 0
 for {set i 1} {$i <= 10} {incr i} {
-    incr sum $i
+  incr sum $i
 }
 ;# sum is 55
 ```
@@ -503,7 +513,7 @@ for {set i 1} {$i <= 10} {incr i} {
 # Decrementing loop
 set countdown [list]
 for {set i 5} {$i > 0} {incr i -1} {
-    lappend countdown $i
+  lappend countdown $i
 }
 ;# countdown is {5 4 3 2 1}
 ```
@@ -512,7 +522,7 @@ for {set i 5} {$i > 0} {incr i -1} {
 # Loop with step of 2
 set odds [list]
 for {set i 1} {$i < 10} {incr i 2} {
-    lappend odds $i
+  lappend odds $i
 }
 ;# odds is {1 3 5 7 9}
 ```
@@ -520,9 +530,9 @@ for {set i 1} {$i < 10} {incr i 2} {
 ```tcl
 # Eagle extension — optional 'end' script
 for {set i 0} {$i < 3} {incr i} {
-    # loop body
+  # loop body
 } {
-    # This 'end' script runs when the loop terminates normally
+  # This 'end' script runs when the loop terminates normally
 }
 ```
 
@@ -535,7 +545,7 @@ for {set i 0} {$i < 3} {incr i} {
 # Simple iteration
 set total 0
 foreach num {10 20 30 40} {
-    incr total $num
+  incr total $num
 }
 ;# total is 100
 ```
@@ -544,7 +554,7 @@ foreach num {10 20 30 40} {
 # Multiple variables per iteration (key-value pairs)
 set dict {name Alice age 30 city Boston}
 foreach {key value} $dict {
-    # Prints: name => Alice, age => 30, city => Boston
+  # Prints: name => Alice, age => 30, city => Boston
 }
 ```
 
@@ -553,7 +563,7 @@ foreach {key value} $dict {
 set names {Alice Bob Carol}
 set ages  {30 25 35}
 foreach name $names age $ages {
-    # Prints: Alice is 30, Bob is 25, Carol is 35
+  # Prints: Alice is 30, Bob is 25, Carol is 35
 }
 ```
 
@@ -561,7 +571,7 @@ foreach name $names age $ages {
 # Three variables from one list
 set coords {1 2 3  4 5 6  7 8 9}
 foreach {x y z} $coords {
-    # Process (x,y,z) triples
+  # Process (x,y,z) triples
 }
 ```
 
@@ -579,7 +589,7 @@ set doubled [lmap x {1 2 3 4 5} {expr {$x * 2}}]
 ```tcl
 # Filter with lmap using continue
 set positive [lmap x {-3 -1 0 2 4 -5 7} {
-    if {$x > 0} {set x} else {continue}
+  if {$x > 0} then {set x} else {continue}
 }]
 ;# Returns: {2 4 7}
 ```
@@ -588,7 +598,7 @@ set positive [lmap x {-3 -1 0 2 4 -5 7} {
 # Transform key-value pairs
 set pairs {a 1 b 2 c 3}
 set formatted [lmap {k v} $pairs {
-    format "%s=%s" $k $v
+  format "%s=%s" $k $v
 }]
 ;# Returns: {a=1 b=2 c=3}
 ```
@@ -603,8 +613,8 @@ set formatted [lmap {k v} $pairs {
 set i 1
 set product 1
 while {$i <= 5} {
-    set product [expr {$product * $i}]
-    incr i
+  set product [expr {$product * $i}]
+  incr i
 }
 ;# product is 120 (5!)
 ```
@@ -615,8 +625,8 @@ set items {a b c END d e}
 set i 0
 set collected [list]
 while {[lindex $items $i] ne "END"} {
-    lappend collected [lindex $items $i]
-    incr i
+  lappend collected [lindex $items $i]
+  incr i
 }
 ;# collected is {a b c}
 ```
@@ -653,8 +663,8 @@ append html "</html>"
 # Access global variable from procedure
 set ::counter 0
 proc incrementCounter {} {
-    global counter
-    incr counter
+  global counter
+  incr counter
 }
 incrementCounter
 incrementCounter
@@ -664,9 +674,9 @@ incrementCounter
 ```tcl
 # Multiple global declarations
 proc configure {key value} {
-    global config errorCount
-    set config($key) $value
-    incr errorCount 0  ;# Ensure it exists
+  global config errorCount
+  set config($key) $value
+  incr errorCount 0  ;# Ensure it exists
 }
 ```
 
@@ -706,11 +716,11 @@ incr count
 ```tcl
 # Eagle extension — persistent counter across calls
 proc counter {name} {
-    scope create -open -clone -args $name
-    if {![info exists count]} {set count 0}
-    incr count
-    return $count
-    # scope close implied on return
+  scope create -open -clone -args $name
+  if {![info exists count]} then {set count 0}
+  incr count
+  return $count
+  # scope close implied on return
 }
 counter myCounter  ;# Returns: 1
 counter myCounter  ;# Returns: 2
@@ -722,9 +732,9 @@ scope destroy myCounter
 # scope eval — evaluate script in scope context
 scope create myScope
 scope eval myScope {
-    set x 10
-    set y 20
-    expr {$x + $y}
+  set x 10
+  set y 20
+  expr {$x + $y}
 }
 ;# Returns: 30
 scope set myScope x   ;# Returns: 10
@@ -766,10 +776,10 @@ scope destroy sandbox
 ```tcl
 # scope with -procedure option for auto-named per-procedure scopes
 proc accumulate {value} {
-    scope create -open -procedure -args
-    if {![info exists total]} {set total 0}
-    incr total $value
-    return $total
+  scope create -open -procedure -args
+  if {![info exists total]} then {set total 0}
+  incr total $value
+  return $total
 }
 accumulate 10   ;# Returns: 10
 accumulate 20   ;# Returns: 30
@@ -842,10 +852,10 @@ unset data
 ```tcl
 # Pass-by-reference pattern
 proc swap {aName bName} {
-    upvar 1 $aName a $bName b
-    set temp $a
-    set a $b
-    set b $temp
+  upvar 1 $aName a $bName b
+  set temp $a
+  set a $b
+  set b $temp
 }
 set x 1
 set y 2
@@ -856,8 +866,8 @@ swap x y
 ```tcl
 # Modify caller's list
 proc addElement {listName element} {
-    upvar 1 $listName myList
-    lappend myList $element
+  upvar 1 $listName myList
+  lappend myList $element
 }
 set fruits {apple banana}
 addElement fruits cherry
@@ -867,8 +877,8 @@ addElement fruits cherry
 ```tcl
 # Link to global variable
 proc readGlobal {varName} {
-    upvar #0 $varName val
-    return $val
+  upvar #0 $varName val
+  return $val
 }
 set ::greeting Hello
 readGlobal greeting
@@ -883,18 +893,18 @@ readGlobal greeting
 ```tcl
 # Declare namespace variables
 namespace eval myns {
-    variable counter 0
-    variable name default
+  variable counter 0
+  variable name default
 
-    proc increment {} {
-        variable counter
-        incr counter
-    }
+  proc increment {} {
+    variable counter
+    incr counter
+  }
 
-    proc getName {} {
-        variable name
-        return $name
-    }
+  proc getName {} {
+    variable name
+    return $name
+  }
 }
 myns::increment
 myns::increment
@@ -1231,11 +1241,11 @@ lsort -dictionary {file10 file2 file1 file20}
 ```tcl
 # Custom comparison command
 proc byLength {a b} {
-    set la [string length $a]
-    set lb [string length $b]
-    if {$la < $lb} {return -1}
-    if {$la > $lb} {return 1}
-    return 0
+  set la [string length $a]
+  set lb [string length $b]
+  if {$la < $lb} then {return -1}
+  if {$la > $lb} then {return 1}
+  return 0
 }
 lsort -command byLength {cat elephant be a}
 ;# Returns: {a be cat elephant}
@@ -1255,7 +1265,7 @@ base64 encode "Hello, World!"   ;# Returns: SGVsbG8sIFdvcmxkIQ==
 
 ```tcl
 # Decode Base64
-base64 decode "SGVsbG8="        ;# Returns: Hello
+base64 decode SGVsbG8=          ;# Returns: Hello
 ```
 
 ```tcl
@@ -1473,8 +1483,8 @@ parse expression {2 + 3 * 4}
 ```tcl
 # Parse a complete script
 parse script {
-    set x 1
-    puts $x
+  set x 1
+  puts $x
 }
 ;# Returns list of parsed command structures
 ```
@@ -1619,7 +1629,7 @@ string index Hello 10             ;# Returns: (empty string)
 ```
 
 ```tcl
-string range "Hello, World" 0 4   ;# Returns: Hello (quotes needed: whitespace)
+string range "Hello, World" 0 4   ;# Returns: Hello
 string range Hello 1 end          ;# Returns: ello
 ```
 
@@ -1704,7 +1714,7 @@ string format %05d 42                 ;# Returns: 00042
 ```tcl
 string tolower HELLO                   ;# Returns: hello
 string toupper hello                   ;# Returns: HELLO
-string totitle "hello world"           ;# Returns: Hello world (quotes needed: whitespace)
+string totitle "hello world"           ;# Returns: Hello world
 ```
 
 ```tcl
@@ -1716,7 +1726,7 @@ string toupper hello 0 0              ;# Returns: Hello
 string trim "  hello  "               ;# Returns: hello
 string trimleft xxhello x             ;# Returns: hello
 string trimright helloxx x            ;# Returns: hello
-string trim "###text###" "#"          ;# Returns: text (quotes needed: hash is comment char)
+string trim "###text###" "#"          ;# Returns: text
 ```
 
 #### Prefix/Suffix Testing (Eagle extensions)
@@ -1743,7 +1753,7 @@ string is ascii Hello                ;# Returns: 1
 string is print Hello                ;# Returns: 1
 string is graph Hello                ;# Returns: 1
 string is punct ".,;!"              ;# Returns: 1 (quotes needed: semicolon)
-string is control "\x01\x02"        ;# Returns: 1 (quotes needed: backslash escapes)
+string is control "\x01\x02"        ;# Returns: 1
 string is wordchar hello_123        ;# Returns: 1
 string is xdigit 1a2F               ;# Returns: 1
 ```
@@ -1903,7 +1913,7 @@ array default unset counts
 # array for
 array set data {a 1 b 2 c 3}
 array for {key value} data {
-    # Iterates over each key-value pair
+  # Iterates over each key-value pair
 }
 ```
 
@@ -1911,7 +1921,7 @@ array for {key value} data {
 # Eagle extension — array foreach (iterates over keys)
 array set rgb {red 255 green 128 blue 0}
 array foreach key rgb {
-    puts [appendArgs $key " = " $rgb($key)]
+  puts [appendArgs $key " = " $rgb($key)]
 }
 ```
 
@@ -1919,7 +1929,7 @@ array foreach key rgb {
 # Eagle extension — array lmap (collect results, iterates over keys)
 array set prices {apple 1.50 banana 0.75 cherry 2.00}
 set formatted [array lmap fruit prices {
-    format "%s: $%s" $fruit $prices($fruit)
+  format "%s: $%s" $fruit $prices($fruit)
 }]
 ```
 
@@ -1929,8 +1939,8 @@ set formatted [array lmap fruit prices {
 array set data {x 10 y 20 z 30}
 set sid [array startsearch data]
 while {[array anymore data $sid]} {
-    set key [array nextelement data $sid]
-    # Process $key => $data($key)
+  set key [array nextelement data $sid]
+  # Process $key => $data($key)
 }
 array donesearch data $sid
 ```
@@ -1973,8 +1983,8 @@ close $fh
 ```tcl
 set fh [open data.txt r]
 while {![eof $fh]} {
-    set line [gets $fh]
-    # Process line
+  set line [gets $fh]
+  # Process line
 }
 close $fh
 ```
@@ -2072,7 +2082,7 @@ close $fh
 # Read line into variable, return char count
 set fh [open data.txt r]
 while {[gets $fh line] >= 0} {
-    # Process $line
+  # Process $line
 }
 close $fh
 ```
@@ -2247,7 +2257,7 @@ file normalize /usr/local/../lib
 ```
 
 ```tcl
-file separator                           ;# Returns: / (on Unix) or \\ (on Windows)
+file separator                           ;# Returns: / or \\
 file pathtype /usr                       ;# Returns: absolute
 file pathtype relative/path              ;# Returns: relative
 ```
@@ -2269,7 +2279,7 @@ file executable /usr/bin/eagle           ;# Returns: 1 or 0
 
 ```tcl
 # Eagle extension — ownership check
-file owned data.txt                      ;# Returns: 1 if owned by current user
+file owned data.txt                      ;# Returns: 1 if owned
 ```
 
 ```tcl
@@ -2456,7 +2466,7 @@ set cwd [pwd]
 ```tcl
 # Simple procedure
 proc greet {name} {
-    return [appendArgs "Hello, " $name !]
+  return [appendArgs "Hello, " $name !]
 }
 greet World
 ;# Returns: Hello, World!
@@ -2465,7 +2475,9 @@ greet World
 ```tcl
 # Default argument values
 proc connect {host {port 80} {timeout 30}} {
-    return [appendArgs "Connecting to " $host : $port " (timeout=" $timeout )]
+  return [appendArgs \
+      "Connecting to " $host : $port \
+      " (timeout=" $timeout )]
 }
 connect localhost            ;# port=80, timeout=30
 connect localhost 8080       ;# timeout=30
@@ -2475,9 +2487,9 @@ connect localhost 443 60     ;# All specified
 ```tcl
 # Variable arguments
 proc sum {args} {
-    set total 0
-    foreach n $args { incr total $n }
-    return $total
+  set total 0
+  foreach n $args { incr total $n }
+  return $total
 }
 sum 1 2 3 4 5
 ;# Returns: 15
@@ -2486,8 +2498,9 @@ sum 1 2 3 4 5
 ```tcl
 # Mixed required, default, and variable arguments
 proc log {level message args} {
-    set extra [join $args " "]
-    return [appendArgs "\[" $level "\] " $message " " $extra]
+  set extra [join $args " "]
+  return [appendArgs \
+      "\[" $level "\] " $message " " $extra]
 }
 log INFO "Server started" port=8080 host=localhost
 ;# Returns: [INFO] Server started port=8080 host=localhost
@@ -2496,8 +2509,8 @@ log INFO "Server started" port=8080 host=localhost
 ```tcl
 # Recursive procedure
 proc factorial {n} {
-    if {$n <= 1} { return 1 }
-    return [expr {$n * [factorial [expr {$n - 1}]]}]
+  if {$n <= 1} then { return 1 }
+  return [expr {$n * [factorial [expr {$n - 1}]]}]
 }
 factorial 5
 ;# Returns: 120
@@ -2511,7 +2524,9 @@ factorial 5
 ```tcl
 # Eagle extension — named (keyword) arguments
 nproc connect {host port timeout} {
-    return [appendArgs "Connecting to " $host : $port " (timeout=" $timeout )]
+  return [appendArgs \
+      "Connecting to " $host : $port \
+      " (timeout=" $timeout )]
 }
 connect -host localhost -port 8080 -timeout 60
 ;# Returns: Connecting to localhost:8080 (timeout=60)
@@ -2571,16 +2586,16 @@ napply {{x y} {expr {$x + $y}}} -x 3 -y 4
 ```tcl
 # Create namespace with procedures and variables
 namespace eval mylib {
-    variable version 1.0
+  variable version 1.0
 
-    proc greet {name} {
-        return [appendArgs "Hello from mylib, " $name !]
-    }
+  proc greet {name} {
+    return [appendArgs "Hello from mylib, " $name !]
+  }
 
-    proc getVersion {} {
-        variable version
-        return $version
-    }
+  proc getVersion {} {
+    variable version
+    return $version
+  }
 }
 mylib::greet World           ;# Returns: Hello from mylib, World!
 mylib::getVersion            ;# Returns: 1.0
@@ -2607,16 +2622,16 @@ namespace enable true       ;# Enable namespace support
 
 ```tcl
 namespace eval myns {
-    namespace current         ;# Returns: ::myns
-    namespace parent          ;# Returns: ::
+  namespace current         ;# Returns: ::myns
+  namespace parent          ;# Returns: ::
 }
 ```
 
 ```tcl
 # List child namespaces
 namespace eval parent {
-    namespace eval child1 {}
-    namespace eval child2 {}
+  namespace eval child1 {}
+  namespace eval child2 {}
 }
 namespace children ::parent
 ;# Returns: {::parent::child1 ::parent::child2}
@@ -2655,10 +2670,10 @@ namespace which -variable env             ;# Returns: ::env
 
 ```tcl
 namespace eval mathlib {
-    namespace export add subtract
-    proc add {a b} { expr {$a + $b} }
-    proc subtract {a b} { expr {$a - $b} }
-    proc internal {} { return "not exported" }
+  namespace export add subtract
+  proc add {a b} { expr {$a + $b} }
+  proc subtract {a b} { expr {$a - $b} }
+  proc internal {} { return "not exported" }
 }
 
 # Import exported commands
@@ -2676,11 +2691,11 @@ namespace forget mathlib::*
 
 ```tcl
 namespace eval myns {
-    variable data secret
-    proc showData {} {
-        variable data
-        return $data
-    }
+  variable data secret
+  proc showData {} {
+    variable data
+    return $data
+  }
 }
 set callback [namespace code {showData}]
 eval $callback
@@ -2804,12 +2819,14 @@ object referencecount $sb     ;# Returns reference count
 
 ```tcl
 # Proper disposal pattern
-set stream [object create System.IO.MemoryStream]
 try {
-    object invoke $stream WriteByte 65
-    object invoke $stream WriteByte 66
+  set stream [object create System.IO.MemoryStream]
+  object invoke $stream WriteByte 65
+  object invoke $stream WriteByte 66
 } finally {
+  if {[info exists stream]} then {
     object dispose $stream
+  }
 }
 ```
 
@@ -2834,14 +2851,14 @@ object invoke $list Add two
 object invoke $list Add three
 
 object foreach item $list {
-    # Prints: one, two, three
+  # Prints: one, two, three
 }
 ```
 
 ```tcl
 # Collect results with lmap
 set doubled [object lmap item $list {
-    string toupper $item
+  string toupper $item
 }]
 ;# Returns: {ONE TWO THREE}
 ```
@@ -2943,7 +2960,7 @@ debug enable                 ;# Toggle (NOT a query)
 
 ```tcl
 debug interactive true       ;# Enable interactive mode
-debug interactive            ;# Query current interactive state (returns value)
+debug interactive            ;# Query interactive state
 ```
 
 ```tcl
@@ -2998,7 +3015,7 @@ debug halt "stopped by user"           ;# Halt with custom result
 
 ```tcl
 # Nesting depth limits
-debug levels                 ;# Returns: maximumLevels N maximumScriptLevels N ...
+debug levels                 ;# Returns nesting depth limits
 ```
 
 ```tcl
@@ -3048,7 +3065,7 @@ debug eval {info vars}               ;# Run in debugger interp
 # Run code without debugger interception ("full speed")
 # Requires: DEBUGGER
 debug run {
-    set result [expensive_computation]
+  set result [expensive_computation]
 }
 ```
 
@@ -3168,7 +3185,7 @@ debug memory                             ;# Detailed memory statistics
 # Requires: NATIVE
 debug sysmemory                          ;# Native/system memory info
 debug gcmemory                           ;# GC total memory
-debug gcmemory true                      ;# GC total memory (force collection first)
+debug gcmemory true                      ;# GC memory (force collect)
 debug collect                            ;# Force garbage collection
 debug cleanup                            ;# Clean up caches and call frames
 debug purge                              ;# Purge all call frame information
@@ -3317,7 +3334,7 @@ debug restore true true                  ;# Strict and verbose restore
 
 ```tcl
 # Emergency debugging mode
-debug emergency                          ;# Enter emergency mode (default level)
+debug emergency                          ;# Enter emergency mode
 debug emergency -nocomplain Default      ;# With options
 ```
 
@@ -3362,7 +3379,7 @@ interp issafe mySafe           ;# Returns: 1
 ```tcl
 set child [interp create]
 interp eval $child {
-    proc greet {name} { return [appendArgs "Hello, " $name !] }
+  proc greet {name} { return [appendArgs "Hello, " $name !] }
 }
 set result [interp eval $child {greet World}]
 ;# result is "Hello, World!"
@@ -3469,7 +3486,8 @@ interp isstandard $child     ;# Returns: 1
 ```tcl
 # Trust and policy management
 interp marktrusted $child
-interp policy $child -type SomeType {puts [appendArgs "Policy check for: " $args]}
+interp policy $child -type SomeType \
+    {puts [appendArgs "Policy check for: " $args]}
 interp nopolicy $child policyName
 ```
 
@@ -3497,8 +3515,8 @@ interp proclimit $child 500         ;# Max procedures
 interp varlimit $child 1000         ;# Max variables
 interp namespacelimit $child 50     ;# Max namespaces
 interp scopelimit $child 100        ;# Max scopes
-interp resultlimit $child 1048576   ;# Max result size (Requires: RESULT_LIMITS)
-interp callbacklimit $child 100     ;# Max callbacks (Requires: CALLBACK_QUEUE)
+interp resultlimit $child 1048576   ;# Max result size
+interp callbacklimit $child 100     ;# Max callbacks
 interp eventlimit $child 1000       ;# Max events
 interp execlimit $child 100000      ;# Max operation limit
 interp readylimit $child 100        ;# Max ready operations
@@ -3681,19 +3699,19 @@ package relativefilename lib/helper.eagle
 ```tcl
 # Eagle extension — basic test command
 test1 string-length-1.1 "Test string length" {} {
-    string length hello
+  string length hello
 } {5}
 ```
 
 ```tcl
 test1 math-1.1 "Test basic arithmetic" {} {
-    expr {2 + 2}
+  expr {2 + 2}
 } {4}
 ```
 
 ```tcl
 test1 list-1.1 "Test list creation" {} {
-    list a b c
+  list a b c
 } {a b c}
 ```
 
@@ -3706,19 +3724,19 @@ test1 list-1.1 "Test list creation" {} {
 # Eagle extension — advanced test with setup/cleanup
 test2 file-read-1.1 "Test file reading" \
     -setup {
-        set tmpFile [file tempname]
-        set fh [open $tmpFile w]
-        puts $fh "test data"
-        close $fh
+      set tmpFile [file tempname]
+      set fh [open $tmpFile w]
+      puts $fh "test data"
+      close $fh
     } \
     -body {
-        set fh [open $tmpFile r]
-        set data [read -nonewline $fh]
-        close $fh
-        return $data
+      set fh [open $tmpFile r]
+      set data [read -nonewline $fh]
+      close $fh
+      return $data
     } \
     -cleanup {
-        file delete -force $tmpFile
+      file delete -force $tmpFile
     } \
     -result "test data" \
     -match exact
@@ -3728,7 +3746,7 @@ test2 file-read-1.1 "Test file reading" \
 # Test expected error
 test2 error-1.1 "Test error handling" \
     -body {
-        error "expected error"
+      error "expected error"
     } \
     -returnCodes error \
     -result "expected error"
@@ -3739,7 +3757,7 @@ test2 error-1.1 "Test error handling" \
 test2 platform-1.1 "Unix-only test" \
     -constraints {unix} \
     -body {
-        file exists /dev/null
+      file exists /dev/null
     } \
     -result {1}
 ```
@@ -3748,7 +3766,7 @@ test2 platform-1.1 "Unix-only test" \
 # Test with glob match
 test2 version-1.1 "Test version format" \
     -body {
-        version
+      version
     } \
     -match glob \
     -result {*.*.*.*}
@@ -3876,8 +3894,8 @@ set parts [uri parse https://example.com:8080/path?q=test]
 
 ```tcl
 # Validate individual components
-uri host example.com                        ;# Validates hostname (returns type)
-uri scheme https                            ;# Validates scheme name (returns boolean)
+uri host example.com                ;# Validates hostname
+uri scheme https                    ;# Validates scheme name
 ```
 
 ```tcl
@@ -3890,7 +3908,7 @@ uri join /api v1 users                      ;# Returns: /api/v1/users
 ```tcl
 # Validate URI
 uri isvalid https://example.com             ;# Returns: 1
-uri isvalid "not a uri"                     ;# Returns: 0 (quotes needed: whitespace)
+uri isvalid "not a uri"                     ;# Returns: 0
 uri isvalid relative/path relative          ;# Check as relative URI
 ```
 
@@ -3937,7 +3955,8 @@ uri download -timeout 30000 -- https://example.com/large.zip /tmp/large.zip
 ```tcl
 # Requires: NETWORK
 # Download with timeout type (uses interpreter's network timeout)
-uri download -timeouttype network -- https://example.com/file.zip /tmp/file.zip
+uri download -timeouttype network -- \
+    https://example.com/file.zip /tmp/file.zip
 ```
 
 ```tcl
@@ -3970,7 +3989,8 @@ set data [uri download -timeouttype network -inline -- $uri]
 ```tcl
 # Requires: NETWORK
 # Specify response encoding
-set text [uri download -inline -encoding utf-8 -- https://example.com/data.txt]
+set text [uri download -inline -encoding utf-8 \
+    -- https://example.com/data.txt]
 ```
 
 ```tcl
@@ -4055,11 +4075,11 @@ uri upload -inline -callback {myUploadHandler} \
 # Requires: NETWORK
 # Upload with custom WebClient configuration
 set script [object create String {
-    if {[getStringFromObjectHandle methodName] eq "GetWebRequest"} then {
-        webRequest KeepAlive false
-        webRequest Timeout 30000
-        webRequest UserAgent MyApp/1.0
-    }
+  if {[getStringFromObjectHandle methodName] eq "GetWebRequest"} then {
+    webRequest KeepAlive false
+    webRequest Timeout 30000
+    webRequest UserAgent MyApp/1.0
+  }
 }]
 set response [uri upload -timeouttype network -inline \
     -webclientdata $script -data {key value} -- $uri]
@@ -4082,7 +4102,7 @@ set data [uri download -inline -- https://example.com/data.json]
 
 ```tcl
 # Ping host
-uri ping example.com 5000         ;# 5 second timeout, returns {status roundtripTime ms}
+uri ping example.com 5000  ;# 5 second timeout
 ```
 
 ```tcl
@@ -4099,9 +4119,9 @@ uri offline true                   ;# Disable network operations
 ```tcl
 # Security and update information
 uri security                       ;# Returns TLS/security settings info
-uri softwareupdates                ;# Returns current software update trust status
-# uri softwareupdates true         ;# Enable implicit trust of built-in update keys
-# uri softwareupdates false        ;# Disable implicit trust of built-in update keys
+uri softwareupdates                ;# Returns update trust status
+# uri softwareupdates true         ;# Enable built-in update keys
+# uri softwareupdates false        ;# Disable built-in update keys
 ```
 
 ---
@@ -4129,7 +4149,7 @@ set person [xml deserialize MyNamespace.Person $xmlStr]
 # Iterate over XML elements
 set xmlData <items><item>A</item><item>B</item></items>
 xml foreach node $xmlData {
-    puts [appendArgs "Element: " $node]
+  puts [appendArgs "Element: " $node]
 }
 ```
 
@@ -4138,7 +4158,7 @@ xml foreach node $xmlData {
 ```tcl
 # Validate XML against XSD schema
 set schema {<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-    <xs:element name="root" type="xs:string"/>
+  <xs:element name="root" type="xs:string"/>
 </xs:schema>}
 set doc {<root>Hello</root>}
 xml validate $schema $doc   ;# Returns: 1 if valid
@@ -4194,7 +4214,7 @@ tcl ready $interp                     ;# Returns: 1 if ready
 ```tcl
 # Evaluate code in Tcl
 tcl eval $interp {
-    proc greet {name} { return [appendArgs "Hello from Tcl, " $name !] }
+  proc greet {name} { return [appendArgs "Hello from Tcl, " $name !] }
 }
 set greeting [tcl eval $interp {greet Eagle}]
 ;# greeting is "Hello from Tcl, Eagle!"
@@ -4864,7 +4884,7 @@ vwait -timeout 5000 result
 
 ```tcl
 proc greet {name {greeting Hello}} {
-    return [appendArgs $greeting ", " $name !]
+  return [appendArgs $greeting ", " $name !]
 }
 info args greet              ;# Returns: {name greeting}
 info args greet true         ;# Returns: {name {}} {greeting Hello}
@@ -4880,7 +4900,7 @@ info procs *greet*           ;# Returns: greet
 ```tcl
 # Procedures in the current namespace
 namespace eval ::myns {
-    proc helper {} { return 1 }
+  proc helper {} { return 1 }
 }
 info nprocs                  ;# Procs with NamedArguments flag
 ```
@@ -4902,9 +4922,9 @@ info globals *path*          ;# Globals matching pattern
 
 ```tcl
 proc example {} {
-    set local1 a
-    set local2 b
-    return [info locals]
+  set local1 a
+  set local2 b
+  return [info locals]
 }
 example
 ;# Returns: {local1 local2}
@@ -4913,8 +4933,8 @@ example
 ```tcl
 # All visible variables (locals + globals)
 proc showVars {} {
-    set myLocal 1
-    info vars               ;# Returns: locals and visible globals
+  set myLocal 1
+  info vars               ;# Returns: locals and visible globals
 }
 ```
 
@@ -4926,12 +4946,12 @@ info sysvars                ;# Returns: system-defined variables
 ```tcl
 # Variable links (upvar tracking)
 proc outer {} {
-    set data hello
-    inner data
+  set data hello
+  inner data
 }
 proc inner {varName} {
-    upvar 1 $varName local
-    info linkedname local   ;# Returns: data
+  upvar 1 $varName local
+  info linkedname local   ;# Returns: data
 }
 ```
 
@@ -4977,9 +4997,9 @@ info undefined               ;# Returns: list of undefined variables
 
 ```tcl
 proc inner {} {
-    puts [appendArgs "Level: " [info level]]     ;# e.g., 2
-    puts [appendArgs "Caller: " [info level 1]] ;# Returns: outer
-    return [info level]
+  puts [appendArgs "Level: " [info level]]
+  puts [appendArgs "Caller: " [info level 1]]
+  return [info level]
 }
 proc outer {} { inner }
 # At global level:
@@ -4989,7 +5009,7 @@ info level                   ;# Returns: 0
 ```tcl
 # Unique level identifier
 proc showLevelId {} {
-    info levelid             ;# Returns unique ID for this stack level
+  info levelid             ;# Returns unique ID for this stack level
 }
 ```
 
@@ -5135,7 +5155,7 @@ info transactions            ;# List active database transactions
 #### Interpreter Management
 
 ```tcl
-info interps                 ;# List interpreters (all for non-safe, children for safe)
+info interps                 ;# List interpreters
 info interps * true          ;# List all interpreters
 info loaded                  ;# List loaded plugins
 info modules                 ;# List loaded modules
@@ -5152,7 +5172,7 @@ info pluginflags MyPlugin    ;# Plugin flags
 
 ```tcl
 info culture                 ;# Current culture info
-# info culture en-US        ;# Set interpreter culture to en-US (modifies state)
+# info culture en-US        ;# Set interpreter culture
 info cultures *en*           ;# Cultures matching pattern
 ```
 
@@ -5218,9 +5238,9 @@ eval lindex [list $args] 1
 ```tcl
 # Evaluate multi-command script
 eval {
-    set x 10
-    set y 20
-    expr {$x + $y}
+  set x 10
+  set y 20
+  expr {$x + $y}
 }
 ;# Returns: 30
 ```
@@ -5238,7 +5258,7 @@ invoke #0 set globalVar value
 ```tcl
 # Invoke at parent frame
 proc foo {} {
-    invoke 1 info level
+  invoke 1 info level
 }
 ```
 
@@ -5546,7 +5566,7 @@ host screen delete $screen
 host inchan                          ;# Get input channel
 host outchan                         ;# Get output channel
 host errchan                         ;# Get error channel
-host redirected Output               ;# Check if stdout is redirected (ChannelType)
+host redirected Output               ;# Check if stdout redirected
 host mode Output                     ;# Get channel mode (ChannelType)
 host echo false                      ;# Disable input echo (for passwords)
 ```
@@ -5610,15 +5630,15 @@ unload -nocomplain myextension.dll
 ```tcl
 # Define custom background error handler
 proc bgerror {message} {
-    puts stderr [appendArgs "Background error: " $message]
-    puts stderr [appendArgs "Stack trace: " $::errorInfo]
+  puts stderr [appendArgs "Background error: " $message]
+  puts stderr [appendArgs "Stack trace: " $::errorInfo]
 }
 ```
 
 ```tcl
 # Example: error in after callback
 proc bgerror {message} {
-    # Log to file instead of crashing
+  # Log to file instead of crashing
 }
 after 0 {error "background failure"}
 update
@@ -5666,8 +5686,10 @@ rename temp {}
 # Wrap an existing command
 rename puts _original_puts
 proc puts {args} {
-    set timestamp [clock format [clock seconds] -format "%H:%M:%S"]
-    eval _original_puts [list [appendArgs \[ $timestamp \]]] $args
+  set timestamp [clock format [clock seconds] \
+      -format "%H:%M:%S"]
+  eval _original_puts \
+      [list [appendArgs \[ $timestamp \]]] $args
 }
 # Now all puts calls include a timestamp prefix
 ```
@@ -5743,21 +5765,21 @@ The following examples reference procedures from the Eagle script library
 ```tcl
 # Comprehensive error handling
 proc safeOperation {args} {
-    set code [catch {
-        # risky operation
-        set result [eval $args]
-    } msg opts]
+  set code [catch {
+    # risky operation
+    set result [eval $args]
+  } msg opts]
 
-    switch $code {
-        0 { return $result }
-        1 {
-            puts stderr [appendArgs "Error: " $msg]
-            return ""
-        }
-        default {
-            return -options $opts $msg
-        }
+  switch $code {
+    0 { return $result }
+    1 {
+      puts stderr [appendArgs "Error: " $msg]
+      return ""
     }
+    default {
+      return -options $opts $msg
+    }
+  }
 }
 ```
 
@@ -5766,11 +5788,11 @@ proc safeOperation {args} {
 ```tcl
 # Higher-order function: apply a transform to each element
 proc mapList {lambda data} {
-    set result [list]
-    foreach item $data {
-        lappend result [apply $lambda $item]
-    }
-    return $result
+  set result [list]
+  foreach item $data {
+    lappend result [apply $lambda $item]
+  }
+  return $result
 }
 set squares [mapList {{x} {expr {$x * $x}}} {1 2 3 4 5}]
 ;# Returns: {1 4 9 16 25}
@@ -5779,11 +5801,11 @@ set squares [mapList {{x} {expr {$x * $x}}} {1 2 3 4 5}]
 ```tcl
 # Pipeline pattern using proc chaining
 proc pipeline {data args} {
-    set current $data
-    foreach cmd $args {
-        set current [eval $cmd [list $current]]
-    }
-    return $current
+  set current $data
+  foreach cmd $args {
+    set current [eval $cmd [list $current]]
+  }
+  return $current
 }
 ```
 
@@ -5793,7 +5815,8 @@ proc pipeline {data args} {
 # StringBuilder pattern (efficient string building)
 set sb [object create System.Text.StringBuilder]
 for {set i 0} {$i < 100} {incr i} {
-    object invoke $sb AppendLine [format "Line %d" $i]
+  object invoke $sb AppendLine \
+      [format "Line %d" $i]
 }
 set output [object invoke $sb ToString]
 object dispose $sb
@@ -5801,7 +5824,8 @@ object dispose $sb
 
 ```tcl
 # Using .NET collections
-set dict [object create "System.Collections.Generic.Dictionary\`2\[System.String,System.Int32\]"]
+set dict [object create \
+    "System.Collections.Generic.Dictionary\`2\[System.String,System.Int32\]"]
 object invoke $dict Add one 1
 object invoke $dict Add two 2
 set count [object invoke $dict Count]
@@ -5826,14 +5850,14 @@ set hostname [object invoke System.Net.Dns GetHostName]
 ```tcl
 # Accumulator using scope
 proc createAccumulator {name} {
-    scope create $name
-    scope set $name total 0
+  scope create $name
+  scope set $name total 0
 }
 
 proc accumulate {name value} {
-    scope create -open -args $name
-    incr total $value
-    return $total
+  scope create -open -args $name
+  incr total $value
+  return $total
 }
 
 createAccumulator myAcc
@@ -5848,13 +5872,15 @@ scope destroy myAcc
 ```tcl
 # Parameterized test pattern
 foreach {n expected} {0 1  1 1  5 120  10 3628800} {
-    test1 [appendArgs factorial- $n] [appendArgs factorial( $n ") == " $expected] {} {
-        proc fact {n} {
-            if {$n <= 1} {return 1}
-            expr {$n * [fact [expr {$n - 1}]]}
-        }
-        fact $n
-    } $expected
+  test1 [appendArgs factorial- $n] \
+      [appendArgs factorial( $n ") == " $expected] \
+      {} {
+    proc fact {n} {
+      if {$n <= 1} then {return 1}
+      expr {$n * [fact [expr {$n - 1}]]}
+    }
+    fact $n
+  } $expected
 }
 ```
 
@@ -5862,20 +5888,21 @@ foreach {n expected} {0 1  1 1  5 120  10 3628800} {
 # Test with temporary files
 test2 tempfile-1.1 "Write and read temp file" \
     -setup {
-        set tmpDir [file temppath]
-        set tmpFile [file join $tmpDir [appendArgs eagle_test_ [pid] .txt]]
+      set tmpDir [file temppath]
+      set tmpFile [file join $tmpDir \
+          [appendArgs eagle_test_ [pid] .txt]]
     } \
     -body {
-        set fh [open $tmpFile w]
-        puts $fh "eagle test data"
-        close $fh
-        set fh [open $tmpFile r]
-        set data [read -nonewline $fh]
-        close $fh
-        return $data
+      set fh [open $tmpFile w]
+      puts $fh "eagle test data"
+      close $fh
+      set fh [open $tmpFile r]
+      set data [read -nonewline $fh]
+      close $fh
+      return $data
     } \
     -cleanup {
-        file delete -force $tmpFile
+      file delete -force $tmpFile
     } \
     -result "eagle test data"
 ```
