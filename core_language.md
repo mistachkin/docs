@@ -12953,7 +12953,7 @@ Listeners are the output endpoints for trace messages. Eagle supports several li
 | `RawLogFile` | `0x8000` | `TextWriterTraceListener` writing to a raw log file. |
 | `TestLogFile` | `0x10000` | Test log file listener (managed by the test framework). Requires: `TEST`. |
 | `Buffered` | `0x20000` | Buffered listener that accumulates messages for batch output (see [BufferedTraceListener](#buffered-trace-listener)). |
-| `StatusForm` | `0x40000` | WinForms status form listener. Requires: `WINFORMS`, `NATIVE_UI`. |
+| `StatusForm` | `0x40000` | WinForms status form listener. Requires: `WINFORMS`. |
 | `Automatic` | `0x80000` | Automatic listener detection (selects based on available infrastructure). |
 
 **Composite masks:**
@@ -13054,7 +13054,7 @@ The `Default.cs` test infrastructure class provides several specialized `TraceLi
 
 Routes trace output to the interpreter's UI status form via `interpreter.ReportStatus()`. Primarily used during interactive testing with WinForms UI.
 
-- Requires: `NATIVE_UI`
+- Requires: `WINFORMS`
 - Thread-safe: yes
 - `Write()` / `WriteLine()` call `ReportStatus()` on the interpreter
 - `Flush()` clears the status display
@@ -13386,7 +13386,7 @@ The tracing subsystem's compiled behavior depends on several conditional compila
 | `CONSOLE` | Enables console-related trace output and the console trace listener. |
 | `NATIVE` | Enables native debugger output (`OutputDebugString`) and the `NativeTraceListener`. |
 | `TEST` | Enables test-specific listeners (log file, buffered) and test-specific `debug trace` options. |
-| `WINFORMS` / `NATIVE_UI` | Enables the `StatusFormTraceListener`. |
+| `WINFORMS` | Enables the `StatusFormTraceListener`. |
 | `DATA` | Enables the `DatabaseTraceListener`. |
 | `CACHE_DICTIONARY` | Enables the message deduplication cache in `TraceLimits`. |
 
