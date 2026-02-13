@@ -255,9 +255,9 @@ Hippogriff follows a layered architecture with clear separation of concerns:
 
 ```
 +-----------------------------------------------------------+
-|                    Program (Entry Point)                   |
+|                    Program (Entry Point)                  |
 +-----------------------------------------------------------+
-|                    UpdateForm (UI + Orchestration)         |
+|                    UpdateForm (UI + Orchestration)        |
 +-----------------------------------------------------------+
 |  Configuration  |  Release  |  UpdateWebClient  |  FileOps|
 +-----------------------------------------------------------+
