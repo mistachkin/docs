@@ -522,11 +522,14 @@ try {
 For multiple resources:
 
 ```tcl
-set reader [object create System.IO.StreamReader $filename]
 try {
+    set reader [object create System.IO.StreamReader $filename]
+
     set content [object invoke $reader ReadToEnd]
 } finally {
-    object dispose $reader
+    if {[info exists reader]} then {
+        object dispose $reader
+    }
 }
 ```
 
