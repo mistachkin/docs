@@ -41,6 +41,12 @@ This document provides a comprehensive catalog the Eagle scripting language, org
   - [Core and Miscellaneous](#core-and-miscellaneous)
 - [Common Option Patterns](#common-option-patterns)
 - [Test Functions](#test-functions)
+- [Advanced: Design Philosophy, Project Structure, and Build System](#advanced-design-philosophy-project-structure-and-build-system)
+  - [Design Philosophy](#design-philosophy)
+  - [Repository Directory Structure](#repository-directory-structure)
+  - [Solution and Project Organization](#solution-and-project-organization)
+  - [Custom MSBuild Targets Architecture](#custom-msbuild-targets-architecture)
+  - [Build Types and Feature Flags](#build-types-and-feature-flags)
 - [Advanced Topics and Patterns](#advanced-topics-and-patterns)
   - [Built-in Virtual Scripts](#built-in-virtual-scripts)
   - [Managed Assembly Plugin Loader Subsystem](#managed-assembly-plugin-loader-subsystem)
@@ -7808,6 +7814,241 @@ The Eagle test suite (in Eagle/Library/Tests/Default.cs) provides a dedicated te
 - **enumerableDelegate** - Test delegate returning enumerable
 
 **Note**: The Default.cs class contains many additional managed methods used internally for test infrastructure, callbacks, and utilities. The commands listed above are registered via AddExecuteCallback, AddCommand, or AddSubCommands calls and represent the script commands directly callable from Eagle test scripts.
+
+---
+
+## Advanced: Design Philosophy, Project Structure, and Build System
+
+This section provides a comprehensive overview of Eagle's design philosophy, the rationale behind its directory structure, the organization of its solutions and projects, and the purpose and architecture of its custom MSBuild targets system.
+
+### Design Philosophy
+
+Eagle (Extensible Adaptable Generalized Logic Engine) is an implementation of the Tcl scripting language for the Common Language Runtime (CLR), written entirely in C#. Several core design principles shape the project:
+
+**Tcl Fidelity with CLR Integration.** Eagle is based on the design and implementation of Tcl 8.4, borrowing selected features from Tcl 8.5 and 8.6. Rather than being a thin wrapper, Eagle implements the Tcl command model natively in C#, enabling deep interoperability with the .NET type system (e.g., `object create`, `object invoke`) while preserving the "everything is a string" semantics that define Tcl.
+
+**Extreme Backward Compatibility.** The project maintains build support across every major Visual Studio version from 2005 through 2022 and every .NET Framework version from 2.0 through 4.8.1, plus .NET Standard 2.0/2.1, .NET Core, and Mono. Separate `.csproj` and `.sln` files exist for each Visual Studio generation, ensuring the project can be opened and built natively in any of these environments without format conversion or migration. This is intentional: Eagle is designed to be deployable into environments where upgrading the toolchain is not an option.
+
+**Compile-Time Feature Composition.** Rather than shipping a single monolithic binary, Eagle uses an extensive system of compile-time feature flags (80+ MSBuild properties) that selectively include or exclude subsystems. This allows the library to be tailored for specific deployment environments -- from a full-featured desktop shell to a stripped-down variant running inside SQL Server to a "Bare" build that proves no hidden inter-feature dependencies exist.
+
+**Multi-Platform by Design.** Windows, Unix, and Mono are explicitly supported as first-class platforms. Platform-specific code is gated behind `EagleWindows`, `EagleUnix`, and `EagleMono` flags rather than using runtime detection alone, ensuring that platform-inappropriate code paths are excluded at compile time.
+
+**Plugin Architecture.** Eagle is built around an extensible plugin model. The core library provides the interpreter engine, while enterprise plugins are developed as separate assemblies with their own build targets. Plugins can be isolated in separate AppDomains for fault tolerance and security.
+
+**Security as a First-Class Concern.** The build system incorporates strong name signing, Authenticode signing (with dual-algorithm timestamping for long-term validation), embedded certificate handling, and script verification (via the Harpy plugin). Code Access Security (CAS) policy support is maintained for older .NET Framework deployments. The `EagleMaybeEnterpriseLockdown` flag enables enterprise-grade script execution restrictions.
+
+### Repository Directory Structure
+
+The Eagle repository is organized into several top-level directories, each serving a distinct role:
+
+```
+eagle/Eagle/                  Main Eagle source tree
+  ├── Library/                Core library (the Eagle interpreter engine)
+  │   ├── Attributes/         Custom .NET attribute definitions
+  │   ├── Commands/           Built-in script command implementations
+  │   ├── Components/         Reusable component infrastructure
+  │   ├── Containers/         Collection and container types
+  │   ├── Functions/          Expression function implementations
+  │   ├── Hosts/              Console and interactive host implementations
+  │   ├── Interfaces/         Public API interfaces (ICommand, IPlugin, etc.)
+  │   ├── Operators/          Expression operator implementations
+  │   ├── Packages/           Built-in package implementations
+  │   ├── Plugins/            Core plugin infrastructure
+  │   ├── Policies/           Security policy implementations
+  │   ├── Resolvers/          Name and type resolution
+  │   ├── SubCommands/        Ensemble sub-command implementations
+  │   ├── Tools/              Build-time tools and utilities
+  │   ├── Generated/          Auto-generated source files (messages, etc.)
+  │   ├── Resources/          Embedded resources (script library, messages)
+  │   └── Properties/         Assembly metadata and version info
+  ├── Shell/                  Interactive shell (REPL) executable
+  ├── Build/                  Custom MSBuild task implementations (EagleTasks)
+  ├── Example/                Example application project
+  ├── Sample/                 Sample projects (Plugin, TclSample)
+  ├── Management/             PowerShell cmdlets (EagleCmdlets)
+  ├── Service/                Windows service host (EagleServices)
+  ├── Installer/              WiX installer extensions (EagleExtensions)
+  ├── Plugins/                Enterprise and proprietary plugin source
+  │   └── ...                 Other enterprise/proprietary plugins
+  ├── Native/                 Native interop (Garuda, Spilornis)
+  ├── Targets/                Custom MSBuild targets files
+  ├── Keys/                   Strong name key files (public keys only)
+  ├── MonoDevelop/            MonoDevelop/Xamarin Studio solution variants
+  ├── NuGet/                  NuGet package definitions and targets
+  ├── Test/                   Test suite (161+ test categories)
+  ├── Toolkit/                Toolkit projects
+  ├── Update/                 Update mechanism (Hippogriff)
+  ├── Stub/                   Stub/bootstrap assemblies
+  ├── Setup/                  Setup and installation scripts
+  └── Externals/              External binary dependencies
+
+docs/                         Documentation repository
+  ├── core_language.md        This file (language catalog/specification)
+  ├── quick_start.md          Getting started guide
+  ├── core_examples.md        Code examples
+  └── ...                     Other documentation
+
+extra/                        Add-on packages and tools
+  ├── startup scripts         Multi-stage initialization chain
+  ├── integration packages    Harpy, Zeus, Badge convenience commands
+  └── worker scripts          Background task automation
+
+pkgt/                         Package Client Toolset
+  └── ...                     Cross-platform package delivery with
+                              cryptographic verification
+
+externals/                    Shared external dependencies
+```
+
+**Rationale.** The separation of the core library (`Library/`) from the shell (`Shell/`), services (`Service/`), management tools (`Management/`), and plugins (`Plugins/`) follows the principle of deploying only what is needed. The core library can be embedded as a scripting engine in any .NET application without pulling in the interactive shell, PowerShell cmdlets, or Windows service infrastructure. The `Targets/` directory is kept at the solution level because the MSBuild targets are shared across all projects -- they define the build policy for the entire Eagle ecosystem.
+
+### Solution and Project Organization
+
+Eagle maintains multiple `.sln` files to support different Visual Studio versions and build configurations:
+
+| Solution Pattern | Purpose |
+|---|---|
+| `Eagle.sln` / `Eagle20XX.sln` | Standard edition: core library + shell + build tasks + sample + example |
+| `EagleCore.sln` / `EagleCore20XX.sln` | Core subset: library only (minimal build) |
+| `EagleEnterprise.sln` / `EagleEnterprise20XX.sln` | Enterprise edition: standard + all enterprise plugins |
+| `EagleExtra.sln` / `EagleExtra20XX.sln` | Extra edition: standard + management + service + installer |
+| `EagleNetStandard2X.sln` | .NET Standard 2.x cross-platform build |
+| `EagleEnterpriseMono2010.sln` | Mono-specific enterprise build |
+| `MonoDevelop/Eagle.MonoDevelop20XX.sln` | MonoDevelop/Xamarin IDE variants |
+
+Within each solution, projects follow a versioned naming convention:
+
+| Project | Role |
+|---|---|
+| `Eagle.csproj` / `Eagle20XX.csproj` | Core library (the interpreter engine) |
+| `EagleShell.csproj` / `EagleShell20XX.csproj` | Interactive shell executable |
+| `EagleTasks.csproj` / `EagleTasks20XX.csproj` | Custom MSBuild tasks |
+| `EagleCmdlets.csproj` / `EagleCmdlets20XX.csproj` | PowerShell cmdlets |
+| `EagleServices.csproj` / `EagleServices20XX.csproj` | Windows service host |
+| `EagleExtensions.csproj` / `EagleExtensions20XX.csproj` | WiX installer extensions |
+| `Sample.csproj` / `Plugin.csproj` / `TclSample.csproj` | Sample/demo projects |
+| `EagleNetStandard2X.csproj` / `EagleShellNetStandard2X.csproj` | .NET Standard variants |
+
+**Rationale for per-version project files.** Each Visual Studio version introduced changes to the `.csproj` format, default property values, and implicit imports. Rather than relying on format auto-migration (which is lossy and can produce incorrect builds), Eagle maintains explicit project files for each toolchain. This guarantees that building with Visual Studio 2008 produces an identical binary to what was tested, and that newer MSBuild features do not leak into builds targeting older frameworks. The `20XX` suffix directly indicates the minimum required toolchain version.
+
+### Custom MSBuild Targets Architecture
+
+The build system is factored into four primary `.targets` files in `Eagle/Targets/`, each with a specific responsibility:
+
+#### `Eagle.Presets.targets` -- Target Framework Control
+
+Loaded first. Contains properties that must be established before any build type logic runs:
+
+- `EagleNetStandard20` / `EagleNetStandard21` -- Flags indicating .NET Standard targeting
+- `EagleNetCoreReferences` / `EagleNetCore20` / `EagleNetCore30` -- Controls which .NET Core APIs are available
+
+**Rationale.** These properties gate conditional logic throughout the other targets files. They must be set before `Eagle.Builds.targets` is imported because build type definitions reference them. Separating presets from the build types prevents circular dependency issues.
+
+#### `Eagle.Builds.targets` -- Build Type Definitions
+
+Defines named build configurations selected via the `EagleBuildType` property. Each build type is a `PropertyGroup` that sets dozens of feature flags to specific values. Build types fall into three categories:
+
+**Framework-versioned builds** (`NetFx20` through `NetFx481`, `NetStandard20`, `NetStandard21`): Target a specific .NET version and configure features accordingly. For example, `NetFx45` and higher enable `EagleCompression` (System.IO.Compression requires .NET 4.5+), while `NetStandard20` disables `EagleAppDomains`, `EagleRemoting`, and `EagleWinForms` (APIs absent from .NET Standard).
+
+**Special-purpose builds**:
+
+| Build Type | Purpose |
+|---|---|
+| `Bare` | Strips nearly every optional feature to its minimum. Primarily used to detect hidden compile-time dependencies between features. If a `Bare` build compiles, the feature gating is correct. |
+| `LeanAndMean` | Disables features that add runtime overhead (profiler, debugger, notification system, cache statistics, threading commands). Used for performance-sensitive deployments where diagnostic capabilities are not needed. |
+| `Database` | Removes features incompatible with SQL Server CLR hosting (native P/Invoke, System.Drawing, remoting, web access). Enables Eagle to run as a stored procedure scripting engine. |
+| `MonoOnUnix` | Official configuration for Mono on Unix. Enables Mono-specific code paths, disables Windows-specific features, adjusts stack size to 1 MB (Mono default), and disables threaded Tcl. |
+| `Development` | Enables dead code compilation, obsolete features, policy tracing, and test-only features. Used by the Eagle Development Team during active development. |
+
+**Rationale.** Build types exist because a single set of `#if` preprocessor directives cannot express the combinations needed for deployment across such diverse environments. The `EagleBuildType` property acts as a "preset selector" that configures 30-80 individual flags in a tested, validated combination. This is safer than requiring users to set dozens of properties individually.
+
+#### `Eagle.Settings.targets` -- Property Defaults and Global Configuration
+
+The largest targets file. Defines default values for all 80+ feature flag properties, each guarded by a `Condition="'$(PropertyName)' == ''"` check so that values from build types, command-line overrides, or `.targets.user` files take precedence.
+
+Key categories of settings:
+
+- **Edition properties**: `EagleOfficial`, `EagleOfficialBinary`, `EagleStable`, `EagleSolution` -- Control release metadata and licensing behavior
+- **Versioning**: `EaglePatchLevel`, `EagleSourceId`, `EagleSourceTimeStamp` -- Control how version information is embedded from the Fossil SCM checkout
+- **Signing**: `EagleAuthenticodeSign`, `StrongNameWithoutSdk`, `EagleTimeStampUrl`, `EagleRfcTimeStampUrl1`-`3` -- Authenticode and strong name signing configuration with multiple timestamping servers for redundancy
+- **Platform features**: `EagleWindows`, `EagleUnix`, `EagleMono`, `EagleMonoHacks`, `EagleMonoLegacy` -- Platform-specific code gate controls
+- **Subsystem toggles**: `EagleConfiguration`, `EagleData`, `EagleDrawing`, `EagleRemoting`, `EagleWinForms`, `EagleWeb`, `EagleCompression`, `EagleXml`, `EagleNetwork` -- Control which BCL subsystem dependencies are compiled in
+- **Diagnostics**: `EagleVerbose`, `EagleDebugTrace`, `EagleDebugWrite`, `EagleForceTrace`, `EagleMaybeTrace`, `EaglePolicyTrace` -- Granular control over runtime diagnostic output
+- **Performance**: `EagleFastErrorCode`, `EagleFastErrorInfo`, `EagleResultLimits`, `EagleThrowOnDisposed` -- Performance vs. safety trade-offs
+- **Detection**: `EagleDetectBuildTool`, `EagleDetectOperatingSystem`, `EagleDetectArchitecture`, `EagleDetectNetFx20` through `EagleDetectNetFx481` -- Runtime environment auto-detection
+- **Stack management**: `EagleDefaultStackSize` / `EagleStackSize` (default `0x1000000` / 16 MB) -- Configurable to support deep recursion in Tcl scripts
+- **Resource generation**: `EagleMsgGen`, `EagleMessagesResGen`, `EagleLibraryResGen`, `EaglePackagesResGen` -- Control regeneration of embedded resources during the build
+
+**Rationale.** Centralizing defaults in a single file ensures consistency across all projects in the solution. The `Condition` guard pattern means properties can be overridden at any level (command line, `.targets.user`, build type, environment variable) without modifying the shared file. Every property includes an XML comment explaining its purpose, which serves as living documentation for the build system.
+
+Every targets file supports per-user overrides via a `*.targets.user` file (e.g., `Eagle.Settings.targets.user`). These files are not checked into source control and allow individual developers to customize their build environment without modifying shared files.
+
+#### `Eagle.targets` -- Build Targets (Actions)
+
+Contains the actual MSBuild `<Target>` elements that perform build-time actions. These fall into several categories:
+
+**Hack Targets** -- Workarounds for MSBuild and Visual Studio defects:
+
+- `FixCopyFilesToOutputDirectory` -- Works around the built-in `CopyFilesToOutputDirectory` target lacking `Inputs`/`Outputs` attributes, which causes it to fire unconditionally and break builds that post-process assemblies (e.g., for digital signing). The target copies the final assembly back to the intermediate output to resynchronize timestamps.
+
+**Housekeeping Targets**:
+
+- `CleanDoneFiles` / `GetDoneFiles` / `UpdateDoneFiles` -- Manage `.done` sentinel files that track which post-build steps have run. Since multiple targets may modify the output assembly (strong name signing, Authenticode signing, 32-bit marking), the timestamps of sentinel files must be resynchronized after the final modification to prevent unnecessary re-execution on subsequent builds.
+- `CleanConfigurations` -- Removes configuration files from the output directory during clean builds.
+- `CleanWixOutputFiles` -- Removes WiX build artifacts (`.msi`, `.wixobj`, `.wixpdb`) from the test directory.
+
+**Signing Targets**:
+
+- `StrongNameSign` -- Re-signs the output assembly with the project's strong name key. Handles three different methods of locating `sn.exe` (explicit path, `GetFrameworkSDKPath` task, `TargetFrameworkSDKToolsDirectory` property) to work around the Visual Studio 2012 / .NET 4.5 RTM bug that broke `GetFrameworkSDKPath`. Signs both the main output and the unobfuscated copy if present.
+
+**Post-Processing Targets**:
+
+- `Mark32BitOnly` -- Uses `CorFlags.exe` to set the 32-bit flag on executables, necessary for some deployment scenarios.
+- `CopyPkgIndex` / `CopyKeyRings` -- Copies Tcl package index and key ring files to the output directory for native Tcl interop.
+- `CopyLibrary` / `CopyFlatLibrary` / `CopyTools` -- Copies the script library tree, tools, and configurations to the output directory, preserving directory structure.
+- `CopyExternals` / `CopyArchitectureExternals` / `CopyAllArchitectureExternals` -- Copies platform-specific external dependencies (e.g., native DLLs) to the output directory, filtered by processor architecture.
+- `CopyConfigurations` -- Copies `.config` files to the output directory.
+
+**Detection Targets**:
+
+- `EagleDetectBuildTool` -- Determines whether MSBuild, XBuild (Mono), or .NET Core SDK is being used, setting the `BuildTool` property. This gates targets that are only valid for specific build tools.
+- `EagleDetectOperatingSystem` -- Sets the `OperatingSystem` property to `Windows`, `Unix`, or `MacOSX` based on the `$(OS)` environment variable.
+- `EagleDetectArchitecture` -- Sets the `Architecture` property to `x86`, `x64`, `ia64`, or `arm` based on processor architecture environment variables.
+- `EagleDetectNetFx20Sp` -- Detects the service pack level of .NET Framework 2.0, adding `NET_20_SP1` or `NET_20_SP2` to the define constants.
+- `EagleDetectNetFx20` through `EagleDetectNetFx481` -- Adds framework-version-specific preprocessor symbols (e.g., `NET_20`, `NET_40`, `NET_45`) based on the target framework version. These symbols drive `#if` directives throughout the C# source code.
+- `EagleDetectNetCoreReferences` / `EagleDetectNetCore20` / `EagleDetectNetCore30` -- Adds `NET_CORE_REFERENCES`, `NET_CORE_20`, or `NET_CORE_30` define constants when targeting .NET Core or .NET Standard.
+- `EagleDetectVs2017` -- Uses `vswhere.exe` to locate the Visual Studio 2017+ installation path, needed for finding post-build tools like `EditBin.exe`.
+
+**Rationale for "hack" targets.** The comments in `Eagle.targets` are deliberately candid about the nature of these workarounds (e.g., "Contains more evil MSBuild hacks than your doctor recommended"). Each hack addresses a specific, documented MSBuild or Visual Studio defect. The `FixCopyFilesToOutputDirectory` target, for example, exists because the built-in MSBuild target fails to handle the case where the output assembly is modified after initial compilation (a common requirement for strong name re-signing). Without this workaround, incremental builds would silently use the wrong assembly. The `.done` sentinel file pattern ensures idempotency across all post-processing steps.
+
+#### Additional Targets Files
+
+- **`Eagle.Sample.targets`** -- Build targets for sample/demo projects, including resource generation for sample packages and script processing targets that demonstrate Eagle's build-time scripting capabilities.
+- **`Eagle.NuGet.targets`** / **`Eagle.Tools.NuGet.targets`** (in `NuGet/build/`) -- Targets included by NuGet package consumers to automatically configure Eagle references.
+- **`Eagle.MonoDevelop.targets`** / **`Eagle.MonoDevelop.Settings.targets`** (in `MonoDevelop/Targets/`) -- MonoDevelop-specific overrides for building with the Mono toolchain.
+- **Plugin targets** (in `Plugins/*/Targets/`) -- Each enterprise plugin has its own targets file that extends the core build system with plugin-specific signing, resource embedding, and post-processing steps.
+
+### Build Types and Feature Flags
+
+The following table summarizes the official and special-purpose build types and their key characteristics:
+
+| Build Type | Target Framework | Official Release | Key Characteristics |
+|---|---|---|---|
+| `Default` | (implies .NET 2.0) | Yes | Baseline configuration; all standard features enabled |
+| `NetFx20` | .NET Framework 2.0 | Yes | Explicit .NET 2.0; PowerShell 1.0 |
+| `NetFx35` | .NET Framework 3.5 | No | PowerShell 2.0 |
+| `NetFx40` | .NET Framework 4.0 | Yes | PowerShell 3.0 |
+| `NetFx45`-`NetFx481` | .NET Framework 4.5-4.8.1 | Varies | PowerShell 5.0; enables compression support |
+| `NetFx462` | .NET Framework 4.6.2 | Yes | PowerShell 5.0; compression; widely deployed target |
+| `NetStandard20` | .NET Standard 2.0 | No | Disables AppDomains, drawing, remoting, WinForms |
+| `NetStandard21` | .NET Standard 2.1 | No | Like NetStandard20 with 2.1-specific API access |
+| `Bare` | .NET Framework 2.0 | No | Nearly all features disabled; dependency validation |
+| `LeanAndMean` | .NET Framework 4.0 | No | Performance-focused; disables diagnostics/debugger |
+| `Database` | .NET Framework 2.0 | No | SQL Server CLR compatible; no native/P-Invoke |
+| `MonoOnUnix` | .NET Framework 4.0 | Yes | Mono runtime on Unix; 1 MB stack; no Windows features |
+| `Development` | (configurable) | No | Dead code, obsolete features, and policy tracing enabled |
+
+The complete set of feature flags is documented in the comments within `Eagle.Settings.targets`. Each flag follows the `Eagle*` naming convention and defaults to a safe value that can be overridden via `EagleBuildType`, command-line `/property:` arguments, or per-user `.targets.user` files.
 
 ---
 
