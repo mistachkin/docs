@@ -33,6 +33,7 @@ pitfalls** when working with Eagle.
 
 | File | What it contains | When you use it |
 |------|------------------|-----------------|
+| `why_eagle.md` | Feature overview, language comparisons, security model, and use-case guidance | When explaining Eagle's advantages, comparing it to other languages, or making a case for adoption |
 | `quick_start_guide.md` | Getting started guide: obtaining Eagle, running the shell, language basics, .NET interop intro | When new users need to get up and running or when explaining Eagle basics |
 | `core_language.md` | Eagle command catalog (built-ins), organized by category; includes advanced topics | When you need command syntax, options, behavior, or Eagle-only extensions |
 | `core_examples.md` | Contains 500+ worked examples for every command and sub-command, organized by category | When you need usage examples, idiomatic patterns, or practical demonstrations |

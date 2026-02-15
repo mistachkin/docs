@@ -2,6 +2,7 @@
 
 ## Table of Contents
 
+* [Why Eagle?](why_eagle.md)
 * [Eagle Quick Start Guide](quick_start_guide.md)
 * [Eagle Core Language](core_language.md)
 * [Eagle Core Examples](core_examples.md)
