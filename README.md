@@ -1,4 +1,4 @@
-# Documentation for the Eagle scripting language
+# Documentation for the Eagle Scripting Language
 
 ## Table of Contents
 
