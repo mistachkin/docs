@@ -1,8 +1,8 @@
 # Eagle Scripting Language
 
-> **For AI agents**: This document is searchable by command name using anchors `#cmd-NAME` (e.g., `#cmd-string`, `#cmd-object`). Use the [Alphabetical Command Index](#alphabetical-command-index) for quick lookup. Eagle-specific commands (not in Tcl 8.6) are listed in the [Eagle Extensions Quick Reference](#eagle-extensions-quick-reference). Internal infrastructure classes are documented in [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure).
+> **For AI agents**: This document is searchable by command name using anchors `#cmd-NAME` (e.g., `#cmd-string`, `#cmd-object`). Use the [Alphabetical Command Index](#alphabetical-command-index) for quick lookup. Eagle-specific commands (not in Tcl 8.6) are listed in the [Eagle Extensions Quick Reference](#eagle-extensions-quick-reference). Internal infrastructure classes are documented in [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure). For worked examples of every command, see [core_examples.md](core_examples.md). For script library procedures, see [core_script_library.md](core_script_library.md).
 
-This document provides a comprehensive catalog the Eagle scripting language, organized by functional category based on their ObjectGroup attributes.
+This document provides a comprehensive catalog of the Eagle scripting language, organized by functional category based on their ObjectGroup attributes.
 
 ## Table of Contents
 
@@ -552,7 +552,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
   - **Returns**: An empty string (or the value from `break`).
   - **Example**:
     ```tcl
-    foreach {key value} $dict {
+    foreach {key value} $pairs {
       puts "$key => $value"
     }
 
@@ -1939,7 +1939,7 @@ String commands belong to ObjectGroup: "string"
 
   ---
 
-  - `string is dict` - Valid dictionary (even number of elements)
+  - `string is dict` - Valid dictionary (a list with an even number of elements, suitable for key-value pair iteration)
 
   ---
 
@@ -4454,7 +4454,7 @@ The `sql` command provides database connectivity using ADO.NET, supporting any d
   **Example**:
   ```tcl
   set trans [sql transaction begin $conn]
-  try {
+  if {[catch {
     sql execute $conn \
         "INSERT INTO users (name) VALUES (@name)" \
         {name String Alice}
@@ -4462,7 +4462,7 @@ The `sql` command provides database connectivity using ADO.NET, supporting any d
         "INSERT INTO users (name) VALUES (@name)" \
         {name String Bob}
     sql transaction commit $trans
-  } on error {msg} {
+  } msg]} then {
     sql transaction rollback $trans
     error [appendArgs "Transaction failed: " $msg]
   }
@@ -4571,14 +4571,14 @@ Network commands belong to ObjectGroup: "network"
   #### HTTP Operations
 
   - `uri get ?options? uri ?argument?` - Performs an HTTP GET request.
-    - **Options**: `-headers dict` (custom headers), `-timeout ms` (timeout)
+    - **Options**: `-headers keyValueList` (custom headers), `-timeout ms` (timeout)
     - **Returns**: Response body (or saves to file with appropriate options).
 
   ---
 
   - `uri post ?options? uri ?argument?` - Performs an HTTP POST request.
     - *argument* is the POST body
-    - **Options**: `-contenttype type` (Content-Type header), `-headers dict`
+    - **Options**: `-contenttype type` (Content-Type header), `-headers keyValueList`
 
   ---
 
@@ -7884,7 +7884,7 @@ eagle/Eagle/                  Main Eagle source tree
 
 docs/                         Documentation repository
   ├── core_language.md        This file (language catalog/specification)
-  ├── quick_start.md          Getting started guide
+  ├── quick_start_guide.md    Getting started guide
   ├── core_examples.md        Code examples
   └── ...                     Other documentation
 

@@ -1,5 +1,7 @@
 # Why Eagle?
 
+> **For AI agents**: This document provides a high-level overview of Eagle's capabilities and comparisons with other languages. For command syntax, see [core_language.md](core_language.md). For worked examples, see [core_examples.md](core_examples.md). For script library procedures, see [core_script_library.md](core_script_library.md). For getting started, see [quick_start_guide.md](quick_start_guide.md). For tips and idioms, see [tips_and_tricks.md](tips_and_tricks.md). For the Garuda native Tcl package, see [garuda.md](garuda.md).
+
 Eagle (Extensible Adaptable Generalized Logic Engine) is a scripting
 language built from the ground up for the Common Language Runtime (CLR).
 It speaks Tcl, lives inside your C# applications, and runs everywhere
@@ -72,7 +74,7 @@ but has been effectively abandoned since 2012.
 | .NET integration | Actively maintained with support from .NET Framework 2.0 through .NET 10+. New .NET APIs are adopted as they ship. | IronRuby is unmaintained.  MRI Ruby has no native .NET integration. |
 | Security model | Policy-based execution, safe interpreters, script signing. | Ruby lacks a built-in sandbox.  `$SAFE` levels were removed in Ruby 3.0. |
 | Embeddability | Designed to be embedded: create an interpreter, register custom commands, and evaluate scripts in three lines of C#. | MRI Ruby's C API is not designed for .NET embedding; IronRuby's DLR-based API is complex and unsupported. |
-| Testing | Built-in test framework (`runTest`) with constraints, setup/cleanup blocks, and deep .NET introspection. | Ruby has excellent test tooling (RSpec, Minitest), but none of it can introspect or drive a .NET application natively. |
+| Testing | Built-in test framework (`test` command, `runTest` library procedure) with constraints, setup/cleanup blocks, and deep .NET introspection. | Ruby has excellent test tooling (RSpec, Minitest), but none of it can introspect or drive a .NET application natively. |
 
 **Choose Eagle when** your target is .NET and you need a maintained,
 embeddable engine.  **Choose Ruby when** you are building web
@@ -89,7 +91,7 @@ However, neither was designed for .NET embedding or systems automation.
 |---|---|---|
 | .NET embedding | Purpose-built for it.  No bridge layer, no serialization boundary -- scripts manipulate .NET objects directly. | Embedding V8 or another JS engine in .NET requires a bridge (e.g., ClearScript, Jint) that introduces serialization overhead and API impedance. |
 | Security | Safe interpreters remove dangerous commands entirely.  Script signing prevents unauthorized code.  No JIT attack surface. | V8's JIT compiler has been a recurring source of security vulnerabilities.  Node.js has no built-in sandboxing (`vm` module is explicitly not a security mechanism). |
-| Type system access | Eagle can reflect over any loaded .NET assembly, discover types, and invoke members -- including generics on .NET 4.0+. | TypeScript types are erased at runtime.  JS engines have no knowledge of .NET types without an explicit binding layer. |
+| Type system access | Eagle can reflect over any loaded .NET assembly, discover types, and invoke members -- including generics. | TypeScript types are erased at runtime.  JS engines have no knowledge of .NET types without an explicit binding layer. |
 | Cross-platform | Runs on every platform the CLR supports, including legacy .NET Framework 2.0. | Node.js is portable, but embedding a JS engine in a .NET application adds a large native dependency. |
 
 **Choose Eagle when** your application is .NET and you want scripts
@@ -108,8 +110,8 @@ Shell scripting is the default automation tool on Unix-like systems.
 | Platform support | Windows, Linux, and macOS with identical behavior. | Bash and Zsh are POSIX-only.  Windows support requires WSL, Cygwin, or MSYS2 -- all adding friction and subtle incompatibilities. |
 | .NET integration | Scripts create .NET objects, call APIs, and link variables without leaving the language. | Shell scripts can invoke `dotnet` CLI tools but cannot interact with .NET APIs or objects in-process. |
 | Security | Safe interpreters, script signing, and policy enforcement.  Scripts can be cryptographically verified before execution. | Shell scripts run with the full privileges of the invoking user.  There is no built-in signing or sandboxing mechanism. |
-| Error handling | Structured return codes, exception interception from .NET, `try`/`catch`/`finally`. | `set -e` and trap-based error handling are fragile and difficult to compose. |
-| Data structures | Lists, dictionaries, arrays, and full access to .NET collections. | Arrays and associative arrays are limited and have inconsistent syntax across Bash versions. |
+| Error handling | Structured return codes, exception interception from .NET, `catch` for error trapping, and `try`/`finally` for cleanup guarantees. | `set -e` and trap-based error handling are fragile and difficult to compose. |
+| Data structures | Lists, key-value lists (dictionary-style), arrays, and full access to .NET collections. | Arrays and associative arrays are limited and have inconsistent syntax across Bash versions. |
 | Testability | Built-in test framework with constraints, setup, cleanup, and expected-result matching. | Testing shell scripts typically requires external frameworks (bats, shunit2) and is inherently brittle. |
 
 **Choose Eagle when** you need cross-platform automation that works

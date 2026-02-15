@@ -1,6 +1,6 @@
 # Eagle Script Library
 
-> **For AI agents**: This document covers 580+ script library procedures. Use the [Alphabetical Procedure Index](#alphabetical-procedure-index) for quick lookup by name. Each procedure has an anchor `####-procedureName` under its source file section. Eagle-only procedures are marked "(Eagle only)". The [Advanced Usage Patterns](#advanced-usage-patterns-and-examples) section provides common idioms.
+> **For AI agents**: This document covers 580+ script library procedures. Use the [Alphabetical Procedure Index](#alphabetical-procedure-index) for quick lookup by name. Each procedure has an anchor `####-procedureName` under its source file section. Eagle-only procedures are marked "(Eagle only)". The [Advanced Usage Patterns](#advanced-usage-patterns-and-examples) section provides common idioms. For core language commands (built-ins), see [core_language.md](core_language.md). For worked examples, see [core_examples.md](core_examples.md). For getting started, see [quick_start_guide.md](quick_start_guide.md). For the Garuda native Tcl package, see [garuda.md](garuda.md). For the updater, see [updater.md](updater.md).
 
 This document provides comprehensive documentation for all script procedures in the Eagle scripting language libraries, organized by package and functional category.
 
@@ -11,7 +11,7 @@ This document provides comprehensive documentation for all script procedures in 
   - [Initialization (init.eagle)](#initialization-initeagle)
   - [Auxiliary Utilities (auxiliary.eagle)](#auxiliary-utilities-auxiliaryeagle)
   - [Tcl Compatibility (compat.eagle)](#tcl-compatibility-compateagle)
-  - [Database Utilities (database.eagle)](#database-utilities-daborteagle)
+  - [Database Utilities (database.eagle)](#database-utilities-databaseeagle)
   - [List Utilities (list.eagle)](#list-utilities-listeagle)
   - [Platform Detection (platform.eagle)](#platform-detection-platformeagle)
   - [File I/O - Basic (file1.eagle)](#file-io---basic-file1eagle)
@@ -46,6 +46,8 @@ Quick reference to all documented Eagle script library procedures.
 
 | Procedure | Source File | Brief Description |
 |-----------|-----------|-------------------|
+| `#support` | shell.eagle | Show commercial support requirements |
+| `addRuntimeOption` | runopt.eagle | Add a runtime option |
 | `addToPath` | platform.eagle | Add directory to search path |
 | `appendArgs` | auxiliary.eagle | Concatenate arguments as strings |
 | `appendFile` | file1.eagle | Append data to a binary file |
@@ -61,6 +63,7 @@ Quick reference to all documented Eagle script library procedures.
 | `compileViaDotNetCoreCSharp` | csharp.eagle | Compile C# via .NET Core SDK |
 | `copyFilesRecursive` | file3.eagle | Recursively copy files |
 | `csharpLog` | csharp.eagle | Log C# compilation messages |
+| `debug` | shim.eagle | Intercept Eagle debug calls from Tcl |
 | `doesCompileCSharpWork` | csharp.eagle | Test if C# compilation works |
 | `downloadAndExtractNativeTclKitDll` | pkgt.eagle | Download native TclKit DLL |
 | `downloadAndExtractNativeTclTkDlls` | pkgt.eagle | Download native Tcl/Tk DLLs |
@@ -71,6 +74,7 @@ Quick reference to all documented Eagle script library procedures.
 | `evaluateInRemoteSandbox` | shell.eagle | Evaluate in remote sandbox |
 | `execShell` | exec.eagle | Execute command via system shell |
 | `exportAndImportPackageCommands` | auxiliary.eagle | Export/import package commands |
+| `extractZipArchive` | unzip.eagle | Extract a ZIP archive |
 | `filter` | list.eagle | Filter list elements by predicate |
 | `filterForGlob` | file3.eagle | Filter for glob-compatible patterns |
 | `findDirectories` | file3.eagle | Find directories matching pattern |
@@ -89,6 +93,7 @@ Quick reference to all documented Eagle script library procedures.
 | `getDotNetCoreSdkPath` | csharp.eagle | Get .NET Core SDK path |
 | `getDotNetStandardReferencePath` | csharp.eagle | Get .NET Standard reference path |
 | `getEnvironmentVariable` | auxiliary.eagle | Get environment variable value |
+| `getLengthModifier` | shim.eagle | Get format modifier for 64-bit integers |
 | `getExternalIpAddress` | shell.eagle | Get external IP address |
 | `getHostSize` | compat.eagle | Get console size (columns/rows) |
 | `getOwnerForProcess` | process.eagle | Get process owner |
@@ -164,7 +169,7 @@ Quick reference to all documented Eagle script library procedures.
 | `setupUnzipVars` | unzip.eagle | Setup unzip variables |
 | `sourceWithInfo` | init.eagle | Source with location tracking (Eagle only) |
 | `tclLog` | compat.eagle | Tcl-compatible logging |
-| `tclLogForCommand` | exec.eagle | Log command execution |
+| `tclLogForCommand` | file3.eagle | Log command execution |
 | `tclPkgUnknown` | init.eagle | Package unknown handler |
 | `test` | compat.eagle | Tcl-compatible test command |
 | `toggleRuntimeOption` | runopt.eagle | Toggle runtime option |
@@ -494,7 +499,7 @@ Returns the host console size in columns and rows.
 #### parray
 
 ```tcl
-parray a ?pattern?
+parray a {pattern ""}
 ```
 
 Prints the contents of an array to stdout, emulating the native Tcl `parray` procedure.
@@ -716,7 +721,7 @@ Returns elements from the list for which the script returns non-zero.
 
 - **Arguments**:
   - `list` - List to filter
-  - `script` - Script that receives each element and returns a boolean
+  - `script` - Script that receives each element via the `item` variable and returns a boolean
 - **Returns**: Filtered list.
 
 - **Example**:
@@ -739,7 +744,7 @@ Applies a transformation script to each list element.
 
 - **Arguments**:
   - `list` - List to transform
-  - `script` - Script that receives each element and returns transformed value
+  - `script` - Script that receives each element via the `item` variable and returns transformed value
 - **Returns**: Transformed list.
 
 - **Example**:
@@ -6002,7 +6007,7 @@ When the Eagle script library is loaded, the following system aliases are create
 ### Eagle1.0 Library
 - **Total files**: 28
 - **Files with procedures**: 24
-- **Stub files**: 4 (embed.eagle, vendor.eagle, pkgIndex.eagle, test.eagle)
+- **Stub files**: 3 (embed.eagle, vendor.eagle, pkgIndex.eagle)
 - **Estimated procedures**: 500+ (includes 377 in test.eagle)
 
 ### Test1.0 Library
@@ -6116,21 +6121,16 @@ test error-1.3 {invalid argument} -body {
 #### Output Verification
 
 ```tcl
-# Capture and verify output
+# Test -output option to verify stdout
 test output-1.1 {verify puts output} -body {
-  set output [capture {
-    puts "Hello, World!"
-  }]
-  return $output
-} -result {Hello, World!}
+  puts "Hello, World!"
+} -output {Hello, World!
+}
 
-# Verify output pattern
-test output-1.2 {verify log format} -body {
-  set output [capture {
-    tputs $test_channel "Test message"
-  }]
-  string match "*Test message*" $output
-} -result {1}
+# Use tputs for test log output
+test output-1.2 {verify log message} -body {
+  tputs $test_channel "Test message\n"
+} -result {}
 ```
 
 ### Object Lifecycle Patterns

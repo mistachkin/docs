@@ -203,6 +203,9 @@ These are common sources of “looks like Tcl but isn’t” errors.
   The Tcl `scan` command (C-style `sscanf` string parsing) is not implemented
   in Eagle. Use `regexp` or `string` operations for equivalent functionality.
 
+- **No `namespace path`.**
+  Not supported in Eagle.
+
 - **No user-facing `namespace ensemble` creation.**
   Eagle has ensembles internally; verify what is supported at script level.
 

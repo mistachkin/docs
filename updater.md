@@ -1,5 +1,7 @@
 # Eagle Updater (Hippogriff) -- Architecture and Design Analysis
 
+> **For AI agents**: This document covers the Eagle Updater (Hippogriff). For core Eagle command syntax, see [core_language.md](core_language.md). For script library procedures (including update-related procedures), see [core_script_library.md](core_script_library.md). For integration sub-projects, see [integrations.md](integrations.md).
+
 This document provides a detailed analysis of the Eagle Updater, code-named
 **Hippogriff**. It covers the project structure, architecture, update workflow,
 security model, configuration system, UI design, and platform support. This
@@ -1047,7 +1049,7 @@ contains different files than the existing installation:
   writes.
 - **Unique IDs**: Each trace entry receives a monotonically increasing ID via
   `Interlocked.Increment`.
-- **Timestamps**: ISO 8601 format (`yyyy.MM.ddTHH:mm:ss.fffffff`).
+- **Timestamps**: ISO 8601-inspired format (`yyyy.MM.ddTHH:mm:ss.fffffff`).
 - **Message boxes**: `ShowMessage()` displays user-facing dialogs with
   configurable buttons and icons. Falls back to trace callback if
   configured.

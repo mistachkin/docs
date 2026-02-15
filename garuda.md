@@ -1,5 +1,7 @@
 # Eagle Native Package for Tcl (Garuda) -- Command and Architecture Reference
 
+> **For AI agents**: This document covers the Garuda native Tcl package. For core Eagle command syntax, see [core_language.md](core_language.md). For worked examples, see [core_examples.md](core_examples.md). For script library procedures, see [core_script_library.md](core_script_library.md). For integration sub-projects, see [integrations.md](integrations.md).
+
 This document provides a comprehensive reference for the Eagle Native Package
 for Tcl, known as **Garuda**. It covers all sub-commands and their semantics,
 the managed-side bridge architecture, the build system, platform support,
@@ -95,7 +97,7 @@ Source files referenced:
 
 ## 1. Overview
 
-**Garuda** (formally "Eagle Package for Tcl") is a stubs-enabled native C
+**Garuda** (formerly "Eagle Package for Tcl") is a stubs-enabled native C
 package/extension for Tcl that bridges Tcl applications to the .NET Common
 Language Runtime (CLR). It provides any application embedding Tcl 8.4 or higher
 with full access to the Eagle scripting engine (Extensible Adaptable
@@ -532,11 +534,12 @@ during package loading), Garuda registers an additional Tcl command
 named `eagle` in the Tcl interpreter. This command provides the primary
 mechanism for evaluating Eagle scripts from Tcl.
 
-**Syntax**: `eagle <script>`
+**Syntax**: `eagle arg ?arg ...?`
 
-**Description**: Evaluates `<script>` in the Eagle interpreter associated
-with the current Tcl interpreter. The result of the Eagle evaluation is
-returned as the Tcl result.
+**Description**: Evaluates the concatenated arguments in the Eagle interpreter
+associated with the current Tcl interpreter (following standard Tcl `eval`
+concatenation rules). The result of the Eagle evaluation is returned as the
+Tcl result.
 
 The `eagle` command is implemented via the `TclBridge` mechanism on the
 managed side. When invoked, the native bridge callback fires, which
@@ -1306,7 +1309,8 @@ Test `tclLoad-12.2` verifies safe interpreter permissions:
 | `garuda clrbridgerunning` | Allowed |
 | `garuda clrversion` | Allowed |
 | `garuda clrappdomainid` | Allowed |
-| `garuda clrexecute` | Allowed |
+| `garuda clrload` | **Denied** (permission denied: safe interp) |
+| `garuda clrexecute` | **Denied** (permission denied: safe interp) |
 | `garuda clrstart` | **Denied** (permission denied: safe interp) |
 | `garuda clrstop` | **Denied** |
 | `garuda dumpstate` | **Denied** |

@@ -817,16 +817,16 @@ set decoded [uri unescape hello%20world]
 # HTTP GET (returns content as string)
 set html [uri get https://example.com/]
 
-# HTTP POST with form data
-set response [uri post -data {var1 val1 var2 val2} -- \
-    https://example.com/api]
+# HTTP POST with form data (argument is the POST body)
+set response [uri post https://example.com/api \
+    {var1=val1&var2=val2}]
 
 # Download file to disk
 uri download https://example.com/file.zip /tmp/file.zip
 
 # Ping a host
 uri ping example.com 5000
-;# Returns: {status roundtripTime ms}
+;# Returns: 1 if reachable
 ```
 
 - **See also**: [core_language.md](core_language.md#cmd-uri) — `uri` command; [core_examples.md](core_examples.md#ex-uri) — uri examples
@@ -933,6 +933,7 @@ Use this when matching the same pattern against many strings in a loop.
 
 ```tcl
 # -eval: evaluate the replacement as a script
+# -eval: the matched text is available via the match variable
 regsub -all -eval {\d+} "item1 item2 item3" {
   expr {[string range $match 0 end] * 10}
 }

@@ -1964,6 +1964,8 @@ array set data {a 1 b 2 c 3 d 4}
 
 ---
 
+<a id="io-examples"></a>
+
 ## I/O and Channel Examples
 
 <a id="ex-close"></a>
@@ -2721,6 +2723,8 @@ namespace origin add               ;# Returns: ::mathlib::add
 
 ---
 
+<a id="object-examples"></a>
+
 ## Objects (.NET Interop) Examples
 
 <a id="ex-object"></a>
@@ -3348,6 +3352,8 @@ debug callback {}                        ;# Clear callback
 
 ---
 
+<a id="interpreter-examples"></a>
+
 ## Interpreter Management Examples
 
 <a id="ex-interp"></a>
@@ -3774,6 +3780,8 @@ test2 version-1.1 "Test version format" \
 
 ---
 
+<a id="database-examples"></a>
+
 ## Database (SQL) Examples
 
 <a id="ex-sql"></a>
@@ -3843,6 +3851,8 @@ test2 version-1.1 "Test version format" \
 ```
 
 ---
+
+<a id="network-examples"></a>
 
 ## Network and URI Examples
 
@@ -4166,6 +4176,8 @@ xml validate $schema $doc   ;# Returns: 1 if valid
 
 ---
 
+<a id="tcl-examples"></a>
+
 ## Tcl Integration Examples
 
 <a id="ex-tcl"></a>
@@ -4214,7 +4226,7 @@ tcl ready $interp                     ;# Returns: 1 if ready
 ```tcl
 # Evaluate code in Tcl
 tcl eval $interp {
-  proc greet {name} { return [appendArgs "Hello from Tcl, " $name !] }
+  proc greet {name} { return "Hello from Tcl, ${name}!" }
 }
 set greeting [tcl eval $interp {greet Eagle}]
 ;# greeting is "Hello from Tcl, Eagle!"
@@ -4311,6 +4323,8 @@ tcl exceptions                         ;# Get/set exception handling
 ```
 
 ---
+
+<a id="expression-examples"></a>
 
 ## Expression Evaluation Examples
 
@@ -4637,6 +4651,8 @@ expr {$age >= 18 ? "adult" : "minor"}
 
 ---
 
+<a id="time-examples"></a>
+
 ## Time and Clock Examples
 
 <a id="ex-clock"></a>
@@ -4765,6 +4781,8 @@ puts [appendArgs "lsort: " [time {lsort -integer $list} 10000]]
 ```
 
 ---
+
+<a id="event-examples"></a>
 
 ## Event Management Examples
 
@@ -4967,8 +4985,8 @@ info commands string*        ;# Returns: string
 info commands *puts*         ;# Returns: puts
 info cmdtype puts            ;# Returns: native
 info cmdtype greet           ;# Returns: proc (if greet is a proc)
-info complete {set x 1}     ;# Returns: True
-info complete "set x {"     ;# Returns: False (quotes needed: unclosed brace)
+info complete {set x 1}     ;# Returns: 1
+info complete "set x {"     ;# Returns: 0 (quotes needed: unclosed brace)
 ```
 
 ```tcl
@@ -5214,6 +5232,8 @@ version Default            ;# Base version only
 ```
 
 ---
+
+<a id="engine-examples"></a>
 
 ## Engine Operation Examples
 
@@ -5621,6 +5641,8 @@ unload -nocomplain myextension.dll
 ```
 
 ---
+
+<a id="core-misc-examples"></a>
 
 ## Core and Miscellaneous Examples
 

@@ -112,7 +112,7 @@ This works on Windows, macOS, and Linux wherever the .NET SDK is installed.
 
 1. Open the appropriate solution file for your Visual Studio version (e.g., `Eagle.sln`, `EagleNetStandard2X.sln`).
 2. Select the desired build configuration (Debug or Release).
-3. Use **Build > Rebuild All** (or Ctrl+Shift+B to build).
+3. Use **Build > Build Solution** (Ctrl+Shift+B) or **Build > Rebuild All**.
 
 The repository contains multiple `.sln` files targeting different framework versions and Visual Studio editions.
 
@@ -244,7 +244,7 @@ puts $y(two)
 ;# Prints: 2
 
 array names y
-;# Returns: {1 two}
+;# Returns: 1 two (order may vary)
 ```
 
 Use `array names`, `array get`, `array set`, and `array size` to work with arrays. See [core_language.md](core_language.md#cmd-array) for full details.
@@ -271,7 +271,7 @@ if {$x > 10} then {
 for {set i 0} {$i < 5} {incr i} {
   puts $i
 }
-# Prints: 0 1 2 3 4
+# Prints: 0 1 2 3 4 (one per line)
 ```
 
 #### foreach (iterate over a list)
@@ -280,7 +280,7 @@ for {set i 0} {$i < 5} {incr i} {
 foreach fruit {apple banana cherry} {
   puts $fruit
 }
-# Prints: apple banana cherry
+# Prints: apple banana cherry (one per line)
 ```
 
 #### while
@@ -291,7 +291,7 @@ while {$i < 3} {
   puts $i
   incr i
 }
-# Prints: 0 1 2
+# Prints: 0 1 2 (one per line)
 ```
 
 **Important**: Always brace your conditions (`{$x > 10}`, not `"$x > 10"`) to avoid premature substitution.
@@ -476,7 +476,7 @@ object invoke $sb Append ", World!"
 
 # Read a property
 set length [object invoke $sb Length]
-;# Returns: 12
+;# Returns: 13
 
 # Call ToString
 set result [object invoke $sb ToString]
@@ -587,6 +587,9 @@ This demonstrates:
 - [Eagle Script Library](core_script_library.md) — 580+ library procedures for platform detection, file helpers, object utilities, test framework, and more.
 - [Eagle Tips and Tricks](tips_and_tricks.md) — Eagle-specific features, advanced idioms, and best practices not found in standard Tcl.
 - [Eagle Native Package for Tcl (Garuda)](garuda.md) — Using Eagle from within a native Tcl environment.
+- [Why Eagle?](why_eagle.md) — Feature overview, language comparisons, and use-case guidance.
+- [Eagle Integration Sub-Projects](integrations.md) — MSBuild, WiX, PowerShell, and MonoDevelop integration.
+- [Eagle Updater (Hippogriff)](updater.md) — Keeping Eagle up to date.
 
 ### External Tcl Resources
 

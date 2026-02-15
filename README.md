@@ -1,7 +1,10 @@
 # Documentation for the Eagle Scripting Language
 
+Eagle (Extensible Adaptable Generalized Logic Engine) is a Tcl-compatible scripting language with deep .NET/CLR integration. This repository contains the canonical Markdown documentation.
+
 ## Table of Contents
 
+* [AI Agent Navigation Guide](AGENTS.md)
 * [Why Eagle?](why_eagle.md)
 * [Eagle Quick Start Guide](quick_start_guide.md)
 * [Eagle Core Language](core_language.md)
