@@ -52,7 +52,7 @@ with CPython releases.
 | Area | Eagle | Python / IronPython |
 |---|---|---|
 | .NET embedding | First-class: `Interpreter.Create()`, add commands, link variables, enforce policies -- all with a stable, public API designed for embedding. | IronPython can be embedded, but the hosting API is heavier and IronPython 3.x lags behind CPython, creating a fragmented ecosystem. |
-| Security | Safe interpreters restrict commands at a granular level. Script signing via Harpy/Badge ensures only approved code runs. No JIT compiler surface. | Python's `exec` / `eval` are difficult to sandbox. There is no built-in safe interpreter or script-signing infrastructure. |
+| Security | Safe interpreters restrict commands at a granular level. Script signing via Harpy/Badge ensures only approved code runs. No scripting-engine bytecode/JIT surface. | Python's `exec` / `eval` are difficult to sandbox. There is no built-in safe interpreter or script-signing infrastructure. |
 | Cross-platform | One script, one engine: .NET Framework 2.0 through .NET 10+, Mono, Windows, Linux, macOS. | CPython is portable, but IronPython is limited to specific .NET versions and may lack packages that depend on CPython C extensions. |
 | Native interop | The `[tcl]` command loads native Tcl libraries directly from Eagle; the Garuda package enables the reverse direction.  Both work cross-platform. | ctypes and cffi are powerful but require manual structure definitions and are outside the managed safety net. |
 | Startup overhead | The Eagle interpreter is lightweight and designed for rapid instantiation inside a host process. | Python's import machinery and IronPython's DLR compilation add measurable startup latency. |
@@ -90,7 +90,7 @@ However, neither was designed for .NET embedding or systems automation.
 | Area | Eagle | JavaScript / TypeScript |
 |---|---|---|
 | .NET embedding | Purpose-built for it.  No bridge layer, no serialization boundary -- scripts manipulate .NET objects directly. | Embedding V8 or another JS engine in .NET requires a bridge (e.g., ClearScript, Jint) that introduces serialization overhead and API impedance. |
-| Security | Safe interpreters remove dangerous commands entirely.  Script signing prevents unauthorized code.  No JIT attack surface. | V8's JIT compiler has been a recurring source of security vulnerabilities.  Node.js has no built-in sandboxing (`vm` module is explicitly not a security mechanism). |
+| Security | Safe interpreters remove dangerous commands entirely.  Script signing prevents unauthorized code.  No scripting-engine bytecode/JIT surface. | V8's JIT compiler has been a recurring source of security vulnerabilities.  Node.js has no built-in sandboxing (`vm` module is explicitly not a security mechanism). |
 | Type system access | Eagle can reflect over any loaded .NET assembly, discover types, and invoke members -- including generics. | TypeScript types are erased at runtime.  JS engines have no knowledge of .NET types without an explicit binding layer. |
 | Cross-platform | Runs on every platform the CLR supports, including legacy .NET Framework 2.0. | Node.js is portable, but embedding a JS engine in a .NET application adds a large native dependency. |
 
@@ -129,7 +129,7 @@ closest mainstream competitor to Eagle in the .NET scripting space.
 | Area | Eagle | PowerShell |
 |---|---|---|
 | Embeddability | Embedding is a core design goal.  The API is small, stable, and well-documented.  Multiple interpreters can coexist in one process with independent security policies. | PowerShell can be hosted via `System.Management.Automation`, but the API surface is large, and the engine carries significant overhead. |
-| Security | Safe interpreters remove commands at a granular level.  Script signing is built into the Harpy/Badge plugin system.  No JIT compiler. | Execution policies are advisory and easily bypassed.  Constrained Language Mode is coarse-grained.  The PowerShell JIT (via the DLR) has been a target for attacks. |
+| Security | Safe interpreters remove commands at a granular level.  Script signing is built into the Harpy/Badge plugin system.  No scripting-engine bytecode/JIT surface. | Execution policies are advisory and easily bypassed.  Constrained Language Mode is coarse-grained.  The PowerShell JIT (via the DLR) has been a target for attacks. |
 | Startup / footprint | The Eagle interpreter is compact and starts quickly -- suitable for short-lived automation tasks and high-frequency embedding. | PowerShell's startup cost is significant, making it less suitable for rapid, repeated invocations from a host process. |
 | Cross-platform consistency | The same script on .NET Framework 2.0 and .NET 10+ on every OS.  Behavior differences are minimized by design. | PowerShell 5.1 (Windows-only) and PowerShell 7+ (cross-platform) have meaningful behavioral differences, creating a split ecosystem. |
 | Native interop | The `[tcl]` command lets Eagle load and call into native Tcl libraries; the Garuda package lets native Tcl load and call into Eagle.  Both directions work cross-platform. | PowerShell can call native code via `Add-Type` and P/Invoke, but there is no equivalent bidirectional bridge for Tcl. |
@@ -175,6 +175,8 @@ that influences every layer of the architecture.
 
 Eagle deliberately does not include a bytecode compiler or JIT.
 Scripts are parsed and interpreted directly.
+
+> Note: This refers to Eagle's *scripting engine* itself (i.e., scripts are not compiled to bytecode or native code by Eagle). The underlying CLR may still use a JIT to execute Eagle's C# implementation.
 
 This is a **security feature**.  Historically, a large proportion of
 scripting-language exploits have targeted bugs in internal compilers

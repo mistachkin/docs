@@ -13,6 +13,7 @@ Eagle (Extensible Adaptable Generalized Logic Engine) is a Tcl-compatible script
 * [Eagle Native Package for Tcl (Garuda)](garuda.md)
 * [Eagle Integration Sub-Projects](integrations.md)
 * [Eagle Updater (Hippogriff)](updater.md)
+* [Marketing Summaries](marketing.md)
 * [Tcl 8.6 Manual Pages (Command Reference)](https://www.tcl-lang.org/man/tcl8.6/TclCmd/contents.htm)
 * [Tcl Tutorial Index (Tcler's Wiki)](https://wiki.tcl-lang.org/page/Tcl+Tutorial+Index)
 * [AI Agent Navigation Guide](AGENTS.md)

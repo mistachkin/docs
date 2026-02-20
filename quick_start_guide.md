@@ -536,12 +536,12 @@ proc handleClickEvent { sender e } {
   puts stdout "I have been clicked!"
 }
 
-proc centerButton {} {
-  set size [$::form -alias ClientSize]
+proc centerButton {form button} {
+  set size [$form -alias ClientSize]
 
-  $::button AutoSize true
-  $::button Left [expr {([$size Width] - [$::button Width]) / 2}]
-  $::button Top [expr {([$size Height] - [$::button Height]) / 2}]
+  $button AutoSize true
+  $button Left [expr {([$size Width] - [$button Width]) / 2}]
+  $button Top [expr {([$size Height] - [$button Height]) / 2}]
 }
 
 object load -import System.Windows.Forms
@@ -563,7 +563,7 @@ $button add_Click handleClickEvent
 object invoke $form.Controls Add $button
 
 interp sleeptime {} 200
-after 100 [list centerButton]
+after 100 [list centerButton $form $button]
 
 vwait forever
 ```
