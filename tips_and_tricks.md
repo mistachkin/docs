@@ -51,7 +51,7 @@ This guide covers Eagle's unique capabilities and highest-value patterns. Each s
   - [Breakpoints and Inspection](#breakpoints-and-inspection)
 - [Script Library Utilities](#script-library-utilities)
   - [Platform Detection: isEagle, isWindows, isMono, isDotNetCore](#platform-detection-iseagle-iswindows-ismono-isdotnetcore)
-  - [Dictionary Access: getDictionaryValue](#dictionary-access-getdictionaryvalue)
+  - [Dictionary Operations: dict and getDictionaryValue](#dictionary-operations-dict-and-getdictionaryvalue)
   - [List Helpers: filter](#list-helpers-filter)
   - [File Discovery: findFilesRecursive](#file-discovery-findfilesrecursive)
 
@@ -1209,9 +1209,19 @@ These procedures return non-zero if the condition is true, zero otherwise.
 
 ---
 
-### Dictionary Access: getDictionaryValue
+### Dictionary Operations: dict and getDictionaryValue
 
-Eagle does not have the Tcl `dict` command. Instead, use key-value lists (flat lists of alternating name-value pairs) and the `getDictionaryValue` library procedure:
+Eagle provides the `dict` command for full dictionary support, compatible with Tcl 8.6:
+
+```tcl
+set d [dict create name Alice age 30 city Boston]
+dict get $d name              ;# Returns: Alice
+dict exists $d country        ;# Returns: 0
+dict keys $d                  ;# Returns: {name age city}
+dict set d country USA        ;# Add a new key
+```
+
+For simple key lookups with a default value, you can also use the `getDictionaryValue` library procedure from `auxiliary.eagle`:
 
 ```tcl
 set data {name Alice age 30 city Boston}
@@ -1222,7 +1232,7 @@ getDictionaryValue $data country unknown
 ;# Returns: unknown (default when key not found)
 ```
 
-- **See also**: [core_script_library.md](core_script_library.md) — `getDictionaryValue` in Auxiliary Utilities
+- **See also**: [core_language.md](core_language.md#cmd-dict) — `dict` command reference; [core_script_library.md](core_script_library.md) — `getDictionaryValue` in Auxiliary Utilities
 
 ---
 

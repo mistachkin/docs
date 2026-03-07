@@ -14,6 +14,7 @@ This document provides a comprehensive catalog of the Eagle scripting language, 
   - [Lists](#lists)
   - [Strings](#strings)
   - [Arrays](#arrays)
+  - [Dictionaries](#dictionaries)
   - [I/O and Channels](#io-and-channels)
   - [File System](#file-system)
   - [Procedures](#procedures)
@@ -103,20 +104,20 @@ The following commands are Eagle-specific extensions not found in standard Tcl 8
 `exec` (30+ Eagle options), `for` (optional *end* script), `regexp`/`regsub` (Eagle-specific switches), `vwait` (timeout option), `load`/`unload` (.NET assembly support).
 
 **Standard Tcl 8.6 commands not implemented in Eagle:**
-`dict`, `fileevent`, `scan`.
+`fileevent`, `scan`.
 
 ---
 
 ## Command Count Summary
 
-Total Commands: **121** (core library commands, including 8 internal infrastructure classes: `Default`, `Core`, `Alias`, `_Delegate`, `SubDelegate`, `Automatic`, `Ensemble`, `Stub` — see [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure)).
+Total Commands: **122** (core library commands, including 8 internal infrastructure classes: `Default`, `Core`, `Alias`, `_Delegate`, `SubDelegate`, `Automatic`, `Ensemble`, `Stub` — see [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure)).
 
 Commands are organized into the following ObjectGroup categories:
 - Conditional: 2 commands
 - Control: 9 commands
 - Loop: 5 commands
 - Variables: 10 commands
-- Lists: 15 commands
+- Lists: 16 commands
 - Strings: 13 commands
 - Channels (I/O): 12 commands
 - File System: 5 commands
@@ -162,6 +163,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 | [`debug`](#cmd-debug) | Debugging operations | [Debugging](#debugging) |
 | [`default`](#cmd-default) | Command base class (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
 | [`delegate`](#cmd-delegate) | Delegate command wrapper (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
+| [`dict`](#cmd-dict) | Dictionary operations | [Dictionaries](#dictionaries) |
 | [`do`](#cmd-do) | Do-while loop | [Control Flow](#control-flow) |
 | [`downlevel`](#cmd-downlevel) | Execute script at lower call stack level | [Control Flow](#control-flow) |
 | [`encoding`](#cmd-encoding) | Character encoding operations | [Strings](#strings) |
@@ -2185,6 +2187,212 @@ Arrays in Eagle are associative arrays (hash tables) that map string keys to str
   #### Random Access (Eagle extension)
 
   - `array random ?options? arrayName ?pattern?` - Returns a random key-value pair from the array. If *pattern* is given, only matching keys are considered.
+
+---
+
+### Dictionaries
+
+Dictionary commands belong to ObjectGroup: "list"
+
+Dictionaries in Eagle are value types represented as lists with an even number of elements (alternating keys and values). The `dict` command provides a comprehensive set of operations for creating, querying, and modifying dictionaries. Dictionaries support nested key traversal, where intermediate keys map to sub-dictionaries.
+
+<a id="cmd-dict"></a>
+- **dict** - Dictionary operations
+
+  #### Creating and Querying Dictionaries
+
+  ---
+
+  - `dict create ?key value ...?` - Creates a new dictionary from key-value pairs. Returns an empty dictionary if no arguments are provided. Raises an error if an odd number of arguments is given.
+
+  ---
+
+  - `dict get dictionaryValue ?key ...?` - Returns the value associated with a key. With no keys, returns the entire dictionary as a key-value list. Multiple keys traverse nested dictionaries. Raises an error if a key is not found.
+
+  ---
+
+  - `dict exists dictionaryValue key ?key ...?` - Returns 1 if the specified key path exists in the dictionary, 0 otherwise. Multiple keys traverse nested dictionaries. Never raises an error for missing keys.
+
+  ---
+
+  - `dict size dictionaryValue` - Returns the number of top-level key-value pairs in the dictionary.
+
+  ---
+
+  - `dict info dictionaryValue` - Returns a human-readable string describing the dictionary's internal structure, including the number of root entries, nested entries, and hash code.
+
+  ---
+
+  - `dict keys dictionaryValue ?pattern?` - Returns a list of all keys in the dictionary. If *pattern* is given, only keys matching the glob pattern are returned.
+
+  ---
+
+  - `dict values dictionaryValue ?pattern?` - Returns a list of all values in the dictionary. If *pattern* is given, only values matching the glob pattern are returned.
+
+  **Example**:
+  ```tcl
+  set d [dict create name Alice age 30 city Boston]
+  dict get $d name          ;# Returns: Alice
+  dict get $d               ;# Returns entire dictionary
+  dict exists $d age        ;# Returns: 1
+  dict exists $d country    ;# Returns: 0
+  dict size $d              ;# Returns: 3
+  dict keys $d              ;# Returns: {name age city}
+  dict values $d            ;# Returns: {Alice 30 Boston}
+  dict keys $d a*           ;# Returns: {age}
+
+  # Nested dictionaries
+  set d [dict create a {x 1 y 2} b {x 3 y 4}]
+  dict get $d a x           ;# Returns: 1
+  dict exists $d a x        ;# Returns: 1
+  dict exists $d a z        ;# Returns: 0
+  ```
+
+  ---
+
+  #### Modifying Dictionaries (In-Place)
+
+  These sub-commands modify a dictionary stored in a variable. The variable is updated in place and the new dictionary value is returned.
+
+  ---
+
+  - `dict set dictionaryVariable key ?key ...? value` - Sets a value in the dictionary variable. Multiple keys create or traverse nested dictionaries. Creates the variable if it doesn't exist.
+
+  ---
+
+  - `dict unset dictionaryVariable key ?key ...?` - Removes a key from the dictionary variable. Multiple keys navigate to nested dictionaries. Does not raise an error if the key doesn't exist.
+
+  ---
+
+  - `dict append dictionaryVariable key ?string ...?` - Appends one or more strings to the value associated with *key*. If the key doesn't exist, it is created with the appended strings as its value.
+
+  ---
+
+  - `dict incr dictionaryVariable key ?increment?` - Increments the integer value associated with *key* by *increment* (default 1). If the key doesn't exist, it is created with a value of *increment*. The existing value must be a valid integer.
+
+  ---
+
+  - `dict lappend dictionaryVariable key ?value ...?` - Appends one or more elements to the list value associated with *key*. If the key doesn't exist, it is created with the values as list elements.
+
+  **Example**:
+  ```tcl
+  set d [dict create]
+  dict set d name Eagle        ;# d = {name Eagle}
+  dict set d version 1.0       ;# d = {name Eagle version 1.0}
+  dict set d config debug true ;# Nested: config -> debug -> true
+  dict get $d config debug     ;# Returns: true
+
+  dict append d name " Script" ;# name is now "Eagle Script"
+  dict incr d counter          ;# counter is now 1
+  dict incr d counter 5        ;# counter is now 6
+
+  dict lappend d tags fast     ;# tags is now {fast}
+  dict lappend d tags portable ;# tags is now {fast portable}
+
+  dict unset d counter         ;# Removes counter key
+  ```
+
+  ---
+
+  #### Functional Dictionary Operations (Value-Based)
+
+  These sub-commands return a new dictionary value without modifying any variable.
+
+  ---
+
+  - `dict remove dictionaryValue ?key ...?` - Returns a new dictionary with the specified keys removed. Missing keys are silently ignored.
+
+  ---
+
+  - `dict replace dictionaryValue ?key value ...?` - Returns a new dictionary with the specified key-value pairs added or replaced. Raises an error if an odd number of key-value arguments is given.
+
+  ---
+
+  - `dict merge ?dictionaryValue ...?` - Returns a new dictionary formed by merging one or more dictionaries. Later dictionaries override earlier ones for duplicate keys. With no arguments, returns an empty dictionary.
+
+  ---
+
+  - `dict filter dictionaryValue filterType ...` - Returns a new dictionary containing only the entries that match the filter criteria. Filter types:
+    - `dict filter dictionaryValue key ?pattern ...?` - Keep entries whose keys match any of the glob patterns.
+    - `dict filter dictionaryValue value ?pattern ...?` - Keep entries whose values match any of the glob patterns.
+    - `dict filter dictionaryValue script {keyVariable valueVariable} body` - Keep entries for which *body* evaluates to true. The key and value are set in the specified variables before each evaluation.
+
+  ---
+
+  - `dict map {keyVar valueVar} dictionaryValue body` - Creates a new dictionary by evaluating *body* for each key-value pair. The key variable and value variable are set before each iteration. If *body* returns a non-empty result, the key is mapped to that result in the output dictionary. Supports `break` and `continue`.
+
+  **Example**:
+  ```tcl
+  set d {a 1 b 2 c 3 d 4}
+
+  dict remove $d b d          ;# Returns: {a 1 c 3}
+  dict replace $d b 20 e 5    ;# Returns: {a 1 b 20 c 3 d 4 e 5}
+  dict merge {a 1 b 2} {b 3 c 4}  ;# Returns: {a 1 b 3 c 4}
+
+  # Filter by key pattern
+  dict filter {abc 1 def 2 abx 3} key ab*    ;# Returns: {abc 1 abx 3}
+
+  # Filter by value pattern
+  dict filter {a 10 b 2 c 13} value 1*       ;# Returns: {a 10 c 13}
+
+  # Filter by script
+  dict filter $d script {k v} {expr {$v > 2}}  ;# Returns: {c 3 d 4}
+
+  # Map: double all values
+  dict map {k v} $d {expr {$v * 2}}  ;# Returns: {a 2 b 4 c 6 d 8}
+  ```
+
+  ---
+
+  #### Dictionary Iteration and Scoping
+
+  ---
+
+  - `dict foreach {keyVar valueVar} dictionaryValue body` - Iterates over each key-value pair in the dictionary, setting *keyVar* and *valueVar* before evaluating *body*. Supports `break` and `continue`. Returns an empty string.
+
+  ---
+
+  - `dict update dictionaryVariable key varName ?key varName ...? body` - Maps dictionary keys to local variables, evaluates *body*, then writes the local variables back into the dictionary. If a local variable is unset during *body*, the corresponding key is removed from the dictionary.
+
+  ---
+
+  - `dict with dictionaryVariable ?key ...? body` - Unpacks all keys from the dictionary (or a nested sub-dictionary specified by *key* arguments) into local variables with the same names as the keys, evaluates *body*, then writes the local variables back. If a variable is unset during *body*, its key is removed.
+
+  **Example**:
+  ```tcl
+  # foreach iteration
+  set keys {}
+  set vals {}
+  dict foreach {k v} {a 1 b 2 c 3} {
+    lappend keys $k
+    lappend vals $v
+  }
+  ;# keys = {a b c}, vals = {1 2 3}
+
+  # foreach with break
+  set visited {}
+  dict foreach {k v} {a 1 b 2 c 3} {
+    lappend visited $k
+    if {$k eq "b"} break
+  }
+  ;# visited = {a b}
+
+  # update: modify specific keys via local variables
+  set d [dict create a 1 b 2]
+  dict update d a x b y {
+    set x [expr {$x + 10}]
+  }
+  dict get $d a    ;# Returns: 11
+
+  # with: unpack all keys into local variables
+  set d [dict create a 1 b 2]
+  dict with d {
+    set a [expr {$a + 10}]
+    set b [expr {$b + 20}]
+  }
+  dict get $d a    ;# Returns: 11
+  dict get $d b    ;# Returns: 22
+  ```
 
 ---
 

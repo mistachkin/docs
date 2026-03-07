@@ -29,6 +29,8 @@ This companion file to [`core_language.md`](core_language.md) provides at least 
   - [base64](#ex-base64), [concat](#ex-concat), [encoding](#ex-encoding), [format](#ex-format), [guid](#ex-guid), [hash](#ex-hash), [join](#ex-join), [parse](#ex-parse), [regexp](#ex-regexp), [regsub](#ex-regsub), [split](#ex-split), [string](#ex-string)
 - [Arrays](#array-examples)
   - [array](#ex-array)
+- [Dictionaries](#dictionary-examples)
+  - [dict](#ex-dict)
 - [I/O and Channels](#io-examples)
   - [close](#ex-close), [eof](#ex-eof), [fblocked](#ex-fblocked), [fconfigure](#ex-fconfigure), [fcopy](#ex-fcopy), [flush](#ex-flush), [gets](#ex-gets), [open](#ex-open), [puts](#ex-puts), [read](#ex-read), [seek](#ex-seek), [tell](#ex-tell), [truncate](#ex-truncate)
 - [File System](#file-system-examples)
@@ -1960,6 +1962,220 @@ array set data {a 1 b 2 c 3 d 4}
 # array random data              ;# Returns random key name
 # array random -pair data        ;# Returns random key-value pair
 # array random data "a*"         ;# Random from matching keys only
+```
+
+---
+
+<a id="dictionary-examples"></a>
+
+## Dictionary Examples
+
+<a id="ex-dict"></a>
+### dict
+
+#### Creating and Querying
+
+```tcl
+# Create an empty dictionary
+dict create                   ;# Returns: (empty string)
+
+# Create with key-value pairs
+dict create a b c d e f       ;# Returns: {a b c d e f}
+```
+
+```tcl
+# Get entire dictionary
+dict get {a b c d}            ;# Returns: {a b c d}
+
+# Get single key
+dict get {a b c d} a          ;# Returns: b
+
+# Get nested key
+dict get {a {x y} c d} a x   ;# Returns: y
+```
+
+```tcl
+# Check key existence
+dict exists {a b c d} a      ;# Returns: 1
+dict exists {a b c d} z      ;# Returns: 0
+
+# Nested existence
+dict exists {a {x y} c d} a x  ;# Returns: 1
+dict exists {a {x y} c d} a z  ;# Returns: 0
+```
+
+```tcl
+# Size, keys, values
+dict size {a b c d e f}      ;# Returns: 3
+dict keys {a b c d e f}      ;# Returns: {a c e}
+dict keys {abc 1 def 2 abx 3} ab*  ;# Returns: {abc abx}
+dict values {a b c d e f}    ;# Returns: {b d f}
+dict values {a 1 b 2 c 10} 1*     ;# Returns: {1 10}
+```
+
+```tcl
+# Info about dictionary structure
+dict info {a b c d}          ;# Returns internal info string
+```
+
+#### In-Place Modification
+
+```tcl
+# Set keys (creates variable if needed)
+set d [dict create]
+dict set d name eagle         ;# d = {name eagle}
+dict set d a b c              ;# Nested: a -> b -> c
+dict get $d a b               ;# Returns: c
+```
+
+```tcl
+# Overwrite existing key
+set d [dict create a b]
+dict set d a new
+dict get $d a                 ;# Returns: new
+```
+
+```tcl
+# Unset keys
+set d [dict create a b c d]
+dict unset d a
+dict keys $d                  ;# Returns: {c}
+
+# Unset missing key — no error
+set d [dict create a b c d]
+dict unset d z
+dict size $d                  ;# Returns: 2
+```
+
+```tcl
+# Append strings to key value
+set d [dict create a hello]
+dict append d a " world"
+dict get $d a                 ;# Returns: hello world
+
+# Append to new key
+dict append d b greeting
+dict get $d b                 ;# Returns: greeting
+```
+
+```tcl
+# Increment key value
+set d [dict create x 5]
+dict incr d x 3
+dict get $d x                 ;# Returns: 8
+
+# Increment new key (starts from 0)
+dict incr d y
+dict get $d y                 ;# Returns: 1
+
+# Negative increment
+set d [dict create x 10]
+dict incr d x -7
+dict get $d x                 ;# Returns: 3
+```
+
+```tcl
+# List-append to key value
+set d [dict create]
+dict lappend d x hello
+dict lappend d x world
+dict get $d x                 ;# Returns: {hello world}
+```
+
+#### Functional Operations (Value-Based)
+
+```tcl
+# Remove keys (returns new dictionary)
+dict remove {a b c d e f} c          ;# Returns: {a b e f}
+dict remove {a b c d e f} a e        ;# Returns: {c d}
+dict remove {a b c d} z              ;# Returns: {a b c d} (no error)
+```
+
+```tcl
+# Replace/add key-value pairs
+dict replace {a b} c d               ;# Returns: {a b c d}
+dict replace {a b c d} a x           ;# Returns: {a x c d}
+```
+
+```tcl
+# Merge dictionaries (later wins)
+dict merge                            ;# Returns: (empty)
+dict merge {a b c d}                  ;# Returns: {a b c d}
+dict merge {a 1 b 2} {b 3 c 4}       ;# Returns: {a 1 b 3 c 4}
+```
+
+```tcl
+# Filter by key pattern
+dict filter {abc 1 def 2 abx 3} key ab*    ;# Returns: {abc 1 abx 3}
+
+# Filter by value pattern
+dict filter {a 10 b 2 c 13} value 1*       ;# Returns: {a 10 c 13}
+
+# Filter by script
+dict filter {a 10 b 2 c 13 d 1} script {k v} {
+  expr {$v > 5}
+}
+;# Returns: {a 10 c 13}
+```
+
+```tcl
+# Map: transform values
+dict map {k v} {a 1 b 2 c 3} {
+  expr {$v * 2}
+}
+;# Returns: {a 2 b 4 c 6}
+```
+
+#### Iteration and Scoping
+
+```tcl
+# foreach: iterate over key-value pairs
+set keys {}
+set vals {}
+dict foreach {k v} {a 1 b 2 c 3} {
+  lappend keys $k
+  lappend vals $v
+}
+;# keys = {a b c}, vals = {1 2 3}
+```
+
+```tcl
+# foreach with break
+set keys {}
+dict foreach {k v} {a 1 b 2 c 3} {
+  lappend keys $k
+  if {$k eq "b"} break
+}
+;# keys = {a b}
+```
+
+```tcl
+# foreach with continue
+set vals {}
+dict foreach {k v} {a 1 b 2 c 3} {
+  if {$k eq "b"} continue
+  lappend vals $v
+}
+;# vals = {1 3}
+```
+
+```tcl
+# update: map keys to local variables, modify, write back
+set d [dict create a 1 b 2]
+dict update d a x b y {
+  set x [expr {$x + 10}]
+}
+dict get $d a    ;# Returns: 11
+```
+
+```tcl
+# with: unpack all keys into local variables
+set d [dict create a 1 b 2]
+dict with d {
+  set a [expr {$a + 10}]
+  set b [expr {$b + 20}]
+}
+list [dict get $d a] [dict get $d b]  ;# Returns: {11 22}
 ```
 
 ---

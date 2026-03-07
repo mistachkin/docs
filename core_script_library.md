@@ -6323,7 +6323,7 @@ set sum [lreduce $numbers 0 \
 
 #### Key-Value List Operations
 
-**Note**: Eagle does NOT have the `dict` command. Use key-value lists (pairs) instead, along with `getDictionaryValue` from auxiliary.eagle.
+**Note**: Eagle now provides the `dict` command (see [core_language.md](core_language.md#cmd-dict)). The key-value list patterns below remain useful for simple cases and for the `getDictionaryValue` helper from auxiliary.eagle, which provides default-value support.
 
 ```tcl
 # Build key-value list from pairs

@@ -111,7 +111,7 @@ Shell scripting is the default automation tool on Unix-like systems.
 | .NET integration | Scripts create .NET objects, call APIs, and link variables without leaving the language. | Shell scripts can invoke `dotnet` CLI tools but cannot interact with .NET APIs or objects in-process. |
 | Security | Safe interpreters, script signing, and policy enforcement.  Scripts can be cryptographically verified before execution. | Shell scripts run with the full privileges of the invoking user.  There is no built-in signing or sandboxing mechanism. |
 | Error handling | Structured return codes, exception interception from .NET, `catch` for error trapping, and `try`/`finally` for cleanup guarantees. | `set -e` and trap-based error handling are fragile and difficult to compose. |
-| Data structures | Lists, key-value lists (dictionary-style), arrays, and full access to .NET collections. | Arrays and associative arrays are limited and have inconsistent syntax across Bash versions. |
+| Data structures | Lists, dictionaries (`dict` command), arrays, and full access to .NET collections. | Arrays and associative arrays are limited and have inconsistent syntax across Bash versions. |
 | Testability | Built-in test framework with constraints, setup, cleanup, and expected-result matching. | Testing shell scripts typically requires external frameworks (bats, shunit2) and is inherently brittle. |
 
 **Choose Eagle when** you need cross-platform automation that works

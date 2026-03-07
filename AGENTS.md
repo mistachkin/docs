@@ -169,7 +169,7 @@ If the question touches sandboxing or safe interpreters:
 
 | You need… | Likely section / module |
 |-----------|--------------------------|
-| key-value list helpers (dict-like) | `auxiliary.eagle` (e.g., `getDictionaryValue`) |
+| dictionary operations | `dict` command (built-in); also `getDictionaryValue` in `auxiliary.eagle` |
 | platform detection (Windows/Unix/Mono/.NET) | `platform.eagle` (e.g., `isWindows`, `isMono`, `isDotNetCore`) |
 | file read/write helpers | `file1.eagle`, `file2.eagle`, `file2u.eagle` |
 | recursive file discovery | `file3.eagle` |
@@ -192,9 +192,6 @@ These are common sources of “looks like Tcl but isn’t” errors.
 
 - **No `{*}` argument expansion operator.**
   Use `eval` + `list` patterns for controlled argument expansion.
-
-- **No Tcl `dict` command.**
-  Use key-value lists and library helpers like `getDictionaryValue`.
 
 - **No `fileevent`.**
   Use polling with `after` / event processing, or CLR async patterns.
@@ -246,10 +243,10 @@ where, rather than duplicating full reference content.
 - Go to: `core_script_library.md` → Test framework (`test.eagle`) and constraints
   (`constraints.eagle`)
 
-### Recipe: Implement "dict-like" data access
-- Go to: `core_script_library.md`
-- Search for: `getDictionaryValue`
-- Use key-value lists (`{name1 value1 name2 value2 ...}`), not Tcl dicts.
+### Recipe: Use dictionary data structures
+- Go to: `core_language.md#cmd-dict`
+- Use the `dict` command: `dict create`, `dict get`, `dict set`, `dict exists`, `dict keys`, etc.
+- For simple lookups with defaults, also see `getDictionaryValue` in `core_script_library.md`.
 
 ### Recipe: Evaluate an Eagle script from an MSBuild target
 - Go to: `integrations.md` → MSBuild Integration → Examples
