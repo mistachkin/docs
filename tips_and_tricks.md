@@ -54,6 +54,20 @@ This guide covers Eagle's unique capabilities and highest-value patterns. Each s
   - [Dictionary Operations: dict and getDictionaryValue](#dictionary-operations-dict-and-getdictionaryvalue)
   - [List Helpers: filter](#list-helpers-filter)
   - [File Discovery: findFilesRecursive](#file-discovery-findfilesrecursive)
+- [Showcase: Unique Things Eagle Can Do](#showcase-unique-things-eagle-can-do)
+  - [One-Liners and Quick Wins](#one-liners-and-quick-wins)
+  - [Fetch and Extract Live Data](#fetch-and-extract-live-data)
+  - [Instant Cryptography Toolkit](#instant-cryptography-toolkit)
+  - [Regex-Powered Text Transforms](#regex-powered-text-transforms)
+  - [Console Wizardry (Windows)](#console-wizardry-windows)
+  - [Live .NET Reflection](#live-net-reflection)
+  - [Build a REST Micro-Client in Five Lines](#build-a-rest-micro-client-in-five-lines)
+  - [Windows Security Descriptors from Script](#windows-security-descriptors-from-script)
+  - [Hot-Compile and Run C# from a Script](#hot-compile-and-run-c-from-a-script)
+  - [Self-Contained SQLite Pipeline](#self-contained-sqlite-pipeline)
+  - [The Debugger is a Command](#the-debugger-is-a-command)
+  - [Scope: Persistent Closures Without the Mess](#scope-persistent-closures-without-the-mess)
+  - [Safe Interpreter: Run Untrusted Code in a Sandbox](#safe-interpreter-run-untrusted-code-in-a-sandbox)
 
 ---
 
@@ -249,8 +263,7 @@ if {[doesCompileCSharpWork]} then {
           public static int Add(int a, int b) { return a + b; }
       }
   }
-  set assembly [compileViaCSharpCodeProvider $source true false false \
-      results errors]
+  set assembly [compileCSharp $source true false false results errors]
 
   # Call the compiled method
   set result [object invoke Calculator Add 3 4]
@@ -841,15 +854,15 @@ The `sql` command provides database access through ADO.NET:
 
 ```tcl
 # Open a connection
-set conn [sql open "Data Source=mydb.sqlite;Version=3;"]
+set conn [sql open "Data Source=mydb.sqlite;"]
 
 # Scalar query
 set count [sql execute -execute scalar $conn \
-    "SELECT COUNT(*) FROM users"]
+    "SELECT COUNT(*) FROM users;"]
 
 # Reader query with results as nested lists
 set results [sql execute -execute reader -format nestedlist $conn \
-    "SELECT name, age FROM users"]
+    "SELECT name, age FROM users;"]
 foreach row $results {
   lassign $row name age
   puts [appendArgs "Name: " $name ", Age: " $age]
@@ -857,7 +870,7 @@ foreach row $results {
 
 # Parameterized query (safe from SQL injection)
 set results [sql execute -execute reader $conn \
-    "SELECT * FROM users WHERE age > @minAge" \
+    "SELECT * FROM users WHERE age > @minAge;" \
     {minAge Int32 21}]
 
 # Close the connection
@@ -870,10 +883,10 @@ sql close $conn
 set trans [sql transaction begin $conn]
 try {
   sql execute $conn \
-      "INSERT INTO users (name) VALUES (@n)" \
+      "INSERT INTO users (name) VALUES (@n);" \
       {n String Alice}
   sql execute $conn \
-      "INSERT INTO users (name) VALUES (@n)" \
+      "INSERT INTO users (name) VALUES (@n);" \
       {n String Bob}
   sql transaction commit $trans
 } finally {
@@ -934,9 +947,8 @@ Use this when matching the same pattern against many strings in a loop.
 ```tcl
 # -eval: evaluate the replacement as a script
 # -eval: the matched text is available via the match variable
-regsub -all -eval {\d+} "item1 item2 item3" {
-  expr {[string range $match 0 end] * 10}
-}
+regsub -all -eval {expr {[string range {&} 0 end] * 10}} \
+    -- {\d+} "item1 item2 item3" ""
 ```
 
 ### -options: Direct .NET RegexOptions
@@ -1259,3 +1271,523 @@ set scripts [findFilesRecursive *.eagle]
 ```
 
 - **See also**: [core_script_library.md](core_script_library.md) — File Finder (file3.eagle)
+
+---
+
+## Showcase: Unique Things Eagle Can Do
+
+The examples below demonstrate capabilities that are built into Eagle and
+require **no third-party packages**. They are grouped roughly by difficulty:
+beginner-friendly examples first, progressing to more advanced patterns.
+
+Every example that creates variables is wrapped in `[apply]` so it
+introduces no global state. Every example that creates files or other
+resources cleans up after itself.
+
+---
+
+### One-Liners and Quick Wins
+
+These work at the interactive shell prompt — just paste and go.
+
+```tcl
+# Generate a random password (16 chars, ASCII)
+package require Eagle.Test; visibleCharsOnly [expr {randstr(16)}]
+
+# Current date in ISO 8601
+clock format [clock seconds] -iso
+
+# Quick GUID
+guid new
+
+# SHA-256 of a string
+hash normal sha256 "Eagle is fun"
+
+# Base64 round-trip
+base64 encode "Hello, .NET world!"
+base64 decode [base64 encode "Hello, .NET world!"]
+
+# Coin flip
+expr {rand() < 0.5 ? "heads" : "tails"}
+
+# How many CPUs?
+object invoke System.Environment ProcessorCount
+
+# .NET runtime version, one shot
+object invoke System.Environment Version
+
+# Rotate bits (Eagle-only operators)
+expr {0xDEAD <<< 4}  ;# left-rotate
+expr {0xBEEF >>> 8}  ;# right-rotate
+```
+
+---
+
+### Fetch and Extract Live Data
+
+These examples hit freely available public APIs. They require the
+`Eagle.Test` package for JSON path support.
+
+```tcl
+# Fetch the International Space Station's current position
+# (Open Notify API — no key required)
+apply {{} {
+  package require Eagle.Test
+  set json [uri get http://api.open-notify.org/iss-now.json]
+  set lat [getOrSetViaJsonPaths $json {iss_position latitude}]
+  set lon [getOrSetViaJsonPaths $json {iss_position longitude}]
+  puts [appendArgs "ISS is at " $lat "N, " $lon "E right now."]
+}}
+
+# How many humans are in space right now?
+apply {{} {
+  package require Eagle.Test
+  set json [uri get http://api.open-notify.org/astros.json]
+  set n [getOrSetViaJsonPaths $json {number}]
+  puts [appendArgs "There are " $n " people in space right now."]
+}}
+
+# Fetch a random programming joke (JokeAPI — no key required)
+apply {{} {
+  package require Eagle.Test
+  set json [uri get \
+      https://v2.jokeapi.dev/joke/Programming?type=single]
+  puts [getOrSetViaJsonPaths $json {joke}]
+}}
+
+# Look up a word's definition (Free Dictionary API)
+apply {{word} {
+  package require Eagle.Test
+  set json [uri get \
+      [appendArgs https://api.dictionaryapi.dev/api/v2/entries/en/ \
+          $word]]
+  set def [getOrSetViaJsonPaths $json {0 meanings 0 definitions 0 \
+      definition}]
+  puts [appendArgs $word ": " $def]
+}} serendipity
+
+# What is my public IP address?
+puts [string trim [uri get https://api.ipify.org]]
+```
+
+---
+
+### Instant Cryptography Toolkit
+
+No `openssl` binary, no `pip install cryptography` — it is all built in.
+
+```tcl
+# SHA family shootout
+apply {{msg} {
+  foreach alg {sha1 sha256 sha384 sha512} {
+    puts [appendArgs $alg ": " [hash normal $alg $msg]]
+  }
+}} "The quick brown fox jumps over the lazy dog."
+
+# HMAC-SHA256 (e.g. for webhook signature verification)
+apply {{key msg} {
+  puts [hash keyed hmacsha256 $key $msg]
+}} my-secret-key payload-to-sign
+
+# Generate a crypto-random hex token (32 bytes = 64 hex chars)
+apply {{} {
+  set bytes [object create -alias System.Byte\[\] 32]
+  try {
+    set rng [object invoke -alias \
+        System.Security.Cryptography.RandomNumberGenerator Create]
+    try {
+      $rng GetBytes $bytes
+      set hex [object invoke -flags +Static \
+          System.BitConverter ToString $bytes]
+      puts [string map {- ""} $hex]
+    } finally {
+      object dispose $rng
+    }
+  } finally {
+    object dispose $bytes
+  }
+}}
+
+# Verify a file's SHA-256 checksum
+apply {{path expected} {
+  set actual [hash normal -filename sha256 $path]
+  if {$actual eq $expected} then {
+    puts "Checksum OK."
+  } else {
+    puts [appendArgs "MISMATCH! Got " $actual]
+  }
+}} [info nameofexecutable] \
+    D0F23739CECF21FED8C37A73FEA4889D1AFBB7B5757D9F2272FDC31E062ABCC7
+```
+
+---
+
+### Regex-Powered Text Transforms
+
+Eagle's `regsub` has three replacement modes — the `-command` and `-eval`
+modes are unique and eliminate the need for multi-step pipelines.
+
+```tcl
+# Double every number in a string (using -eval)
+regsub -all -eval {expr {& * 2}} -- {\d+} "I have 3 cats and 12 fish" ""
+;# Returns: I have 6 cats and 24 fish
+
+# Title-case every word (using -command)
+regsub -all -command -- {\w+} "eagle is a scripting language" \
+    {apply {{match} {
+        string totitle $match
+    }}}
+;# Returns: Eagle Is A Scripting Language
+
+# Obfuscate email addresses in text
+regsub -all -command -- \
+    {[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}} \
+    "Contact alice@example.com or bob@test.org" \
+    {apply {{addr} {
+        regexp {^(..).*(@.*)$} $addr -> head tail
+        appendArgs $head "..." $tail
+    }}}
+;# Returns: Contact al...@example.com or bo...@test.org
+
+# Extract all URLs from a block of text
+apply {{text} {
+  regexp -all -inline -- {https?://[^\s<>"]+} $text
+}} "Visit https://eagle-lang.org or http://example.com/test for info"
+;# Returns: {https://eagle-lang.org http://example.com/test}
+```
+
+---
+
+### Console Wizardry (Windows)
+
+Eagle's `[host]` command gives you direct control over the console that
+no other scripting language provides without native extensions.
+
+```tcl
+# Draw a decorative box around a message
+host writebox -fg White -bg DarkBlue -boxfg Yellow \
+    "Welcome to Eagle!"
+
+# Save the current screen, do work, then restore it
+# (Windows-only: uses Win32 screen buffer management)
+apply {{} {
+  set screen [host screen create]
+  host screen push $screen
+  try {
+    host clear
+    host color -foreground Green -background Black
+    host position -x 10 -y 5
+    puts "This is a temporary screen."
+    puts "Press Enter to return..."
+    host readline
+  } finally {
+    host screen pop
+    host screen delete $screen
+  }
+}}
+
+# Retro "Matrix" rain effect for 5 seconds (Windows)
+apply {{} {
+  set size [host size]
+  set columns [lindex $size 0]; set rows [lindex $size 1]
+  set savedColors [host color]
+  host color -foreground Green -background Black
+  host clear
+  try {
+    set end [expr {[clock seconds] + 5}]
+    while {[clock seconds] < $end} {
+      set x [expr {int(rand() * $columns)}]
+      set y [expr {int(rand() * $rows)}]
+      host position -x $x -y $y
+      puts -nonewline [string index \
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$" \
+          [expr {int(rand() * 38)}]]
+      after 5
+    }
+  } finally {
+    host color -foreground [lindex $savedColors 0] \
+               -background [lindex $savedColors 1]
+    host clear
+  }
+}}
+
+# Query the console font (Windows)
+host font
+```
+
+---
+
+### Live .NET Reflection
+
+Explore the entire .NET type system interactively — no IDE required.
+
+```tcl
+# List all public methods on System.String
+object members System.String -membertype Method
+
+# Inspect the properties of the Environment class
+object members System.Environment -membertype Property
+
+# Enumerate all values in a .NET enum
+apply {{enumType} {
+  object invoke System.Enum GetNames $enumType
+}} System.DayOfWeek
+;# Returns: {Sunday Monday Tuesday Wednesday Thursday Friday Saturday}
+
+# Dynamic proxy: call any static method by name
+apply {{type method args} {
+  eval object invoke -flags +Static [list $type] [list $method] $args
+}} System.IO.Path GetTempPath
+```
+
+---
+
+### Build a REST Micro-Client in Five Lines
+
+```tcl
+# A reusable one-shot JSON GET that returns a parsed field
+apply {{url field} {
+  package require Eagle.Test
+  set json [uri get $url]
+  getOrSetViaJsonPaths $json $field
+}} https://httpbin.org/ip origin
+;# Returns: your public IP address
+```
+
+Because `[uri]`, `[hash]`, `[base64]`, and the JSON support are all
+built in, you can script against most REST APIs with zero setup.
+
+---
+
+### Windows Security Descriptors from Script
+
+Eagle can read and decode Windows NTFS security descriptors — try doing
+*that* in Python without `pywin32`.
+
+```tcl
+# Read the SDDL string for a file (Windows)
+apply {{path} {
+  puts [file sddl $path]
+}} [info nameofexecutable]
+
+# Show the rights for a file (Windows)
+apply {{path} {
+  foreach item [file rights $path] {
+    puts $item
+  }
+}} [info nameofexecutable]
+
+# Check if a file is read-accessible before opening
+apply {{path} {
+  if {[file readable $path]} then {
+    puts [appendArgs $path " is readable."]
+  } else {
+    puts [appendArgs $path " is NOT readable."]
+  }
+}} [info nameofexecutable]
+```
+
+---
+
+### Hot-Compile and Run C# from a Script
+
+Eagle can compile C# source code at runtime and call the resulting types
+immediately — no external toolchain, no temp files left behind. This
+uses the `compileCSharp` procedure from `csharp.eagle`.
+
+```tcl
+apply {{} {
+  if {![doesCompileCSharpWork]} then {
+    puts "C# compilation not available on this platform."
+    return
+  }
+  set src {
+    using System;
+    public static class Greeter {
+      public static string Greet(string name) {
+        return "Hello, " + name + "! It is " +
+            DateTime.Now.ToString("HH:mm:ss") + ".";
+      }
+    }
+  }
+  set assembly [compileCSharp $src true false false results errors]
+  try {
+    puts [object invoke Greeter Greet "Eagle User"]
+  } finally {
+    catch {object dispose $assembly}
+  }
+}}
+```
+
+---
+
+### Self-Contained SQLite Pipeline
+
+Create, populate, query, and tear down a database — all in one
+self-cleaning block. No files left on disk.
+
+```tcl
+apply {{} {
+  set fileName [file tempname]
+  try {
+    set conn [sql open -type SQLite \
+        [appendArgs "Data Source=" $fileName \;]]
+    try {
+      sql execute $conn "CREATE TABLE heroes (\
+          name TEXT, universe TEXT, power INTEGER);"
+
+      foreach {name universe power} {
+          Superman    DC     100
+          Batman      DC      42
+          Spider-Man  Marvel   88
+          Iron-Man    Marvel   91
+          Aquaman     DC      67
+      } {
+        sql execute $conn \
+            "INSERT INTO heroes VALUES(@n, @u, @p);" \
+            [list n String $name] [list u String $universe] \
+            [list p Int32 $power]
+      }
+
+      puts "=== Heroes with power > 80 ==="
+      sql execute -execute reader $conn \
+          "SELECT name, power FROM heroes \
+           WHERE power > 80 ORDER BY power DESC;"
+
+      foreach id [lsort [array names rows]] {
+        if {$id in [list count names]} then continue
+        puts [appendArgs "  " [getColumnValue $rows($id) name] \
+            " (" [getColumnValue $rows($id) power] ")"]
+      }
+
+      set avg [sql execute -execute scalar $conn \
+          "SELECT AVG(power) FROM heroes"]
+      puts [appendArgs "\nAverage power level: " $avg]
+
+      set mvp [sql execute -execute scalar $conn \
+          "SELECT name FROM heroes ORDER BY power DESC LIMIT 1;"]
+      puts [appendArgs "Most powerful: " $mvp]
+    } finally {
+      sql close $conn
+    }
+  } finally {
+    catch {file delete $fileName}
+  }
+}}
+```
+
+---
+
+### The Debugger is a Command
+
+In most languages, the debugger is a separate tool you attach. In Eagle,
+the debugger is a built-in command ensemble you can script against.
+
+```tcl
+# Set a watchpoint that fires whenever a variable changes
+apply {{} {
+  set myVar zero ;# must exist
+  debug watch myVar +BreakOnSet
+  try {
+    set myVar first  ;# debugger would break here
+    set myVar second ;# and here
+  } finally {
+    debug watch myVar -BreakOnSet;# clean up watchpoint
+  }
+}}
+
+# Programmatic breakpoint — useful for conditional debugging
+apply {{data} {
+  if {[llength $data] == 3} then {
+    debug break ;# drop into the interactive debugger
+  }
+  return [llength $data]
+}} {a b c}
+
+# Run a block with the debugger completely suspended
+# (zero overhead — no breakpoint checking at all)
+debug run {
+  # This code runs at full speed, no debugger interception
+  set result 0
+  for {set i 0} {$i < 1000} {incr i} {
+    incr result $i
+  }
+}
+```
+
+---
+
+### Scope: Persistent Closures Without the Mess
+
+The `[scope]` command creates named, persistent variable environments
+that survive across procedure calls — like closures, but explicit and
+thread-safe.
+
+```tcl
+# A counter that remembers its state between calls
+apply {{} {
+  scope create -open -args counter
+  try {
+    scope eval counter {set n 0}
+
+    # Increment from anywhere
+    scope eval counter {incr n}
+    scope eval counter {incr n}
+    scope eval counter {incr n}
+
+    puts [appendArgs "Counter is now: " \
+        [scope eval counter {set n}]]
+    ;# Prints: Counter is now: 3
+  } finally {
+    scope destroy counter
+  }
+}}
+
+# Thread-safe shared accumulator with locking
+apply {{} {
+  scope create -open -args ledger
+  try {
+    scope eval ledger { set balance 1000 }
+
+    # Each "transaction" locks the scope
+    foreach amount {-50 200 -75 -25 100} {
+      scope eval -lock true ledger [list incr balance $amount]
+    }
+
+    puts [appendArgs "Final balance: $" \
+        [scope eval ledger { set balance }]]
+    ;# Prints: Final balance: $1150
+  } finally {
+    scope destroy ledger
+  }
+}}
+```
+
+---
+
+### Safe Interpreter: Run Untrusted Code in a Sandbox
+
+Eagle's safe interpreter is a first-class security boundary — no
+filesystem access, no network access, no .NET reflection, resource
+limits enforced.
+
+```tcl
+apply {{} {
+  set child [interp create -safe]
+  try {
+    # Set resource limits
+    interp recursionlimit $child 50
+    interp timeout $child 2000 ;# 2-second wall-clock limit
+
+    # Safe code works fine
+    puts [interp eval $child {expr {6 * 7}}]
+    ;# Prints: 42
+
+    # Dangerous code is blocked
+    catch {interp eval $child {open somepath RDONLY}} msg
+    puts [appendArgs "Blocked: " $msg]
+  } finally {
+    interp delete $child
+  }
+}}
+```
