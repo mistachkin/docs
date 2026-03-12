@@ -1620,6 +1620,8 @@ split /usr/local/bin /
 
 ---
 
+> **See also:** [`string.md`](string.md) — deep-dive analysis of the `string` command with additional examples covering 29 sub-commands, 64-class type checking, culture-aware operations, extended `string map`, and `string format` .NET integration.
+
 <a id="ex-string"></a>
 ### string
 
@@ -1861,6 +1863,8 @@ string classes
 ---
 
 ## Array Examples
+
+> **See also:** [`array.md`](array.md) — deep-dive analysis of the `array` command with additional examples covering 17 sub-commands, 8 storage backends, deep copy, default values, random access, and iteration patterns.
 
 <a id="ex-array"></a>
 ### array
@@ -2457,6 +2461,8 @@ close $fh
 
 ---
 
+> **See also:** [`file.md`](file.md) — deep-dive analysis of the `file` command with additional examples covering 54 sub-commands, security descriptors, access control, advanced globbing, and temporary file management.
+
 <a id="ex-file"></a>
 ### file
 
@@ -2802,6 +2808,8 @@ napply {{x y} {expr {$x + $y}}} -x 3 -y 4
 
 ## Namespace Examples
 
+> **See also:** [`namespace.md`](namespace.md) — deep-dive analysis of the `namespace` command with additional examples covering the dual-implementation architecture, import/export mechanism, per-namespace unknown handlers, and scope integration.
+
 <a id="ex-namespace"></a>
 ### namespace
 
@@ -2948,6 +2956,8 @@ namespace origin add               ;# Returns: ::mathlib::add
 <a id="object-examples"></a>
 
 ## Objects (.NET Interop) Examples
+
+> **See also:** [`object.md`](object.md) — Deep-dive analysis of all 44 sub-commands, the opaque handle system, FixupReturnValue pipeline, method overload resolution, and practical .NET interop patterns.
 
 <a id="ex-object"></a>
 ### object
@@ -3171,6 +3181,8 @@ object fromvar myObjectVar
 ---
 
 ## Debugging Examples
+
+  > **See also:** [`debug.md`](debug.md) for a deep-dive analysis of the debugger architecture, emergency recovery, secure evaluation, variable watchpoints, and practical debugging patterns.
 
 <a id="ex-debug"></a>
 ### debug
@@ -4888,6 +4900,8 @@ expr {$age >= 18 ? "adult" : "minor"}
 ## Time and Clock Examples
 
 <a id="ex-clock"></a>
+> **See also**: [`clock.md`](clock.md) — Deep-dive analysis covering format string translation, custom epochs, high-resolution timing, ISO 8601 modes, build numbering, duration calculation, and all 15 sub-commands.
+
 ### clock
 
 #### Getting Current Time
@@ -5126,6 +5140,8 @@ vwait -timeout 5000 result
 ---
 
 ## Introspection Examples
+
+> **See also:** [`info.md`](info.md) — deep-dive analysis of the `info` command with additional examples covering 85 sub-commands, safe interpreter filtering, obfuscated procedure protection, .NET reflection, and engine metadata introspection.
 
 <a id="ex-info"></a>
 ### info
@@ -5748,6 +5764,8 @@ puts [appendArgs "My PID: " [pid]]
 ---
 
 ## Managed Environment Examples
+
+  > **See also:** [`host.md`](host.md) for a deep-dive analysis of the host lifecycle safety interlocks, Windows-native screen buffer management, color theming, box drawing, and practical patterns.
 
 <a id="ex-host"></a>
 ### host

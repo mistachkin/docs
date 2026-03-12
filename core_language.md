@@ -623,6 +623,8 @@ All variable commands belong to ObjectGroup: "variable"
 
 ---
 
+> **See also:** [`array.md`](array.md) — deep-dive analysis of the `array` command, including all 17 sub-commands, 8 polymorphic storage backends (ElementDictionary, environment, System.Array, thread, database, network, registry, tests), `array copy` with deep copy, `array default` (TIP #508), `array random` with 5 options, `array for`/`foreach`/`lmap` iteration, per-element flags, `VariableFlags`, and trace integration.
+
 <a id="cmd-array"></a>
 - **array** - Array operations (see Arrays section for sub-commands)
 
@@ -1637,6 +1639,8 @@ String commands belong to ObjectGroup: "string"
     ```
 
 ---
+
+> **See also:** [`string.md`](string.md) — deep-dive analysis of the `string` command, including all 29 sub-commands, the 64-class `string is` type-checking system, culture-aware comparison, extended `string map`, `string format` .NET integration, MatchMode enumeration, and character classification callbacks.
 
 <a id="cmd-string"></a>
 - **string** - String operations (extensive sub-commands)
@@ -2674,6 +2678,8 @@ File system commands belong to ObjectGroup: "fileSystem"
 
 ---
 
+> **See also:** [`file.md`](file.md) — deep-dive analysis of the `file` command, including all 54 sub-commands, Windows ACL/SDDL security, PE file inspection, access control infrastructure, advanced globbing with `MatchMode`, cryptographic temporary paths, interpreter cleanup management, and platform-specific behavior.
+
 <a id="cmd-file"></a>
 - **file** - File operations (extensive sub-commands)
 
@@ -3030,6 +3036,8 @@ Namespaces provide hierarchical organization of commands and variables, preventi
 
 ---
 
+> **See also:** [`namespace.md`](namespace.md) — deep-dive analysis of the `namespace` command, including all 22 sub-commands, dual-implementation architecture (Namespace1 stub vs. Namespace2 full), `INamespace` object model with parent-child hierarchy and reference counting, name resolution algorithm, call frame integration, import/export mechanism with `IAlias`, per-namespace unknown handler, namespace mappings, pluggable `IResolve` per namespace, and scope integration.
+
 <a id="cmd-namespace"></a>
 - **namespace** - Namespace operations
 
@@ -3180,6 +3188,8 @@ Namespaces provide hierarchical organization of commands and variables, preventi
 Object commands belong to ObjectGroup: "managedEnvironment"
 
 ---
+
+> **See also:** [`object.md`](object.md) — Deep-dive analysis of all 44 sub-commands, the opaque handle system, FixupReturnValue pipeline, method overload resolution, ObjectFlags, MarshalFlags, ByRefArgumentFlags, and practical .NET interop patterns.
 
 <a id="cmd-object"></a>
 - **object** - .NET object operations (comprehensive .NET interop)
@@ -3435,6 +3445,8 @@ Debug command belongs to ObjectGroup: "debug"
 The `debug` command provides comprehensive debugging capabilities for Eagle scripts and the interpreter itself. It is an ensemble command with 78 sub-commands covering breakpoint management, execution control, memory analysis, script bundling, tracing, and runtime configuration. Many sub-commands require the `DEBUGGER` compile-time flag; others require `DEBUGGER_BREAKPOINTS`, `SHELL`, `DATA`, `HISTORY`, `NATIVE`, or `PREVIOUS_RESULT`.
 
 ---
+
+  > **See also:** [`debug.md`](debug.md) for a deep-dive analysis of the debugger architecture, the dual-context suspend/resume model, `BreakpointType` enum, `DebugEmergencyLevel` lifecycle control, `HeaderFlags` display control, variable watchpoints, token-level breakpoints, and all 65+ sub-commands.
 
 <a id="cmd-debug"></a>
 - **debug** - Debugging operations
@@ -5533,6 +5545,8 @@ Time commands belong to ObjectGroup: "time"
 ---
 
 <a id="cmd-clock"></a>
+> **See also**: [`clock.md`](clock.md) — Deep-dive analysis of Eagle's `[clock]` command internals: Tcl-to-.NET format string translation (static mappings + dynamic delegates), custom epoch support, high-resolution performance counters, ISO 8601 formatting, `ClockData`/`IClockData`, fake time injection, and 15 sub-commands including Eagle-specific `buildnumber`, `duration`, `filetime`, `isvalid`, `monthdays`, `now`, `start`/`stop`.
+
 - **clock** - Clock and time operations
 
   The `clock` command provides comprehensive date/time functionality including formatting, parsing, and high-resolution timing.
@@ -5822,6 +5836,8 @@ Introspection commands belong to ObjectGroup: "introspection"
 The `info` command is the primary means for querying the state of the interpreter, examining procedures, variables, commands, and system information. It has over 80 sub-commands organized by category.
 
 ---
+
+> **See also:** [`info.md`](info.md) — deep-dive analysis of the `info` command, including all 85 sub-commands, safe interpreter sub-command filtering, obfuscated procedure protection, .NET reflection integration, engine metadata (9 attributes), platform variable caching, `info commands` filtering options, `info cmdtype`/`info cmdcount` command analysis, culture/localization queries, Windows window enumeration, and database connection introspection.
 
 <a id="cmd-info"></a>
 - **info** - Introspection operations
@@ -7434,6 +7450,8 @@ Managed environment commands belong to ObjectGroup: "managedEnvironment"
 These commands interact with the .NET runtime and the interactive host environment.
 
 ---
+
+  > **See also:** [`host.md`](host.md) for a deep-dive analysis of the host interface hierarchy, console lifecycle safety interlocks (`closeCount`/`referenceCount`/`mustBeOpenCount` state machine, read/write level tracking, kiosk mode lock), Windows-native screen buffer management (push/pop stack via `CreateConsoleScreenBuffer`/`SetConsoleActiveScreenBuffer`), `HostFlags` (60+ capability flags), `HostCreateFlags`, color theming, box drawing, and all 33 + 8 sub-commands.
 
 <a id="cmd-host"></a>
 - **host** - Host operations (interactive console host)

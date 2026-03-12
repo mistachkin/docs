@@ -49,6 +49,15 @@ pitfalls** when working with Eagle.
 | `regexp.md` | Deep-dive analysis of the `regexp`/`regsub` commands: .NET `System.Text.RegularExpressions` integration, default `Singleline` behavior (dot matches newlines — opposite of Tcl), Tcl-to-.NET substitution translation (`TranslateSubSpec`), three replacement modes (normal, `-eval`, `-command`/TIP #463), `-extra` extended substitutions (`\P`, `\I`, `\S`, `\M#`, `\N<name>`), pattern mutation prefixes (`***=`, `***:`), and all Eagle-specific options | When you need to understand regex behavior differences from Tcl, substitution translation, the three regsub modes, named group references, or the many Eagle-specific regex options |
 | `uri.md` | Deep-dive analysis of the `uri` command: 18 sub-commands for URI construction/parsing/validation, HTTP download/upload (sync and async), four per-interpreter web callbacks (`PreWebClientCallback`, `NewWebClientCallback`, `WebTransferCallback`, `WebErrorCallback`), custom `WebClient`-derived classes (`TagAndTimeoutWebClient`, `ScriptWebClient`), async transfers with `CommandCallback` script evaluation, retry infrastructure, offline mode, and security protocol management | When you need to understand HTTP operations, async downloads/uploads with callbacks, custom WebClient configuration, the web callback chain, retry logic, or URI utility operations |
 | `package.md` | Deep-dive analysis of the `package` command: 23 sub-commands, multi-source index discovery pipeline (host, filesystem, plugin, bundle), tagged package indexes (`pkgIndex_XXXX.eagle` with `$tag` variable), auto-path system and interpreter initialization, package aliases with circular-reference detection, security verification (Authenticode, StrongName, locked/rejected packages), the four-stage `package require` fallback chain, `PackageFallback` delegate, `.noPkgIndex` disable markers, and all `PackageFlags`/`PackageIndexFlags` | When you need to understand package management, index discovery, tagged indexes, auto-path construction, package aliases, security verification during scanning, the require fallback chain, or package lifecycle (provide/withdraw/forget) |
+| `clock.md` | Deep-dive analysis of the `clock` command: 15 sub-commands, Tcl-to-.NET format string translation (static mappings + `ClockTransformCallback` delegates for `%s`, `%j`, `%V`, `%Z`, `%Q`), custom epoch support (Unix, Build, PE, user-defined), high-resolution performance counters (`clock start`/`stop`), ISO 8601 formatting, .NET ticks, `ClockData`/`IClockData` interface, fake time injection, and safe interpreter timing restrictions | When you need to understand time formatting/parsing, format specifier translation, custom epochs, high-resolution timing, build numbering, or calendar operations |
+| `string.md` | Deep-dive analysis of the `string` command: 29 sub-commands, 64-class `string is` type-checking system (18 per-character + 46 whole-string), culture-aware comparison via `CultureInfo`/`CompareOptions`, extended `string map` with `-regexp`/`-eval`/`-multipass`/`-maximum`/`-countvar`, `string format` .NET `String.Format` integration, `MatchMode` enumeration, character classification callbacks (`CharIsWord`, `CharIsAscii`, `CharIsGraph`, `CharIsReserved`), and `StringBuilderFactory`/`StringBuilderCache` optimization | When you need to understand string operations, the type-checking system, culture-aware comparison, extended mapping/substitution, format string integration, or character classification |
+| `file.md` | Deep-dive analysis of the `file` command: 54 sub-commands, Windows ACL/SDDL security descriptors, PE file magic number inspection, three-tier access verification (`VerifyReadable`/`VerifyWritable`/`AccessCheck`), advanced globbing with `MatchMode` (Exact, Glob, Regexp, SubString), cryptographic temporary path generation, interpreter cleanup management, `file under` containment checks, `file validname` path validation, `GetDateTimeCallback`/`SetDateTimeCallback` delegates, and platform-specific P/Invoke (`stat`/`lstat` on Unix, `BY_HANDLE_FILE_INFORMATION` on Windows) | When you need to understand file operations, path validation, Windows security descriptors, access control, temporary file infrastructure, globbing, or platform-specific file behavior |
+| `info.md` | Deep-dive analysis of the `info` command: 85 sub-commands, safe interpreter sub-command filtering via `PolicyOps.AllowedInfoSubCommandNames`, obfuscated procedure protection (`ProcedureFlags.Obfuscated`), .NET reflection integration (`Assembly`, `FileVersionInfo`, assembly attributes), engine metadata (9 `EngineAttribute` values), `info commands` with 18+ filtering options (`-safe`, `-unsafe`, `-hidden`, `-sdk`, `-core`, `-library`), `info cmdtype` (proc/alias/object/ensemble/native), platform variable caching with refresh restrictions, `info culture`/`info cultures` for localization, Windows window enumeration (`info hwnd`/`info windows`/`info windowtext`), database introspection (`info connections`/`info transactions`), and processor count masking in safe interpreters | When you need to understand interpreter introspection, command/procedure/variable queries, safe interpreter restrictions on info, engine version metadata, .NET reflection from scripts, or platform/environment queries |
+| `namespace.md` | Deep-dive analysis of the `namespace` command: 22 sub-commands, dual-implementation architecture (Namespace1 compatibility stub vs. Namespace2 full implementation), `INamespace` object model with parent-child hierarchy and reference counting, name resolution algorithm (`GetBase` → `GetDescendant` traversal), call frame integration (`VariableFrame`, `ResolveData` per frame), import/export mechanism via `IAlias` with `NamespaceImport` flag, per-namespace unknown handler, namespace mappings for name remapping, pluggable `IResolve` resolver per namespace, `namespace enable`/`rename`/`descendants`/`info`/`mappings` Eagle extensions, and `scope attach`/`detach`/`export`/`import` integration | When you need to understand namespace management, the dual-implementation architecture, name resolution, call frame binding, import/export, per-namespace unknown handlers, or scope-namespace interoperability |
+| `array.md` | Deep-dive analysis of the `array` command: 17 sub-commands, 8 polymorphic storage backends (`ElementDictionary`, environment, `System.Array`, thread, database, network, registry, tests), `array copy` with `-deep` option, `array default` (TIP #508) for missing-key defaults, `array random` with 5 options (`-strict`, `-pair`, `-valueonly`, `-matchname`, `-matchvalue`), `array for`/`foreach`/`lmap` iteration, per-element flags via `VariableFlagsDictionary`, `VariableFlags` enum (Array, ReadOnly, Virtual, System, Dirty, BreakOnGet/Set/Unset), `ArraySearch` stateful iteration, trace integration (`FireArraySetTraces`), and thread-safe locking | When you need to understand array operations, storage backends, default values, deep copy, random access, iteration patterns, per-element flags, or variable trace integration |
+| `host.md` | Deep-dive analysis of the `host` command: 33 primary sub-commands + 8 nested `host screen` sub-commands, 15-interface host hierarchy (`IHost` aggregating `IInteractiveHost`, `IStreamHost`, `IColorHost`, `IBoxHost`, `IPositionHost`, `ISizeHost`, `IReadHost`, `IWriteHost`, `IDebugHost`, `IThreadHost`, `IFileSystemHost`, `IProcessHost`, `IInformationHost`, `IDisplayHost`), `Default` → `Shell` → `Core` → `Console` class hierarchy, console lifecycle safety interlocks (`closeCount`/`referenceCount`/`mustBeOpenCount` atomic counters, `SystemConsoleMustBeOpen()` guards, read/write level tracking, `CheckActiveReadsAndWrites()`, kiosk mode lock, `ConsoleOps.IsShared()` cross-AppDomain detection), Windows-native screen buffer management (push/pop stack via `CreateConsoleScreenBuffer`/`SetConsoleActiveScreenBuffer` P/Invoke, standard handle redirection, `BreakpointDictionary`-style `IntPtrDictionary` storage), `HostFlags` (60+ capability flags), `HostCreateFlags` (30+ creation flags), `HostSizeType` for buffer/window sizing, `OutputStyle` for formatting modes, `host writebox` with theme/color/position control, `host font` Windows console font, and `host color`/`host namedcolor` themed color management | When you need to understand the host system, console lifecycle, safety interlocks, screen buffer management, color/box/position/size control, capability flags, stream redirection, or any of the 41 host sub-commands |
+| `object.md` | Deep-dive analysis of the `object` command: 44 sub-commands, opaque handle system (`ObjectDictionary` → `ObjectWrapper` → `ObjectData`), `FixupReturnValue` pipeline, `FindMethodsAndFixupArguments` method overload resolution (~1,500 lines), `ObjectFlags` (40+ flags: `NoDispose`/`AutoDispose`/`Alias`/`Locked`/`ForceNew`/`AllowExisting`), `MarshalFlags` (30+ flags: `StrictMatchCount`/`StrictMatchType`/`ReorderMatches`/`HandleByValue`), `ByRefArgumentFlags`, reference counting (`ReferenceCount`/`TemporaryReferenceCount` with `ObjectReferenceType`), command alias dispatch, assembly trust/strong-name verification, type aliases, namespace imports, and comprehensive practical patterns | When you need to understand .NET interop architecture, object lifecycle, handle management, method resolution, marshalling, assembly loading, or any of the 44 object sub-commands |
+| `debug.md` | Deep-dive analysis of the `debug` command: 65+ sub-commands, dual-context suspend/resume debugger architecture (every property stored as Current/Saved pair with reference-counted suspend/resume), `BreakpointType` enum (40+ flags covering token, command, variable, cancel, error, exit, procedure, expression phases with composite presets: Common, Standard, Express, Default), `DebugEmergencyLevel` lifecycle control (create/dispose/reset/enable/disable/break with feature flags for tokens, isolated interpreters, verbosity), `HeaderFlags` display control (25+ information sections), `InteractiveLoopData` breakpoint context, `BreakpointDictionary` two-level file→location lookup, `debug break` demand breakpoints, `debug secureeval` sandboxed child evaluation with timeout/trust/event controls, `debug invoke` call-frame-level execution, `debug watch` variable watchpoints (`BreakOnGet`/`BreakOnSet`/`BreakOnUnset`), `debug token` file/line breakpoints, `debug trace` with 20+ configuration options, script bundling (`bundle`/`mount`/`unmount`), and re-entry prevention mechanisms | When you need to understand the debugger architecture, breakpoint management, variable watchpoints, emergency recovery, secure evaluation, trace configuration, script bundling, or any of the 65+ debug sub-commands |
 | `garuda.md` | The Eagle Native Package for Tcl (Garuda) reference | When you need to integrate with Eagle via a native Tcl environment |
 | `integrations.md` | Eagle's four official integration sub-projects: MSBuild, WiX, PowerShell, MonoDevelop | When you need to use Eagle from MSBuild builds, WiX installers, PowerShell, or MonoDevelop |
 | `updater.md` | Eagle Updater (Hippogriff) architecture and design analysis | When you need to understand the update mechanism, its security model, or its configuration |
@@ -125,12 +134,25 @@ In `core_language.md`, use:
 #### .NET / CLR integration
 If the task involves .NET types, assemblies, reflection, or runtime control:
 - Start at: `object` command and the **Objects / .NET Interop** section.
+- For a deep-dive on the opaque handle system, FixupReturnValue pipeline,
+  method overload resolution, ObjectFlags, MarshalFlags, and all 44 sub-commands,
+  see [`object.md`](object.md).
+- **No Tcl equivalent** — Tcl has no built-in .NET interop; Eagle's `object`
+  command is the primary bridge between scripts and the CLR.
 - Typical workflow:
   - `object load` to load an assembly (if needed)
   - `object import` to shorten type names
   - `object create` to instantiate
   - `object invoke` to call members
   - `object dispose` for lifecycle cleanup
+- Key patterns:
+  - `object create -alias System.Text.StringBuilder` — alias-based method dispatch
+  - `object invoke -flags +Static System.IO.File ReadAllText $path` — static method call
+  - `object foreach -alias item in $list { $item ToString }` — collection iteration
+  - `object create -objectflags +NoDispose System.Guid $str` — suppress auto-disposal
+  - `object invoke -marshalflags +ReorderMatches $obj Method $args` — flexible overload resolution
+  - `object invoke -parametertypes [list Int32 String] $obj Method 42 hello` — explicit overload selection
+  - `object dispose -flags +Force $handle` — force disposal of locked objects
 
 #### External processes and tooling
 If you need to run compilers, formatters, linters, test runners, etc.:
@@ -269,6 +291,196 @@ network operations:
   - `WebTransferCallback` for intercepting transfers (caching, mocking)
   - `WebErrorCallback` for custom retry logic with `Ok`/`Error`/`Return`/`Break`/`Continue` semantics
   - `uri offline true` to disable all network operations
+
+#### Time operations and formatting
+If the task involves date/time formatting, parsing, timing measurement,
+or epoch calculations:
+- Start at: `clock` in the **Time and Clock** section of `core_language.md`.
+- For a deep-dive on format translation, epochs, performance counters,
+  and Eagle-specific sub-commands, see [`clock.md`](clock.md).
+- **Key difference from Tcl**: Format specifiers (`%Y`, `%m`, etc.) are
+  translated from Tcl to .NET format patterns via a dual-layer system.
+- Typical workflow:
+  - `clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"` — format time
+  - `clock scan "2025-01-15" -format "%Y-%m-%d"` — parse date string
+  - `set start [clock start]; ...; clock stop $start` — high-res timing
+- Key patterns:
+  - `-epoch` option for custom epoch on most sub-commands
+  - `-ticks` for .NET tick interpretation in `clock format`
+  - `-iso -full -isotimezone` for ISO 8601 output
+  - `clock duration -flags Human` for human-readable durations
+  - `clock buildnumber` for MSBuild-compatible version numbers
+  - Dynamic delegates for `%s`, `%j`, `%V`, `%Z`, `%Q` specifiers
+
+#### String operations and type checking
+If the task involves string manipulation, type validation, pattern matching,
+culture-aware comparison, or format string generation:
+- Start at: `string` in the **String Processing** section of `core_language.md`.
+- For a deep-dive on all 29 sub-commands, the 64-class type-checking system,
+  extended `string map`, and .NET format integration, see [`string.md`](string.md).
+- **Key extension**: Eagle adds 46 whole-string `string is` classes beyond Tcl’s
+  18 per-character classes, culture-aware comparison, `-regexp`/`-eval` mapping,
+  and `string format` with .NET `String.Format` via reflection.
+- Typical workflow:
+  - `string is integer -strict $val` — type validation
+  - `string match -nocase {*.dll} $path` — glob matching
+  - `string map -regexp -eval -- {{(\d+)} {expr {$1 * 2}}} $text` — regex-based substitution
+  - `string compare -culture en-US -options OrdinalIgnoreCase $a $b` — culture-aware comparison
+- Key patterns:
+  - `string is list $val` — validate Tcl list structure
+  - `string is type $val` — test against .NET types, paths, URIs, GUIDs, etc.
+  - `string map -multipass` for cascading substitutions
+  - `string map -maximum N -countvar c` for counted replacements
+  - `string format {0:C2} 1234.5` — .NET composite format strings
+  - `MatchMode` enum for switching between Glob, Regex, and SubString
+
+#### File operations, security, and path management
+If the task involves file I/O, path manipulation, file attributes, access
+control, temporary files, or filesystem queries:
+- Start at: `file` in the **File System** section of `core_language.md`.
+- For a deep-dive on all 54 sub-commands, access control, SDDL, globbing,
+  and platform-specific behavior, see [`file.md`](file.md).
+- **Key extensions**: Eagle adds Windows ACL/SDDL manipulation, PE magic
+  number inspection, `file validname` path validation, `file under`
+  containment checks, `file cleanup` interpreter lifecycle management,
+  advanced globbing with `MatchMode`, and cryptographic temp paths.
+- Typical workflow:
+  - `file exists $path` / `file isfile $path` — test before operating
+  - `file copy -force $src $dst` — copy with overwrite
+  - `file delete -force -recursive $dir` — remove directory tree
+  - `file attributes $path -readonly false` — clear read-only
+  - `file normalize $path` — resolve to absolute path
+- Key patterns:
+  - `file tempname` / `file temppath` — crypto-random temp files with env precedence
+  - `file cleanup $path` — register for automatic interpreter cleanup
+  - `file sddl -flags ToList $path` — structured ACL inspection (Windows)
+  - `file glob -match Regexp -directory $dir {pattern}` — regex file search
+  - `file under /safe/base $userPath` — directory containment validation
+  - `file trusted $dll && file verified $dll` — assembly verification before `load`
+  - `file validname $input Component` — validate user-supplied filenames
+
+#### Interpreter introspection
+If the task involves querying interpreter state, inspecting procedures,
+commands, variables, engine metadata, or runtime environment:
+- Start at: `info` in the **Introspection** section of `core_language.md`.
+- For a deep-dive on all 85 sub-commands, safe interpreter filtering,
+  obfuscation, and .NET reflection integration, see [`info.md`](info.md).
+- **Key extensions**: Eagle adds 60+ sub-commands beyond Tcl, including
+  .NET/CLR queries, security/policy introspection, plugin/module inspection,
+  database connection tracking, culture support, and Windows window enumeration.
+- Typical workflow:
+  - `info commands ?pattern?` — list commands with extensive filtering
+  - `info cmdtype $cmd` — determine command type (proc/alias/ensemble/native)
+  - `info exists $var` / `info exists $var val` — check-and-read variables
+  - `info engine PatchLevel` — query engine version
+  - `info framework` — query .NET version
+- Key patterns:
+  - `info commands -safe -standard` — find safe commands
+  - `info commands -hiddenonly` — find hidden commands (unsafe only)
+  - `info subcommands $ensemble` — list ensemble sub-commands
+  - `info policies` / `info decision` — inspect security policy state
+  - `info culture` / `info cultures` — query/set localization
+  - `info connections` / `info transactions` — monitor database state
+  - `info assembly true` — query host application assembly metadata
+  - Safe interpreters: restricted to ~25 sub-commands, no refresh, no hidden visibility
+
+#### Namespace management and organization
+If the task involves namespace creation, hierarchical code organization,
+command import/export, or namespace-scoped variables:
+- Start at: `namespace` in the **Namespaces** section of `core_language.md`.
+- For a deep-dive on the dual-implementation architecture, object model,
+  name resolution, and call frame integration, see [`namespace.md`](namespace.md).
+- **Key extensions**: Eagle has a dual implementation (Namespace1 stub
+  vs. Namespace2 full), `namespace enable` to toggle support, `namespace
+  rename`, `namespace descendants`, per-namespace unknown handlers,
+  namespace mappings, and `scope` command integration.
+- Typical workflow:
+  - `namespace eval name { ... }` — create namespace and define contents
+  - `namespace export pattern` — declare exportable commands
+  - `namespace import ns::*` — import exported commands
+  - `namespace current` — query current namespace
+- Key patterns:
+  - `namespace enable true` — activate full namespace support (Namespace2)
+  - `namespace descendants ::parent` — recursive child enumeration
+  - `namespace rename ::old ::new` — rename namespace (Eagle-only)
+  - `namespace unknown {script}` — per-namespace unknown handler
+  - `namespace mappings` — inspect namespace name remapping table
+  - `namespace code {script}` — create namespace-preserving callback
+  - `scope attach scopeName ::namespace` — link scope variables to namespace
+
+#### Array operations and virtual backends
+If the task involves associative arrays, array iteration, default values,
+copying, random selection, or virtual arrays (env, database, registry):
+- Start at: `array` in the **Variables / Data** section of `core_language.md`.
+- For a deep-dive on all 17 sub-commands, storage backends, and
+  per-element flags, see [`array.md`](array.md).
+- **Key extensions**: Eagle adds `array copy` (deep copy), `array default`
+  (TIP #508), `array random`, `array values`, `array foreach`/`lmap`,
+  8 polymorphic backends, and per-element flags.
+- Typical workflow:
+  - `array set data {key val ...}` — create/populate array
+  - `array get data ?pattern?` — retrieve as key-value list
+  - `array names data -glob pattern` — filtered key listing
+  - `array for {k v} data { ... }` — iterate key-value pairs
+- Key patterns:
+  - `array default set arr 0` — auto-default for counters (`incr arr(key)`)
+  - `array copy -deep src dst` — independent deep copy
+  - `array random -pair data` — random key-value pair
+  - `array values data -regexp {pattern}` — filtered value listing
+  - `array names env` — list environment variables via virtual backend
+  - `array lmap key data { expr }` — map over array elements
+
+#### Host management, console lifecycle, and screen buffers
+If the task involves console control, screen buffers, color theming,
+cursor positioning, window sizing, box drawing, font control, host
+lifecycle, or stream redirection:
+- Start at: `host` in the **Managed Environment** section of `core_language.md`.
+- For a deep-dive on the interface hierarchy, lifecycle safety interlocks,
+  and screen buffer management, see [`host.md`](host.md).
+- **No Tcl equivalent** — Tcl has no built-in host command; Eagle exposes
+  the full console subsystem including Win32 screen buffers.
+- Typical workflow:
+  - `host isopen` — check if host is ready
+  - `host color -foreground Green -background Black` — set colors
+  - `host position -x 10 -y 5` — position cursor
+  - `host writebox "message"` — draw decorative box
+  - `host screen create` / `host screen push` / `host screen pop` — screen buffer management
+- Key patterns:
+  - `host flags` — query 60+ capability flags to adapt to host
+  - `host screen create` + `push` + `pop` + `delete` — independent screen buffers (Windows)
+  - `host close` — 5 layers of safety checks (kiosk, active I/O, shared console)
+  - `host size -width W -height H` — resize with auto-rollback on failure
+  - `host font -facename Consolas -fontsize 14 -save true` — font with save/restore
+  - `host writebox -fg White -bg Blue -boxfg Yellow "text"` — themed box drawing
+  - `host redirected Output` — check channel redirection state
+  - `host reset -all` — reset all host components to defaults
+
+#### Debugging and diagnostics
+If the task involves debugging scripts, setting breakpoints, variable
+watchpoints, single-stepping, trace configuration, memory diagnostics,
+or emergency recovery:
+- Start at: `debug` in the **Debugging** section of `core_language.md`.
+- For a deep-dive on all 65+ sub-commands, the dual-context debugger
+  architecture, and emergency recovery, see [`debug.md`](debug.md).
+- **No Tcl equivalent** — Tcl has no built-in debug command; Eagle
+  integrates the debugger directly into the interpreter.
+- Typical workflow:
+  - `debug setup true true` — initialize isolated debugger
+  - `debug enable true` — enable debugging
+  - `debug types Standard` — set breakpoint types
+  - `debug onerror true` — break on errors
+  - `debug token file.eagle 42 42 true` — set line breakpoint
+  - `debug watch myVar {BreakOnSet}` — set variable watchpoint
+  - `debug break` — programmatic break into debugger
+- Key patterns:
+  - `debug run { script }` — execute without debugger overhead (suspend/resume)
+  - `debug emergency {Created, Enabled, Reset, Break}` — emergency recovery
+  - `debug secureeval -timeout 5000 child { script }` — sandboxed evaluation
+  - `debug invoke 2 info vars` — inspect variables at specific call level
+  - `debug trace -console true -enabledcategories "Engine"` — configure tracing
+  - `debug watch var {BreakOnGet, BreakOnSet, BreakOnUnset}` — full watchpoint
+  - `debug token file start end true` — source-level breakpoint
+  - `debug status` — query debugging state across all layers
 
 #### Testing primitives
 If you’re writing or understanding tests:
@@ -458,6 +670,148 @@ where, rather than duplicating full reference content.
   - `.noPkgIndex` marker files to disable indexing for files/directories
   - `PackageFallback` delegate for programmatic package resolution
 
+### Recipe: Format and parse dates, measure elapsed time
+- Go to: `core_language.md#cmd-clock`
+- For internals and format translation: [`clock.md`](clock.md)
+- Look for:
+  - `clock format $secs -format "%Y-%m-%d %H:%M:%S"` — Tcl format specifiers
+  - `clock scan "2025-01-15"` — parse date strings
+  - `clock format $secs -iso -full -isotimezone` — ISO 8601 output
+  - `set start [clock start]; ...; set us [clock stop $start]` — high-res timing
+  - `clock buildnumber -epoch [clock scan "2023-01-01"]` — build numbering
+  - `clock duration -flags Human start end` — human-readable durations
+  - `-epoch` option for custom epoch on `seconds`, `format`, `scan`, etc.
+  - Dynamic delegates for `%s`, `%j`, `%V`, `%Z`, `%Q` format specifiers
+
+### Recipe: Manipulate strings and validate types
+- Go to: `core_language.md#cmd-string`
+- For internals and architecture: [`string.md`](string.md)
+- Look for:
+  - `string is integer -strict $val` — strict type validation (empty string fails)
+  - `string is list $val` / `string is dict $val` — structure validation
+  - `string match -nocase {pattern} $str` — glob-style matching
+  - `string map -regexp -eval -- {{pattern} {script}} $text` — regex substitution with evaluation
+  - `string map -multipass -maximum N -countvar c -- {mapping} $text` — cascading counted replacements
+  - `string compare -culture name -options flags $a $b` — culture-aware comparison
+  - `string format {0:C2} 1234.5` — .NET composite format strings via `String.Format`
+  - `string reverse $str` / `string totitle $str` — Eagle-only sub-commands
+  - 64 `string is` classes: 18 per-character (alpha, digit, etc.) + 46 whole-string (list, dict, type, uri, guid, etc.)
+
+### Recipe: Work with files, paths, and filesystem security
+- Go to: `core_language.md#cmd-file`
+- For internals and architecture: [`file.md`](file.md)
+- Look for:
+  - `file normalize $path` — resolve to absolute path
+  - `file join $dir $name` — portable path construction
+  - `file validname $input Component` — validate user-supplied filenames
+  - `file copy -force $src $dst` — copy with overwrite
+  - `file delete -force -recursive $dir` — remove directory tree with read-only handling
+  - `file attributes $path -readonly false -hidden true` — get/set 12 FileAttributes
+  - `file tempname` / `file temppath` — cryptographic temp files with env var precedence
+  - `file cleanup $path` — register for automatic interpreter cleanup on dispose
+  - `file sddl -flags ToList $path` — Windows ACL inspection as structured list
+  - `file rights $path` — effective access rights (GenericRead, GenericWrite, etc.)
+  - `file glob -match Regexp -directory $dir {pattern}` — regex-based file search
+  - `file under /allowed/base $userPath` — directory containment check
+  - `file trusted $dll` / `file verified $dll` — assembly trust verification
+  - `file magic $exe` — PE file header inspection
+  - `file version -full $dll` — FileVersionInfo as dictionary
+
+### Recipe: Introspect interpreter state and runtime environment
+- Go to: `core_language.md#cmd-info`
+- For internals and architecture: [`info.md`](info.md)
+- Look for:
+  - `info commands ?options? ?pattern?` — list commands with 18+ filters (-safe, -hidden, -sdk, etc.)
+  - `info cmdtype $cmd` — returns proc, alias, object, ensemble, or native
+  - `info cmdcount ?path? ?type?` — detailed execution counters (OperationCount, CommandCount, UnknownCount)
+  - `info args $proc` / `info body $proc` / `info default $proc arg var` — procedure introspection
+  - `info exists $var ?valVar?` — Eagle extension: atomic check-and-read
+  - `info vars` / `info globals` / `info locals` / `info sysvars` — variable listing by scope
+  - `info engine ?attribute? ?refresh?` — 9 engine attributes (Name, Version, PatchLevel, Configuration, etc.)
+  - `info framework` / `info runtime` / `info runtimeversion` — .NET version queries
+  - `info assembly ?entry?` — assembly FullName and Location via reflection
+  - `info subcommands $ensemble ?pattern?` — enumerate ensemble sub-commands
+  - `info policies` / `info decision` — security policy introspection
+  - `info culture ?name?` / `info cultures ?pattern?` — localization queries
+  - `info connections` / `info transactions` — database state monitoring
+  - `info os` / `info hostname` / `info pid` / `info processors` — system information
+
+### Recipe: Organize code with namespaces and imports
+- Go to: `core_language.md#cmd-namespace`
+- For internals and architecture: [`namespace.md`](namespace.md)
+- Look for:
+  - `namespace eval name { ... }` — create namespace and define contents
+  - `namespace export -clear pattern ...` — declare exportable commands
+  - `namespace import -force ns::*` — import exported commands (force overwrites)
+  - `namespace forget ns::*` — remove imported commands
+  - `namespace enable true` — activate full namespace support (Namespace2)
+  - `namespace children ?name? ?pattern?` — list direct child namespaces
+  - `namespace descendants ?name? ?pattern?` — recursive child enumeration (Eagle-only)
+  - `namespace rename ::old ::new` — rename namespace (Eagle-only)
+  - `namespace code {script}` — create callback preserving namespace context
+  - `namespace inscope ::ns script args` — execute in namespace with arguments
+  - `namespace unknown {handler}` — per-namespace unknown command handler
+  - `namespace which -command name` / `namespace which -variable name` — resolve qualified name
+  - `namespace origin importedCmd` — trace import chain to original command
+  - `namespace mappings` — inspect namespace name remapping table
+
+### Recipe: Work with arrays, default values, and virtual backends
+- Go to: `core_language.md#cmd-array`
+- For internals and architecture: [`array.md`](array.md)
+- Look for:
+  - `array set data {key val ...}` — create/populate array from list
+  - `array get data ?pattern?` — retrieve as flat key-value list
+  - `array names data -glob|-regexp|-exact|-substring pattern` — filtered key listing
+  - `array values data ?mode? ?pattern?` — filtered value listing (Eagle-only)
+  - `array default set arr 0` — default value for missing keys (TIP #508)
+  - `array copy -deep src dst` — deep copy with independent elements
+  - `array random -pair -strict data ?pattern?` — random element selection
+  - `array for {k v} data { body }` — key-value iteration
+  - `array foreach key data { body }` — key-only iteration (Eagle-only)
+  - `array lmap key data { body }` — mapped iteration returning list (Eagle-only)
+  - `array names env` — list environment variables via virtual backend
+  - 8 backends: ElementDictionary, env, System.Array, thread, database, network, registry, tests
+
+### Recipe: Control the console host, screen buffers, and display
+- Go to: `core_language.md#cmd-host`
+- For internals and architecture: [`host.md`](host.md)
+- Look for:
+  - `host isopen` to check host readiness before operations
+  - `host open` / `host close` for lifecycle control (close has 5 safety layers)
+  - `host color -foreground Color -background Color` for console colors
+  - `host namedcolor -theme name -name color` for themed color management
+  - `host position -x col -y row` / `-relx N -rely N` for cursor positioning
+  - `host size -width W -height H` for window sizing (auto-rollback on failure)
+  - `host writebox ?options? string` for decorative box drawing with colors
+  - `host screen create` + `push name` + `pop` + `delete name` for Win32 screen buffers
+  - `host font -facename name -fontsize N` for console font control (Windows)
+  - `host readchar` / `host readkey` / `host readline` for input
+  - `host inchan` / `host outchan` / `host errchan` for stream redirection
+  - `host redirected channel` to check channel redirection state
+  - `host flags` to query 60+ host capability flags
+  - `host reset -all` to reset all host components
+  - `host sleep N` for thread-level sleep (requires HostFlags.Sleep)
+
+### Recipe: Debug scripts with breakpoints, watchpoints, and stepping
+- Go to: `core_language.md#cmd-debug`
+- For internals and architecture: [`debug.md`](debug.md)
+- Look for:
+  - `debug setup true true` to initialize an isolated debugger
+  - `debug enable true` / `debug enable false` to toggle the debugger
+  - `debug types Standard` to set breakpoint types (Common + Token)
+  - `debug onerror true` / `debug oncancel true` to break on specific events
+  - `debug token file startLine endLine true` to set line-level breakpoints
+  - `debug watch varName {BreakOnGet, BreakOnSet}` to set variable watchpoints
+  - `debug step true` / `debug steps N` for single-stepping
+  - `debug break` to programmatically enter the debugger
+  - `debug run { script }` to execute without debugger overhead
+  - `debug emergency {flags}` for emergency recovery with lifecycle control
+  - `debug secureeval -timeout N path { script }` for sandboxed evaluation
+  - `debug invoke level cmd args` to execute at a specific call frame
+  - `debug trace -console true -enabledcategories "cat"` for trace configuration
+  - `debug status` to query debugging state across all layers
+  - `debug memory` / `debug gcmemory` for memory diagnostics
+
 ### Recipe: Perform HTTP downloads and uploads with customization
 - Go to: `core_language.md#cmd-uri`
 - For internals and architecture: [`uri.md`](uri.md)
@@ -485,10 +839,21 @@ where, rather than duplicating full reference content.
 
 ### Recipe: Use .NET types safely and clean up resources
 - Go to: `core_language.md#cmd-object`
+- For full architecture, handle lifecycle, method resolution, and all 44 sub-commands,
+  see [`object.md`](object.md).
 - Look for:
-  - `object create`
-  - `object invoke`
-  - `object dispose`
+  - `object create` — instantiation with 37 options (aliases, flags, type resolution)
+  - `object invoke` — member invocation with 48 options (static, by-ref, marshalling)
+  - `object dispose` — disposal pipeline (reference counting, force, locked objects)
+  - `object foreach` / `object lmap` — collection iteration with auto-alias
+  - `object load` — assembly loading with trust/strong-name verification
+  - `object import` / `object type` — namespace imports and type aliases
+  - `object cleanup` — batch cleanup with configurable scope
+- Key architectural concepts:
+  - **Opaque handles**: `ObjectDictionary` → `ObjectWrapper` → `ObjectData` three-layer system
+  - **FixupReturnValue**: pipeline that decides whether to create a handle or return a string
+  - **Command alias dispatch**: `-alias` flag creates commands that delegate to `object invoke`
+  - **Method overload resolution**: `FindMethodsAndFixupArguments` engine with scoring
 - Then cross-reference:
   - `core_script_library.md` → `Object Utilities (object.eagle)`
 
