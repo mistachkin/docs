@@ -1424,6 +1424,8 @@ Copies files recursively using Robocopy (Windows only).
 
 Package: `Eagle.Execute`
 
+> See also: [`exec.md`](exec.md) for a comprehensive analysis of the `exec` command's argument processing, command-line building, and differences from native Tcl.
+
 #### getShellExecutableName
 
 ```tcl

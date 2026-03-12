@@ -39,6 +39,8 @@ pitfalls** when working with Eagle.
 | `core_examples.md` | Contains 500+ worked examples for every command and sub-command, organized by category | When you need usage examples, idiomatic patterns, or practical demonstrations |
 | `core_script_library.md` | Contains 580+ library procedures (script-level utilities), organized by package and source file | When you need helper procedures, test utilities, file helpers, platform detection, etc. |
 | `tips_and_tricks.md` | Eagle-unique features, advanced idioms, and best practices not found in standard Tcl | When looking for Eagle-specific patterns, performance tips, or unique capabilities |
+| `exec.md` | Deep-dive analysis of the `exec` command: argument processing, command-line building, escaping, and differences from native Tcl | When you need to understand exec's quoting/escaping algorithm, the three argument assembly paths, or why Eagle exec behaves differently from Tcl exec |
+| `scope.md` | Deep-dive analysis of the `scope` command: persistent named variable environments, call frame stack model, cloning, locking, namespace integration, and global scope redirection | When you need to understand how scopes work, implement persistent state across procedure calls, or use thread-safe shared state |
 | `garuda.md` | The Eagle Native Package for Tcl (Garuda) reference | When you need to integrate with Eagle via a native Tcl environment |
 | `integrations.md` | Eagle's four official integration sub-projects: MSBuild, WiX, PowerShell, MonoDevelop | When you need to use Eagle from MSBuild builds, WiX installers, PowerShell, or MonoDevelop |
 | `updater.md` | Eagle Updater (Hippogriff) architecture and design analysis | When you need to understand the update mechanism, its security model, or its configuration |
@@ -125,6 +127,8 @@ If the task involves .NET types, assemblies, reflection, or runtime control:
 #### External processes and tooling
 If you need to run compilers, formatters, linters, test runners, etc.:
 - Start at: `exec` in the **Native Environment** section.
+- For a deep-dive on argument processing, quoting, escaping, and Tcl
+  differences, see [`exec.md`](exec.md).
 - Eagle’s `exec` is more featureful than Tcl’s:
   - variable-based stdin
   - separate stdout/stderr capture
@@ -133,9 +137,23 @@ If you need to run compilers, formatters, linters, test runners, etc.:
   - background execution
   - shell execution mode
   - callbacks for streaming output
+  - command-line building with `-commandline`, `-forprocessor`, `-escaperanges`
+  - custom escape and pre-processing hooks
 
 > Important: Eagle does not use Tcl’s pipeline / redirection syntax. Use `exec`
-> options instead.
+> options instead. See [`exec.md`](exec.md) for the full comparison.
+
+#### Persistent state and variable scopes
+If the task involves persistent state across procedure calls, coroutine-like
+patterns, thread-safe shared state, or sandboxed global environments:
+- Start at: `scope` in the **Variables / Data** section of `core_language.md`.
+- For a deep-dive on the call frame stack model, cloning, locking, namespace
+  integration, and global scope redirection, see [`scope.md`](scope.md).
+- Key patterns:
+  - `scope create -open -clone -args $name` — idempotent persistent counter
+  - `scope create -open -procedure -args` — per-procedure private state
+  - `scope eval -lock name { script }` — thread-safe shared access
+  - `scope global name` — sandboxed global environment
 
 #### Testing primitives
 If you’re writing or understanding tests:
@@ -222,12 +240,24 @@ where, rather than duplicating full reference content.
 
 ### Recipe: Run a tool and capture stdout, stderr, and exit code
 - Go to: `core_language.md#cmd-exec`
+- For quoting/escaping details and Tcl differences: [`exec.md`](exec.md)
 - Look for options:
   - `-stdout varName`
   - `-stderr varName`
   - `-exitcode varName`
   - `-timeout milliseconds`
   - `-setall` when you want variables set even on error
+  - `-commandline` when arguments contain spaces (see [`exec.md`](exec.md) §5)
+
+### Recipe: Implement persistent state across procedure calls
+- Go to: `core_language.md#cmd-scope`
+- For internals and advanced patterns: [`scope.md`](scope.md)
+- Look for patterns:
+  - `scope create -open -clone -args $name` for named persistent state
+  - `scope create -open -procedure -args` for per-procedure auto-named state
+  - `scope eval name { script }` for scoped execution
+  - `scope eval -lock name { script }` for thread-safe access
+  - `scope global name` for sandboxed global redirection
 
 ### Recipe: Use .NET types safely and clean up resources
 - Go to: `core_language.md#cmd-object`

@@ -473,7 +473,7 @@ accumulate 5    ;# Returns: 35
 
 The `-procedure` option auto-generates the scope name from the enclosing procedure, so each procedure gets its own persistent state.
 
-- **See also**: [core_language.md](core_language.md#cmd-scope) — `scope` command; [core_examples.md](core_examples.md#ex-scope) — scope examples
+- **See also**: [core_language.md](core_language.md#cmd-scope) — `scope` command; [core_examples.md](core_examples.md#ex-scope) — scope examples; [scope.md](scope.md) — deep-dive analysis
 
 ---
 

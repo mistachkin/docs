@@ -715,6 +715,8 @@ incr count
 <a id="ex-scope"></a>
 ### scope
 
+> For a deep-dive on scope internals, the call frame stack model, cloning modes, locking, and namespace integration, see [`scope.md`](scope.md).
+
 ```tcl
 # Eagle extension — persistent counter across calls
 proc counter {name} {
@@ -5577,6 +5579,8 @@ subst -novariables -nocommands {Tab:\tNewline:\n}
 
 <a id="ex-exec"></a>
 ### exec
+
+> For a detailed analysis of argument processing, quoting/escaping, and differences from native Tcl, see [`exec.md`](exec.md).
 
 ```tcl
 # Simple command execution

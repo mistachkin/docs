@@ -932,7 +932,7 @@ All variable commands belong to ObjectGroup: "variable"
     scope destroy testScope
     ```
 
-  - **See also**: [`uplevel`](#cmd-uplevel), [`upvar`](#cmd-upvar), [`variable`](#cmd-variable)
+  - **See also**: [`uplevel`](#cmd-uplevel), [`upvar`](#cmd-upvar), [`variable`](#cmd-variable), [`scope.md`](scope.md) (deep-dive analysis)
 
 ---
 
@@ -7058,6 +7058,8 @@ These commands interact with the operating system and native code.
   - For I/O redirection, use the `-stdin`, `-stdout`, `-stderr` options
   - Use `-shell` to open documents/URLs with associated applications
   - The `-timeout` option kills the process if it doesn't exit in time
+
+  **See also**: [`exec.md`](exec.md) — Deep-dive analysis of argument processing, the three command-line assembly paths (`-commandline`, `-escaperanges`, default concatenation), quoting/escaping algorithms, and comprehensive comparison with native Tcl `exec`.
 
 ---
 
