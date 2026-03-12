@@ -109,28 +109,28 @@ Eagle's safe interpreter security operates through three complementary
 layers, each providing defense-in-depth:
 
 ```
-┌─────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────┐
 │           Layer 1: Command Hiding                    │
 │                                                      │
 │  Unsafe commands moved to hidden table.              │
 │  Scripts in safe interp cannot see or call them.     │
 │  Parent can invoke via [interp invokehidden].        │
-├─────────────────────────────────────────────────────┤
-│           Layer 2: Policy-Based Access Control        │
+├──────────────────────────────────────────────────────┤
+│           Layer 2: Policy-Based Access Control       │
 │                                                      │
 │  Commands that remain exposed (file, info, object,   │
 │  interp, etc.) are restricted by policy callbacks.   │
-│  Each invocation checked against allowed sub-command  │
+│  Each invocation checked against allowed sub-command │
 │  lists, trusted types, trusted URIs, trusted dirs.   │
 │  Deny-by-default: no policy vote = denied.           │
-├─────────────────────────────────────────────────────┤
-│           Layer 3: Resource Limits                    │
+├──────────────────────────────────────────────────────┤
+│           Layer 3: Resource Limits                   │
 │                                                      │
 │  Hard caps on recursion, iterations, procedures,     │
 │  variables, namespaces, scopes, results, callbacks,  │
 │  events, exec operations, ready ops, child interps.  │
 │  Prevents resource exhaustion / denial-of-service.   │
-└─────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────┘
 ```
 
 ### 3.2. Command hiding

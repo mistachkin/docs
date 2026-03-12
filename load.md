@@ -613,7 +613,7 @@ through .NET remoting transparent proxies. The `Plugin` wrapper class
 
 Interpreter ──→ Plugin (wrapper)    Actual IPlugin implementation
                     │                       ↑
-                    └── transparent proxy ───┘
+                    └── transparent proxy ──┘
                     (MarshalByRefObject)
 ```
 
