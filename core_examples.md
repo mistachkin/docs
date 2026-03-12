@@ -1496,6 +1496,8 @@ parse script {
 ---
 
 <a id="ex-regexp"></a>
+> **See also**: [`regexp.md`](regexp.md) — Deep-dive analysis covering the .NET regex engine, default `Singleline` behavior, Eagle-specific options (`-global`, `-skip`, `-limit`, `-compiled`, `-extra`), pattern mutation prefixes, and practical patterns.
+
 ### regexp
 
 ```tcl
@@ -1540,6 +1542,8 @@ regexp -compiled -nocase {pattern} "Some Pattern"
 ---
 
 <a id="ex-regsub"></a>
+> **See also**: [`regexp.md`](regexp.md) — Deep-dive on `[regsub]` internals: the three replacement modes (normal, `-eval`, `-command`), `TranslateSubSpec` translation, `-extra` substitutions for named groups, and `-strict`/`-nostrict` behavior.
+
 ### regsub
 
 ```tcl
@@ -3820,6 +3824,8 @@ interp bgerror $child               ;# Query current handler
 ## Package Examples
 
 <a id="ex-package"></a>
+> **See also**: [`package.md`](package.md) — Deep-dive analysis covering multi-source index discovery, tagged indexes, auto-path integration, package aliases, security verification, the require fallback chain, and all 23 sub-commands.
+
 ### package
 
 #### Loading Packages
@@ -4007,6 +4013,8 @@ test2 version-1.1 "Test version format" \
 <a id="ex-sql"></a>
 ### sql
 
+> **See also**: [`sql.md`](sql.md) for a deep-dive analysis of the database command, including `-variable` auto-cleanup, script bundles, parameterized queries, result formatting, and practical patterns.
+
 #### Connection Management
 
 ```tcl
@@ -4107,6 +4115,8 @@ test2 version-1.1 "Test version format" \
 ---
 
 <a id="ex-uri"></a>
+> **See also**: [`uri.md`](uri.md) — Deep-dive analysis covering HTTP download/upload, async callbacks, custom WebClient classes, the four per-interpreter web callbacks, retry infrastructure, and all 18 sub-commands.
+
 ### uri
 
 #### URI Construction and Parsing

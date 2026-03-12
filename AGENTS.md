@@ -45,6 +45,10 @@ pitfalls** when working with Eagle.
 | `library.md` | Deep-dive analysis of the `library` command: P/Invoke-style FFI, dynamic delegate creation via Reflection.Emit, module lifecycle/reference counting, marshalling, architecture and certificate verification | When you need to understand how Eagle calls native C functions, the dynamic delegate type creation mechanism, or module lifecycle management |
 | `interp.md` | Deep-dive analysis of the `interp` command: interpreter lifecycle, safe interpreter security model, command hiding, policy-based access control, resource limits, execution timeouts, and cross-interpreter communication | When you need to understand interpreter management, the safe interpreter security model, policy callbacks, resource limits, or how to sandbox untrusted code |
 | `load.md` | Deep-dive analysis of the `load`/`unload` commands: .NET plugin loading infrastructure, security verification chain (strong name, Authenticode, public key token), AppDomain isolation, built-in plugins, enterprise plugins (Harpy, Badge, HotKey, Zeus, Demo, Featherlight, Aquila, Kapok), and plugin lifecycle management | When you need to understand how Eagle loads/unloads .NET plugins, the security verification pipeline, AppDomain isolation, PluginFlags, or the enterprise plugin ecosystem |
+| `sql.md` | Deep-dive analysis of the `sql` command: ADO.NET database access, `-variable` options with DbTraceCallback for automatic resource cleanup, script bundle databases (signed SQLite-based script containers), query execution pipeline, parameter binding, result formatting, transaction management, and performance profiling | When you need to understand database operations, automatic connection/transaction cleanup, the script bundle system, parameterized queries, or provider type resolution |
+| `regexp.md` | Deep-dive analysis of the `regexp`/`regsub` commands: .NET `System.Text.RegularExpressions` integration, default `Singleline` behavior (dot matches newlines — opposite of Tcl), Tcl-to-.NET substitution translation (`TranslateSubSpec`), three replacement modes (normal, `-eval`, `-command`/TIP #463), `-extra` extended substitutions (`\P`, `\I`, `\S`, `\M#`, `\N<name>`), pattern mutation prefixes (`***=`, `***:`), and all Eagle-specific options | When you need to understand regex behavior differences from Tcl, substitution translation, the three regsub modes, named group references, or the many Eagle-specific regex options |
+| `uri.md` | Deep-dive analysis of the `uri` command: 18 sub-commands for URI construction/parsing/validation, HTTP download/upload (sync and async), four per-interpreter web callbacks (`PreWebClientCallback`, `NewWebClientCallback`, `WebTransferCallback`, `WebErrorCallback`), custom `WebClient`-derived classes (`TagAndTimeoutWebClient`, `ScriptWebClient`), async transfers with `CommandCallback` script evaluation, retry infrastructure, offline mode, and security protocol management | When you need to understand HTTP operations, async downloads/uploads with callbacks, custom WebClient configuration, the web callback chain, retry logic, or URI utility operations |
+| `package.md` | Deep-dive analysis of the `package` command: 23 sub-commands, multi-source index discovery pipeline (host, filesystem, plugin, bundle), tagged package indexes (`pkgIndex_XXXX.eagle` with `$tag` variable), auto-path system and interpreter initialization, package aliases with circular-reference detection, security verification (Authenticode, StrongName, locked/rejected packages), the four-stage `package require` fallback chain, `PackageFallback` delegate, `.noPkgIndex` disable markers, and all `PackageFlags`/`PackageIndexFlags` | When you need to understand package management, index discovery, tagged indexes, auto-path construction, package aliases, security verification during scanning, the require fallback chain, or package lifecycle (provide/withdraw/forget) |
 | `garuda.md` | The Eagle Native Package for Tcl (Garuda) reference | When you need to integrate with Eagle via a native Tcl environment |
 | `integrations.md` | Eagle's four official integration sub-projects: MSBuild, WiX, PowerShell, MonoDevelop | When you need to use Eagle from MSBuild builds, WiX installers, PowerShell, or MonoDevelop |
 | `updater.md` | Eagle Updater (Hippogriff) architecture and design analysis | When you need to understand the update mechanism, its security model, or its configuration |
@@ -191,6 +195,80 @@ compiled assemblies, or understanding the plugin security model:
   - `load -viaresource "Plugin.dll.compressed"` — load from embedded resource
   - `load -publickeytoken "..." Plugin.dll` — require specific publisher
   - `unload -nocomplain -match Glob Plugin.dll *Enterprise*` — flexible unloading
+
+#### Database operations (ADO.NET)
+If the task involves database access, SQL queries, transactions, or
+script bundle databases:
+- Start at: `sql` in the **Database** section of `core_language.md`.
+- For a deep-dive on the query execution pipeline, `-variable` auto-cleanup,
+  script bundles, and provider types, see [`sql.md`](sql.md).
+- Typical workflow:
+  - `sql open -variable conn -type SQLite "connStr"` — auto-cleanup connection
+  - `sql execute $conn "SELECT ..." {param Type value}` — parameterized query
+  - `sql foreach $conn "SELECT ..." { body }` — iterate results
+  - `sql transaction -variable trans begin $conn` — auto-cleanup transaction
+- Key patterns:
+  - `-variable` option for automatic resource cleanup via DbTraceCallback
+  - Parameterized queries with `{name Type value}` lists to prevent SQL injection
+  - `-time` option for performance profiling
+  - Script bundle databases for secure script distribution
+
+#### Package management and discovery
+If the task involves package loading, discovery, versioning, auto-path,
+or understanding the package index system:
+- Start at: `package` in the **Packages** section of `core_language.md`.
+- For a deep-dive on the index discovery pipeline, tagged indexes,
+  auto-path, aliases, and security, see [`package.md`](package.md).
+- **Key extension**: Eagle adds multi-source discovery (host, filesystem,
+  plugin, bundle), tagged indexes (`pkgIndex_XXXX.eagle`), aliases, and
+  security verification.
+- Typical workflow:
+  - `package require MyPackage 1.0` — load a package
+  - `package scan -host -normal -primary -tagged -recursive -- $dir` — full scan
+  - `package alias shortname realpackage 2.0` — create alias
+  - `package info MyPackage` — query metadata
+- Key patterns:
+  - `package ifneeded name ver script {Core, Locked}` — locked package registration
+  - `package scan -whatif -normal -primary -- $dir` — preview discovery
+  - `lappend auto_path /new/dir` — triggers automatic rescan via trace
+  - `PackageFallback` delegate for on-demand package downloading
+  - `.noPkgIndex` markers to disable indexing
+
+#### Regular expressions
+If the task involves regex matching, substitution, or understanding
+differences between Eagle and Tcl regex behavior:
+- Start at: `regexp` / `regsub` in the **String Processing** section of `core_language.md`.
+- For a deep-dive on .NET integration, substitution translation, the three
+  replacement modes, and Eagle-specific options, see [`regexp.md`](regexp.md).
+- **Critical difference**: Eagle defaults to `RegexOptions.Singleline` (`.`
+  matches `\n`). Use `-linestop` or `-line` for Tcl-compatible behavior.
+- Key patterns:
+  - `regexp -linestop {pattern} $text` — Tcl-compatible dot behavior
+  - `regexp -compiled -nocase {pattern} $text` — IL-compiled, case-insensitive
+  - `regexp -all -global -skip 1 {(\w+)=(\w+)} $input k0 v0 k1 v1` — extract groups sequentially
+  - `regsub -all -command {\d+} $input {string length}` — TIP #463 command replacement
+  - `regsub -extra {(?<name>...)} $input {\N<name>}` — named group substitution
+  - `regexp {***=literal.text} $input` — safe literal matching
+
+#### HTTP operations and URI handling
+If the task involves HTTP requests, downloads, uploads, URI parsing, or
+network operations:
+- Start at: `uri` in the **Network and URI** section of `core_language.md`.
+- For a deep-dive on the web callback chain, async transfers, custom
+  WebClient classes, and retry infrastructure, see [`uri.md`](uri.md).
+- **No Tcl equivalent** — the `uri` command is Eagle-only; Tcl uses
+  `package require http` with a different token-based API.
+- Typical workflow:
+  - `uri get $url` — inline HTTP GET (returns response body)
+  - `uri post -data {key value ...} -- $url` — form-encoded POST
+  - `uri download -retries 3 -timeout 30000 -- $url /tmp/file` — download with retries
+  - `uri upload -inline -raw -method PUT -data $bytes -- $url` — raw PUT
+- Key patterns:
+  - `-callback {script}` for async transfers with completion notification
+  - `-webclientdata $obj` for custom WebClient configuration
+  - `WebTransferCallback` for intercepting transfers (caching, mocking)
+  - `WebErrorCallback` for custom retry logic with `Ok`/`Error`/`Return`/`Break`/`Continue` semantics
+  - `uri offline true` to disable all network operations
 
 #### Testing primitives
 If you’re writing or understanding tests:
@@ -353,6 +431,57 @@ where, rather than duplicating full reference content.
   - `load -ruleset $rs fileName` to filter commands/policies
   - `load -nocommands -nofunctions fileName` for selective entity loading
   - `unload fileName` / `unload -nocomplain fileName` for plugin removal
+
+### Recipe: Execute database queries with auto-cleanup
+- Go to: `core_language.md#cmd-sql`
+- For internals and architecture: [`sql.md`](sql.md)
+- Look for:
+  - `sql open -variable conn -type SQLite "connStr"` for auto-cleanup connections
+  - `sql execute -execute Reader -format NestedList $conn "SELECT ..."` for queries
+  - `sql foreach $conn "SELECT ..." { body }` for row iteration
+  - `sql transaction -variable trans begin $conn` for auto-cleanup transactions
+  - `{paramName Type value}` parameter lists for SQL injection prevention
+  - `-time` option for performance profiling (prepare + execute timing)
+  - Script bundle databases for signed, encrypted script distribution
+
+### Recipe: Manage packages and package discovery
+- Go to: `core_language.md#cmd-package`
+- For internals and architecture: [`package.md`](package.md)
+- Look for:
+  - `package require name ?version?` for loading packages
+  - `package scan -host -normal -primary -tagged -recursive -- $dir` for full index discovery
+  - `package alias shortname realpackage 2.0` for package aliasing
+  - `package ifneeded name ver script {Locked, Rejected}` for locked packages
+  - `package scan -whatif` for previewing discovery without state changes
+  - `package withdraw name ?ver?` to unload without removing registration
+  - `lappend auto_path /dir` triggers automatic rescan via `AutoPathTraceCallback`
+  - `.noPkgIndex` marker files to disable indexing for files/directories
+  - `PackageFallback` delegate for programmatic package resolution
+
+### Recipe: Perform HTTP downloads and uploads with customization
+- Go to: `core_language.md#cmd-uri`
+- For internals and architecture: [`uri.md`](uri.md)
+- Look for:
+  - `uri get $url` — inline GET (shorthand for `uri download -inline`)
+  - `uri post -data {key value} -- $url` — form-encoded POST
+  - `uri download -retries 3 -timeout 30000 -- $url /path` — download with retries
+  - `uri upload -inline -raw -method PUT -data $bytes -- $url` — raw PUT
+  - `-callback {script}` for async transfers with completion notification
+  - `-webclientdata $obj` for custom WebClient headers/timeout/proxy
+  - `WebTransferCallback` / `WebErrorCallback` for per-interpreter interception and retry control
+  - `uri offline true/false` to toggle network access
+
+### Recipe: Use regex matching and substitution with Eagle-specific features
+- Go to: `core_language.md#cmd-regexp` and `core_language.md#cmd-regsub`
+- For internals and Tcl differences: [`regexp.md`](regexp.md)
+- Look for:
+  - `-linestop` or `-line` to get Tcl-compatible dot behavior (Eagle defaults to `.` matching `\n`)
+  - `-compiled` for IL compilation when reusing patterns
+  - `-all -global -skip 1` for sequential extraction of capture groups
+  - `-command` (TIP #463) or `-eval` for programmatic replacement
+  - `-extra` with `\N<name>` for .NET named group substitution
+  - `***=` prefix for safe literal pattern matching
+  - `-options {IgnoreCase, Multiline}` for direct .NET RegexOptions control
 
 ### Recipe: Use .NET types safely and clean up resources
 - Go to: `core_language.md#cmd-object`

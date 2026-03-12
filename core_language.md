@@ -1521,6 +1521,8 @@ String commands belong to ObjectGroup: "string"
 ---
 
 <a id="cmd-regexp"></a>
+> **See also**: [`regexp.md`](regexp.md) — Deep-dive analysis of Eagle's `[regexp]` and `[regsub]` internals: .NET regex engine integration, default `Singleline` behavior (`.` matches newlines — opposite of Tcl), the substitution translation layer, three replacement modes, `-extra` substitutions, and all Eagle-specific options.
+
 - **regexp** - Regular expression matching
   - `regexp ?switches? exp string ?matchVar? ?subMatchVar subMatchVar ...?`
   - Tests whether the regular expression *exp* matches part or all of *string*. Optionally stores matches in variables.
@@ -1562,6 +1564,8 @@ String commands belong to ObjectGroup: "string"
 ---
 
 <a id="cmd-regsub"></a>
+> **See also**: [`regexp.md`](regexp.md) — Deep-dive on `[regsub]` substitution translation (`TranslateSubSpec`), the three replacement modes (normal, `-eval`, `-command`/TIP #463), `-extra` extended substitutions (`\P`, `\I`, `\S`, `\M#`, `\N<name>`), and `-strict`/`-nostrict` backslash handling.
+
 - **regsub** - Regular expression substitution
   - `regsub ?switches? exp string subSpec ?varName?`
   - Replaces matches of regular expression *exp* in *string* with *subSpec*. If *varName* is provided, stores the result there and returns the number of replacements; otherwise returns the modified string.
@@ -4310,6 +4314,8 @@ The `package` command manages Eagle packages - reusable collections of procedure
 ---
 
 <a id="cmd-package"></a>
+> **See also**: [`package.md`](package.md) — Deep-dive analysis of Eagle's `[package]` command internals: multi-source index discovery pipeline (host, filesystem, plugin, bundle), tagged package indexes, auto-path system and interpreter initialization, package aliases, security verification (Authenticode, StrongName, locked/rejected), the four-stage require fallback chain, and `.noPkgIndex` disable markers.
+
 - **package** - Package management
 
   #### Loading and Requiring Packages
@@ -4573,6 +4579,8 @@ The `sql` command provides database connectivity using ADO.NET, supporting any d
 <a id="cmd-sql"></a>
 - **sql** - Database operations
 
+  > **See also**: [`sql.md`](sql.md) for a deep-dive analysis of the database command internals, including the `-variable` options for automatic resource cleanup via DbTraceCallback, the script bundle database system, the full query execution pipeline with all 30+ options, parameter binding, result formatting, transaction management, performance profiling, and the connection type system.
+
   #### Connection Management
 
   - `sql open ?options? connectionString` - Opens a database connection using the ADO.NET connection string.
@@ -4730,6 +4738,8 @@ Network commands belong to ObjectGroup: "network"
 ---
 
 <a id="cmd-uri"></a>
+> **See also**: [`uri.md`](uri.md) — Deep-dive analysis of Eagle's `[uri]` command internals: 18 sub-commands, four per-interpreter web callbacks (`PreWebClientCallback`, `NewWebClientCallback`, `WebTransferCallback`, `WebErrorCallback`), async transfers with `CommandCallback`, custom `WebClient`-derived classes, retry infrastructure, and offline mode.
+
 - **uri** - URI operations (Eagle extension)
 
   Comprehensive URI handling and HTTP client functionality.

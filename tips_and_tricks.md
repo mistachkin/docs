@@ -829,7 +829,7 @@ uri ping example.com 5000
 ;# Returns: 1 if reachable
 ```
 
-- **See also**: [core_language.md](core_language.md#cmd-uri) — `uri` command; [core_examples.md](core_examples.md#ex-uri) — uri examples
+- **See also**: [`uri.md`](uri.md) — Deep-dive analysis; [core_language.md](core_language.md#cmd-uri) — `uri` command; [core_examples.md](core_examples.md#ex-uri) — uri examples
 
 ---
 
@@ -961,7 +961,7 @@ Additional Eagle-specific switches:
 | `-limit n` | Limit number of matches |
 | `-skip n` | Skip first n capture groups |
 
-- **See also**: [core_language.md](core_language.md#cmd-regexp) — `regexp` command; [core_examples.md](core_examples.md#ex-regexp) — regexp examples
+- **See also**: [`regexp.md`](regexp.md) — Deep-dive analysis; [core_language.md](core_language.md#cmd-regexp) — `regexp` command; [core_examples.md](core_examples.md#ex-regexp) — regexp examples
 
 ---
 
