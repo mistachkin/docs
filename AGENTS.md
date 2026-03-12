@@ -41,6 +41,9 @@ pitfalls** when working with Eagle.
 | `tips_and_tricks.md` | Eagle-unique features, advanced idioms, and best practices not found in standard Tcl | When looking for Eagle-specific patterns, performance tips, or unique capabilities |
 | `exec.md` | Deep-dive analysis of the `exec` command: argument processing, command-line building, escaping, and differences from native Tcl | When you need to understand exec's quoting/escaping algorithm, the three argument assembly paths, or why Eagle exec behaves differently from Tcl exec |
 | `scope.md` | Deep-dive analysis of the `scope` command: persistent named variable environments, call frame stack model, cloning, locking, namespace integration, and global scope redirection | When you need to understand how scopes work, implement persistent state across procedure calls, or use thread-safe shared state |
+| `tcl.md` | Deep-dive analysis of the `tcl` command: native Tcl library loading, interpreter management, command bridging, function pointer marshalling, and bidirectional Eagle/Tcl integration | When you need to understand how Eagle embeds native Tcl, bridge commands between runtimes, or use native Tcl packages from Eagle |
+| `library.md` | Deep-dive analysis of the `library` command: P/Invoke-style FFI, dynamic delegate creation via Reflection.Emit, module lifecycle/reference counting, marshalling, architecture and certificate verification | When you need to understand how Eagle calls native C functions, the dynamic delegate type creation mechanism, or module lifecycle management |
+| `interp.md` | Deep-dive analysis of the `interp` command: interpreter lifecycle, safe interpreter security model, command hiding, policy-based access control, resource limits, execution timeouts, and cross-interpreter communication | When you need to understand interpreter management, the safe interpreter security model, policy callbacks, resource limits, or how to sandbox untrusted code |
 | `garuda.md` | The Eagle Native Package for Tcl (Garuda) reference | When you need to integrate with Eagle via a native Tcl environment |
 | `integrations.md` | Eagle's four official integration sub-projects: MSBuild, WiX, PowerShell, MonoDevelop | When you need to use Eagle from MSBuild builds, WiX installers, PowerShell, or MonoDevelop |
 | `updater.md` | Eagle Updater (Hippogriff) architecture and design analysis | When you need to understand the update mechanism, its security model, or its configuration |
@@ -155,6 +158,22 @@ patterns, thread-safe shared state, or sandboxed global environments:
   - `scope eval -lock name { script }` — thread-safe shared access
   - `scope global name` — sandboxed global environment
 
+#### Native library FFI (P/Invoke)
+If the task involves calling native C functions, loading shared libraries,
+or P/Invoke-style foreign function interface:
+- Start at: `library` in the **Native Environment** section of `core_language.md`.
+- For a deep-dive on dynamic delegate creation, module lifecycle, marshalling,
+  and architecture verification, see [`library.md`](library.md).
+- Typical workflow:
+  - `library load` to load a native shared library
+  - `library declare` to define a function signature (creates delegate type via Reflection.Emit)
+  - `library call` to invoke the native function
+  - `library undeclare` / `library unload` for cleanup
+- Key patterns:
+  - `library declare -module $m -functionname F -returntype IntPtr` — combined declare+resolve
+  - `library load -trustedonly signed.dll` — certificate-verified loading
+  - `library matcharchitecture mylib.dll` — architecture compatibility check
+
 #### Testing primitives
 If you’re writing or understanding tests:
 - Look at the **Testing** section and `test1`/`test2`.
@@ -162,9 +181,20 @@ If you’re writing or understanding tests:
 
 #### Security and safe execution
 If the question touches sandboxing or safe interpreters:
-- Look at:
-  - Interpreter Management
-  - Built-in Virtual Scripts
+- Start at: `interp` in the **Interpreter Management** section of `core_language.md`.
+- For a deep-dive on the security model, command hiding, policy callbacks,
+  resource limits, and execution timeouts, see [`interp.md`](interp.md).
+- For the policy subsystem architecture, see the **Security Policy Subsystem**
+  section in `core_language.md`.
+- Key patterns:
+  - `interp create -safe` — create a sandboxed interpreter
+  - `interp makesafe` — convert an existing interpreter to safe mode
+  - `interp policy -type T path script` — install a custom policy
+  - `interp recursionlimit` / `iterationlimit` / `timeout` — set resource limits
+  - `interp invokehidden` — run trusted operations in a safe interpreter
+  - `interp alias` — create controlled communication channels
+- Also see:
+  - Built-in Virtual Scripts (`safe.eagle`, `removeCommands`, `removeVariables`)
   - Safe-interpreter related packages in `core_script_library.md`
 
 ---
@@ -258,6 +288,41 @@ where, rather than duplicating full reference content.
   - `scope eval name { script }` for scoped execution
   - `scope eval -lock name { script }` for thread-safe access
   - `scope global name` for sandboxed global redirection
+
+### Recipe: Use native Tcl packages or evaluate Tcl code from Eagle
+- Go to: `core_language.md#cmd-tcl`
+- For internals and architecture: [`tcl.md`](tcl.md)
+- For the reverse direction (Tcl → Eagle): [`garuda.md`](garuda.md)
+- Look for:
+  - `tcl load` to load the native Tcl library
+  - `tcl create` / `tcl delete` for interpreter lifecycle
+  - `tcl eval interp { script }` for evaluation
+  - `tcl command create` for bridging Eagle commands into Tcl
+  - `tcl set` / `tcl unset` for variable exchange
+  - `loadGarudaForUseByEagle` for full bidirectional setup
+
+### Recipe: Call native C functions via P/Invoke-style FFI
+- Go to: `core_language.md#cmd-library`
+- For internals and architecture: [`library.md`](library.md)
+- Look for:
+  - `library load fileName` to load a native shared library
+  - `library declare -module $m -functionname F -returntype T -parametertypes {T1 T2}` to declare
+  - `library call $delegate arg1 arg2` to invoke
+  - `library undeclare $delegate` and `library unload $module` for cleanup
+  - `library info module $m` / `library info delegate $d` for introspection
+  - `library certificate -chain fileName` for signature verification
+
+### Recipe: Create a safe sandbox for untrusted code
+- Go to: `core_language.md#cmd-interp`
+- For internals and security model: [`interp.md`](interp.md)
+- For the policy architecture: `core_language.md` → Security Policy Subsystem
+- Look for:
+  - `interp create -safe` to create a sandboxed interpreter
+  - `interp recursionlimit` / `iterationlimit` / `varlimit` / `timeout` for resource limits
+  - `interp watchdog path true` for timeout enforcement
+  - `interp alias $child safeCmd {} parentCmd` for controlled access
+  - `interp invokehidden $child source trusted.eagle` for trusted initialization
+  - `interp policy -type T path script` for custom policy callbacks
 
 ### Recipe: Use .NET types safely and clean up resources
 - Go to: `core_language.md#cmd-object`

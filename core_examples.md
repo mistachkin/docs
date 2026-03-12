@@ -3577,6 +3577,8 @@ debug callback {}                        ;# Clear callback
 <a id="ex-interp"></a>
 ### interp
 
+> **Deep-dive**: For comprehensive analysis of the interp command's internals, including the safe interpreter security model, command hiding, policy-based access control, resource limits, and cross-interpreter communication, see [`interp.md`](interp.md).
+
 #### Creating and Deleting
 
 ```tcl
@@ -4400,6 +4402,8 @@ xml validate $schema $doc   ;# Returns: 1 if valid
 
 <a id="ex-tcl"></a>
 ### tcl
+
+> For a deep-dive on native Tcl integration internals, command bridging, function pointer marshalling, and library discovery, see [`tcl.md`](tcl.md). For the reverse direction (Tcl loading Eagle), see [`garuda.md`](garuda.md).
 
 #### Loading and Unloading
 
@@ -5681,6 +5685,8 @@ subst -novariables -nocommands {Tab:\tNewline:\n}
 
 <a id="ex-library"></a>
 ### library
+
+> **Deep-dive**: For comprehensive analysis of the library command's internals, dynamic delegate creation, module lifecycle, and marshalling infrastructure, see [`library.md`](library.md).
 
 ```tcl
 # Eagle extension — P/Invoke native library calls

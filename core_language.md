@@ -4297,6 +4297,8 @@ The `interp` command manages child interpreters, providing sandboxing, isolation
 
   - `interp service path ?options?` - Performs service-related operations on interpreter *path*.
 
+  - **See also**: [`interp.md`](interp.md) for a deep-dive analysis of the interp command's internals, including the safe interpreter security model, command hiding, policy-based access control, resource limits, execution timeouts, and cross-interpreter communication patterns.
+
 ---
 
 ### Packages
@@ -5135,6 +5137,8 @@ Eagle can interoperate with native Tcl interpreters, allowing scripts to leverag
   ---
 
   - `tcl versionrange ?options?` - Get version range
+
+  - **See also**: [`garuda.md`](garuda.md) (Tcl-to-Eagle direction), [`tcl.md`](tcl.md) (deep-dive analysis)
 
 ---
 
@@ -7392,6 +7396,7 @@ These commands interact with the operating system and native code.
   - **Related Commands**:
     - `[info modules]` - List all loaded native modules
     - `[info delegates]` - List all declared delegates
+  - **See also**: [`library.md`](library.md) for a deep-dive analysis of the library command's internals, including dynamic delegate type creation, module lifecycle and reference counting, the marshalling layer, and comparisons to FFI in other languages.
 
 ---
 
