@@ -66,15 +66,18 @@ System.Int32               →  Int32#3
 For types from non-runtime assemblies, short type names are used:
 `StringBuilder#1` instead of the fully qualified form.
 
-The special handle `""` (empty string) represents null.
+The special handle `"null"` is a read-only opaque object handle that resolves
+to an internal value of null. An empty string `""` does not represent null —
+when passed where an `Interpreter`-typed parameter is expected, it is
+converted to the active interpreter instance.
 
 ### 2.2 The FixupReturnValue Pipeline
 
 `FixupReturnValue` in `MarshalOps.cs` is the central decision point for
 every .NET value entering the script world. Its decision tree:
 
-1. **Null value** → return empty string (unless `-create` forces handle
-   creation)
+1. **Null value** → return the special `"null"` handle name (unless
+   `-create` forces handle creation)
 2. **String value** → return as-is (unless `-create` forces handle)
 3. **Enum or simple type** → return string representation (unless
    `-create`)
