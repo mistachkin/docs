@@ -134,7 +134,7 @@ IPluginData (metadata)
     ├── FileName, TypeName, DateTime
     ├── Commands (CommandDataList)
     ├── Policies (PolicyDataList)
-    └── Token (security token)
+    └── Token (registration token)
 
 IPlugin : IPluginData (runtime behavior)
     ├── Initialize(interpreter, clientData, ref result)
@@ -253,7 +253,9 @@ verification and hash-based integrity checking.
 
 ```
 [load] -viaresource → RuntimeOps.LoadPlugin(resourceName, ...)
-    → fileSystemHost.GetData(resourceName) → AppDomain.Load(bytes, ...)
+    → fileSystemHost.GetData(resourceName)
+    → Security verification (via temporary file)
+    → AppDomain.Load(bytes, ...)
 ```
 
 This path loads plugins from embedded resources within the Eagle assembly
@@ -261,6 +263,11 @@ itself. The resource name is used to retrieve assembly bytes (and
 optional PDB symbol bytes) from the file system host. This is used for
 plugins that ship embedded within the Eagle core binary, such as certain
 enterprise plugins.
+
+Even though the assembly is loaded from in-memory bytes rather than a
+file on disk, Authenticode and strong name signature verification still
+applies. The bytes are written to a temporary file so that the same
+file-based verification APIs can be used (see §5.5).
 
 ### 4.4 Command Flags
 
