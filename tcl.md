@@ -114,7 +114,7 @@ command.
 │  tcl eval $interp { package require Tk }    │
 ├─────────────────────────────────────────────┤
 │  Tcl.cs (Command Implementation)            │
-│  37 sub-commands, option parsing             │
+│  37 sub-commands, option parsing            │
 ├─────────────────────────────────────────────┤
 │  Interpreter (Managed)                      │
 │  Tcl interpreter registry, bridges, threads │

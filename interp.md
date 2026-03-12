@@ -492,21 +492,21 @@ through shared objects.
 Every Eagle interpreter maintains two command tables:
 
 ```
-┌─────────────────────────────────┐
-│        Interpreter              │
-│                                 │
-│  ┌──────────────────────┐       │
-│  │  Exposed Commands    │       │ Scripts can see and call
-│  │  (normal command     │       │ these commands.
-│  │   table)             │       │
-│  └──────────────────────┘       │
-│                                 │
-│  ┌──────────────────────┐       │
-│  │  Hidden Commands     │       │ Only accessible via
-│  │  (hidden command     │       │ [interp invokehidden]
-│  │   table)             │       │ from the parent.
-│  └──────────────────────┘       │
-└─────────────────────────────────┘
+┌────────────────────────────┐
+│        Interpreter         │
+│                            │
+│  ┌──────────────────────┐  │
+│  │  Exposed Commands    │  │ Scripts can see and call
+│  │  (normal command     │  │ these commands.
+│  │   table)             │  │
+│  └──────────────────────┘  │
+│                            │
+│  ┌──────────────────────┐  │
+│  │  Hidden Commands     │  │ Only accessible via
+│  │  (hidden command     │  │ [interp invokehidden]
+│  │   table)             │  │ from the parent.
+│  └──────────────────────┘  │
+└────────────────────────────┘
 ```
 
 ### 6.2. Hiding and exposing

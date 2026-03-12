@@ -81,33 +81,33 @@ unloaded while delegates still reference them.
 ### The integration stack
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│                     Eagle Script                           │
-│   library load → library declare → library call → ...      │
-├────────────────────────────────────────────────────────────┤
-│                   Library.cs (command)                      │
-│   Parses sub-commands and options; dispatches to infra      │
-├────────────────────────────────────────────────────────────┤
-│              DelegateOps / NativeDelegate                   │
-│   CreateNativeDelegateType (Reflection.Emit)               │
-│   Resolve / Unresolve / Invoke                             │
-├────────────────────────────────────────────────────────────┤
-│              NativeModule / NativeOps                       │
-│   LoadLibrary / FreeLibrary / GetProcAddress                │
-│   Reference counting and lifecycle management              │
-├────────────────────────────────────────────────────────────┤
-│                    MarshalOps                               │
-│   FindMethodsAndFixupArguments                             │
-│   FixupByRefArguments / FixupReturnValue                   │
-├────────────────────────────────────────────────────────────┤
-│               .NET Runtime / P/Invoke                      │
-│   System.Runtime.InteropServices                           │
-│   System.Reflection.Emit                                   │
-├────────────────────────────────────────────────────────────┤
-│               Native Platform APIs                         │
-│   Windows: LoadLibrary / GetProcAddress / FreeLibrary      │
-│   Unix: dlopen / dlsym / dlclose                           │
-└────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                     Eagle Script                         │
+│   library load → library declare → library call → ...    │
+├──────────────────────────────────────────────────────────┤
+│                   Library.cs (command)                   │
+│   Parses sub-commands and options; dispatches to infra   │
+├──────────────────────────────────────────────────────────┤
+│              DelegateOps / NativeDelegate                │
+│   CreateNativeDelegateType (Reflection.Emit)             │
+│   Resolve / Unresolve / Invoke                           │
+├──────────────────────────────────────────────────────────┤
+│              NativeModule / NativeOps                    │
+│   LoadLibrary / FreeLibrary / GetProcAddress             │
+│   Reference counting and lifecycle management            │
+├──────────────────────────────────────────────────────────┤
+│                    MarshalOps                            │
+│   FindMethodsAndFixupArguments                           │
+│   FixupByRefArguments / FixupReturnValue                 │
+├──────────────────────────────────────────────────────────┤
+│               .NET Runtime / P/Invoke                    │
+│   System.Runtime.InteropServices                         │
+│   System.Reflection.Emit                                 │
+├──────────────────────────────────────────────────────────┤
+│               Native Platform APIs                       │
+│   Windows: LoadLibrary / GetProcAddress / FreeLibrary    │
+│   Unix: dlopen / dlsym / dlclose                         │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ### Component responsibilities
