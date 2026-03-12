@@ -87,8 +87,8 @@ A scope progresses through four phases:
   create ──► open (push) ──► use (read/write variables) ──► close (pop) ──► destroy
     │             │                                              │              │
     │             └──── can be repeated any number of times ─────┘              │
-    │                                                                          │
-    └────────────── scope persists across open/close cycles ───────────────────┘
+    │                                                                           │
+    └────────────── scope persists across open/close cycles ────────────────────┘
 ```
 
 ### Phase 1: Create (`scope create`)
