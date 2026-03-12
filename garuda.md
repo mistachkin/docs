@@ -92,6 +92,19 @@ Source files referenced:
 18. [Test Reference](#18-test-reference)
 19. [Version and Package Metadata](#19-version-and-package-metadata)
 20. [Directory Structure](#20-directory-structure)
+21. [.NET Framework vs .NET Core: Consolidated Comparison](#21-net-framework-vs-net-core-consolidated-comparison)
+    - 21.1 [Compile-Time Selection](#211-compile-time-selection)
+    - 21.2 [Runtime Loading and Initialization](#212-runtime-loading-and-initialization)
+    - 21.3 [Managed Method Execution](#213-managed-method-execution)
+    - 21.4 [Managed-Side Entry Point Signatures](#214-managed-side-entry-point-signatures)
+    - 21.5 [Shutdown and Resource Cleanup](#215-shutdown-and-resource-cleanup)
+    - 21.6 [Platform Support and Portability](#216-platform-support-and-portability)
+    - 21.7 [String Encoding and Marshalling](#217-string-encoding-and-marshalling)
+    - 21.8 [Thread Safety Differences](#218-thread-safety-differences)
+    - 21.9 [Version Query and AppDomain Semantics](#219-version-query-and-appdomain-semantics)
+    - 21.10 [Tcl-Side Runtime Selection](#2110-tcl-side-runtime-selection)
+    - 21.11 [Assembly Discovery Differences](#2111-assembly-discovery-differences)
+    - 21.12 [Feature Comparison Matrix](#2112-feature-comparison-matrix)
 
 ---
 
@@ -1427,3 +1440,366 @@ Eagle/Library/
         +-- package.eagle             (Outer test orchestrator)
         +-- tcl-load.eagle            (Inner Garuda integration tests)
 ```
+
+---
+
+## 21. .NET Framework vs .NET Core: Consolidated Comparison
+
+This section consolidates all differences between the two runtime integration
+paths into a single reference. Throughout the Garuda codebase, these paths
+are selected at **compile time** — a single `CORE_CLR` or `CLR_40` define
+determines which entire code path is compiled. There is no runtime switching
+within a single binary; instead, two separate DLLs are produced
+(`Garuda.dll` for .NET Framework, `GarudaCore.dll` for .NET Core).
+
+### 21.1 Compile-Time Selection
+
+The preprocessor logic in `GarudaPre.h` establishes two mutually exclusive
+code paths:
+
+```c
+#if defined(CORE_CLR)
+#  define USE_CORE_CLR          /* .NET Core / .NET 5+ path */
+#elif defined(CLR_40)
+#  if defined(_MSC_VER) && _MSC_VER >= 1600   /* VS 2010+ */
+#    define USE_CLR_40          /* .NET Framework v4.0+ path */
+#  endif
+#endif
+```
+
+| Build Define | Internal Flag | Runtime Targeted | Minimum VS Version |
+|---|---|---|---|
+| `CORE_CLR` | `USE_CORE_CLR` | .NET Core 3.0+ / .NET 5+ | Any (also GCC) |
+| `CLR_40` | `USE_CLR_40` | .NET Framework 4.0 (with v2.0 fallback) | VS 2010 (v1600) |
+
+The `USE_CORE_CLR` / `USE_CLR_40` flags then gate all conditional
+compilation via `#if defined(USE_CORE_CLR)` throughout `GarudaDecls.h`,
+`Garuda.c`, and the two implementation files.
+
+### 21.2 Runtime Loading and Initialization
+
+#### .NET Framework (`GarudaClr.c` — `LoadAndStartTheClr`)
+
+The .NET Framework path uses COM-based CLR hosting APIs, which are
+Windows-only:
+
+1. **Module acquisition**: `GetModuleHandleW("MSCorEE")` — the CLR
+   execution engine DLL is expected to already be loadable on the system.
+2. **CLR factory**: `GetProcAddress(hModule, "CLRCreateInstance")` obtains
+   the factory function. If `CLRCreateInstance` returns `E_NOTIMPL`
+   (pre-v4 CLR), falls back to the deprecated `CorBindToRuntimeEx`.
+3. **Runtime discovery** (v4+ path):
+   - `ICLRMetaHost::GetRuntime(version)` — selects CLR version.
+   - `ICLRRuntimeInfo::IsLoadable()` — validates the CLR can load.
+   - `ICLRRuntimeInfo::GetInterface(CLSID_CLRRuntimeHost,
+     IID_ICLRRuntimeHost)` — obtains the runtime host.
+4. **Runtime start**: `ICLRRuntimeHost::Start()`.
+5. **Version selection**: `CLR_VERSION_LATEST` (`"v4.0.30319"`) by default;
+   `CLR_VERSION_MINIMUM` (`"v2.0.50727"`) if `bUseMinimumClr` is set.
+
+**Static state after loading**:
+- `pClrMetaHost` — `ICLRMetaHost*` (v4 only)
+- `pClrRuntimeInfo` — `ICLRRuntimeInfo*` (v4 only)
+- `pClrRuntimeHost` — `ICLRRuntimeHost*`
+- `bClrStarted` — `TRUE` after `Start()` succeeds
+
+#### .NET Core (`GarudaCoreClr.c` — `LoadAndStartTheCoreClr`)
+
+The .NET Core path uses the `hostfxr` C API, which is cross-platform:
+
+1. **hostfxr discovery**: `get_hostfxr_path()` from `<nethost.h>` locates
+   the hostfxr shared library on disk.
+2. **Dynamic loading**:
+   - Windows: `LoadLibraryW(runtimeLibraryFileName)`
+   - POSIX: `dlopen(runtimeLibraryFileName, RTLD_LAZY | RTLD_LOCAL)`
+3. **Function pointer resolution** — loads four (or five) function pointers
+   from the hostfxr library:
+   - `hostfxr_initialize_for_runtime_config` — initialize with a
+     `.runtimeconfig.json` file
+   - `hostfxr_get_runtime_delegate` — obtain runtime delegates
+   - `hostfxr_close` — close the runtime context
+   - `load_assembly_and_get_function_pointer` — obtained indirectly via
+     `hostfxr_get_runtime_delegate(hdt_load_assembly_and_get_function_pointer)`
+   - `hostfxr_get_dotnet_environment_info` (optional, requires
+     `HAVE_DOTNET_ENVIRONMENT_INFO`)
+4. **Runtime initialization**:
+   `hostfxr_initialize_for_runtime_config(configPath, NULL, &context)`.
+   Accepts three success codes: `Success (0)`,
+   `Success_HostAlreadyInitialized (1)`,
+   `Success_DifferentRuntimeProperties (2)`.
+5. **Runtime configuration**: **Requires** a `.runtimeconfig.json` file
+   path. If not explicitly provided, Garuda constructs one from the
+   executable path:
+   - Windows: `GetModuleFileNameW(NULL, ...)` + `".runtimeconfig.json"`
+   - POSIX: `build_runtimeconfig_file_name()` using `/proc/self/exe`
+     (Linux) or `_NSGetExecutablePath()` (macOS)
+
+**Static state after loading**:
+- `pCoreClrModule` — `HMODULE` (hostfxr library handle)
+- `uCoreClrFunctions` — `CoreClrFunctions` struct (5 function pointers)
+- `pCoreClrContext` — `hostfxr_handle`
+- `bCoreClrBridgeStarted` — `TRUE` after bridge startup
+
+### 21.3 Managed Method Execution
+
+Both paths ultimately call managed code to execute the four lifecycle
+methods (`Startup`, `Control`, `Detach`, `Shutdown`). The mechanism differs
+fundamentally.
+
+#### .NET Framework (`ExecuteClrMethod`)
+
+Uses the single COM method:
+
+```c
+ICLRRuntimeHost_ExecuteInDefaultAppDomain(
+    pClrRuntimeHost,     /* COM interface pointer */
+    assemblyPath,        /* L"C:\\path\\to\\Eagle.dll" */
+    typeName,            /* L"Eagle._Components.Public.NativePackage" */
+    methodName,          /* L"StartupClr" */
+    argumentString,      /* Single wide-string argument (Tcl list format) */
+    &returnValue         /* DWORD out: 0=Ok, 1=Error */
+);
+```
+
+The CLR hosting API constrains the managed method signature to
+`static int MethodName(String argument)` returning a DWORD. This is why
+all protocol information must be packed into a single string argument.
+
+#### .NET Core (`ExecuteCoreClrMethod`)
+
+Uses a two-step process — first resolve a function pointer, then call it:
+
+```c
+/* Step 1: Resolve managed method to native function pointer */
+load_assembly_and_get_function_pointer(
+    assemblyPath,        /* L"C:\\path\\to\\Eagle.dll" */
+    typeName,            /* L"Eagle._Components.Public.NativePackage, Eagle, ..." */
+    methodName,          /* L"StartupCoreClr" */
+    NULL,                /* delegate type name (NULL = default) */
+    NULL,                /* reserved */
+    (void**)&pManaged    /* out: component_entry_point_fn */
+);
+
+/* Step 2: Call the resolved function pointer */
+returnValue = pManaged(argumentString, lengthInBytes);
+```
+
+The `component_entry_point_fn` signature is `int (const char_t*, int32_t)`
+where the second parameter is the argument length in **bytes** (not code
+units). This size-aware passing is needed because `wchar_t` is 2 bytes on
+Windows but 4 bytes on POSIX.
+
+### 21.4 Managed-Side Entry Point Signatures
+
+The `NativePackage` class provides both sets of entry points:
+
+#### .NET Framework Entry Points
+
+```csharp
+// Signature required by ICLRRuntimeHost.ExecuteInDefaultAppDomain
+public static int StartupClr(string argument)
+public static int ControlClr(string argument)
+public static int DetachClr(string argument)
+public static int ShutdownClr(string argument)
+```
+
+The CLR hosting API marshals the native `LPCWSTR` argument directly to a
+`System.String`.
+
+#### .NET Core Entry Points
+
+```csharp
+#if NET_CORE_50
+[UnmanagedCallersOnly(EntryPoint = "StartupCoreClr",
+    CallConvs = new[] { typeof(CallConvCdecl) })]
+#endif
+public static int StartupCoreClr(IntPtr arg, int arg_size_in_bytes)
+```
+
+Each CoreCLR method:
+1. Receives a raw `IntPtr` + byte size.
+2. Calls `MarshalArgument(arg, arg_size_in_bytes)` to convert to
+   `System.String`, handling the platform-specific `wchar_t` size:
+   - Windows: `Marshal.PtrToStringUni` (UTF-16, 2-byte code units)
+   - POSIX: `MarshalOps.PtrToStringUTF32` (UTF-32, 4-byte code units)
+3. Delegates to the corresponding `*Clr` method (e.g., `StartupClr`).
+
+On .NET 5+, the `[UnmanagedCallersOnly]` attribute enables direct native
+calls without going through the P/Invoke marshalling layer. On .NET
+Standard 2.0/2.1, the same methods exist but without the attribute; the
+`hostfxr` runtime resolves them by name.
+
+### 21.5 Shutdown and Resource Cleanup
+
+#### .NET Framework (`StopAndReleaseTheClr`)
+
+1. Sets `EAGLE_CLR_STOPPING=1` environment variable (via
+   `SetEnvironmentVariableW`) to signal managed code.
+2. Calls `ICLRRuntimeHost::Stop()`.
+3. Unsets the environment variable.
+4. Releases COM interfaces in order:
+   `ICLRRuntimeHost` → `ICLRRuntimeInfo` → `ICLRMetaHost` (via
+   `IUnknown::Release`).
+5. Sets all interface pointers to NULL.
+
+Note: The CLR, once loaded into a process, cannot be fully unloaded. The
+`Stop()` call terminates managed execution but the CLR remains mapped.
+
+#### .NET Core (`StopAndReleaseTheCoreClr`)
+
+1. Sets `EAGLE_CLR_STOPPING=1` environment variable
+   (Windows: `SetEnvironmentVariableW`; POSIX: `setenv`).
+2. Calls `hostfxr_close(pCoreClrContext)`.
+3. Unsets the environment variable
+   (Windows: `SetEnvironmentVariableW(name, NULL)`;
+   POSIX: `unsetenv`).
+4. Frees the hostfxr library
+   (Windows: `FreeLibrary`; POSIX: `dlclose`).
+5. Zeroes the `CoreClrFunctions` structure.
+6. Sets all handles/pointers to NULL.
+
+### 21.6 Platform Support and Portability
+
+| Aspect | .NET Framework | .NET Core |
+|---|---|---|
+| **Windows** | Full support (primary platform) | Full support |
+| **Linux** | Not supported | Supported (`libGarudaCore.so`) |
+| **macOS** | Not supported | Supported (`libGarudaCore.dylib`) |
+| **Output DLL** | `Garuda.dll` | `GarudaCore.dll` / `libGarudaCore.{so,dylib}` |
+| **Build systems** | Visual Studio only (`Garuda2022.vcxproj`) | Visual Studio + GCC (`GarudaNetStandard21.vcxproj`, `compile-*.sh`) |
+| **Linked library** | `MSCorEE.lib` (implicit link) | `nethost.lib` / `libnethost` (explicit link) |
+| **Dynamic loading** | `GetModuleHandleW` (already loaded) | `get_hostfxr_path` + `LoadLibraryW`/`dlopen` |
+| **Architecture support** | x86, x64, ARM (Windows) | x86, x64, ARM (Windows); x86_64, arm64 (Unix) |
+
+On non-Windows platforms, only the CoreCLR variant is built — .NET
+Framework is Windows-only and Mono does not support the native hosting
+APIs that Garuda requires.
+
+### 21.7 String Encoding and Marshalling
+
+The encoding of the argument string passed to managed code differs by
+platform:
+
+| Platform | `wchar_t` Size | Encoding | Tcl_UniChar Size |
+|---|---|---|---|
+| Windows (.NET Fx) | 2 bytes | UTF-16 / UCS-2 | 2 bytes |
+| Windows (.NET Core) | 2 bytes | UTF-16 / UCS-2 | 2 bytes |
+| Linux (.NET Core) | 4 bytes | UTF-32 / UCS-4 | 2 bytes |
+| macOS (.NET Core) | 4 bytes | UTF-32 / UCS-4 | 2 bytes |
+
+On Windows, the Tcl Unicode functions (`Tcl_NewUnicodeObj`,
+`Tcl_GetUnicodeFromObj`) operate directly on `wchar_t` data. On POSIX,
+`GarudaStr.c` provides conversion wrappers (`Cvt_NewUnicodeObj`,
+`Cvt_GetUnicode`, etc.) that translate between 4-byte `wchar_t` (UTF-32)
+and 2-byte `Tcl_UniChar` (UTF-16) using the `ConvertUTF_v2` library.
+
+For the CoreCLR `hostfxr` API on POSIX, the `char_t` type is `char`
+(UTF-8), not `wchar_t`. Additional wrappers (`Cvt_pInitForRuntimeConfig`,
+`Cvt_pLoadAssemblyAndGetFuncPtr`) handle the UTF-32-to-UTF-8 conversion
+needed to call hostfxr functions with file paths and type names.
+
+### 21.8 Thread Safety Differences
+
+| Aspect | .NET Framework | .NET Core |
+|---|---|---|
+| **Mutex API** | `Tcl_MutexLock`/`Tcl_MutexUnlock` | `Wrp_MutexLock`/`Wrp_MutexUnlock` |
+| **Recursion** | Tcl mutexes are recursive on Windows | Custom recursive wrapper on POSIX (`Pal_MutexLock`/`Pal_MutexUnlock` via `pthread_owner_t`) |
+| **Atomic operations** | `InterlockedIncrement`/`InterlockedCompareExchange` (Win32) | `<stdatomic.h>` on POSIX; Win32 intrinsics on Windows |
+| **Thread identity** | Not needed (Windows mutexes track this) | `pthread_self()` comparison for recursive lock ownership |
+
+The `Wrp_MutexLock`/`Wrp_MutexUnlock` wrappers in the CoreCLR path
+delegate to `Pal_MutexLock`/`Pal_MutexUnlock` on POSIX, which implement
+recursive locking by tracking the owning thread ID (`pthread_self()`) and
+a `recursionDepth` counter protected by an inner non-recursive mutex. On
+Windows, these wrappers simply call through to the standard
+`Tcl_MutexLock`/`Tcl_MutexUnlock`.
+
+### 21.9 Version Query and AppDomain Semantics
+
+#### Version Query
+
+- **.NET Framework**: `ICLRRuntimeInfo::GetVersionString()` returns the
+  exact CLR version string (e.g., `"v4.0.30319"`).
+- **.NET Core**: `hostfxr_get_dotnet_environment_info()` (if available —
+  requires `HAVE_DOTNET_ENVIRONMENT_INFO`) uses a callback
+  (`GetCoreClrVersionCallback`) to populate a `CoreClrVersionInfo` struct
+  with SDK and framework version details. This callback-based API returns
+  richer information (SDK versions, framework names, architectures).
+
+#### AppDomain ID
+
+- **.NET Framework**: `ICLRRuntimeHost::GetCurrentAppDomainId()` returns
+  the actual AppDomain ID (typically `1` for the default domain).
+- **.NET Core**: `GetCurrentCoreClrAppDomainId()` returns a hardcoded
+  `1` since .NET Core does not have the AppDomain concept. This provides
+  API compatibility for the `garuda clrappdomainid` sub-command.
+
+### 21.10 Tcl-Side Runtime Selection
+
+The `helper.tcl` script (2,818 lines) handles runtime detection and
+DLL selection at package-load time. The decision flow:
+
+1. **Forced CoreCLR** — `shouldForceCoreClr` returns `true` if the
+   `FORCE_DOTNET_CORE` environment variable exists **or** the platform
+   is not Windows (Mono does not support native hosting).
+2. **Explicit setting** — `hasUseCoreClr` checks, in order:
+   - The `::Garuda::useCoreClr` Tcl variable (if set to a boolean)
+   - The `UseCoreClr` environment variable (if set to a boolean)
+3. **Package name override** — `package require GarudaDotNetFx` forces
+   `useCoreClr = false`; `package require GarudaDotNetCore` forces
+   `useCoreClr = true`.
+
+Based on the final `useCoreClr` value, `helper.tcl` configures:
+
+| Configuration | `useCoreClr = false` | `useCoreClr = true` |
+|---|---|---|
+| **DLL name** | `Garuda.dll` / `libGaruda.so` | `GarudaCore.dll` / `libGarudaCore.so` |
+| **Type name** | `Eagle._Components.Public.NativePackage` | `Eagle._Components.Public.NativePackage, Eagle, Version=1.0, Culture=neutral` |
+| **Startup method** | `StartupClr` | `StartupCoreClr` |
+| **Control method** | `ControlClr` | `ControlCoreClr` |
+| **Detach method** | `DetachClr` | `DetachCoreClr` |
+| **Shutdown method** | `ShutdownClr` | `ShutdownCoreClr` |
+
+The type name for .NET Core includes the full assembly-qualified name
+because `load_assembly_and_get_function_pointer` requires it; the .NET
+Framework path uses the short type name because
+`ExecuteInDefaultAppDomain` resolves types from the loaded assembly.
+
+### 21.11 Assembly Discovery Differences
+
+`helper.tcl` searches for the Eagle managed assembly in different
+locations depending on the runtime:
+
+| Runtime | Configurations Searched | Subdirectories | Assembly Names |
+|---|---|---|---|
+| .NET Framework | `DebugCLRv4`, `ReleaseCLRv4`, `DebugCLRv2`, `ReleaseCLRv2` | (none) | `Eagle_CLRv4.dll`, `Eagle_CLRv2.dll`, `Eagle.dll` |
+| .NET Core | `DebugNetStandard2X`, `DebugNetStandard21`, `DebugNetStandard20`, `ReleaseNetStandard2X`, etc. | `netcoreapp3.0`, `netstandard2.X`, `netstandard2.1`, `netstandard2.0` | `Eagle_CoreCLR.dll`, `Eagle.dll` |
+
+The CoreCLR path also:
+- Detects installed .NET Core SDK versions
+- Writes a `.runtimeconfig.json` file if needed
+- Adds the CoreCLR runtime directory to the `PATH` environment variable
+  so that the hostfxr library can be located
+
+### 21.12 Feature Comparison Matrix
+
+| Feature | .NET Framework | .NET Core |
+|---|---|---|
+| **Compile flag** | `CLR_40` → `USE_CLR_40` | `CORE_CLR` → `USE_CORE_CLR` |
+| **Hosting API** | COM interfaces (`ICLRMetaHost`, `ICLRRuntimeInfo`, `ICLRRuntimeHost`) | C functions (`hostfxr_*`, `get_hostfxr_path`) |
+| **Method execution** | `ICLRRuntimeHost::ExecuteInDefaultAppDomain` | `load_assembly_and_get_function_pointer` → `component_entry_point_fn` |
+| **Managed method signature** | `static int Method(string argument)` | `static int Method(IntPtr arg, int arg_size_in_bytes)` |
+| **Argument passing** | Single `LPCWSTR` (auto-marshalled to `System.String`) | `LPCWSTR` pointer + byte size (manually marshalled) |
+| **Runtime config** | Not required (CLR version selected by API) | `.runtimeconfig.json` **required** |
+| **Version selection** | Explicit: `"v4.0.30319"` or `"v2.0.50727"` | Implicit: determined by `.runtimeconfig.json` |
+| **Legacy fallback** | `CorBindToRuntimeEx` if `CLRCreateInstance` unavailable | None (hostfxr is required) |
+| **AppDomains** | Supported (default domain only) | Not supported (hardcoded ID `1`) |
+| **Platform** | Windows only | Windows, Linux, macOS |
+| **Module loading** | Static link to `MSCorEE.lib` | Dynamic discovery via `get_hostfxr_path` + `LoadLibraryW`/`dlopen` |
+| **String encoding** | UTF-16 only (2-byte `wchar_t`) | Platform-dependent (UTF-16 on Windows, UTF-32 on POSIX) |
+| **Mutex implementation** | Standard `Tcl_MutexLock` | `Wrp_MutexLock` (recursive wrapper on POSIX) |
+| **Atomic operations** | Win32 `Interlocked*` | `<stdatomic.h>` on POSIX |
+| **Error reporting** | COM `HRESULT` codes | `HRESULT`-compatible codes + `dlerror()` on POSIX |
+| **DLL output name** | `Garuda.dll` | `GarudaCore.dll` / `libGarudaCore.{so,dylib}` |
+| **`[UnmanagedCallersOnly]`** | Not applicable | Used on .NET 5+ (bypasses P/Invoke marshaller) |
+| **GCC build support** | No | Yes (`compile-debug.sh`, `compile-release.sh`) |

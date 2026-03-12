@@ -4613,8 +4613,8 @@ The `sql` command provides database connectivity using ADO.NET, supporting any d
 
   **Example**:
   ```tcl
-  set conn [sql open \
-      "Data Source=mydb.sqlite;Version=3;"]
+  set conn [sql open -type SQLite \
+      "Data Source=mydb.sqlite;"]
   if {[sql isopen $conn]} then {
     # Use connection...
   }

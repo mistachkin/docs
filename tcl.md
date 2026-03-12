@@ -18,6 +18,16 @@ fundamentally different relationship: a .NET/CLR-hosted scripting engine
 (Eagle) dynamically loads and controls a native C runtime (Tcl) through
 P/Invoke-style function pointer marshalling.
 
+**Important**: Garuda is **not required** to use the `[tcl]` command. The
+`[tcl]` ensemble is fully self-contained — it can load native Tcl libraries,
+create interpreters, evaluate scripts, exchange variables, and even set up a
+standard command bridge (the `eagle` command in Tcl) entirely on its own.
+However, Eagle and Garuda are designed to **work together**: when Garuda is
+available, it integrates with the `[tcl]` subsystem via the `NativePackage`
+class (§9.2) to provide enhanced bidirectional integration, including
+interpreter pooling, lifecycle coordination, and the ability for native Tcl
+to initiate Eagle sessions.
+
 The **reverse direction** — native Tcl loading Eagle — is handled by
 **Garuda**, the Eagle Native Package for Tcl (documented separately in
 [`garuda.md`](garuda.md)). Together, `[tcl]` and Garuda form a complete
@@ -32,6 +42,7 @@ Eagle code.
 | `Eagle/Library/Components/Private/TclWrapper.cs` | 8,999 | P/Invoke wrappers and native library loading |
 | `Eagle/Library/Components/Private/TclApi.cs` | 3,101 | Managed Tcl API wrapper (49 function pointers) |
 | `Eagle/Library/Components/Private/TclBridge.cs` | 875 | Bidirectional command bridging |
+| `Eagle/Library/Components/Public/NativePackage.cs` | ~2,500 | Garuda integration entry points and interpreter pooling |
 | `Eagle/Library/Components/Private/TclThread.cs` | 3,020 | Isolated Tcl worker threads |
 | `Eagle/Library/Components/Private/TclDelegates.cs` | 1,061 | Native delegate declarations |
 | `Eagle/Library/Components/Private/TclModule.cs` | 247 | Native module lifecycle and reference counting |
@@ -70,8 +81,8 @@ The `[tcl]` command solves this by **embedding native Tcl inside Eagle**:
 3. **Script Evaluation**: Evaluates Tcl scripts in the native interpreter,
    returning results to Eagle.
 4. **Variable Exchange**: Reads and writes variables across the boundary.
-5. **Command Bridging**: Makes Eagle commands callable from Tcl (and
-   vice versa via Garuda).
+5. **Command Bridging**: Makes Eagle commands callable from Tcl via the
+   standard bridge (and enhanced when Garuda is available via NativePackage).
 6. **Thread Management**: Creates isolated Tcl threads with their own
    interpreters for concurrent operations.
 
@@ -277,7 +288,9 @@ Creates a new native Tcl interpreter.
 | `-noforcedelete` | Don't force-delete the bridge on cleanup |
 | `-nocomplain` | Suppress bridge-related errors |
 
-**Returns:** The interpreter handle name (e.g., `tcl0`).
+**Returns:** The interpreter handle name. The initially created interpreter
+is named `parentInterp#1`; subsequent interpreters created via `tcl create`
+are named `interp#2`, `interp#3`, etc.
 
 **Implementation** (`Tcl.cs`, lines 576-731):
 1. Constructs `TclCreateFlags` from options.
@@ -346,7 +359,7 @@ Evaluates a Tcl script in the specified native Tcl interpreter.
 | Option | Effect |
 |--------|--------|
 | `-time` | Measure and report evaluation time |
-| `-exceptions` | Control .NET exception propagation (boolean) |
+| `-exceptions` | Call `Tcl_AllowExceptions` before evaluation, allowing atypical return codes from the native Tcl evaluation API (boolean) |
 
 **Returns:** The result of the Tcl evaluation.
 
@@ -358,8 +371,10 @@ Evaluates a Tcl script in the specified native Tcl interpreter.
    - Calls `Tcl_EvalObjEx()` via the function pointer.
    - Retrieves the result via `Tcl_GetObjResult()`.
    - Marshals the result back to .NET Unicode.
-4. If `-exceptions` is true and Tcl returns an error, the Tcl error is
-   converted to a .NET exception.
+4. If `-exceptions` is true, calls `Tcl_AllowExceptions()` before
+   evaluation, permitting atypical return codes (e.g., `TCL_BREAK`,
+   `TCL_CONTINUE`) to be returned from the native Tcl evaluation API
+   rather than being converted to `TCL_ERROR`.
 
 #### `tcl expr ?options? interp arg ?arg ...?`
 
@@ -551,7 +566,7 @@ Queues a script for execution in a Tcl worker thread.
 | `-eventtype type` | Type of event to queue (default: Evaluate) |
 | `-eventflags flags` | Event flags |
 | `-data object` | Custom data object to pass |
-| `-exceptions bool` | Control exception propagation |
+| `-exceptions bool` | Call `Tcl_AllowExceptions` to allow atypical return codes |
 | `-synchronous bool` | Wait for completion (default: false) |
 
 **Implementation:** Calls `interpreter.QueueTclThreadEvent()`, which posts
@@ -568,8 +583,10 @@ semantics.
 
 #### `tcl exceptions ?exceptions?`
 
-Gets or sets the global exception handling behavior. When enabled, Tcl errors
-are propagated as .NET exceptions.
+Gets or sets the global flag that controls whether `Tcl_AllowExceptions()` is
+called before native Tcl evaluations. When enabled, atypical return codes
+(e.g., `TCL_BREAK`, `TCL_CONTINUE`) can be returned from the native Tcl
+evaluation APIs rather than being converted to `TCL_ERROR`.
 
 #### `tcl update ?options?`
 
@@ -732,9 +749,11 @@ eagle {clock seconds}                         ;# Returns current timestamp
 eagle {object invoke System.IO.File Exists /tmp/test}  ;# .NET from Tcl!
 ```
 
-This is the primary mechanism for Tcl code to access Eagle functionality
-without Garuda. The standard bridge is simpler but less powerful than
-Garuda's full bidirectional integration.
+This is the primary mechanism for Tcl code to access Eagle functionality.
+The standard bridge is fully functional without Garuda. When Garuda is also
+loaded, it integrates with this same bridge infrastructure via the
+`NativePackage` class (§9.2), adding interpreter pooling, lifecycle
+coordination, and the ability for native Tcl to initiate Eagle sessions.
 
 ## 7. Tcl Library Discovery
 
@@ -839,12 +858,15 @@ the thread that created them. Eagle's thread management respects this:
 
 ## 9. Relationship with Garuda
 
-Eagle's `[tcl]` command and the Garuda native package are complementary:
+Eagle's `[tcl]` command and the Garuda native package are complementary but
+**independent**. The `[tcl]` command is fully self-contained and does not
+require Garuda. However, when Garuda is available, it integrates with the
+`[tcl]` subsystem to provide enhanced capabilities in both directions.
 
-| Direction | Mechanism | Entry Point |
-|-----------|-----------|-------------|
-| Eagle → Tcl | `[tcl]` command | `tcl eval $interp { ... }` |
-| Tcl → Eagle | Garuda package | `eagle { ... }` in Tcl |
+| Direction | Without Garuda | With Garuda |
+|-----------|---------------|-------------|
+| Eagle → Tcl | `tcl eval $interp { ... }` — fully functional | Same, plus Garuda-aware interpreter management |
+| Tcl → Eagle | Standard bridge: `eagle { ... }` in Tcl (created by `tcl create -bridge`) | Garuda `package require` initiates Eagle sessions with interpreter pooling and lifecycle coordination |
 
 ### 9.1 How They Connect
 
@@ -868,16 +890,169 @@ Eagle script
   │     └─► Result returned to Eagle
 ```
 
-### 9.2 The `loadGarudaForUseByEagle` Procedure
+### 9.2 The `NativePackage` Class
+
+`NativePackage` (`Library/Components/Public/NativePackage.cs`) is the static
+utility class that serves as Garuda's managed-side entry point. It bridges
+the gap between native Tcl (via Garuda) and Eagle interpreters, managing
+interpreter creation/pooling, TclApi initialization, and bridge setup when
+Garuda initiates the connection from the Tcl side.
+
+#### Entry Points
+
+NativePackage exposes four CLR-callable entry points that Garuda's native
+code invokes directly:
+
+| Entry Point | Purpose |
+|-------------|---------|
+| `StartupClr(string)` | Called when Garuda loads in a Tcl interpreter; creates or retrieves an Eagle interpreter, initializes the TclApi, and creates the command bridge |
+| `ControlClr(string)` | Administrative operations (e.g., `package require` delegation) |
+| `DetachClr(string)` | Selectively removes a Tcl interpreter's bindings; in isolated mode, disposes the dedicated Eagle interpreter |
+| `ShutdownClr(string)` | Complete cleanup — disposes all Eagle interpreters and clears registries |
+
+On .NET 5+, an additional `StartupCoreClr(IntPtr, int)` entry point is
+exposed via `[UnmanagedCallersOnly]` for CoreCLR hosting.
+
+#### Garuda Protocol Versions
+
+Communication between Garuda and NativePackage uses a versioned protocol
+passed as a Tcl list argument:
+
+| Protocol ID | Version | Arguments |
+|-------------|---------|-----------|
+| `Garuda_v1.0` | 1.0 (legacy) | Module handle, interpreter pointer, safe flag |
+| `Garuda_v1.0_r1.0` | 1.1 | Module handle, interpreter pointer, safe flag |
+| `Garuda_v1.0_r2.0` | 1.2 (current) | Module handle, stubs pointer, interpreter pointer, isolated flag, safe flag |
+
+The v1.2 protocol adds the Tcl C API stubs pointer (enabling stubs-based
+API access) and the isolated flag (controlling interpreter sharing mode).
+
+#### Startup Sequence
+
+When Garuda calls `StartupClr`, `NativePackage` performs:
+
+1. **Protocol parsing** — Extracts the Tcl module handle, stubs pointer
+   (v1.2+), native `Tcl_Interp*` pointer, isolation mode, and safety mode
+   from the Garuda protocol argument list.
+
+2. **Interpreter acquisition** — Either creates a new Eagle interpreter
+   (isolated mode) or retrieves the primary shared Eagle interpreter:
+   - **Isolated mode**: Each Tcl interpreter gets a dedicated Eagle
+     interpreter, providing full isolation.
+   - **Shared mode**: Multiple Tcl interpreters share a single Eagle
+     interpreter (the "primary" interpreter).
+
+3. **TclApi creation** — Initializes a `TclApi` object using the provided
+   module handle and stubs pointer, enabling managed-to-native Tcl API calls.
+
+4. **Tcl interpreter registration** — Registers the native `Tcl_Interp*`
+   pointer in a name-to-pointer dictionary (`IntPtrDictionary`). This
+   prevents Eagle from attempting to delete an interpreter that Garuda owns.
+
+5. **TclBridge creation** — Creates a `TclBridge` that registers an `eagle`
+   command in the native Tcl interpreter, mapping it to Eagle's `[eval]`
+   command. This is the same bridge mechanism used by `tcl create -bridge`,
+   but initiated from the Tcl side.
+
+6. **Interpreter storage** — Stores the Eagle interpreter in a static
+   `IntPtrInterpreterDictionary` keyed by the Tcl interpreter pointer
+   (isolated) or `IntPtr.Zero` (shared), transferring ownership to
+   NativePackage for the lifetime of the integration.
+
+#### Interpreter Lifecycle and Ownership
+
+```
+Native Tcl side                     NativePackage                    Eagle side
+───────────────                     ─────────────                    ──────────
+package require Garuda
+  │
+  └─► Garuda native code
+        │
+        └─► StartupClr(protocol)  ─►  Parse protocol args
+                                       │
+                                       ├─► Create/retrieve interpreter
+                                       ├─► Create TclApi
+                                       ├─► Register Tcl interp pointer
+                                       ├─► Create TclBridge
+                                       └─► Store interpreter mapping
+                                                    │
+                                                    └─►  Eagle interpreter ready
+                                                          (bridge installed)
+
+  ... Tcl code calls [eagle { ... }] ...
+
+  ... eventually ...
+
+  Garuda unloading
+    │
+    └─► DetachClr(protocol)  ──►  Remove Tcl interp binding
+                                   │
+                                   ├─► Isolated: dispose Eagle interp
+                                   └─► Shared: remove bridge commands
+
+    └─► ShutdownClr(protocol) ──► Dispose ALL Eagle interpreters
+                                   Clear all registries
+```
+
+#### Static State Management
+
+NativePackage maintains thread-safe static state:
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `interpreters` | `IntPtrInterpreterDictionary` | Maps Tcl `IntPtr` → Eagle `Interpreter` |
+| `tclInterps` | `IntPtrDictionary` | Maps name → Tcl `IntPtr` (prevents Eagle from deleting Garuda-owned interpreters) |
+| `activeCount` | `int` (interlocked) | Tracks active entry point calls for safe shutdown |
+| `syncRoot` | `object` | Lock for all dictionary access |
+
+The `tclInterps` dictionary is particularly important: when Eagle's `[tcl]`
+subsystem checks whether it should delete a Tcl interpreter (via
+`ShouldDeleteTclInterpreter()`), it consults this dictionary. Interpreters
+registered by Garuda through `NativePackage` are protected from deletion
+because Garuda owns their lifecycle.
+
+#### Impact on `[tcl]` Sub-Commands
+
+Several `[tcl]` sub-commands are aware of NativePackage:
+
+- **`tcl primary`** — Calls `NativePackage.GetParentTclInterpreter()` to
+  locate the parent Tcl interpreter when Garuda initiated the session. This
+  allows Eagle scripts to discover and use the Tcl interpreter that loaded
+  Garuda, even though Eagle didn't create it via `tcl load`.
+
+- **`tcl interps`** — Lists all known Tcl interpreters, including those
+  registered by NativePackage from Garuda.
+
+- **`tcl delete`** — Checks `ShouldDeleteTclInterpreter()` to avoid
+  deleting Garuda-owned interpreters.
+
+- **`tcl ready`** — Can detect interpreters made available through
+  NativePackage.
+
+#### Bidirectional Integration Summary
+
+Without Garuda, the integration is **Eagle-initiated and unidirectional at
+startup**: Eagle loads Tcl, creates interpreters, and optionally sets up a
+bridge for Tcl-to-Eagle callbacks.
+
+With Garuda and NativePackage, the integration becomes **truly
+bidirectional at initialization**: either side can initiate the connection.
+Native Tcl can `package require Garuda` to bootstrap Eagle, and Eagle can
+`tcl load` to bootstrap Tcl. In either case, the resulting bridge provides
+the same bidirectional command execution capability.
+
+### 9.3 The `loadGarudaForUseByEagle` Procedure
 
 The `loadGarudaForUseByEagle` script library procedure (in `init.eagle`)
-automates the full setup:
+automates the full setup from the Eagle side:
 
 1. Loads the native Tcl library (`tcl load`).
 2. Creates the standard command bridge.
 3. Loads the Garuda native package into the Tcl interpreter.
 
-This gives complete bidirectional integration in a single call.
+This gives complete bidirectional integration in a single call, combining
+the `[tcl]` command's native Tcl loading with Garuda's enhanced integration
+via NativePackage.
 
 ## 10. Comparisons to Other Languages
 
@@ -1059,27 +1234,31 @@ tcl delete $interp
 
 ## 12. Error Handling
 
-### 12.1 Exception Propagation
+### 12.1 Atypical Return Codes and `Tcl_AllowExceptions`
 
 By default, Tcl errors are returned as Eagle errors with `ReturnCode.Error`.
-The `-exceptions` option controls whether Tcl errors should additionally be
-propagated as .NET exceptions:
+The `-exceptions` option does **not** control .NET exception propagation.
+Instead, it controls whether `Tcl_AllowExceptions()` is called before the
+native Tcl evaluation, which permits atypical return codes (`TCL_BREAK`,
+`TCL_CONTINUE`, and user-defined codes) to pass through the native Tcl
+evaluation APIs without being converted to `TCL_ERROR`:
 
 ```tcl
-# Default: Tcl errors become Eagle errors
-catch {tcl eval $interp {error "Tcl error"}} msg
-puts $msg  ;# "Tcl error"
+# Default: atypical return codes are converted to TCL_ERROR by Tcl
+catch {tcl eval $interp {return -code break}} msg
+# Result is an error because Tcl converted the break to an error
 
-# With -exceptions true: also throws .NET exception
-tcl eval -exceptions true $interp {error "Tcl error"}
-# This may raise a .NET exception depending on the interpreter configuration
+# With -exceptions true: Tcl_AllowExceptions() is called first
+catch {tcl eval -exceptions true $interp {return -code break}} msg opts
+dict get $opts -code  ;# returns "break" — atypical code preserved
 ```
 
 ### 12.2 The `tcl exceptions` Global Setting
 
-The `tcl exceptions` sub-command controls the global default for exception
-propagation. When set to `true`, all Tcl errors are propagated as .NET
-exceptions unless overridden by a per-call `-exceptions false`.
+The `tcl exceptions` sub-command controls the global default for the
+`Tcl_AllowExceptions` behavior. When set to `true`, `Tcl_AllowExceptions()`
+is called before all native Tcl evaluations unless overridden by a per-call
+`-exceptions false`.
 
 ### 12.3 Error Line Tracking
 
@@ -1138,6 +1317,7 @@ trusted/signed locations. This prevents loading tampered Tcl libraries.
 - `Library/Components/Private/TclWrapper.cs` — P/Invoke wrappers and library loading
 - `Library/Components/Private/TclApi.cs` — Managed API wrapper (49 function pointers)
 - `Library/Components/Private/TclBridge.cs` — Bidirectional command bridging
+- `Library/Components/Public/NativePackage.cs` — Garuda integration entry points and interpreter pooling
 - `Library/Components/Private/TclThread.cs` — Isolated Tcl worker threads
 - `Library/Components/Private/TclDelegates.cs` — Native delegate declarations
 - `Library/Components/Private/TclModule.cs` — Native module lifecycle

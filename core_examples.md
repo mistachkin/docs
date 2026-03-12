@@ -4031,7 +4031,7 @@ test2 version-1.1 "Test version format" \
 
 ```tcl
 # Open SQLite connection
-# set conn [sql open "Data Source=mydb.sqlite;Version=3;"]
+# set conn [sql open -type SQLite "Data Source=mydb.sqlite;"]
 # sql isopen $conn       ;# Returns: 1
 # sql connection $conn   ;# Returns connection info
 # sql close $conn

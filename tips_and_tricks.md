@@ -854,7 +854,7 @@ The `sql` command provides database access through ADO.NET:
 
 ```tcl
 # Open a connection
-set conn [sql open "Data Source=mydb.sqlite;"]
+set conn [sql open -type SQLite "Data Source=mydb.sqlite;"]
 
 # Scalar query
 set count [sql execute -execute scalar $conn \
