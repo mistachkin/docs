@@ -44,6 +44,7 @@ pitfalls** when working with Eagle.
 | `tcl.md` | Deep-dive analysis of the `tcl` command: native Tcl library loading, interpreter management, command bridging, function pointer marshalling, and bidirectional Eagle/Tcl integration | When you need to understand how Eagle embeds native Tcl, bridge commands between runtimes, or use native Tcl packages from Eagle |
 | `library.md` | Deep-dive analysis of the `library` command: P/Invoke-style FFI, dynamic delegate creation via Reflection.Emit, module lifecycle/reference counting, marshalling, architecture and certificate verification | When you need to understand how Eagle calls native C functions, the dynamic delegate type creation mechanism, or module lifecycle management |
 | `interp.md` | Deep-dive analysis of the `interp` command: interpreter lifecycle, safe interpreter security model, command hiding, policy-based access control, resource limits, execution timeouts, and cross-interpreter communication | When you need to understand interpreter management, the safe interpreter security model, policy callbacks, resource limits, or how to sandbox untrusted code |
+| `load.md` | Deep-dive analysis of the `load`/`unload` commands: .NET plugin loading infrastructure, security verification chain (strong name, Authenticode, public key token), AppDomain isolation, built-in plugins, enterprise plugins (Harpy, Badge, HotKey, Zeus, Demo, Featherlight, Aquila, Kapok), and plugin lifecycle management | When you need to understand how Eagle loads/unloads .NET plugins, the security verification pipeline, AppDomain isolation, PluginFlags, or the enterprise plugin ecosystem |
 | `garuda.md` | The Eagle Native Package for Tcl (Garuda) reference | When you need to integrate with Eagle via a native Tcl environment |
 | `integrations.md` | Eagle's four official integration sub-projects: MSBuild, WiX, PowerShell, MonoDevelop | When you need to use Eagle from MSBuild builds, WiX installers, PowerShell, or MonoDevelop |
 | `updater.md` | Eagle Updater (Hippogriff) architecture and design analysis | When you need to understand the update mechanism, its security model, or its configuration |
@@ -173,6 +174,23 @@ or P/Invoke-style foreign function interface:
   - `library declare -module $m -functionname F -returntype IntPtr` — combined declare+resolve
   - `library load -trustedonly signed.dll` — certificate-verified loading
   - `library matcharchitecture mylib.dll` — architecture compatibility check
+
+#### Plugin loading and management
+If the task involves loading .NET plugins, extending the interpreter with
+compiled assemblies, or understanding the plugin security model:
+- Start at: `load` / `unload` in the **Native Environment** section of `core_language.md`.
+- For a deep-dive on the plugin infrastructure, security verification,
+  AppDomain isolation, and enterprise plugins, see [`load.md`](load.md).
+- Typical workflow:
+  - `load /path/to/Plugin.dll` to load a plugin (auto-discovers `IPlugin` type)
+  - `load -verifiedonly -trustedonly Plugin.dll` for security-verified loading
+  - `load -isolated Plugin.dll` for AppDomain-isolated loading
+  - `unload /path/to/Plugin.dll` to unload
+- Key patterns:
+  - `load -ruleset $rs Plugin.dll` — filter which commands/policies are registered
+  - `load -viaresource "Plugin.dll.compressed"` — load from embedded resource
+  - `load -publickeytoken "..." Plugin.dll` — require specific publisher
+  - `unload -nocomplain -match Glob Plugin.dll *Enterprise*` — flexible unloading
 
 #### Testing primitives
 If you’re writing or understanding tests:
@@ -323,6 +341,18 @@ where, rather than duplicating full reference content.
   - `interp alias $child safeCmd {} parentCmd` for controlled access
   - `interp invokehidden $child source trusted.eagle` for trusted initialization
   - `interp policy -type T path script` for custom policy callbacks
+
+### Recipe: Load a .NET plugin with security verification
+- Go to: `core_language.md#cmd-load`
+- For internals and architecture: [`load.md`](load.md)
+- Look for:
+  - `load fileName` to load a plugin (auto-discovers IPlugin type)
+  - `load -verifiedonly -trustedonly fileName` for full security verification
+  - `load -isolated fileName` for AppDomain isolation
+  - `load -publickeytoken "hex" fileName` to require a specific publisher
+  - `load -ruleset $rs fileName` to filter commands/policies
+  - `load -nocommands -nofunctions fileName` for selective entity loading
+  - `unload fileName` / `unload -nocomplain fileName` for plugin removal
 
 ### Recipe: Use .NET types safely and clean up resources
 - Go to: `core_language.md#cmd-object`

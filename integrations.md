@@ -220,7 +220,7 @@ Three MSBuild files control the integration:
 
 **`Eagle.Settings.targets`** defines default properties:
 
-- `EagleTaskTargets` (default: `true`) -- master switch for enabling Eagle
+- `EagleTaskTargets` (default: `true`) -- switch for enabling Eagle
   build tasks.
 - `EagleTaskPath` -- path to the directory containing `EagleTasks.dll`.
 

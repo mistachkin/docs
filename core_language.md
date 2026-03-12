@@ -7647,6 +7647,8 @@ These commands interact with the .NET runtime and the interactive host environme
     - `-global` - Load symbols globally
     - `-lazy` - Lazy loading
 
+  > **See also**: [`load.md`](load.md) for a deep-dive analysis of the plugin loading infrastructure, including the full security verification chain, AppDomain isolation, all 20+ options, built-in and enterprise plugins, and practical loading patterns.
+
   **Example**:
   ```tcl
   load myextension.dll MyPackage
@@ -7665,6 +7667,8 @@ These commands interact with the .NET runtime and the interactive host environme
   - **Options**:
     - `-keeplibrary` - Keep library loaded but remove package
     - `-nocomplain` - Don't error if package not loaded
+
+  > **See also**: [`load.md`](load.md) for a deep-dive analysis of the unloading pipeline, plugin matching, and all unload options.
 
   **Example**:
   ```tcl
@@ -13731,7 +13735,7 @@ The following parameters are not exposed through `debug trace` options but can b
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `isTracePossible` | `bool` | `true` | Master kill switch. When `false`, all trace calls return immediately without any processing. |
+| `isTracePossible` | `bool` | `true` | Primary kill switch. When `false`, all trace calls return immediately without any processing. |
 | `isWritePossible` | `bool` | `true` | Secondary kill switch for the write path specifically. |
 | `isTraceEnabled` | `bool?` | `null` (resolves to `true`) | Runtime enable/disable. When `null`, falls back to `isTraceEnabledByDefault`. |
 | `isTraceEnabledByDefault` | `bool?` | `null` (resolves to `true`) | Default enabled state, read from `NoTrace`/`Trace` environment variables at initialization. |

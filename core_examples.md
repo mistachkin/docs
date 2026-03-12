@@ -5850,6 +5850,8 @@ host font -facename Consolas -fontsize 12 ;# Set console font
 <a id="ex-load"></a>
 ### load
 
+> **See also**: [`load.md`](load.md) for a deep-dive analysis of the plugin loading infrastructure, security verification chain, AppDomain isolation, built-in and enterprise plugins, and practical loading patterns.
+
 ```tcl
 # Load a compiled extension
 load myextension.dll MyPackage
@@ -5859,6 +5861,8 @@ load myextension.dll MyPackage
 
 <a id="ex-unload"></a>
 ### unload
+
+> **See also**: [`load.md`](load.md) for a deep-dive analysis of the unloading pipeline, plugin matching, and all unload options.
 
 ```tcl
 # Unload a previously loaded extension
