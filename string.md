@@ -24,10 +24,11 @@ There are four key areas of complexity:
 
 2. **Culture-aware operations** — The `compare`, `equal`, `starts`,
    `ends`, `tolower`, `toupper`, and `totitle` sub-commands accept
-   `-culture` (a `CultureInfo` value) and `-options` (`CompareOptions`
-   flags) for culture-sensitive string processing. Case conversion
-   uses .NET reflection to invoke `String.ToLower(CultureInfo)` and
-   similar methods.
+   `-culture` (a `CultureInfo` value) for culture-sensitive string
+   processing. The `compare` and `equal` sub-commands also accept
+   `-options` (`CompareOptions` flags). Case conversion uses .NET
+   reflection to invoke `String.ToLower(CultureInfo)` and similar
+   methods.
 
 3. **Extended `string map`** — Beyond Tcl's simple key-value mapping,
    Eagle's `string map` supports `-regexp` (regex-based matching),
@@ -458,9 +459,9 @@ string is ?not? class ?options? string
 |--------|------|-------------|
 | `-strict` | flag | Empty strings fail (default: empty strings pass) |
 | `-nocomplain` | flag | Suppress error messages |
-| `-not` | flag | Negate the result |
-| `-any` | flag | Pass if ANY character matches (vs all) |
-| `-via` | flag | Treat `string` as a variable name |
+| `-not` | bool | Negate the result |
+| `-any` | bool | Pass if ANY character matches (vs all) |
+| `-via` | bool | Treat `string` as a variable name |
 | `-count` | int | Expected character count |
 | `-good` | varName | Store passing characters/values |
 | `-bad` | varName | Store failing characters/values |
@@ -512,8 +513,9 @@ ASCII range, unlike `alnum`/`alpha`/`digit` which use Unicode-aware
 | `double` | `Value.GetDouble` | 64-bit floating point |
 | `single` | `Value.GetSingle` | 32-bit floating point |
 | `decimal` | `Value.GetDecimal` | 128-bit decimal |
-| `number` / `numeric` | `Value.GetDouble` or `Value.GetDecimal` | Any numeric value |
-| `real` | `Value.GetDouble` | Floating-point value |
+| `number` | `Value.GetNumber` | Any numeric value |
+| `numeric` | `Value.GetNumeric` | Any numeric value |
+| `real` | `Value.GetNumber` with `ValueFlags.AnyRealAnyRadix` | Floating-point value |
 
 ### Whole-string validation classes — Data types
 
@@ -521,10 +523,10 @@ ASCII range, unlike `alnum`/`alpha`/`digit` which use Unicode-aware
 |-------|-----------|-------------|
 | `datetime` | `Value.GetDateTime` | Parseable as .NET `DateTime` |
 | `timespan` | `Value.GetTimeSpan` | Parseable as .NET `TimeSpan` |
-| `guid` | `Guid.TryParse` | Valid GUID format |
+| `guid` | `Value.GetGuid` | Valid GUID format |
 | `version` | `Value.GetVersion` | Parseable as .NET `Version` |
 | `versionrange` | `Value.GetVersionRange` | Two `Version` values |
-| `uri` | `Uri.TryCreate` | Valid URI |
+| `uri` | `Value.GetUri` | Valid URI |
 | `base64` | `StringOps.IsBase64` | Valid Base64 string |
 | `xml` | `XmlOps.LoadString` | Valid XML (conditional on XML flag) |
 
@@ -536,7 +538,7 @@ ASCII range, unlike `alnum`/`alpha`/`digit` which use Unicode-aware
 | `dict` | `ListOps` + even count | Valid dictionary (even element count, TIP #501) |
 | `annotation` | `Value.IsAnnotation` | Valid annotation format |
 | `identifier` | `StringOps.IsValidIdentifier` | Valid C#-style identifier |
-| `idxranges` | `StringOps.IsValidIndexRanges` | Valid index range specification |
+| `idxranges` | `RuntimeOps.ParseIndexRanges` | Valid index range specification |
 | `encoding` | `interpreter.GetEncoding` | Valid encoding name |
 
 ### Whole-string validation classes — File system
@@ -553,7 +555,7 @@ ASCII range, unlike `alnum`/`alpha`/`digit` which use Unicode-aware
 | Class | Validator | Description |
 |-------|-----------|-------------|
 | `cidr` | `SocketOps.IsValidCIDR` | Valid CIDR notation (requires NETWORK) |
-| `inetaddr` | `SocketOps.IsValidIPAddress` | Valid IP address (requires NETWORK) |
+| `inetaddr` | `Value.GetWideInteger2` then falls back to `IPAddress.TryParse` | Valid IP address (requires NETWORK) |
 
 ### Whole-string validation classes — Interpreter objects
 
@@ -561,21 +563,21 @@ ASCII range, unlike `alnum`/`alpha`/`digit` which use Unicode-aware
 |-------|-----------|-------------|
 | `array` | Variable resolution + `EntityOps.IsArray` | Existing array variable |
 | `command` | `interpreter.InternalDoesIExecuteExistViaResolvers` | Existing command |
-| `element` | Variable resolution + `EntityOps.IsElement` | Existing array element |
-| `interpreter` | `interpreter.InternalDoesInterpreterExist` | Existing child interpreter |
-| `object` | `interpreter.InternalDoesObjectExist` | Existing opaque object handle |
-| `plugin` | `interpreter.DoesPluginExist` | Loaded plugin |
-| `ruleset` | `interpreter.DoesRuleSetExist` | Existing rule set |
+| `element` | `EntityOps.IsArray` + `FlagOps.HasFlags` for `VariableFlags.WasElement` + `interpreter.GetVariableValue` | Existing array element |
+| `interpreter` | `Value.GetInterpreter` | Existing child interpreter |
+| `object` | `Value.GetObject` | Existing opaque object handle |
+| `plugin` | `interpreter.GetPlugin` + `interpreter.InternalFindPlugin` | Loaded plugin |
+| `ruleset` | `RuleSet.Create` to test parseability | Existing rule set |
 | `scalar` | `EntityOps.IsScalar` | Existing scalar variable |
-| `type` | `interpreter.DoesTypeExist` | Known .NET type |
-| `value` | `interpreter.InternalDoesValueExist` | Existing value |
-| `variant` | `interpreter.InternalDoesVariantExist` | Existing variant |
+| `type` | `Value.GetAnyType` | Known .NET type |
+| `value` | `Value.GetValue` to test parseability | Existing value |
+| `variant` | `Value.GetVariant` to test parseability | Existing variant |
 
 ### Special classes
 
 | Class | Behavior |
 |-------|----------|
-| `none` | Always returns false |
+| `none` | Returns true when string parses as `Index.Invalid` |
 | `not` | Modifier only — negates the next class |
 
 ### The `-any` vs default behavior

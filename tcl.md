@@ -175,7 +175,7 @@ other `tcl` sub-commands that require a Tcl interpreter.
 |--------|--------|
 | `-findflags flags` | Control library search behavior (FindFlags enum) |
 | `-loadflags flags` | Control loading behavior (LoadFlags enum) |
-| `-robustify` | Exclude ActiveTcl BasiKits; enable SetDllDirectory on Windows |
+| `-robustify` | Exclude ActiveTcl BaseKits; enable SetDllDirectory on Windows |
 | `-trustedonly` | Only load from trusted/signed locations |
 | `-maybetrustedonly` | Same as `-trustedonly` in release builds only |
 | `-eval script` | Evaluate a script as part of the find process |
@@ -333,7 +333,7 @@ Returns the handle of the primary (first-created) Tcl interpreter.
 
 #### `tcl active interp`
 
-Gets or sets the "active" flag on a Tcl interpreter. Implements TIP #335
+Gets the "active" flag on a Tcl interpreter. Implements TIP #335
 semantics.
 
 #### `tcl preserve interp`

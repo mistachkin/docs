@@ -316,7 +316,7 @@ namespace info ::mylib   ;# Detailed namespace metadata
 #### `namespace mappings` **(Eagle)**
 
 Returns the namespace mapping table as key-value pairs. Mappings allow
-remapping namespace names to other names (e.g., `::Eagle` → `::` for
+remapping namespace names to other names (e.g., `::Eagle` -> `::` for
 backward compatibility).
 
 Thread-safe: uses `lock (interpreter.InternalSyncRoot)`.
@@ -537,7 +537,7 @@ Gets or sets the unknown command handler for the current namespace.
 
 | Implementation | Behavior |
 |----------------|----------|
-| Namespace1 | Gets/sets `interpreter.NamespaceUnknown` and `interpreter.GlobalUnknown` (single global handler) |
+| Namespace1 | Gets/sets `interpreter.NamespaceUnknown` (single global handler) |
 | Namespace2 | Gets/sets per-namespace `currentNamespace.Unknown` property; falls back to `interpreter.GlobalUnknown` |
 
 The per-namespace unknown handler in Namespace2 is a significant
@@ -578,11 +578,11 @@ Namespaces form a tree via parent-child relationships:
 
 ```
 :: (global)
-├── ::mylib
-│   ├── ::mylib::utils
-│   └── ::mylib::internal
-└── ::app
-    └── ::app::ui
++-- ::mylib
+|   +-- ::mylib::utils
+|   +-- ::mylib::internal
++-- ::app
+    +-- ::app::ui
 ```
 
 **Child management methods** (Namespace.cs):
@@ -625,8 +625,8 @@ frame integration.
 ### Resolution steps
 
 1. **Determine the base namespace** (`GetBase()`):
-   - If the name is absolute (starts with `::`) → use GlobalNamespace
-   - Otherwise → use current namespace from the call frame's
+   - If the name is absolute (starts with `::`) -> use GlobalNamespace
+   - Otherwise -> use current namespace from the call frame's
      `ResolveData` via `GetCurrentNamespaceViaResolvers()`
 
 2. **Descend by components** (`GetDescendant()`):
@@ -647,19 +647,19 @@ frame integration.
 
 | Method | Description | Example |
 |--------|-------------|---------|
-| `IsQualifiedName()` | Contains `::` | `::foo::bar` → true |
-| `IsAbsoluteName()` | Starts with `::` | `::foo` → true, `foo::bar` → false |
-| `IsGlobalName()` | Empty or only `::` | `::` → true, `""` → true |
-| `SplitName()` | Parse into qualifiers and tail | `::a::b::c` → (`::a::b`, `c`) |
-| `MakeAbsoluteName()` | Add `::` prefix if needed | `foo` → `::foo` |
-| `MakeQualifiedName()` | Resolve relative to current namespace | `foo` in `::bar` → `::bar::foo` |
+| `IsQualifiedName()` | Contains `::` | `::foo::bar` -> true |
+| `IsAbsoluteName()` | Starts with `::` | `::foo` -> true, `foo::bar` -> false |
+| `IsGlobalName()` | Empty or only `::` | `::` -> true, `""` -> true |
+| `SplitName()` | Parse into qualifiers and tail | `::a::b::c` -> (`::a::b`, `c`) |
+| `MakeAbsoluteName()` | Add `::` prefix if needed | `foo` -> `::foo` |
+| `MakeQualifiedName()` | Resolve relative to current namespace | `foo` in `::bar` -> `::bar::foo` |
 
 ### Variable resolution
 
 `GetVariableFrame()` resolves the correct call frame for variable
 access in a namespace context:
 
-1. Check for `GlobalOnly` flag → use `CurrentGlobalFrame`
+1. Check for `GlobalOnly` flag -> use `CurrentGlobalFrame`
 2. Split variable name into qualifiers and tail
 3. If qualified name:
    - Absolute path: lookup namespace from qualifiers, use its
@@ -690,19 +690,19 @@ Each call frame has a `ResolveData` property that stores the current
 namespace context via a `ResolverClientData` wrapper:
 
 ```
-CallFrame.ResolveData → ResolverClientData → INamespace
+CallFrame.ResolveData -> ResolverClientData -> INamespace
 ```
 
 **Getting the current namespace from a frame:**
 ```
 NamespaceOps.GetCurrent(interpreter, frame)
-  → frame.ResolveData → ResolverClientData.Data → INamespace
+  -> frame.ResolveData -> ResolverClientData.Data -> INamespace
 ```
 
 **Setting the current namespace on a frame:**
 ```
 NamespaceOps.SetCurrent(interpreter, frame, namespace)
-  → frame.ResolveData = new ResolverClientData(namespace)
+  -> frame.ResolveData = new ResolverClientData(namespace)
 ```
 
 ### Frame types
@@ -982,7 +982,7 @@ if {!$nsEnabled} {
 
 | Feature | Tcl `namespace` | Eagle `namespace` |
 |---------|----------------|-------------------|
-| Sub-commands | ~15 | 22 |
+| Sub-commands | 19 | 22 |
 | Enable/disable | Always enabled | `namespace enable` toggles |
 | Implementation | Single | Dual: stub + full |
 | eval / inscope | Create namespace + execute | Same + call frame binding |
@@ -1049,7 +1049,7 @@ The mappings table is accessed under a lock for thread safety.
 - **Namespace object**: `eagle/Eagle/Library/Components/Private/Namespace.cs`
 - **Namespace data**: `eagle/Eagle/Library/Components/Public/NamespaceData.cs`
 - **INamespace interface**: `eagle/Eagle/Library/Interfaces/Public/Namespace.cs`
-- **Core language reference**: `core_language.md` § Namespaces →
+- **Core language reference**: `core_language.md` § Namespaces ->
   `namespace` command
 - **Examples**: `core_examples.md` § namespace
 - **Scope integration**: `scope.md` § Namespace Integration

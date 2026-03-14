@@ -81,7 +81,6 @@ The following commands are Eagle-specific extensions not found in standard Tcl 8
 | `host` | Managed Env | Interactive console host control (colors, input, screens) |
 | `invoke` | Engine | Invoke command at a specific call stack level |
 | `lget` | Lists | Get element from list variable (combines set + lindex) |
-| `lmap` | Lists/Loop | Transform list by applying body to each element |
 | `lremove` | Lists | Remove list elements by index |
 | `library` | Native Env | Native library P/Invoke (.dll/.so loading and calls) |
 | `napply` | Procedures | Apply lambda with named arguments |
@@ -489,8 +488,8 @@ Quick reference to all Eagle commands with links to their detailed documentation
 
 <a id="cmd-do"></a>
 - **do** - Do-while loop
-  - `do script clause test`
-  - Executes *script* at least once, then repeatedly while *test* evaluates to true. The *clause* must be the literal word `while` or `until`.
+  - `do script ?clause? test`
+  - Executes *script* at least once, then repeatedly while *test* evaluates to true. The *clause* is optional and defaults to `while`; it must be the literal word `while` or `until`.
   - **Clauses**:
     - `while` - Continue looping while *test* is true
     - `until` - Continue looping until *test* is true (i.e., while *test* is false)
@@ -1651,7 +1650,7 @@ String commands belong to ObjectGroup: "string"
 
   #### String Measurement and Access
 
-  - `string bytelength string ?encoding?` - Returns the number of bytes needed to represent *string* in the specified encoding (default: utf-8). Different from character length for multi-byte encodings.
+  - `string bytelength string ?encoding?` - Returns the number of bytes needed to represent *string* in the specified encoding. When no encoding is provided, returns the raw internal C# string byte length (UTF-16, i.e., `Length * sizeof(char)`). Different from character length for multi-byte encodings.
 
   ---
 
@@ -7672,8 +7671,15 @@ These commands interact with the .NET runtime and the interactive host environme
   - *packageName* - Name of the package to initialize (optional)
   - *interp* - Target interpreter (optional, defaults to current)
   - **Options**:
-    - `-global` - Load symbols globally
-    - `-lazy` - Lazy loading
+    - `-nocommands` - Don't register plugin commands
+    - `-nofunctions` - Don't register plugin functions
+    - `-nopolicies` - Don't register plugin policies
+    - `-notraces` - Don't register plugin traces
+    - `-verifiedonly` - Only load verified assemblies
+    - `-trustedonly` - Only load trusted assemblies
+    - `-isolated` - Load in isolated AppDomain
+    - `-preview` - Preview load without committing
+    - `-update` - Update existing plugin
 
   > **See also**: [`load.md`](load.md) for a deep-dive analysis of the plugin loading infrastructure, including the full security verification chain, AppDomain isolation, all 20+ options, built-in and enterprise plugins, and practical loading patterns.
 
@@ -7754,7 +7760,7 @@ These commands provide fundamental interpreter operations and utility functions.
 <a id="cmd-nop"></a>
 - **nop** - No operation (ObjectGroup: "nop")
   - `nop`
-  - Does nothing and returns an empty string.
+  - Does nothing; the previous interpreter result is left untouched (purposely not modified).
   - Useful as a placeholder or for timing/profiling.
 
   **Example**:

@@ -6,7 +6,7 @@
 
 Eagle's `[interp]` command provides **complete interpreter lifecycle
 management** — creating, configuring, securing, and destroying child
-interpreters from script code. With 65 sub-commands, it is the largest
+interpreters from script code. With 60 sub-commands, it is the largest
 ensemble command in Eagle, covering interpreter hierarchy management,
 cross-interpreter communication, hidden command administration, security
 policy configuration, resource limit enforcement, execution timeout
@@ -37,8 +37,8 @@ operation must be explicitly authorized.
 
 | File | Lines | Role |
 |------|-------|------|
-| `Eagle/Library/Commands/Interp.cs` | 4,452 | Main command implementation (65 sub-commands) |
-| `Eagle/Library/Components/Public/Interpreter.cs` | 124,855 | Interpreter class: state, safety checks, lifecycle |
+| `Eagle/Library/Commands/Interp.cs` | 4,452 | Main command implementation (60 sub-commands) |
+| `Eagle/Library/Components/Public/Interpreter.cs` | 124,863 | Interpreter class: state, safety checks, lifecycle |
 | `Eagle/Library/Components/Private/PolicyOps.cs` | 2,374 | Policy decision logic, allowed sub-command lists |
 | `Eagle/Library/Components/Public/InterpreterHelper.cs` | 524 | Factory methods for interpreter creation |
 | `Eagle/Library/Components/Public/InterpreterSettings.cs` | 2,332 | Interpreter configuration and initialization flags |
@@ -184,7 +184,7 @@ default policy callbacks are installed:
 | `info` | Allow list | `appdomain`, `args`, `body`, `commands`, `complete`, `context`, `default`, `engine`, `ensembles`, `exists`, `functions`, `globals`, `level`, `library`, `locals`, `nprocs`, `objects`, `operands`, `operators`, `patchlevel`, `procs`, `script`, `subcommands`, `tclversion`, `vars` |
 | `interp` | Allow list | `alias`, `aliases`, `cancel`, `children`, `exists`, `issafe`, `issdk`, `rename` |
 | `object` | Allow list | `dispose`, `exists`, `invoke`, `invokeall`, `invokeraw`, `isnull`, `isoftype` |
-| `package` | Deny list | Everything **except**: `alias`, `aliases`, `indexes`, `relativefilename`, `reset`, `scan`, `vloaded` |
+| `package` | Deny list | Disallowed sub-commands: `alias`, `aliases`, `indexes`, `relativefilename`, `reset`, `scan`, `vloaded` |
 | `source` | URI/directory validation | Only trusted URIs and directories |
 | `uri` | Allow list | `get`, `isvalid`, `post` |
 
@@ -199,7 +199,7 @@ overridden by a permissive one.
 
 ### 3.4. The `interp` sub-commands allowed in safe interpreters
 
-Of the 65 total sub-commands, only **8** are permitted in safe
+Of the 60 total sub-commands, only **8** are permitted in safe
 interpreters via the default policy:
 
 | Sub-command | Why it's safe |
@@ -213,7 +213,7 @@ interpreters via the default policy:
 | `issdk` | Queries SDK status (read-only) |
 | `rename` | Can rename commands within the safe interpreter |
 
-The remaining 57 sub-commands are **denied** in safe interpreters,
+The remaining 52 sub-commands are **denied** in safe interpreters,
 including all commands that could modify the security posture:
 `create`, `delete`, `eval`, `expose`, `hide`, `invokehidden`,
 `makesafe`, `makestandard`, `marktrusted`, `policy`, `nopolicy`,
@@ -533,8 +533,8 @@ invariant.
 
 ```tcl
 interp invokehidden $child source trusted_script.eagle
-interp invokehidden -global $child exec ls
-interp invokehidden -namespace ::myns $child someCmd arg1
+interp invokehidden $child -global exec ls
+interp invokehidden $child -namespace ::myns someCmd arg1
 ```
 
 This is how the parent (or host application) performs privileged
@@ -787,7 +787,7 @@ set safe [interp create -safe]
 
 # Initialize with trusted code using invokehidden
 interp invokehidden $safe source trusted_init.eagle
-interp invokehidden -global $safe set configVar "production"
+interp invokehidden $safe -global set configVar "production"
 
 # Now run untrusted code with the initialized state
 interp eval $safe $userScript

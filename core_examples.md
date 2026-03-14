@@ -202,15 +202,17 @@ foreach item {a b c STOP d e} {
 ```
 
 ```tcl
-# Break with value
+# Note: break accepts an optional value, but loop commands like
+# while and foreach reset the result after handling break, so the
+# break value is not propagated as the loop's return value.
 set i 0
-set found [while {$i < 100} {
+while {$i < 100} {
   if {[expr {$i * $i}] > 50} then {
-    break $i
+    break
   }
   incr i
-}]
-;# found is the first i where i*i > 50
+}
+;# $i is the first i where i*i > 50
 ```
 
 ---
@@ -1081,12 +1083,12 @@ set tail [lrange $data 1 end]
 
 ```tcl
 # Eagle extension — remove by index
-lremove {a b c d e} 1 3    ;# Returns: {a c e}
+lremove {a b c d e} 1      ;# Returns: {a c d e}
 ```
 
 ```tcl
-# Remove first and last
-lremove {x y z w} 0 end    ;# Returns: {y z}
+# Nested removal: index 1 selects {d e f}, then index 0 removes "d"
+lremove {{a b c} {d e f}} 1 0   ;# Returns: {{a b c} {e f}}
 ```
 
 ---

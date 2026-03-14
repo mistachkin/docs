@@ -239,9 +239,8 @@ regsub {(\w+) (\w+)} "John Doe" {\2, \1} result
 The `-literal` and `-verbatim` options modify this mode:
 - **`-literal`**: The substitution string is used as-is, with no
   translation of `&`, `\0`–`\9`, or any other special sequences.
-- **`-verbatim`**: The substitution string is passed directly to .NET's
-  `Regex.Replace` as a replacement pattern (using `$` syntax), bypassing
-  Eagle's `TranslateSubSpec` translation.
+- **`-verbatim`**: When true, the callback returns the matched text
+  (`match.Value`) instead of processing the substitution spec.
 
 #### Mode 2: Script evaluation (`RegsubEvaluateMatchCallback`, `-eval`)
 
@@ -331,7 +330,7 @@ The translation walks each character through a chain of handlers:
 
 3. **`HandleSubSpecOtherEscapeOrMetaChar`** — Handles unrecognized
    escape sequences based on the strict mode:
-   - **`-strict`** (default): Keeps both the backslash and the
+   - **Strict mode** (default): Keeps both the backslash and the
      character (e.g., `\x` → `\x`). This preserves Tcl's behavior
      where unrecognized escapes are kept verbatim.
    - **`-nostrict`**: Strips the backslash, keeping only the character
@@ -445,8 +444,7 @@ All options for the `[regsub]` command, organized by category:
 | `-noculture` | flag | Culture-invariant matching |
 | `-quote` | flag | Quote the replacement result for Tcl list safety |
 | `-literal` | flag | Treat subSpec as literal text (no `&`/`\N` expansion) |
-| `-verbatim` | flag | Pass subSpec directly to .NET as a replacement pattern (`$` syntax) |
-| `-strict` | flag | Keep unrecognized `\X` escapes verbatim (default: **on**) |
+| `-verbatim` | flag | When true, the callback returns the matched text (`match.Value`) instead of processing the substitution spec |
 | `-nostrict` | flag | Strip backslash from unrecognized `\X` escapes |
 | `-extra` | flag | Enable extended substitution sequences (`\P`, `\I`, `\S`, `\M#`, `\N<name>`) |
 | `-eval script` | script | Evaluate script for each match; result becomes replacement |
@@ -531,7 +529,7 @@ delegate that receives match information from the .NET regex engine. The
 | `pattern` | The original pattern string |
 | `input` | The original input string |
 | `replacement` | The substitution specification (subSpec) |
-| `text` | The accumulated result text (`StringBuilder`) |
+| `text` | The eval script text from the `-eval` option (`string`) |
 | `count` | The replacement count (incremented by each callback) |
 | `quote` | Whether to quote the replacement for list safety |
 | `extra` | Whether extended substitution sequences are enabled |
@@ -569,13 +567,15 @@ internal flags in `RegExOps.Create()`:
   patterns created through the standard path get compiled.
 
 - **`ForceCompiled2`** (default: `false`) — When a regex is created with
-  explicit options, the `Compiled` flag is only added if the caller
-  explicitly requested it (via `-compiled` or `-options Compiled`).
+  two arguments (pattern and regExOptions), the `Compiled` flag is only
+  added if the caller explicitly requested it (via `-compiled` or
+  `-options Compiled`).
 
-In practice, this means most `[regexp]` and `[regsub]` calls benefit
-from IL compilation automatically. The `-compiled` switch is most
-relevant when you are also using `-options` to set explicit flags, since
-`ForceCompiled2` does not force compilation in that case.
+Both `[regexp]` and `[regsub]` use the two-argument
+`Create(pattern, regExOptions)` form, which uses `ForceCompiled2 = false`.
+This means patterns are **not** compiled to IL by default. The `-compiled`
+switch or `-options Compiled` must be specified explicitly to enable IL
+compilation.
 
 The .NET runtime itself caches compiled regex patterns internally (up to
 `Regex.CacheSize` entries, default 15). Eagle does not add a separate

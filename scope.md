@@ -84,11 +84,11 @@ This makes scopes ideal for:
 A scope progresses through four phases:
 
 ```
-  create ──► open (push) ──► use (read/write variables) ──► close (pop) ──► destroy
-    │             │                                              │              │
-    │             └──── can be repeated any number of times ─────┘              │
-    │                                                                           │
-    └────────────── scope persists across open/close cycles ────────────────────┘
+  create --> open (push) --> use (read/write variables) --> close (pop) --> destroy
+    |             |                                              |              |
+    |             +---- can be repeated any number of times -----+              |
+    |                                                                           |
+    +-------------- scope persists across open/close cycles --------------------+
 ```
 
 ### Phase 1: Create (`scope create`)
@@ -102,7 +102,7 @@ cloned) `VariableDictionary`. Key behaviors:
   that makes `scope create -open -clone -args $name` safe to call repeatedly.
 - If `-strict` is set and the scope already exists, an error is returned.
 - If no name is provided, an automatic name is generated via
-  `CallFrameOps.GetAutomaticScopeName()` (format: `scopeN`).
+  `CallFrameOps.GetAutomaticScopeName()` (format: `scope#N`).
 - The interpreter enforces a **scope limit** (`ScopeLimit` property): 50 in
   safe interpreters, unlimited in unsafe interpreters.
 
@@ -177,7 +177,7 @@ Creates a new scope or returns an existing one (idempotent unless `-strict`).
    shared)` to derive the name from the enclosing procedure or lambda frame.
    The procedure's name is embedded in the scope name, with an optional
    thread ID for non-shared scopes.
-2. If the scope already exists (checked via `interpreter.GetScope()`):
+2. If the scope already exists (checked via `interpreter.InternalGetScope()`):
    - With `-strict`: returns error.
    - Without `-strict`: returns the existing name (no modification).
 3. For new scopes:
@@ -185,8 +185,8 @@ Creates a new scope or returns an existing one (idempotent unless `-strict`).
    - If `-clone`: calls `CallFrameOps.CloneToNewScope()` to copy variables.
    - If `-fast`: calls `CallFrameOps.SetFast()` to set `CallFrameFlags.Fast`.
    - Calls `interpreter.AddScope()` to register.
-4. If `-open`: pushes the frame via `interpreter.PushCallFrame()`.
-5. If `-args`: calls `interpreter.CopyProcedureArgumentsToFrame()`.
+4. If `-args`: calls `interpreter.CopyProcedureArgumentsToFrame()`.
+5. If `-open`: pushes the frame via `interpreter.PushCallFrame()`.
 
 #### `scope open ?options? ?name?`
 
@@ -199,8 +199,8 @@ Pushes an existing scope onto the call stack.
 **Implementation** (`Scope.cs`, lines 585-669):
 1. Resolves the scope name (direct or via `-procedure`).
 2. Retrieves the scope via `interpreter.GetScope()`.
-3. Pushes via `interpreter.PushCallFrame()`.
-4. If `-args`: copies procedure arguments.
+3. If `-args`: copies procedure arguments.
+4. Pushes via `interpreter.PushCallFrame()`.
 
 #### `scope close ?options? ?name?`
 
@@ -214,8 +214,8 @@ Pops the current or named scope from the call stack.
 **Implementation** (`Scope.cs`, lines 317-370):
 1. Without `-all`: calls `interpreter.PopScopeCallFrames()` or
    `interpreter.GetScopeCallFrame(name, ..., pop=true, remove=false)`.
-2. With `-all`: uses `interpreter.PopScopeCallFrames()` in a loop until no
-   more scope frames remain.
+2. With `-all`: makes a single call to
+   `interpreter.PopScopeCallFrames(ref frame, ref usable)`.
 3. Only pops scope frames — non-scope frames on the stack are left in place.
 
 #### `scope destroy name`
@@ -241,7 +241,7 @@ Evaluates a script in the context of a named scope.
 
 | Option | Effect |
 |--------|--------|
-| `-lock` | Acquire lock on scope during evaluation |
+| `-lock` | Acquire lock on scope during evaluation (requires a boolean value argument, e.g., `-lock true`) |
 | `-timeout milliseconds` | Timeout for lock acquisition (unsafe) |
 | `-eventwaitflags flags` | Event wait flags for lock (unsafe) |
 
@@ -285,7 +285,7 @@ Iterates the scope's `VariableDictionary` directly.
 #### `scope exists name`
 
 Returns boolean `True` if the named scope exists, `False` otherwise. Calls
-`interpreter.GetScope()` with `LookupFlags.NoUsable` to avoid side effects.
+`interpreter.InternalGetScope()` with `LookupFlags.NoVerbose` to avoid side effects.
 
 #### `scope current`
 
@@ -308,9 +308,8 @@ Acquires a lock on the named scope, preventing concurrent modification.
 
 **Returns:** Empty string on success.
 
-**Implementation:** Calls `interpreter.LockScope()`, which internally calls
-`frame.Lock()`. The lock is a .NET `Monitor`-style lock on the call frame
-object.
+**Implementation:** Calls `frame.Lock(ref result)` directly on the scope's
+call frame. The lock is a .NET `Monitor`-style lock on the call frame object.
 
 #### `scope unlock ?options? name`
 
@@ -320,8 +319,8 @@ Releases a previously acquired lock.
 
 **Returns:** Empty string on success.
 
-**Implementation:** Calls `interpreter.UnlockScope()`, which internally calls
-`frame.Unlock()`.
+**Implementation:** Calls `frame.Unlock(ref result)` directly on the scope's
+call frame.
 
 The lock/unlock mechanism is distinct from the `-lock` option on `scope eval`.
 Manual lock/unlock gives the script fine-grained control over when the lock is
@@ -628,7 +627,7 @@ Or more concisely with `scope eval -lock`:
 ```tcl
 proc sharedCounter {} {
   scope create -procedure -shared
-  scope eval -lock $::scope {
+  scope eval -lock true $::scope {
     if {![info exists count]} {set count 0}
     incr count
   }
@@ -647,10 +646,10 @@ scope lock myScope
 scope unlock myScope
 ```
 
-`scope lock` calls `interpreter.LockScope()` → `frame.Lock()`, which acquires
-a .NET `Monitor`-style lock on the call frame object. `scope unlock` releases
-it. The `-nocomplain` option on both suppresses errors if the scope doesn't
-exist.
+`scope lock` calls `frame.Lock(ref result)` directly on the scope's call
+frame, which acquires a .NET `Monitor`-style lock on the call frame object.
+`scope unlock` calls `frame.Unlock(ref result)` to release it. The
+`-nocomplain` option on both suppresses errors if the scope doesn't exist.
 
 **Caution:** Manual lock/unlock requires careful coding to ensure the lock is
 always released, even on error. Consider using `scope eval -lock` instead.
@@ -658,16 +657,16 @@ always released, even on error. Consider using `scope eval -lock` instead.
 ### 8.2 Automatic Locking with `scope eval -lock`
 
 ```tcl
-scope eval -lock myScope {
+scope eval -lock true myScope {
   # lock is held during this script
   # automatically released on completion (success or error)
 }
 ```
 
-The `-lock` option on `scope eval` acquires the lock before pushing the scope,
-evaluates the script, and releases the lock in the `finally` block. This is
-the recommended approach for thread-safe scope access because it guarantees
-lock release.
+The `-lock` option on `scope eval` requires a boolean value argument (e.g.,
+`-lock true`). It acquires the lock before pushing the scope, evaluates the
+script, and releases the lock in the `finally` block. This is the recommended
+approach for thread-safe scope access because it guarantees lock release.
 
 The `-timeout` option (unsafe) specifies how long to wait for the lock in
 milliseconds. The `-eventwaitflags` option (unsafe) controls event processing
@@ -689,8 +688,8 @@ the interpreter's global variable frame:
 scope create sandbox
 scope eval sandbox {set x 100; set y 200}
 scope global sandbox
-# Now: global x → sandbox's x (100)
-# Now: set ::x  → sandbox's x (100)
+# Now: global x -> sandbox's x (100)
+# Now: set ::x  -> sandbox's x (100)
 # The true global frame is hidden
 scope global -unset
 # Normal global frame restored
@@ -830,13 +829,13 @@ don't: naming, independent lifecycle, locking, and namespace integration.
 
 | Method | Purpose |
 |--------|---------|
-| `GetAutomaticScopeName(Interpreter)` | Generates `scopeN` names using interpreter's NextId |
+| `GetAutomaticScopeName(Interpreter)` | Generates `scope#N` names using interpreter's NextId |
 | `GetAutomaticScopeName(ICallFrame, bool)` | Generates procedure/lambda-based scope names |
 | `IsScope(ICallFrame)` | Checks `CallFrameFlags.Scope` flag |
 | `IsGlobalScope(ICallFrame)` | Checks `CallFrameFlags.GlobalScope` flag |
 | `MarkGlobalScope(ICallFrame, ref Result)` | Converts scope to global scope (changes flags) |
 | `SetFast(ICallFrame, bool)` | Sets/clears `CallFrameFlags.Fast` |
-| `NewEngineScope(Interpreter)` | Creates a scope with `Scope \| Engine` flags |
+| `NewEngineScope(Interpreter)` | Creates a scope with `Scope | Engine` flags |
 | `CloneToNewScope(...)` | Clones variables into a new scope (by value or by reference) |
 | `CloneToExistingScope(...)` | Merges variables into an existing scope |
 
@@ -972,13 +971,13 @@ scope eval sharedState {
 
 # Called from multiple threads:
 proc recordConnection {} {
-  scope eval -lock sharedState {
+  scope eval -lock true sharedState {
     incr connections
   }
 }
 
 proc recordError {} {
-  scope eval -lock sharedState {
+  scope eval -lock true sharedState {
     incr errors
   }
 }
@@ -1014,7 +1013,7 @@ scope destroy myScope
 | Persistent counter across calls | `scope create -open -clone -args $name` |
 | Per-procedure private state | `scope create -open -procedure -args` |
 | Evaluate script in isolated context | `scope eval name { script }` |
-| Thread-safe shared state | `scope eval -lock name { script }` |
+| Thread-safe shared state | `scope eval -lock true name { script }` |
 | Read/write scope variable without opening | `scope set name var ?value?` |
 | Redirect global frame | `scope global name` |
 | Sandbox untrusted script | `scope create s; scope global s; source ...; scope global -unset` |

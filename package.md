@@ -51,11 +51,11 @@ group.
 | File | Lines | Role |
 |------|-------|------|
 | `Eagle/Library/Commands/Package.cs` | ~1,450 | Main command implementation (23 sub-commands) |
-| `Eagle/Library/Components/Private/PackageOps.cs` | 37,276 | Package operations: index discovery, version comparison, security checks, script generation |
+| `Eagle/Library/Components/Private/PackageOps.cs` | 4,767 | Package operations: index discovery, version comparison, security checks, script generation |
 | `Eagle/Library/Components/Public/Interpreter.cs` | 124,855 | Package storage, alias resolution, fallback chain, auto-path management |
-| `Eagle/Library/Components/Public/PackageData.cs` | ~300 | Package metadata implementation (IPackageData) |
+| `Eagle/Library/Components/Public/PackageData.cs` | ~191 | Package metadata implementation (IPackageData) |
 | `Eagle/Library/Components/Private/PackageContextClientData.cs` | ~250 | State management during index evaluation |
-| `Eagle/Library/Containers/Private/PackageIndexDictionary.cs` | ~200 | Index file → flags mapping |
+| `Eagle/Library/Containers/Private/PackageIndexDictionary.cs` | ~71 | Index file → flags mapping |
 | `Eagle/Library/Containers/Private/PackageAliasDictionary.cs` | ~100 | Alias name → (package, version, flags) mapping |
 | `Eagle/Library/Components/Public/Enumerations.cs` | large | PackageFlags, PackageIndexFlags, PackageType enums |
 | `Eagle/Library/Components/Private/GlobalState.cs` | large | Auto-path list construction and caching |
@@ -78,7 +78,7 @@ Eagle adds 14 sub-commands beyond Tcl's standard set:
 | `absent` | Pre-condition: verify package is NOT loaded |
 | `alias` / `aliases` | Package name aliasing with version and flag overrides |
 | `indexes` | List discovered package index files |
-| `info` | Detailed package metadata (flags, paths, timestamps) |
+| `info` | Detailed package metadata (flags, paths, loaded status) |
 | `loaded` / `vloaded` | Query loaded packages (with/without version info) |
 | `pending` | Check if packages are currently being loaded |
 | `present` | Post-condition: verify package IS loaded |
@@ -362,7 +362,7 @@ Standard Tcl version operations. `vcompare` returns `-1`, `0`, or `1`.
 `vsatisfies` returns a boolean. `vsort` sorts two versions.
 
 **Fallback behavior**: If version strings fail to parse as .NET
-`Version` objects, `vcompare` and `vsort` fall back to string
+`Version` objects, `vcompare` raises an error while `vsort` falls back to string
 comparison rather than raising an error.
 
 **AlwaysSatisfy flag**: If `PackageFlags.AlwaysSatisfy` is set on the
@@ -544,10 +544,10 @@ Discovers package indexes embedded in the Eagle runtime:
 
 | PackageType | Index path | Purpose |
 |-------------|-----------|---------|
-| `Loader` | `lib/Eagle1.0-Loader/pkgIndex.eagle` | Plugin loader package |
+| `Loader` | `lib/Loader1.0/pkgIndex.eagle` | Plugin loader package |
 | `Library` | `lib/Eagle1.0/pkgIndex.eagle` | Core script library |
-| `Test` | `lib/Eagle1.0-Test/pkgIndex.eagle` | Test framework |
-| `Kit` | `lib/Eagle1.0-Kit/pkgIndex.eagle` | Kit packages |
+| `Test` | `lib/Test1.0/pkgIndex.eagle` | Test framework |
+| `Kit` | `lib/Kit1.0/pkgIndex.eagle` | Kit packages |
 | `Bundle` | (from BundleManager) | Bundle-embedded indexes |
 | `Host` | (from host list file) | Host-defined packages |
 
@@ -962,10 +962,10 @@ The `PackageType` enum classifies packages by their origin:
 | `Default` | 0x100 | Internal use only |
 
 Each type maps to a specific index file location:
-- `Loader` → `lib/Eagle1.0-Loader/pkgIndex.eagle`
+- `Loader` → `lib/Loader1.0/pkgIndex.eagle`
 - `Library` → `lib/Eagle1.0/pkgIndex.eagle`
-- `Test` → `lib/Eagle1.0-Test/pkgIndex.eagle`
-- `Kit` → `lib/Eagle1.0-Kit/pkgIndex.eagle`
+- `Test` → `lib/Test1.0/pkgIndex.eagle`
+- `Kit` → `lib/Kit1.0/pkgIndex.eagle`
 - `Host`, `Bundle`, `None` → `pkgIndex.eagle` (generic)
 
 ## 13. Practical Patterns

@@ -75,7 +75,7 @@ because .NET's `DateTime.ToString()` has no direct equivalents.
 
 ### Additional sub-commands
 
-Eagle adds 8 sub-commands beyond Tcl's standard set:
+Eagle adds 9 sub-commands beyond Tcl's standard set:
 
 | Sub-command | Purpose |
 |-------------|---------|
@@ -84,7 +84,6 @@ Eagle adds 8 sub-commands beyond Tcl's standard set:
 | `duration` | Human-readable duration between two dates |
 | `filetime` | Convert Windows FILETIME values |
 | `isvalid` | Validate date strings |
-| `microseconds` | Microseconds since epoch |
 | `monthdays` | Days in a given month |
 | `now` | Current time as .NET ticks |
 | `start` / `stop` | High-resolution performance timing pair |
@@ -211,7 +210,9 @@ Parses a date/time string and returns seconds since the epoch.
    - If `-format` is provided, translate it via
      `FormatOps.TranslateDateTimeFormats()` before parsing.
    - Otherwise, use .NET's default `DateTime.Parse()`.
-2. Apply timezone: if `-gmt true`, convert to UTC.
+2. Apply timezone: if `-gmt true`, the input is parsed as UTC (no
+   conversion needed); if `-gmt false` (default), the input is parsed
+   as local time and then converted to UTC via `ToUniversalTime()`.
 3. Convert `DateTime` to seconds since the epoch via
    `TimeOps.DateTimeToSeconds()`.
 
@@ -364,7 +365,10 @@ simple string substitution:
 | `%e` | `%d` | Day of month (space-padded) |
 | `%h` | `MMM` | Same as `%b` |
 | `%H` | `HH` | Hour, 24-hour (00–23) |
+| `%i` | `yyyy.MM.ddTHH:mm:ss.fff` | ISO 8601 with milliseconds |
 | `%I` | `hh` | Hour, 12-hour (01–12) |
+| `%k` | `%H` | Hour, 24-hour (no padding) |
+| `%l` | `%h` | Hour, 12-hour (no padding) |
 | `%m` | `MM` | Month (01–12) |
 | `%M` | `mm` | Minute (00–59) |
 | `%n` | `\n` | Newline |
@@ -389,7 +393,7 @@ Each delegate receives the `DateTime`, `TimeZone`, `CultureInfo`, and
 
 | Tcl | Delegate | Meaning |
 |-----|----------|---------|
-| `%C` | `GetCentury` | Century (year ÷ 100) |
+| `%C` | `GetCentury` | Century (year / 100) |
 | `%g` | `GetTwoDigitYearIso8601` | 2-digit ISO 8601 week-based year |
 | `%G` | `GetFourDigitYearIso8601` | 4-digit ISO 8601 week-based year |
 | `%j` | `GetDayOfYear` | Day of year (001–366) |
@@ -406,23 +410,23 @@ Each delegate receives the `DateTime`, `TimeZone`, `CultureInfo`, and
 
 ```
 clock format $seconds -format "%Y-%m-%d %H:%M:%S %Z (day %j)"
-│
-├─ FormatOps.TclClockDateTime(culture, timezone, format, dateTime, epoch)
-│   │
-│   └─ TranslateDateTimeFormats(culture, timezone, format, dateTime, epoch,
-│                                useFormats=true, useDelegates=true)
-│       │
-│       ├─ Pass 1: Static mappings
-│       │   %Y → yyyy, %m → MM, %d → dd, %H → HH, %M → mm, %S → ss
-│       │
-│       └─ Pass 2: Dynamic delegates
-│           %Z → GetTimeZoneName(dateTime, timezone, culture, epoch)
-│                 → "Eastern Standard Time"
-│           %j → GetDayOfYear(dateTime, timezone, culture, epoch)
-│                 → "042"
-│
-└─ dateTime.ToString(translatedFormat, culture)
-    → "2025-02-11 14:30:00 Eastern Standard Time (day 042)"
+|
++-- FormatOps.TclClockDateTime(culture, timezone, format, dateTime, epoch)
+|   |
+|   +-- TranslateDateTimeFormats(culture, timezone, format, dateTime, epoch,
+|                                useFormats=true, useDelegates=true)
+|       |
+|       +-- Pass 1: Static mappings
+|       |   %Y -> yyyy, %m -> MM, %d -> dd, %H -> HH, %M -> mm, %S -> ss
+|       |
+|       +-- Pass 2: Dynamic delegates
+|           %Z -> GetTimeZoneName(dateTime, timezone, culture, epoch)
+|                 -> "Eastern Standard Time"
+|           %j -> GetDayOfYear(dateTime, timezone, culture, epoch)
+|                 -> "042"
+|
++-- dateTime.ToString(translatedFormat, culture)
+    -> "2025-02-11 14:30:00 Eastern Standard Time (day 042)"
 ```
 
 ### The `%Q` stardate specifier
@@ -469,7 +473,7 @@ The `TimeOps` class provides the core conversion methods:
   Computes `(dateTime - epoch).TotalMilliseconds`.
 
 - **`DateTimeToMicroseconds(ref long us, DateTime dateTime, DateTime epoch)`**:
-  Computes `(dateTime - epoch).Ticks / 10` (since 1 tick = 100ns = 0.1μs).
+  Computes `(dateTime - epoch).Ticks / 10` (since 1 tick = 100ns = 0.1us).
 
 - **`SecondsToDateTime(long seconds, ref DateTime dateTime, DateTime epoch)`**:
   Computes `epoch.AddSeconds(seconds)`.
@@ -518,9 +522,7 @@ need to interact with Eagle's time infrastructure.
 | `UnixEpoch` | 1970-01-01 UTC | Default epoch |
 | `BuildEpoch` | 2000-01-01 Local | Build numbering epoch |
 | `PeEpoch` | 1970-01-01 UTC | PE file compatibility |
-| `SecondsPerMinute` | 60 | Time unit conversion |
-| `SecondsPerHour` | 3,600 | Time unit conversion |
-| `SecondsPerDay` | 86,400 | Time unit conversion |
+| `SecondsInNormalDay` | 86,400 | Time unit conversion |
 | `DaysInMonth[]` | {31,28,31,...} | Calendar reference |
 
 ### Fake time support
@@ -568,8 +570,8 @@ high-resolution timing:
 |--------|-----------|--------|
 | `GetCount()` | Platform-native | `Stopwatch.GetTimestamp()` or `QueryPerformanceCounter` |
 | `GetTickCount()` | ~15ms | `Environment.TickCount` |
-| `GetMicroseconds()` | ~1μs | Derived from performance counter |
-| `GetMicrosecondsFromCount(start, end)` | ~1μs | Elapsed time between two counter values |
+| `GetMicroseconds()` | ~1us | Derived from performance counter |
+| `GetMicrosecondsFromCount(start, end)` | ~1us | Elapsed time between two counter values |
 
 ### Timing side-channel exemption
 
@@ -618,7 +620,7 @@ set now [clock seconds]
 
 # Format as human-readable
 clock format $now -format "%Y-%m-%d %H:%M:%S"
-# → "2025-03-12 14:30:00"
+# -> "2025-03-12 14:30:00"
 
 # Format in UTC
 clock format $now -gmt true -format "%Y-%m-%d %H:%M:%S UTC"
@@ -634,11 +636,11 @@ set now [clock seconds]
 
 # Standard ISO 8601
 clock format $now -iso
-# → "2025-03-12T14:30:00"
+# -> "2025.03.12T14:30:00.000"
 
 # Full ISO 8601 with timezone
 clock format $now -iso -full -isotimezone
-# → "2025-03-12T14:30:00.0000000-05:00"
+# -> "2025-03-12T14:30:00.0000000-05:00"
 ```
 
 ### Pattern 3: High-resolution elapsed timing
@@ -667,7 +669,7 @@ clock buildnumber -epoch [clock scan "2023-01-01"]
 ```tcl
 # Human-readable duration
 clock duration -flags Human "2020-01-01" "2025-03-12"
-# → "5 years, 2 months, 11 days" (approximate)
+# -> "5 years, 2 months, 11 days" (approximate)
 
 # TimeSpan duration
 clock duration "2025-01-01" "2025-03-12"
@@ -678,11 +680,11 @@ clock duration "2025-01-01" "2025-03-12"
 ```tcl
 # Days in February (handles leap years)
 clock monthdays 2
-# → 28 (or 29 in a leap year)
+# -> 28 (or 29 in a leap year)
 
 # Validate a date string
-clock isvalid "2025-02-29"  ;# → 0 (2025 is not a leap year)
-clock isvalid "2024-02-29"  ;# → 1 (2024 is a leap year)
+clock isvalid "2025-02-29"  ;# -> 0 (2025 is not a leap year)
+clock isvalid "2024-02-29"  ;# -> 1 (2024 is a leap year)
 ```
 
 ### Pattern 7: Windows FILETIME conversion
@@ -712,15 +714,15 @@ set now [clock seconds]
 
 # Day of year
 clock format $now -format "Day %j of %Y"
-# → "Day 071 of 2025"
+# -> "Day 071 of 2025"
 
 # ISO 8601 week number
 clock format $now -format "Week %V of %G"
-# → "Week 11 of 2025"
+# -> "Week 11 of 2025"
 
 # Timezone name
 clock format $now -format "%Y-%m-%d %H:%M:%S %Z"
-# → "2025-03-12 14:30:00 Eastern Daylight Time"
+# -> "2025-03-12 14:30:00 Eastern Daylight Time"
 
 # Seconds since epoch (embedded in format)
 clock format $now -format "Epoch: %s"
@@ -731,7 +733,7 @@ clock format $now -format "Epoch: %s"
 ```tcl
 # Generate build number (days since 2000-01-01, revision from time-of-day)
 set buildInfo [clock buildnumber]
-# → "9201 42300" (days revision)
+# -> "9201 42300" (days revision)
 
 # Use as assembly version: 1.0.9201.42300
 ```

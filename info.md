@@ -3,7 +3,7 @@
 ## 1. Executive Summary
 
 The Eagle `info` command is the interpreter's primary introspection
-mechanism, providing **85 sub-commands** for querying every aspect of the
+mechanism, providing **87 sub-commands** for querying every aspect of the
 runtime environment. Tcl's `info` offers roughly 25 sub-commands focused
 on procedure, variable, and script introspection. Eagle extends this
 dramatically with .NET/CLR integration, Windows-specific queries, database
@@ -14,7 +14,7 @@ Key differentiators from Tcl:
 
 | Area | Tcl | Eagle |
 |------|-----|-------|
-| Sub-commands | ~25 | 85 |
+| Sub-commands | ~25 | 87 |
 | .NET integration | None | assembly, framework, runtime, appdomain, objects, delegates, bindertypes |
 | Security introspection | None | policies, decision, administrator |
 | Plugin system | `info loaded` (basic) | plugin, pluginflags, loaded, modules |
@@ -72,7 +72,7 @@ compile-time conditionals (`#if` guards) per sub-command.
 
 ## 3. Sub-Command Reference
 
-Eagle's 85 `info` sub-commands are organized below by functional category.
+Eagle's 87 `info` sub-commands are organized below by functional category.
 Sub-commands marked **(Eagle)** have no Tcl equivalent. Sub-commands
 marked **(Enhanced)** extend Tcl's version with additional options or
 behavior.
@@ -137,22 +137,24 @@ info procs           ;# All visible procedures
 info procs greet*    ;# Procedures matching "greet*"
 ```
 
-#### `info nprocs ?interp?` **(Eagle)**
+#### `info nprocs ?pattern?` **(Eagle)**
 
-Returns the number of procedures. With `interp`, queries a specific
-interpreter.
+Returns a list of named-argument procedures matching `pattern`.
 
 ```tcl
-info nprocs   ;# 42
+info nprocs          ;# All named-argument procedures
+info nprocs greet*   ;# Named-argument procedures matching "greet*"
 ```
 
-#### `info source ?refresh?` **(Eagle)**
+#### `info source ?procName? ?full?` **(Eagle)**
 
-Returns the source file location of the current script or the Eagle
-library.
+Returns the source file location of the specified procedure, or of
+the current script if no procedure name is given.
 
 ```tcl
-info source   ;# /path/to/current/script.eagle
+info source              ;# /path/to/current/script.eagle
+info source myProc       ;# Source location of myProc
+info source myProc true  ;# Full source location details
 ```
 
 ### 3.2 Variable Introspection
@@ -248,10 +250,15 @@ Returns a list of linked variables (variable aliases created with
 info varlinks   ;# All variable links
 ```
 
-#### `info linkedname` **(Eagle)**
+#### `info linkedname varName` **(Eagle)**
 
-Returns the linked name of the interpreter (used in multi-interpreter
-configurations).
+Returns the qualified name of the link target for the variable
+`varName` (i.e., for variables created via `upvar` or similar
+linking mechanisms), conforming to TIP #471.
+
+```tcl
+info linkedname myLink   ;# Qualified name of the link target
+```
 
 ### 3.3 Command Introspection
 
@@ -505,13 +512,14 @@ Returns `1` if the interpreter is in interactive mode, `0` otherwise.
 info interactive   ;# 1 (in shell) or 0 (in script)
 ```
 
-#### `info library ?pattern?` **(Enhanced)**
+#### `info library ?refresh?` **(Enhanced)**
 
-Returns library path information. Eagle extends this with complex
-filtering options and pattern matching.
+Returns library path information. With `refresh` true, forces a
+refresh of the cached library path.
 
 ```tcl
-info library   ;# /path/to/eagle/library
+info library        ;# /path/to/eagle/library
+info library true   ;# Refresh and return library path
 ```
 
 #### `info context` **(Eagle)**
@@ -522,14 +530,13 @@ Returns the current interpreter context information.
 info context   ;# Context details
 ```
 
-#### `info lastinput ?new?` **(Eagle)**
+#### `info lastinput` **(Eagle, conditional: NATIVE && WINDOWS)**
 
-Returns the last input string (bidirectional getter/setter). Useful for
-interactive shell history.
+Returns the Windows idle time tick count via
+`WindowOps.GetLastInputTickCount()`. Takes no arguments.
 
 ```tcl
-info lastinput         ;# Previous input
-info lastinput "new"   ;# Set new input value
+info lastinput   ;# Tick count of last input event
 ```
 
 ### 3.7 Environment and System Information
@@ -579,7 +586,7 @@ info administrator   ;# 0 or 1
 
 Returns the current process ID.
 
-Implementation: `GlobalState.GetCurrentProcessId()`
+Implementation: `ProcessOps.GetId()`
 
 ```tcl
 info pid   ;# 12345
@@ -674,7 +681,7 @@ info binary   ;# /usr/local/bin/eagle.exe
 
 Returns the name of the main executable.
 
-Implementation: `GlobalState.GetNameOfExecutable()`
+Implementation: `PathOps.GetUnixPath(PathOps.GetExecutableName())`
 
 ```tcl
 info nameofexecutable   ;# /usr/local/bin/eagle.exe
@@ -960,22 +967,26 @@ Implementation: `GlobalState.ActiveInterpretersToString(pattern, false)`
 info active   ;# All active interpreters
 ```
 
-#### `info interps ?pattern?`
+#### `info interps ?pattern? ?all?`
 
-Returns a list of existing interpreters matching `pattern`.
+Returns a list of existing interpreters matching `pattern`. With `all`
+set to true, includes all interpreters regardless of visibility.
 
 ```tcl
-info interps   ;# All interpreters
+info interps          ;# All interpreters
+info interps * true   ;# All interpreters including hidden
 ```
 
-#### `info loaded ?package? ?interp?` **(Enhanced)**
+#### `info loaded ?options? ?interp? ?pattern?` **(Enhanced)**
 
-Returns a list of loaded packages/plugins. With `package`, queries a
-specific package. With `interp`, queries a specific interpreter.
+Returns a list of loaded packages/plugins. Supports a `-nocore` option
+to exclude core packages. With `interp`, queries a specific interpreter.
+With `pattern`, filters the results by pattern.
 
 ```tcl
-info loaded           ;# All loaded packages
-info loaded MyPkg     ;# Specific package info
+info loaded                    ;# All loaded packages
+info loaded -nocore            ;# Exclude core packages
+info loaded -nocore {} MyPkg*  ;# Filtered, non-core packages
 ```
 
 #### `info modules ?pattern?` **(Eagle, conditional: EMIT && NATIVE && LIBRARY)**
@@ -986,21 +997,20 @@ Returns a list of loaded modules (dynamically emitted assemblies).
 info modules   ;# All loaded modules
 ```
 
-#### `info plugin name ?subName?` **(Eagle)**
+#### `info plugin name` **(Eagle)**
 
 Returns detailed information about a loaded plugin.
 
 ```tcl
-info plugin MyPlugin       ;# Plugin information
-info plugin MyPlugin ver   ;# Specific plugin attribute
+info plugin MyPlugin   ;# Plugin information
 ```
 
-#### `info pluginflags ?pattern?` **(Eagle)**
+#### `info pluginflags name` **(Eagle)**
 
-Returns plugin flags for plugins matching `pattern`.
+Returns plugin flags for the plugin identified by `name`.
 
 ```tcl
-info pluginflags   ;# All plugin flags
+info pluginflags MyPlugin   ;# Plugin flags for MyPlugin
 ```
 
 ### 3.13 Security and Policy Introspection

@@ -76,7 +76,7 @@ Many sub-commands require specific compile-time flags:
 |------|-------------|
 | `DEBUGGER` | `break`, `emergency`, `eval`, `run`, `subst`, `invoke`, `setup`, `status`, `step`, `steps`, `test`, `types`, and most others |
 | `DEBUGGER_BREAKPOINTS` | `breakpoints`, `ontoken`, `token` |
-| `DEBUGGER_ARGUMENTS` | Execute argument tracking |
+| `SCRIPT_ARGUMENTS` | Execute argument tracking |
 | `SHELL` | `lockloop`, `shell` |
 | `DATA` | `bundle`, `mount`, `unmount`, `mounts` |
 | `NATIVE` | `output`, `stack`, `sysmemory` |
@@ -204,7 +204,7 @@ All flag-toggle sub-commands require `DEBUGGER`.
 | `debug oncancel` | `debugger.BreakOnCancel` | Break when script is cancelled |
 | `debug onerror` | `debugger.BreakOnError` | Break when an error occurs |
 | `debug onexecute` | `debugger.BreakOnExecute` | Break on every command execution |
-| `debug onexit` | `debugger.BreakOnExit` | Break on procedure exit |
+| `debug onexit` | `debugger.BreakOnExit` | Break on exit command |
 | `debug onreturn` | `debugger.BreakOnReturn` | Break on value return |
 | `debug ontest` | `debugger.BreakOnTest` | Break on test command |
 | `debug ontoken` | `debugger.BreakOnToken` | Break on token parsing (requires `DEBUGGER_BREAKPOINTS`) |

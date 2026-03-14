@@ -1,6 +1,6 @@
 # Eagle `object` Command — Deep-Dive Analysis
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `object` command internals, including all 44 sub-commands, the opaque object handle system (`ObjectDictionary` → `ObjectWrapper` → `ObjectData`), handle naming (`Type#N` format), the `FixupReturnValue` pipeline (decides handle creation vs. string return, alias attachment, reference counting), method overload resolution via `FindMethodsAndFixupArguments` (parameter type matching, params arrays, by-ref arguments), the `ObjectFlags` enum (40+ flags controlling disposal, aliasing, naming, references), `MarshalFlags` (30+ flags controlling method resolution and type conversion), `ByRefArgumentFlags`, command alias dispatch, `IObject`/`IObjectData` interfaces, assembly loading with trust verification, namespace imports, type aliases, reference counting (permanent and temporary), and the `Default` → `Shell` → `Core` → `Console` host integration. For basic command syntax, see [`core_language.md`](core_language.md#cmd-object). For usage examples, see [`core_examples.md`](core_examples.md#ex-object). For workflow patterns, see [`tips_and_tricks.md`](tips_and_tricks.md).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `object` command internals, including all 44 sub-commands, the opaque object handle system (`ObjectDictionary` → `ObjectWrapper` → `ObjectData`), handle naming (`Type#N` format), the `FixupReturnValue` pipeline (decides handle creation vs. string return, alias attachment, reference counting), method overload resolution via `FindMethodsAndFixupArguments` (parameter type matching, params arrays, by-ref arguments), the `ObjectFlags` enum (40+ flags controlling disposal, aliasing, naming, references), `MarshalFlags` (30+ flags controlling method resolution and type conversion), `ByRefArgumentFlags`, command alias dispatch, `IObject`/`IObjectData` interfaces, assembly loading with trust verification, namespace imports, type aliases, reference counting (permanent and temporary), and the `Default` → `Engine` → `File` → `Profile` → `Shell` → `Core` → `Console` host integration. For basic command syntax, see [`core_language.md`](core_language.md#cmd-object). For usage examples, see [`core_examples.md`](core_examples.md#ex-object). For workflow patterns, see [`tips_and_tricks.md`](tips_and_tricks.md).
 
 ## 1. Executive Summary
 
@@ -17,9 +17,10 @@ for object orientation, and separate packages for .NET bridging). Eagle's
 with sophisticated method overload resolution, reference counting,
 automatic disposal, and command alias creation.
 
-The command carries `CommandFlags.Safe | Standard | Initialize |
-SecuritySdk` and belongs to the `"managedEnvironment"` object group.
-**It is available in safe interpreters** (with policy restrictions).
+The command carries `CommandFlags.Unsafe | CommandFlags.Critical |
+CommandFlags.NonStandard` and belongs to the `"managedEnvironment"` object group.
+**It is not available in safe interpreters by default**, though the
+policy subsystem may grant access to it in specific contexts.
 
 Key differentiators from Tcl:
 
@@ -63,8 +64,9 @@ System.DateTime            →  System#DateTime#2
 System.Int32               →  Int32#3
 ```
 
-For types from non-runtime assemblies, short type names are used:
-`StringBuilder#1` instead of the fully qualified form.
+For types from the Eagle runtime assembly, short type names are used
+(e.g., `StringBuilder#1`). Types from other assemblies use the fully
+qualified name (e.g., `System#Text#StringBuilder#1`).
 
 The special handle `"null"` is a read-only opaque object handle that resolves
 to an internal value of null. An empty string `""` does not represent null —
@@ -149,7 +151,7 @@ match is selected.
 |------|------|
 | `Commands/Object.cs` (~5,575 lines) | Command implementation: 44 sub-commands |
 | `Components/Private/MarshalOps.cs` (~11,000+ lines) | Marshalling: `FixupReturnValue`, `FindMethodsAndFixupArguments`, type resolution, handle naming |
-| `Components/Private/ObjectOps.cs` (~2,000+ lines) | Option definitions, defaults, disposal helpers |
+| `Components/Private/ObjectOps.cs` (~7,177 lines) | Option definitions, defaults, disposal helpers |
 | `Components/Public/ObjectData.cs` | `IObjectData` implementation: handle metadata |
 | `Containers/Public/ObjectDictionary.cs` | Handle storage: `Dictionary<string, object>` |
 | `Components/Public/Interpreter.cs` | `AddObject`, `RemoveObject`, `AddObjectAlias`, reference counting |
@@ -724,7 +726,7 @@ Returns the resolved type information.
 
 | Option | Type | Purpose |
 |--------|------|---------|
-| `-types` | TypeList | Type list to search |
+| `-objecttypes` | TypeList | Type list to search |
 | `-stricttype` | switch | Strict matching |
 | `-nocase` | switch | Case-insensitive |
 | `-noshowname` | switch | Don't show name in results |
@@ -788,7 +790,7 @@ optionally filtered by pattern.
 
 | Option | Purpose |
 |--------|---------|
-| `-types` | Type list to check |
+| `-objecttypes` | Type list to check |
 | `-stricttype` | Strict type matching |
 | `-nocase` | Case-insensitive |
 | `-nocomplain` | Ignore type resolution errors |
@@ -870,14 +872,14 @@ handle.
 
 | Option | Purpose |
 |--------|---------|
-| `-types` | Type list for matching |
+| `-objecttypes` | Type list for matching |
 | `-aliasname` | Custom alias name |
 | `-verbose` | Verbose output |
-| `-strict` | Strict matching |
+| `-stricttype` | Strict matching |
 | `-nocase` | Case-insensitive |
-| `-raw` | Raw formatting |
-| `-all` | Alias all matches |
-| `-reference` | Create reference alias |
+| `-aliasraw` | Raw formatting |
+| `-aliasall` | Alias all matches |
+| `-aliasreference` | Create reference alias |
 
 ```tcl
 # Create alias for existing handle
@@ -1308,9 +1310,9 @@ set count [$list Count]
 
 ## 14. Safe Interpreter Behavior
 
-Unlike most commands analyzed in this documentation series, `object` is
-marked `CommandFlags.Safe` and **is available in safe interpreters**.
-However, access is heavily restricted by the security policy subsystem:
+The `object` command is marked `CommandFlags.Unsafe | CommandFlags.Critical |
+CommandFlags.NonStandard` and **is not available in safe interpreters by default**.
+However, the policy subsystem may grant access to it, subject to heavy restrictions:
 
 - Only types and members explicitly allowed by active policies can be
   accessed
@@ -1350,7 +1352,7 @@ member invocation, and assembly load against registered policies.
 
 ## 16. Security Considerations
 
-- The command is `Safe` but policy-restricted — policies control which
+- The command is `Unsafe` but can be policy-granted — policies control which
   types, members, and assemblies are accessible
 - `object load -trustedonly -verifiedonly` enforces trust and strong
   name verification on file-loaded assemblies

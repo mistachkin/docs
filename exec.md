@@ -470,8 +470,8 @@ A `ProcessStartInfo` object is constructed with:
   process is used).
 - `UseShellExecute` from the `-shell` flag.
 - `RedirectStandardInput/Output/Error` based on capture settings.
-- `StandardOutputEncoding/StandardErrorEncoding` set to UTF-8 or Unicode based
-  on the `-unicode` flag.
+- `StandardOutputEncoding/StandardErrorEncoding` set to Unicode (UTF-16) when
+  `-unicode` is specified; otherwise uses the .NET default encoding.
 - `WindowStyle` from the `-windowstyle` option.
 - `Domain`, `UserName`, `Password` from authentication options.
 
@@ -596,7 +596,7 @@ options:
 
 ### 9.3 Option-Driven vs. Syntax-Driven
 
-Tcl's `[exec]` has only two user-facing options: `-keepnewline` and `--`. All
+Tcl's `[exec]` has three user-facing options: `-ignorestderr`, `-keepnewline`, and `--`. All
 I/O control is done through positional redirection operators and the pipeline
 syntax.
 

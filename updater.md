@@ -135,7 +135,7 @@ The project lives in `Eagle/Update/` and contains 47 files:
 
 | File | Class | Implements | Purpose |
 |------|-------|-----------|---------|
-| `ByteArray.cs` | `ByteArray` | `IEqualityComparer<byte[]>` | Byte array comparison using element-wise `GenericOps<byte>.Equals` and FNV-1 hashing |
+| `ByteArray.cs` | `ByteArray` | `IEqualityComparer<byte[]>` | Byte array comparison using element-wise `GenericOps<byte>.Equals` and FNV-1a hashing |
 | `Configuration.cs` | `_Configuration` | `IEqualityComparer<Configuration>` | Release-to-configuration matching on lookup fields (ProtocolId, PublicKeyToken, Name, Culture, BuildType) |
 | `CultureInfo.cs` | `_CultureInfo` | `IEqualityComparer<CultureInfo>` | Culture comparison with null handling |
 | `FileName.cs` | `FileName` | `IAnyComparer<string>` | Platform-aware file name comparison (case-insensitive on Windows, case-sensitive elsewhere) |
@@ -156,7 +156,7 @@ The project lives in `Eagle/Update/` and contains 47 files:
 | `FormOps.cs` | `FormOps` | Thread-safe `ISynchronizeInvoke.BeginInvoke` helpers |
 | `FormatOps.cs` | `FormatOps` | String/object formatting for display and logging |
 | `GenericOps.cs` | `GenericOps<T>` | Generic collection utilities (`Contains`, `Equals` for `IComparable<T>`) |
-| `HashOps.cs` | `HashOps` | FNV-1 hash algorithm implementation (32-bit, standard and alternate) |
+| `HashOps.cs` | `HashOps` | FNV-1a hash algorithm implementation (32-bit, standard and alternate) |
 | `ParseOps.cs` | `ParseOps` | Parsing utilities: hex strings, command lines, versions, enums, URIs, cultures |
 | `Program.cs` | `Program` | Application entry point (`Main`), `Fail` handler, `ApplicationExit` cleanup |
 | `Release.cs` | `Release` | Release manifest entry (parsing, validation, comparison, URI construction, file verification) |
@@ -327,7 +327,7 @@ The `_Configuration` comparer is central to release matching. It compares
 5. **Culture**: Culture equality via `_CultureInfo` comparer.
 6. **BuildType**: Enum equality.
 
-The `GetHashCode` implementation uses FNV-1 hashing (via `HashOps`) on
+The `GetHashCode` implementation uses FNV-1a hashing (via `HashOps`) on
 ProtocolId bytes, PublicKeyToken, Name bytes, and Culture, XOR-combined.
 
 The `FileName` comparer uses `FileOps.GetComparisonType()` to determine
@@ -530,7 +530,7 @@ The `ApplicationExit` handler:
 1. Checks for an `.in-use` file (left from a previous self-update).
 
 2. If found, creates a temporary batch file that:
-   - Waits 3+ seconds using `ping -n 4 localhost`.
+   - Waits 3+ seconds using `ping.exe -n {N} 127.0.0.1`.
    - Deletes the `.in-use` file.
 
 3. Launches the batch file as a child process and exits. The batch file
@@ -613,7 +613,7 @@ All three must match for verification to succeed. `FileOps.Hash` uses
 `System.Security.Cryptography.HashAlgorithm.Create()` with a configurable
 algorithm name.
 
-`HashOps` implements the FNV-1 hash algorithm (32-bit) for internal use in
+`HashOps` implements the FNV-1a hash algorithm (32-bit) for internal use in
 comparers and dictionary key generation, not for security verification.
 
 ### 5.5 TLS Certificate Pinning
@@ -724,8 +724,6 @@ All options use the `-optionName value` syntax (with `-` or `/` prefix):
 | `-noStrongNameSigned` | bool | false | Skip strong name verification |
 | `-coreIsAssembly` | bool | true | Whether core file is a .NET assembly |
 | `-strict` | bool | (varies) | Strict error handling |
-| `-exceptions` | bool | false | Allow non-Ok return codes |
-| `-policies` | bool | false | Enable command execution policies |
 
 ### 6.3 Arguments File
 
@@ -748,7 +746,6 @@ Key defaults from the `Defaults` class:
 | `ExecutableName` | `"Hippogriff"` | Assembly and executable name |
 | `BaseUri` | `https://update.eagle.to/` | Update server |
 | `TagPathAndQuery` | `latest.txt?v={0}` (or `stable.txt?v={0}`) | Manifest path |
-| `DefaultCreateFlags` | `SafeEmbeddedUse` | Interpreter flags (if shell enabled) |
 | `SelfUriFormat` | `releases/{0}/Hippogriff.exe` | Self-update download path |
 | `BuildUriFormat` | `releases/{0}/Eagle{1}{2}{0}.exe` | Eagle download path |
 | `HashAlgorithmName` | `"sha1"` | Default hash algorithm |
@@ -843,7 +840,7 @@ present) and `IsGreater` (newer version).
 The `UpdateForm` is a fixed-size, non-resizable dialog:
 
 - **Windows size**: 634 x 233 pixels
-- **Mono size**: 634 x 269 pixels (adjusted for different DPI scaling)
+- **Mono size**: 648 x 269 pixels (adjusted for different DPI scaling)
 - **Border style**: FixedSingle (no resize grip)
 - **Title bar**: No minimize/maximize/close buttons (`ControlBox = false`)
 - **Start position**: Center screen
@@ -995,8 +992,9 @@ updater handles this with a two-step mechanism:
 2. **On exit**: The `ApplicationExit` handler creates a temporary batch
    script:
    ```
-   ping -n 4 localhost > NUL 2>&1
-   DEL /F /Q "...\Hippogriff.exe.in-use"
+   ping.exe -n {N} 127.0.0.1 >NUL
+   IF EXIST "{in-use-path}" DEL /F "{in-use-path}"
+   IF EXIST "%~f0" DEL "%~f0"
    ```
    The batch file is launched as a child process. After the updater exits
    (releasing the file lock), the batch file's 3-second ping delay ensures

@@ -178,7 +178,7 @@ set getStdHandle [library declare \
 
 **What happens internally:**
 
-1. `Library.cs` parses options (13 total; see table below).
+1. `Library.cs` parses options (15 total; see table below).
 2. Calls `DelegateOps.CreateNativeDelegateType`, which uses
    **`System.Reflection.Emit`** to build a delegate type at runtime:
 
@@ -211,9 +211,9 @@ set getStdHandle [library declare \
 | `-returntype type` | `void` | Return type (CLR type name) |
 | `-parametertypes typeList` | `{}` | Parameter type list |
 | `-callingconvention conv` | `Winapi` | `Winapi`, `Cdecl`, `StdCall`, `ThisCall`, `FastCall` |
-| `-charset charset` | `Ansi` | String marshalling: `Ansi`, `Unicode`, `Auto` |
+| `-charset charset` | `(CharSet)0` | String marshalling: `Ansi`, `Unicode`, `Auto` (.NET default) |
 | `-setlasterror bool` | `false` | Capture Win32 last error after call |
-| `-bestfitmapping bool` | `false` | Best-fit character mapping |
+| `-bestfitmapping bool` | `true` | Best-fit character mapping |
 | `-throwonunmappablechar bool` | `false` | Throw on unmappable characters |
 | `-assemblyname name` | auto | Custom dynamic assembly name |
 | `-modulename name` | auto | Custom dynamic module name |
@@ -596,7 +596,7 @@ set module [library load -trustedonly important.dll]
 
 | Sub-command | Syntax | Purpose |
 |------------|--------|---------|
-| `info delegate` | `library info delegate delegateName` | Delegate details (14 fields) |
+| `info delegate` | `library info delegate delegateName` | Delegate details (15 fields) |
 | `info module` | `library info module moduleName` | Module details (8 fields) |
 
 ### Verification operations
@@ -610,7 +610,7 @@ set module [library load -trustedonly important.dll]
 
 ### Info sub-command output fields
 
-**`library info delegate`** returns 14 key-value pairs:
+**`library info delegate`** returns 15 key-value pairs:
 
 | Field | Description |
 |-------|-------------|
@@ -915,6 +915,7 @@ The command is flagged with:
 - **`CommandFlags.NativeCode`** — marks it as executing native code
 - **`CommandFlags.Unsafe`** — marks it as unsafe
 - **`CommandFlags.Critical`** — marks it as security-critical
+- **`CommandFlags.NonStandard`** — marks it as a non-standard Eagle extension
 
 These flags mean the command is **not available in safe interpreters** and
 can be restricted via interpreter policies.

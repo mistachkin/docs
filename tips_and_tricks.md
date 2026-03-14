@@ -24,7 +24,7 @@ This guide covers Eagle's unique capabilities and highest-value patterns. Each s
   - [lmap: Functional List Transformation](#lmap-functional-list-transformation)
   - [lremove: Remove Elements by Index](#lremove-remove-elements-by-index)
 - [Expression Enhancements](#expression-enhancements)
-  - [Logical Operators: ^^, ->, <->](#logical-operators----)
+  - [Bitwise Operators: ^^, ->, <->](#bitwise-operators----)
   - [Bit Rotation: <<<, >>>](#bit-rotation--)
   - [Variable Assignment in Expressions: :=](#variable-assignment-in-expressions-)
   - [List Membership: in, ni](#list-membership-in-ni)
@@ -621,14 +621,17 @@ set formatted [lmap {k v} $pairs {
 
 ### lremove: Remove Elements by Index
 
-`lremove` returns a new list with elements at the specified indices removed:
+`lremove` removes an element at a given index. Multiple indices perform
+nested-path removal, where each successive index drills into the sublist
+selected by the previous index:
 
 ```tcl
-lremove {a b c d e} 1 3
-;# Returns: {a c e}
+lremove {a b c d e} 1
+;# Returns: {a c d e}
 
-lremove {x y z w} 0 end
-;# Returns: {y z}
+# Nested: index 1 selects {d e f}, then index 0 removes "d" from it
+lremove {{a b c} {d e f}} 1 0
+;# Returns: {{a b c} {e f}}
 ```
 
 - **See also**: [core_language.md](core_language.md#cmd-lremove) — `lremove` command
@@ -639,21 +642,24 @@ lremove {x y z w} 0 end
 
 Eagle extends Tcl's expression system with additional operators and functions.
 
-### Logical Operators: ^^, ->, <->
+### Bitwise Operators: ^^, ->, <->
 
 | Operator | Name | Description |
 |----------|------|-------------|
 | `^^` | Logical XOR | True when exactly one operand is true |
-| `->` | Logical implication | False only when the first is true and the second is false |
-| `<->` | Logical equivalence | True when both operands have the same truth value |
+| `->` | Bitwise implication (BitwiseImp) | Bitwise material implication of two integral operands |
+| `<->` | Bitwise equivalence (BitwiseEqv) | Bitwise equivalence (XNOR) of two integral operands |
+
+> **Note:** The logical variants of implication and equivalence are `=>`
+> (LogicalImp) and `<=>` (LogicalEqv), respectively.
 
 ```tcl
 expr {1 ^^ 0}     ;# Returns: 1 (XOR: one true, one false)
 expr {1 ^^ 1}     ;# Returns: 0 (XOR: both true)
-expr {1 -> 0}     ;# Returns: 0 (implication: true -> false is false)
-expr {0 -> 1}     ;# Returns: 1 (implication: false -> anything is true)
-expr {1 <-> 1}    ;# Returns: 1 (equivalence: both true)
-expr {1 <-> 0}    ;# Returns: 0 (equivalence: different)
+expr {1 -> 0}     ;# Returns: 0 (bitwise implication)
+expr {0 -> 1}     ;# Returns: 1 (bitwise implication)
+expr {1 <-> 1}    ;# Returns: 1 (bitwise equivalence)
+expr {1 <-> 0}    ;# Returns: 0 (bitwise equivalence)
 ```
 
 ---
@@ -770,7 +776,7 @@ hash normal md5 Hello
 ;# Returns: 8b1a9953c4611296a827abf8c47804d7
 
 # HMAC (keyed-hash message authentication code)
-hash mac sha256 message secret-key
+hash mac HMACSHA256 message secret-key
 
 # List available algorithms
 hash list
@@ -1292,7 +1298,7 @@ These work at the interactive shell prompt — just paste and go.
 
 ```tcl
 # Generate a random password (16 chars, ASCII)
-package require Eagle.Test; visibleCharsOnly [expr {randstr(16)}]
+expr {randstr(16)}
 
 # Current date in ISO 8601
 clock format [clock seconds] -iso
@@ -1386,7 +1392,7 @@ apply {{msg} {
 
 # HMAC-SHA256 (e.g. for webhook signature verification)
 apply {{key msg} {
-  puts [hash keyed hmacsha256 $key $msg]
+  puts [hash keyed hmacsha256 $msg $key]
 }} my-secret-key payload-to-sign
 
 # Generate a crypto-random hex token (32 bytes = 64 hex chars)
@@ -1523,10 +1529,10 @@ Explore the entire .NET type system interactively — no IDE required.
 
 ```tcl
 # List all public methods on System.String
-object members System.String -membertype Method
+object members System.String -membertypes Method
 
 # Inspect the properties of the Environment class
-object members System.Environment -membertype Property
+object members System.Environment -membertypes Property
 
 # Enumerate all values in a .NET enum
 apply {{enumType} {

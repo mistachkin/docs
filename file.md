@@ -2,22 +2,22 @@
 
 ## 1. Executive Summary
 
-The Eagle `file` command provides **54 sub-commands** for file system
+The Eagle `file` command provides **52 sub-commands** for file system
 operations with deep .NET/CLR integration. While Tcl's `file` offers roughly
 25 sub-commands focused on portable path manipulation and basic I/O, Eagle
 extends this to include Windows security descriptors (SDDL), ACL access
 checks, PE file magic number parsing, .NET assembly verification, object IDs,
 file ownership queries, interpreter cleanup management, advanced globbing with
-`MatchMode`, and cryptographically-generated temporary paths.
+`MatchMode`, and temporary paths.
 
 Key differentiators from Tcl:
 
 | Area | Tcl | Eagle |
 |------|-----|-------|
-| Sub-commands | ~25 | 54 |
+| Sub-commands | ~25 | 52 |
 | Security | Basic permissions | ACL, SDDL, ownership, trusted/verified |
 | Path validation | Minimal | `validname` with platform-specific rules |
-| Temporary files | `file tempfile` (8.6) | `tempname`/`temppath` with env precedence and crypto |
+| Temporary files | `file tempfile` (8.6) | `tempname`/`temppath` with env precedence |
 | PE inspection | None | `magic` extracts PE headers, CLR info |
 | Glob matching | `glob` command | `file glob` with `MatchMode` enum |
 | Cleanup | Manual | `file cleanup` with interpreter lifecycle |
@@ -59,7 +59,7 @@ sub-command interface.
 
 ## 3. Sub-Command Reference
 
-Eagle's 54 `file` sub-commands are organized below by functional category.
+Eagle's 52 `file` sub-commands are organized below by functional category.
 Sub-commands marked **(Eagle)** have no Tcl equivalent. Sub-commands marked
 **(Enhanced)** extend Tcl's version with additional options or behavior.
 
@@ -180,11 +180,13 @@ file separator   ;# / (Unix) or \ (Windows)
 
 #### `file drive name` **(Eagle, Windows)**
 
-Returns the drive letter or UNC root of `name`.
+Returns detailed drive information for the volume containing `name` as a list
+with 7 fields: `name`, `volumeLabel`, `driveType`, `driveFormat`,
+`totalFreeSpace`, `availableFreeSpace`, `totalSize`. UNC paths are rejected.
 
 ```tcl
-file drive C:\Users\test        ;# C:\
-file drive \\server\share\file  ;# \\server\share
+file drive C:\Users\test
+;# name C:\ volumeLabel OS driveType Fixed driveFormat NTFS totalFreeSpace 107374182400 availableFreeSpace 107374182400 totalSize 256060514304
 ```
 
 #### `file tildeexpand name` **(Eagle)**
@@ -322,7 +324,7 @@ matching for flexible containment checks.
 | Option | Default | Description |
 |--------|---------|-------------|
 | `-mode` | `None` | Pattern matching mode (`MatchMode` enum) |
-| `-searchoption` | `TopDirectoryOnly` | `AllDirectories` for recursive |
+| `-searchoption` | `AllDirectories` | Search option (`SearchOption` enum) |
 | `-pathtype` | — | `PathType` enum for validation |
 | `-contains` | — | Check containment vs equality |
 | `-failonerror` | — | Fail on access errors |
@@ -436,12 +438,12 @@ Returns version information for PE files (executables and DLLs). Uses
 
 | Option | Description |
 |--------|-------------|
-| `-full` | Return complete `FileVersionInfo` as dictionary |
+| `-full` | Return complete `FileVersionInfo` via `ToString()` (multi-line) |
 | `-fixed` | Return the fixed (semantic) file version |
 
 ```tcl
 file version myapp.exe             ;# "1.2.3.4"
-file version -full myapp.exe       ;# {FileVersion 1.2.3.4 ProductName ...}
+file version -full myapp.exe       ;# Multi-line FileVersionInfo.ToString() output
 file version -fixed mydll.dll      ;# "1.2.3.4" (fixed version)
 ```
 
@@ -516,10 +518,6 @@ enabled and passes verification.
 ```tcl
 file verified MyAssembly.dll   ;# 1 (strong-named and verified)
 ```
-
-#### `file owner name` **(Eagle, Windows/.NET)**
-
-Returns the owner of the file (SID or account name).
 
 ### 3.5 File Operations
 
@@ -688,23 +686,21 @@ file volumes   ;# {C:/ D:/ E:/} (Windows) or {/} (Unix)
 
 #### `file tempname` **(Eagle)**
 
-Returns a unique temporary filename. Eagle uses cryptographic randomness
-for name generation and supports interpreter-specific temp path callbacks.
+Returns a unique temporary filename. Eagle uses .NET's
+`Path.GetRandomFileName()` for name generation and supports
+interpreter-specific temp path callbacks.
 
 ```tcl
-set tmp [file tempname]   ;# /tmp/eagle-unique-path-A1B2C3D4E5F6.tmp
+set tmp [file tempname]   ;# /tmp/esc_xxxxxxxx.xxxx (random)
 ```
 
 **Generation algorithm:**
 
 1. Get temp directory via `PathOps.GetTempPath()` (see environment
    variable precedence below)
-2. Generate random bytes using `RuntimeOps.GetRandomBytes()` with
-   cryptographic `RandomNumberGenerator`
-3. Encode as hexadecimal filename:
-   - Windows 8.3 format: `eiq-WXYZ.tmp` (16-bit hex)
-   - Unix format: `eagle-unique-path-KLMNOPQRSTUVWXYZ.tmp` (64-bit hex)
-4. Retry with new random bytes if path already exists
+2. Generate a random filename using `Path.GetRandomFileName()`
+3. Prepend the prefix `"esc_"` (Eagle Script Command)
+4. Combine with the temp directory path
 
 #### `file temppath` **(Eagle)**
 
@@ -739,9 +735,9 @@ embedders to override the default behavior.
 
 ### 3.8 Interpreter Cleanup Management
 
-#### `file cleanup ?options? ?path ...?` **(Eagle)**
+#### `file cleanup ?options? ?path?` **(Eagle)**
 
-Registers paths for automatic cleanup when the interpreter shuts down, or
+Registers a path for automatic cleanup when the interpreter shuts down, or
 manages the cleanup list. This is Eagle's mechanism for ensuring temporary
 files and directories are removed during interpreter disposal.
 
@@ -780,9 +776,11 @@ registered with `-recursive`).
 #### `file system name` **(Eagle)**
 
 Returns filesystem type information for the volume containing `name`.
+The result is a list prefixed with `native` (since Eagle has no VFS
+support), followed by the drive format string.
 
 ```tcl
-file system C:\   ;# NTFS (Windows)
+file system C:\   ;# {native NTFS} (Windows)
 ```
 
 #### `file objectid ?options? name` **(Eagle, Windows)**
@@ -810,13 +808,13 @@ The `file` command uses two callback delegate types for timestamp
 operations, defined in `Delegates.cs`:
 
 ```
-GetDateTimeCallback(string path) → DateTime
-SetDateTimeCallback(string path, DateTime dateTime) → void
+GetDateTimeCallback(string path) -> DateTime
+SetDateTimeCallback(string path, DateTime dateTime) -> void
 ```
 
 ### Callback dictionary
 
-At construction time (`File.cs` lines 72–99), the command builds two
+At construction time (`File.cs` lines 72-99), the command builds two
 static dictionaries mapping operation names to .NET methods:
 
 | Key | Get callback | Set callback |
@@ -829,16 +827,16 @@ static dictionaries mapping operation names to .NET methods:
 | `directory.mtime` | `Directory.GetLastWriteTimeUtc` | `Directory.SetLastWriteTimeUtc` |
 
 The lookup key is constructed as `FormatOps.QualifiedName(fileType, subCommand)`
-— for example, if the path is a directory and the sub-command is `mtime`,
+-- for example, if the path is a directory and the sub-command is `mtime`,
 the key becomes `"directory.mtime"`, selecting `Directory.GetLastWriteTimeUtc`.
 
 ### Temporary path callbacks
 
 `PathOps` provides two hook points for overriding temp file behavior:
 
-- `GetStringValueCallback getTempFileNameCallback` — override
+- `GetStringValueCallback getTempFileNameCallback` -- override
   `file tempname` generation
-- `GetStringValueCallback getTempPathCallback` — override
+- `GetStringValueCallback getTempPathCallback` -- override
   `file temppath` resolution
 
 These allow test frameworks or embedders to redirect temporary files to
@@ -850,7 +848,7 @@ controlled locations.
 
 Eagle implements a three-tier access verification system in `FileOps.cs`:
 
-### Tier 1 — Simple verification methods
+### Tier 1 -- Simple verification methods
 
 `VerifyExecutable()`, `VerifyReadable()`, `VerifyWritable()` are the
 entry points called by `file executable`, `file readable`, `file writable`.
@@ -858,13 +856,13 @@ entry points called by `file executable`, `file readable`, `file writable`.
 On Windows (non-Mono), these delegate to Tier 2. On other platforms, they
 fall back to Tier 3.
 
-### Tier 2 — Generic path access
+### Tier 2 -- Generic path access
 
 `VerifyPathAccess()` dispatches to file or directory verification based
 on the path type, using `FileAccess.Read`, `FileAccess.Write`, or
 `FileAccess.ReadWrite`.
 
-### Tier 3 — Detailed ACL evaluation
+### Tier 3 -- Detailed ACL evaluation
 
 `AccessCheck()` performs full Windows ACL evaluation:
 
@@ -933,7 +931,6 @@ full pattern match.
 | File info | `BY_HANDLE_FILE_INFORMATION` structure via P/Invoke |
 | Drive info | `DriveInfo` class |
 | Path format | Backslash separators, drive letters, UNC paths, extended paths (`\\?\`) |
-| 8.3 names | Temp file format: `eiq-WXYZ.tmp` |
 
 ### Unix / macOS
 
@@ -944,7 +941,6 @@ full pattern match.
 | macOS | `stat` / `lstat` with `timespec` structures |
 | File mode | Full mode word parsing (permissions, file type bits) |
 | Path format | Forward slash separators, tilde expansion |
-| Temp names | Format: `eagle-unique-path-KLMNOPQRSTUVWXYZ.tmp` |
 | XDG support | `XDG_RUNTIME_DIR` in temp path resolution |
 
 ### Mono
@@ -982,13 +978,9 @@ In a safe interpreter, only a subset of `file` sub-commands are available.
 Operations that modify the filesystem, access security information, or
 reveal system details are blocked:
 
-- **Blocked categories**: file operations (copy, delete, rename, mkdir,
-  rmdir, touch), security (sddl, rights, owner, trusted, verified),
-  system information (information, objectid, magic, version, system,
-  drive), cleanup management, and certain path operations
-- **Allowed categories**: basic path manipulation (dirname, tail,
-  rootname, extension, join, split, separator, pathtype) and limited
-  queries (exists, type)
+- **Blocked categories**: all sub-commands not explicitly listed below
+- **Allowed sub-commands**: `channels`, `dirname`, `join`, `split`,
+  `validname`
 
 The exact set of allowed sub-commands is determined by
 `PolicyOps.AllowedFileSubCommandNames` and can be customized via the
@@ -1050,7 +1042,7 @@ delegates:
 
 ## 10. Practical Patterns
 
-### Pattern 1 — Safe temporary file workflow
+### Pattern 1 -- Safe temporary file workflow
 
 ```tcl
 # Get a unique temp file
@@ -1068,14 +1060,14 @@ file cleanup $tmp
 # Cleanup happens automatically when interpreter disposes
 ```
 
-### Pattern 2 — Recursive directory deletion with force
+### Pattern 2 -- Recursive directory deletion with force
 
 ```tcl
 # Remove an entire build directory, even with read-only files
 file delete -force -recursive /tmp/build_output
 ```
 
-### Pattern 3 — Cross-platform path construction
+### Pattern 3 -- Cross-platform path construction
 
 ```tcl
 # Join paths portably
@@ -1084,7 +1076,7 @@ set normalized [file normalize $config]
 set native [file nativename $normalized]
 ```
 
-### Pattern 4 — File attribute inspection and modification
+### Pattern 4 -- File attribute inspection and modification
 
 ```tcl
 # Check all attributes
@@ -1097,7 +1089,7 @@ file attributes myfile.txt -hidden true -readonly true
 file attributes myfile.txt -readonly false
 ```
 
-### Pattern 5 — Windows security descriptor management
+### Pattern 5 -- Windows security descriptor management
 
 ```tcl
 # Get SDDL string
@@ -1113,7 +1105,7 @@ if {[lsearch $rights GenericWrite] >= 0} {
 }
 ```
 
-### Pattern 6 — File type detection and validation
+### Pattern 6 -- File type detection and validation
 
 ```tcl
 # Validate a path before use
@@ -1130,7 +1122,7 @@ if {[file trusted $assembly] && [file verified $assembly]} {
 }
 ```
 
-### Pattern 7 — Advanced globbing with regex
+### Pattern 7 -- Advanced globbing with regex
 
 ```tcl
 # Find all C# source files matching a pattern
@@ -1143,7 +1135,7 @@ set readmes [file glob -match SubString -nocase -directory /project readme]
 set logs [file glob -nocomplain -directory /var/log *.log]
 ```
 
-### Pattern 8 — Ownership and access verification
+### Pattern 8 -- Ownership and access verification
 
 ```tcl
 # Check ownership (verbose)
@@ -1156,7 +1148,7 @@ if {[file readable $path] && [file writable $path]} {
 }
 ```
 
-### Pattern 9 — Timestamp manipulation
+### Pattern 9 -- Timestamp manipulation
 
 ```tcl
 # Preserve timestamps during copy
@@ -1167,7 +1159,7 @@ file atime backup.txt $atime
 file mtime backup.txt $mtime
 ```
 
-### Pattern 10 — Directory containment check
+### Pattern 10 -- Directory containment check
 
 ```tcl
 # Verify a path is within an allowed directory
@@ -1196,7 +1188,7 @@ if {[file under -mode Glob -searchoption AllDirectories /project $path]} {
 | File operations | copy, rename, delete, mkdir | Same + `rmdir`, `touch` |
 | Globbing | Separate `glob` command | `file glob` with `MatchMode` (Exact, Glob, Regexp, SubString) |
 | Directory listing | `glob -directory` | `file list` (simpler) + `file glob` (advanced) |
-| Temporary files | `file tempfile` (8.6+) | `tempname`, `temppath` with env precedence and crypto |
+| Temporary files | `file tempfile` (8.6+) | `tempname`, `temppath` with env precedence |
 | PE inspection | None | `magic`, `version` |
 | System info | None | `system`, `objectid`, `information`, `drive`, `volumes` |
 | Cleanup | Manual | `file cleanup` with interpreter lifecycle |
@@ -1229,9 +1221,8 @@ if {[file under -mode Glob -searchoption AllDirectories /project $path]} {
 
 ### Temporary file security
 
-- `file tempname` uses cryptographic randomness
-  (`RuntimeOps.GetRandomBytes()` backed by
-  `System.Security.Cryptography.RandomNumberGenerator`)
+- `file tempname` uses .NET's `Path.GetRandomFileName()` for generating
+  unique filenames
 - Generated names are verified non-existent before returning
 - The `EAGLE_TEST_TEMP` and `EAGLE_TEMP` environment variables allow
   controlled redirection of temp files
@@ -1246,12 +1237,12 @@ if {[file under -mode Glob -searchoption AllDirectories /project $path]} {
 
 ## 13. References
 
-- **Source**: `eagle/Eagle/Library/Commands/File.cs` — command implementation
+- **Source**: `eagle/Eagle/Library/Commands/File.cs` -- command implementation
 - **File operations**: `eagle/Eagle/Library/Components/Private/FileOps.cs`
 - **Path operations**: `eagle/Eagle/Library/Components/Private/PathOps.cs`
-- **Delegates**: `eagle/Eagle/Library/Components/Public/Delegates.cs` —
+- **Delegates**: `eagle/Eagle/Library/Components/Public/Delegates.cs` --
   `GetDateTimeCallback`, `SetDateTimeCallback`
-- **Core language reference**: `core_language.md` § String Processing →
+- **Core language reference**: `core_language.md` -- String Processing -->
   `file` command
-- **Examples**: `core_examples.md` § file
+- **Examples**: `core_examples.md` -- file
 - **Tcl reference**: [Tcl `file` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/file.htm)

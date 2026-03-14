@@ -1126,7 +1126,7 @@ Appends to a file with shared access.
 
 ### File I/O - Unicode (file2u.eagle)
 
-Package: `Eagle.File.Unicode`
+Package: `Eagle.File.Utf8`
 
 #### makeUnicodeChannel
 
@@ -1866,7 +1866,7 @@ Waits for processes to exit within a timeout.
 
 ### Runtime Options (runopt.eagle)
 
-Package: `Eagle.RuntimeOptions`
+Package: `Eagle.Runtime.Option`
 
 #### hasRuntimeOption
 
@@ -1949,7 +1949,7 @@ Toggles a runtime option or sets it to a specific value.
 
 ### Test Logging (testlog.eagle)
 
-Package: `Eagle.TestLog`
+Package: `Eagle.Test.Log`
 
 #### vwaitLocked
 
@@ -2167,7 +2167,7 @@ Runs the updater tool and exits the process.
 
 ### Unknown Object Handler (unkobj.eagle)
 
-Package: `Eagle.UnknownObject`
+Package: `Eagle.Unknown.Object`
 
 #### unknownObjectInvoke
 
@@ -2389,7 +2389,7 @@ Shows commercial support requirements and attempts to redirect to the support we
 
 ### Tcl Shim (shim.eagle)
 
-Package: `Eagle.Shim`
+Package: `Eagle.Tcl.Shim`
 
 These procedures provide compatibility shims for native Tcl.
 
@@ -2424,7 +2424,7 @@ Intercepts Eagle `debug` calls from Tcl scripts.
 
 ### Package Toolset (pkgt.eagle)
 
-Package: `Eagle.PackageToolset`
+Package: `Eagle.Package.Toolset`
 
 #### setupPackageToolsetVars
 

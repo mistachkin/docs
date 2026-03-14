@@ -230,7 +230,7 @@ Tcl's `[load]` command. It performs these steps:
 3. Queries the package module file name via `GetPackageModuleFileName`.
 4. Detects Tcl version and checks for TIP #285 (script cancellation),
    TIP #335, and TIP #336 support.
-5. Populates the `ClrTclStubs` structure with 42 Tcl C API function
+5. Populates the `ClrTclStubs` structure with 48 Tcl C API function
    pointers via `SetClrTclStubs`.
 6. Reads configuration from Tcl variables via `GetClrConfigInfo`.
 7. Obtains the Tcl library module handle (Windows: `TclWinGetTclInstance`;
@@ -829,7 +829,7 @@ Standard combinations:
 
 ### 9.1 ClrTclStubs
 
-Defined in `GarudaInt.h`, this structure contains 42 Tcl C API function
+Defined in `GarudaInt.h`, this structure contains 48 Tcl C API function
 pointers that are passed to the managed bridge code so Eagle can call
 back into the native Tcl library. The layout **must** match the managed
 `NativeStubs` structure in `Eagle/Library/Components/Private/TclApi.cs`.
@@ -1205,7 +1205,7 @@ Constraints: `eagle dotNetOrDotNetCore native logFile garudaLibrary tclLibrary c
 
 The core Garuda integration test file. It sources `prologue.eagle` and
 `epilogue.eagle` for setup/teardown. Line 32 emits the critical sentry
-`"---- running Tcl integration tests."`.
+`"---- running Tcl integration tests..."`.
 
 Tests are organized by feature area:
 
@@ -1753,7 +1753,7 @@ Based on the final `useCoreClr` value, `helper.tcl` configures:
 
 | Configuration | `useCoreClr = false` | `useCoreClr = true` |
 |---|---|---|
-| **DLL name** | `Garuda.dll` / `libGaruda.so` | `GarudaCore.dll` / `libGarudaCore.so` |
+| **DLL name** | `Garuda.dll` | `GarudaCore.dll` / `libGarudaCore.so` / `libGarudaCore.dylib` |
 | **Type name** | `Eagle._Components.Public.NativePackage` | `Eagle._Components.Public.NativePackage, Eagle, Version=1.0, Culture=neutral` |
 | **Startup method** | `StartupClr` | `StartupCoreClr` |
 | **Control method** | `ControlClr` | `ControlCoreClr` |

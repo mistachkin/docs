@@ -1,6 +1,6 @@
 # Eagle `host` Command — Deep-Dive Analysis
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `host` command internals, including the 33 primary sub-commands plus 8 nested `host screen` sub-commands, the 15-interface host hierarchy (`IHost` → `IInteractiveHost`, `IStreamHost`, `IColorHost`, `IBoxHost`, `IPositionHost`, `ISizeHost`, `IReadHost`, `IWriteHost`, `IDebugHost`, `IThreadHost`, `IFileSystemHost`, `IProcessHost`, `IStreamHost`, `IInformationHost`, `IDisplayHost`), the console lifecycle state machine (`closeCount`, `referenceCount`, `mustBeOpenCount`), safety interlocks (`SystemConsoleMustBeOpen`, `CheckActiveReadsAndWrites`, read/write level tracking, kiosk mode lock), the Windows-native screen buffer management system (push/pop stack, `CreateConsoleScreenBuffer`/`SetConsoleActiveScreenBuffer` P/Invoke, standard handle redirection), `HostFlags` (60+ capability flags), `HostCreateFlags` (30+ creation flags), box drawing, color theming, font control, and the `Default` → `Shell` → `Core` → `Console` class hierarchy. For basic command syntax, see [`core_language.md`](core_language.md#cmd-host). For usage examples, see [`core_examples.md`](core_examples.md#ex-host).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `host` command internals, including the 33 primary sub-commands plus 8 nested `host screen` sub-commands, the 15-interface host hierarchy (`IHost` → `IInteractiveHost`, `IStreamHost`, `IColorHost`, `IBoxHost`, `IPositionHost`, `ISizeHost`, `IReadHost`, `IWriteHost`, `IDebugHost`, `IThreadHost`, `IFileSystemHost`, `IProcessHost`, `IInformationHost`, `IDisplayHost`), the console lifecycle state machine (`closeCount`, `referenceCount`, `mustBeOpenCount`), safety interlocks (`SystemConsoleMustBeOpen`, `CheckActiveReadsAndWrites`, read/write level tracking, kiosk mode lock), the Windows-native screen buffer management system (push/pop stack, `CreateConsoleScreenBuffer`/`SetConsoleActiveScreenBuffer` P/Invoke, standard handle redirection), `HostFlags` (60+ capability flags), `HostCreateFlags` (30+ creation flags), box drawing, color theming, font control, and the `Default` → `Engine` → `File` → `Profile` → `Shell` → `Core` → `Console` class hierarchy. For basic command syntax, see [`core_language.md`](core_language.md#cmd-host). For usage examples, see [`core_examples.md`](core_examples.md#ex-host).
 
 ## 1. Executive Summary
 
@@ -67,9 +67,9 @@ pluggable subsystem:
   the minimal `IInteractiveHost` (prompt, read, write, `IsOpen()`) through
   specialized contracts (`IColorHost`, `IBoxHost`, `ISizeHost`,
   `IPositionHost`) to the full `IHost` which aggregates everything
-- **Class hierarchy** — four levels of implementation (`Default` abstract
-  base → `Shell` → `Core` → `Console`) with each level adding
-  platform-specific behavior
+- **Class hierarchy** — seven levels of implementation (`Default` abstract
+  base → `Engine` → `File` → `Profile` → `Shell` → `Core` → `Console`)
+  with each level adding platform-specific behavior
 - **Lifecycle management** — the console can be opened, closed, and
   reopened at runtime, with atomic counters preventing use-after-close
   and close-during-I/O races
@@ -84,7 +84,7 @@ pluggable subsystem:
 
 | File | Role |
 |------|------|
-| `Commands/Host.cs` (~6,200+ lines) | Command implementation: 33 + 8 sub-commands |
+| `Commands/Host.cs` (~2,650 lines) | Command implementation: 33 + 8 sub-commands |
 | `Interfaces/Public/Host.cs` | `IHost` master interface (aggregates all host interfaces) |
 | `Interfaces/Public/InteractiveHost.cs` | `IInteractiveHost` base interface (minimum for interactive loop) |
 | `Interfaces/Public/StreamHost.cs` | `IStreamHost` — In/Out/Error streams, encodings, redirection |
@@ -101,6 +101,9 @@ pluggable subsystem:
 | `Interfaces/Public/ProcessHost.cs` | `IProcessHost` — exit control |
 | `Interfaces/Public/InformationHost.cs` | `IInformationHost` — debugger info display (40+ WriteXxxInfo methods) |
 | `Hosts/Default.cs` | Abstract base host implementation |
+| `Hosts/Engine.cs` | Engine-level host (adds engine integration support) |
+| `Hosts/File.cs` | File-level host (adds file system support) |
+| `Hosts/Profile.cs` | Profile-level host (adds profile loading support) |
 | `Hosts/Shell.cs` | Shell-level host (adds interactive shell support) |
 | `Hosts/Core.cs` | Core host (adds plugin support) |
 | `Hosts/Console.cs` | Console host (full `System.Console` + native Win32 integration) |
@@ -179,9 +182,12 @@ IInteractiveHost (base — minimum for interactive loop)
 
 ```
 Default (abstract)
-  └── Shell (adds interactive shell support)
-       └── Core (adds plugin/host integration)
-            └── Console (full System.Console + Win32 native)
+  └── Engine (adds engine integration support)
+       └── File (adds file system support)
+            └── Profile (adds profile loading support)
+                 └── Shell (adds interactive shell support)
+                      └── Core (adds plugin/host integration)
+                           └── Console (full System.Console + Win32 native)
 ```
 
 Each level adds platform-specific behavior:
@@ -189,6 +195,9 @@ Each level adds platform-specific behavior:
 | Class | Key additions |
 |-------|---------------|
 | `Default` | Abstract base: box character sets, output style, color management framework, `DetailFlags`-based formatting |
+| `Engine` | Engine integration support |
+| `File` | File system support |
+| `Profile` | Profile loading support |
 | `Shell` | Interactive loop support, prompt handling, history integration |
 | `Core` | Plugin host integration, core command support |
 | `Console` | Full `System.Console` implementation, Win32 P/Invoke for native console API, screen buffers, font control, `closeCount` state machine |
@@ -643,6 +652,7 @@ These sub-commands control the host's operational state.
 
 | Option | Component reset |
 |--------|----------------|
+| `-sizetype` | Size type for size reset (`HostSizeType`) |
 | `-all` | Everything below |
 | `-interface` | Host interface (`host.Reset()`) |
 | `-flags` | Host flags (`host.ResetHostFlags()`) |
@@ -823,7 +833,7 @@ Returns the new cursor position after writing.
 
 ```tcl
 host write "Processing... " false  ;# No newline
-host write "Done!"                 ;# With newline (default)
+host write "Done!"                 ;# No newline (default)
 host writebox -fg White -bg Blue "Important Message"
 host writebox -multiple -pairs {key1 val1 key2 val2}
 host beep -frequency 800 -duration 200

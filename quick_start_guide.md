@@ -423,7 +423,7 @@ expr {$x > 0 ? "positive" : "non-positive"}
 ;# Returns: positive
 ```
 
-Eagle extends Tcl's expression operators with logical XOR (`^^`), implication (`->`), equivalence (`<->`), bit rotation (`<<<`, `>>>`), and variable assignment (`:=`). See [tips_and_tricks.md](tips_and_tricks.md#expression-enhancements) for details.
+Eagle extends Tcl's expression operators with logical XOR (`^^`), bitwise implication (`->`), bitwise equivalence (`<->`), logical implication (`=>`), logical equivalence (`<=>`), bit rotation (`<<<`, `>>>`), and variable assignment (`:=`). See [tips_and_tricks.md](tips_and_tricks.md#expression-enhancements) for details.
 
 ---
 
