@@ -21,8 +21,27 @@ present and what values they carry.
 As of the `CommandOptions` refactoring, all option dictionary creation in the
 core library is centralized in a single internal class (`CommandOptions`) with
 an enum-based dispatch (`CommandOptionType`). This makes every command's
-option surface discoverable, testable, and amenable to future tooling (e.g.,
-automated documentation generation, option introspection at the script level).
+option surface discoverable, testable, and amenable to tooling.
+
+**The primary motivation** for this centralization is to enable external
+consumers of the core library -- especially **Language Server Protocol (LSP)
+implementations** -- to provide **auto-completion of option names and their
+values** for any command or sub-command.
+
+The LSP completion flow works as follows: the LSP receives the current
+command invocation arguments from the line being completed -- either **1
+argument** for a top-level command (e.g., `exit`) or **2 arguments** for an
+ensemble sub-command (e.g., `interp create`). It maps these argument strings
+to a `CommandOptionType` enum value, then calls
+`CommandOptions.GetCommandOptions()` to obtain the full `OptionDictionary`.
+From there it can enumerate available option names and inspect each option's
+`OptionFlags` to determine what kind of value it expects (e.g., suggesting
+enum members for `MustHaveEnumValue` options, or offering boolean completions
+for `MustHaveBooleanValue` options).
+
+This requires a **string-to-enum mapping layer** -- a lookup from
+`(commandName, subCommandName?)` pairs to `CommandOptionType` values. This
+mapping does not yet exist in the codebase and is a planned follow-up.
 
 **Key source files:**
 
