@@ -792,6 +792,68 @@ accumulate 20   ;# Returns: 30
 accumulate 5    ;# Returns: 35
 ```
 
+### Scope Persistence Pattern
+
+```tcl
+# Create a scope and demonstrate variable persistence across eval calls
+scope create myCounter
+
+# First eval: initialize the counter
+scope eval myCounter {
+    set count 0
+    set label "visits"
+}
+
+# Second eval: increment and read -- variables persist from previous eval
+scope eval myCounter {
+    incr count
+    puts "Counter: $count $label"  ;# prints: Counter: 1 visits
+}
+
+# Third eval: increment again
+scope eval myCounter {
+    incr count
+    puts "Counter: $count $label"  ;# prints: Counter: 2 visits
+}
+
+# Variables persist in the scope even when not "open"
+scope vars myCounter  ;# returns: count label
+
+# Clean up
+scope destroy myCounter
+```
+
+### Scope Locking for Thread Safety
+
+```tcl
+# Thread-safe shared counter using scope eval -lock
+scope create sharedState
+
+scope eval sharedState {set total 0}
+
+# In different threads or event handlers, use -lock:
+scope eval -lock true sharedState {
+    incr total
+    # Lock is held during this entire block
+    # Other scope eval -lock calls will wait
+}
+```
+
+### Scope Global Sandboxing
+
+```tcl
+# Redirect the global namespace to a scope
+scope create sandbox
+scope global sandbox
+
+# Now global variable access goes to the sandbox
+set ::safeVar "sandboxed value"   ;# stored in sandbox, not real global
+global myGlobal                    ;# creates in sandbox scope
+
+# Restore normal global behavior
+scope global -unset
+```
+
 ---
 
 <a id="ex-set"></a>
@@ -3026,6 +3088,26 @@ object invokeall $sb {Append Hello} {Append " World"} {ToString}
 object invokeraw $sb Append test
 ```
 
+### Chained .NET Method Calls
+
+```tcl
+# Create a StringBuilder and chain operations
+set sb [object create System.Text.StringBuilder]
+
+# Chain append calls using the returned object
+object invoke $sb Append "Hello"
+object invoke $sb Append ", "
+object invoke $sb Append "World!"
+puts [object invoke $sb ToString]  ;# Hello, World!
+
+# Property access on nested objects
+set list [object create System.Collections.Generic.List\`1\[System.String\]]
+object invoke $list Add "first"
+object invoke $list Add "second"
+puts [object invoke $list Count]        ;# 2
+puts [object invoke $list Item 0]       ;# first
+```
+
 #### Object Information
 
 ```tcl
@@ -3878,6 +3960,22 @@ package ifneeded mypackage 1.0 \
 package scan /usr/local/lib/eagle
 ```
 
+### Package Scanning with Flags
+
+```tcl
+# Scan specific directories for packages
+package scan /path/to/my/packages
+
+# Scan with verbose output and forced refresh
+package scan -verbose -refresh
+
+# Scan using the interpreter's current flags
+package scan -interpreter -verbose
+
+# Preview what would be scanned without actually doing it
+package scan -whatif /path/to/packages
+```
+
 ```tcl
 # Get/set unknown package handler
 package unknown               ;# Query current handler
@@ -4090,6 +4188,25 @@ test2 version-1.1 "Test version format" \
 # } finally {
 #     catch {sql transaction rollback $trans}
 # }
+```
+
+### SQL Connection with Automatic Cleanup
+
+```tcl
+# Open a SQLite database with -variable for automatic cleanup
+sql open -type SQLite -variable db "Data Source=mydb.db"
+
+# Execute a query
+sql execute $db "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)"
+sql execute $db "INSERT INTO users (name) VALUES ('Alice')"
+
+# Query with results
+set results [sql execute -execute Reader -format DataTable $db "SELECT * FROM users"]
+puts $results
+
+# When $db variable is unset or goes out of scope, connection is
+# automatically closed and disposed
+unset db
 ```
 
 ---
@@ -5137,6 +5254,31 @@ vwait result
 ```tcl
 # Eagle extension — wait with timeout
 vwait -timeout 5000 result
+```
+
+### Vwait with Timeout and Event Flags
+
+```tcl
+# Wait for a variable change with a 5-second timeout
+after 3000 {set done "completed"}
+
+# This will return after 3 seconds when $done is set
+vwait -timeout 5000 done
+puts $done  ;# completed
+
+# Wait with timeout that expires (no one sets the variable)
+vwait -timeout 1000 -nocomplain neverSet
+# Returns after 1 second without error due to -nocomplain
+```
+
+### Vwait with Locked Script
+
+```tcl
+# Atomically read and reset a shared variable
+vwait -locked {
+    set snapshot $sharedData
+    set sharedData ""
+} sharedData
 ```
 
 ---

@@ -3259,6 +3259,19 @@ Object commands belong to ObjectGroup: "managedEnvironment"
     - **Static members**: Use the type name instead of an object handle
     - **Options**: `-type typeList` (parameter types), `-alias` (alias the result)
 
+  **Error Conditions:**
+  - `"invalid object or type"` -- object handle not found
+  - `"type ... member ... not found"` -- member name doesn't exist on the type
+  - `"matched N method overloads ... need exactly 1"` -- ambiguous overload (with `-strictmember`)
+  - Invocation exceptions (wrapped with error code)
+  - `"wrong # args for field"` -- fields accept 0 (get) or 1 (set) arguments only
+
+  **By-Reference Parameters:** Methods with `ref`/`out` parameters are handled automatically. After invocation, modified by-ref arguments are marshaled back and stored as opaque handles (unless `-nobyref` is set).
+
+  **Chained Member Access:** Dotted member names (e.g., `$obj.Property.Method`) are resolved recursively through `Value.GetNestedMember()` unless `-nonestedmember` is set.
+
+  **Return Values:** Method results go through `MarshalOps.FixupReturnValue()`. With `-create`, the return is an opaque handle. With `-tostring`, it's the string representation. Field gets return the value; field sets return empty string.
+
   ---
 
   - `object invokeall ?options? object memberAndArgs ...?` - Invokes multiple members in sequence.
@@ -4013,6 +4026,23 @@ The `interp` command manages child interpreters, providing sandboxing, isolation
     - *path* - Name for the interpreter (defaults to a generated name)
     - **Returns**: The interpreter path/name.
 
+  **Error Conditions:**
+  - `"interpreter named \"name\" already exists, cannot create"` -- duplicate path
+  - `"wrong # args"` -- invalid argument count
+
+  **Key Option Interactions:**
+  - `-safe` hides unsafe commands by default; combine with `-nohidden` for safe mode without hiding. Sets `CreateFlags.SafeAndHideUnsafe` by default.
+  - `-safe` changes initialization: loads `safe.eagle` instead of `init.eagle` (unless `-unsafeinitialize` is set).
+  - `-isolated` (requires `ISOLATED_INTERPRETERS`) creates the interpreter in a separate AppDomain. Independent of `-safe`.
+  - `-namespaces` enables full namespace support. Inherited from parent by default.
+  - `-noinitialize` skips script library initialization entirely.
+  - `-nocommands`, `-nofunctions`, `-novariables`, `-noloader` progressively strip the interpreter; `-novariables` with initialization uses `MinimumVariables` (just enough for the script library).
+  - `-standard` restricts to standard commands only; combine with `-nohidden` to avoid hiding non-standard commands.
+  - `-security` / `-nosecurity` enables/disables the security policy subsystem.
+  - `-ruleset` provides an `IRuleSet` for security validation of the new interpreter.
+  - Return value: the path/name of the created interpreter.
+  - Safe interpreter scope limit: maximum 50 scopes.
+
   ---
 
   - `interp delete ?path ...?` - Deletes one or more child interpreters and releases their resources.
@@ -4629,6 +4659,20 @@ The `sql` command provides database connectivity using ADO.NET, supporting any d
   - `sql open ?options? connectionString` - Opens a database connection using the ADO.NET connection string.
     - **Options**: `-type providerType` (specify the connection type, e.g., `System.Data.SqlClient.SqlConnection`)
     - **Returns**: A connection handle.
+
+  **Connection Types (DbConnectionType):**
+  `Odbc`, `OleDb`, `Oracle`, `Sql` (SQL Server), `SqlCe` (Compact), `SQLite`, `SQLiteEnterprise`, `Other`.
+
+  **Error Conditions:**
+  - Invalid connection string (provider-specific format errors)
+  - Provider not found (required assembly not loaded)
+  - `"interpreter is not modifiable"` -- interpreter is locked/readonly
+  - Type/assembly resolution failure with public key token mismatch
+  - Connection open failure (network, authentication, etc.)
+
+  **The `-variable` option:** When set, the connection handle is stored in the named variable. Deleting this variable automatically closes and disposes the connection -- providing RAII-style cleanup. This is the recommended pattern for connection lifecycle management.
+
+  **Return value:** A connection name string (e.g., `"db0"`) that can be used with other `sql` sub-commands (`execute`, `transaction`, `close`).
 
   ---
 
@@ -5854,7 +5898,30 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
 - **vwait** - Wait for variable change
   - `vwait ?options? varName`
   - Enters the event loop and waits until variable *varName* is modified (set or unset). This is the standard way to wait for asynchronous operations.
-  - **Options**: `-timeout ms` (maximum time to wait)
+
+  **Extended Options (Eagle-specific):**
+  - `-eventwaitflags flags` -- Controls event waiting behavior; defaults to `interpreter.EventWaitFlags`. Affects how the event loop processes events during the wait.
+  - `-variableflags flags` -- Controls variable change detection; defaults to `interpreter.EventVariableFlags`.
+  - `-timeout ms` -- Timeout in milliseconds. When expired, the wait returns even if the variable hasn't changed. With `-nocomplain`, timeout is treated as success.
+  - `-limit n` -- Maximum number of variable change events to process before returning.
+  - `-handle objHandle` -- Wait on a specific `EventWaitHandle` object instead of the default mechanism.
+  - `-thread threadId` -- Target specific thread for event processing.
+  - `-clear` -- Reset the wait state for the variable without actually waiting. Returns immediately.
+  - `-force` -- Override the "would wait forever" safety check.
+  - `-nocomplain` -- Suppress timeout errors (treat as success).
+  - `-leaveresult` -- Don't clear the interpreter result after the wait completes.
+  - `-locked script` -- Acquire a lock on the variable, execute the script atomically, then release. Guarantees cleanup on error.
+  - `-resetcancel` -- (Restricted) Reset interpreter cancellation state if the wait fails due to readiness issues. Used by top-level event handlers like `hotKey.eagle`.
+
+  **Error Conditions:**
+  - `"can't wait for variable \"name\": would wait forever"` -- no events can trigger the variable change (unless `-force` is set)
+  - Lock acquisition failure (with `-locked`)
+  - Invalid `EventWaitHandle` type (with `-handle`)
+
+  **Behavioral Modes:**
+  - **Clear mode** (`-clear`): Resets wait state, returns immediately.
+  - **Locked mode** (`-locked script`): Acquires lock, evaluates script, releases in `finally` block.
+  - **Standard wait**: Blocks until variable changes, timeout expires, or limit reached.
 
   **Example**:
   ```tcl

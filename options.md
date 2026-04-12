@@ -39,9 +39,14 @@ From there it can enumerate available option names and inspect each option's
 enum members for `MustHaveEnumValue` options, or offering boolean completions
 for `MustHaveBooleanValue` options).
 
-This requires a **string-to-enum mapping layer** -- a lookup from
-`(commandName, subCommandName?)` pairs to `CommandOptionType` values. This
-mapping does not yet exist in the codebase and is a planned follow-up.
+The **string-to-enum mapping** is built into the `CommandOptionType` naming
+convention itself. The overload `GetCommandOptions(ArgumentList arguments)`
+joins the argument strings with underscores and parses the result as a
+`CommandOptionType` enum value. For example, the arguments `["interp",
+"create"]` become the string `"interp_create"`, which parses to
+`CommandOptionType.Interp_Create`. This eliminates the need for a separate
+lookup dictionary -- the enum names serve double duty as both programmatic
+identifiers and the mapping keys.
 
 **Key source files:**
 
