@@ -292,6 +292,8 @@ Quick reference to all Eagle commands with links to their detailed documentation
 ---
 
 <a id="cmd-switch"></a>
+> **See also**: [`options.md`](options.md#switch) — per-option semantics
+
 - **switch** - Pattern matching and branching
   - `switch ?switches? string {pattern body ... ?default body?}`
   - `switch ?switches? string pattern body ... ?default body?`
@@ -413,6 +415,8 @@ Quick reference to all Eagle commands with links to their detailed documentation
 ---
 
 <a id="cmd-return"></a>
+> **See also**: [`options.md`](options.md#return) — per-option semantics
+
 - **return** - Return from procedure or script
   - `return ?options? ?string?`
   - Returns from the current procedure or sourced script with the specified value.
@@ -622,7 +626,7 @@ All variable commands belong to ObjectGroup: "variable"
 
 ---
 
-> **See also:** [`array.md`](array.md) — deep-dive analysis of the `array` command, including all 17 sub-commands, 8 polymorphic storage backends (ElementDictionary, environment, System.Array, thread, database, network, registry, tests), `array copy` with deep copy, `array default` (TIP #508), `array random` with 5 options, `array for`/`foreach`/`lmap` iteration, per-element flags, `VariableFlags`, and trace integration.
+> **See also:** [`array.md`](array.md) — deep-dive analysis of the `array` command, including all 17 sub-commands, 8 polymorphic storage backends (ElementDictionary, environment, System.Array, thread, database, network, registry, tests), `array copy` with deep copy, `array default` (TIP #508), `array random` with 5 options, `array for`/`foreach`/`lmap` iteration, per-element flags, `VariableFlags`, and trace integration. | [`options.md`](options.md#array-copy) — per-option semantics
 
 <a id="cmd-array"></a>
 - **array** - Array operations (see Arrays section for sub-commands)
@@ -933,7 +937,7 @@ All variable commands belong to ObjectGroup: "variable"
     scope destroy testScope
     ```
 
-  - **See also**: [`uplevel`](#cmd-uplevel), [`upvar`](#cmd-upvar), [`variable`](#cmd-variable), [`scope.md`](scope.md) (deep-dive analysis)
+  - **See also**: [`uplevel`](#cmd-uplevel), [`upvar`](#cmd-upvar), [`variable`](#cmd-variable), [`scope.md`](scope.md) (deep-dive analysis) | [`options.md`](options.md#scope-close) — per-option semantics
 
 ---
 
@@ -966,6 +970,8 @@ All variable commands belong to ObjectGroup: "variable"
 ---
 
 <a id="cmd-unset"></a>
+> **See also**: [`options.md`](options.md#unset) — per-option semantics
+
 - **unset** - Unset variables
   - `unset ?options? ?varName varName ...?`
   - Removes the specified variables from the current scope. After unsetting, the variable no longer exists (reading it will raise an error).
@@ -1253,6 +1259,8 @@ Many list commands accept index arguments. Valid index formats include:
 ---
 
 <a id="cmd-lsearch"></a>
+> **See also**: [`options.md`](options.md#lsearch) — per-option semantics
+
 - **lsearch** - Search for element in list
   - `lsearch ?options? list pattern`
   - Searches *list* for an element matching *pattern* and returns the index of the first match, or -1 if no match is found.
@@ -1304,6 +1312,8 @@ Many list commands accept index arguments. Valid index formats include:
 ---
 
 <a id="cmd-lsort"></a>
+> **See also**: [`options.md`](options.md#lsort) — per-option semantics
+
 - **lsort** - Sort a list
   - `lsort ?options? list`
   - Returns a sorted copy of *list*. The original list is not modified.
@@ -1346,6 +1356,8 @@ String commands belong to ObjectGroup: "string"
 ---
 
 <a id="cmd-base64"></a>
+> **See also**: [`options.md`](options.md#base64-decode-and-base64-encode) — per-option semantics
+
 - **base64** - Base64 encoding/decoding
   - `base64 decode ?options? string` - Decode a Base64-encoded string back to its original binary/text form
   - `base64 encode ?options? string` - Encode a string or binary data to Base64 format
@@ -1448,6 +1460,8 @@ String commands belong to ObjectGroup: "string"
 ---
 
 <a id="cmd-hash"></a>
+> **See also**: [`options.md`](options.md#hash-keyed-hash-mac-hash-normal) — per-option semantics
+
 - **hash** - Hashing operations (Eagle extension)
   - `hash normal ?options? algorithm string` - Compute a hash of the string
   - `hash keyed ?options? algorithm string ?key?` - Compute a keyed hash
@@ -1492,6 +1506,8 @@ String commands belong to ObjectGroup: "string"
 ---
 
 <a id="cmd-parse"></a>
+> **See also**: [`options.md`](options.md#parse-command) — per-option semantics
+
 - **parse** - Parse scripts, expressions, and options (Eagle extension)
   - `parse command ?options? text` - Parses *text* as a single command. Returns a structured list of tokens describing the parsed command, including word boundaries, types, and character positions.
   - `parse expression ?options? text` - Parses *text* as a mathematical/logical expression. Returns token structure with operator precedence and operand boundaries.
@@ -1522,7 +1538,7 @@ String commands belong to ObjectGroup: "string"
 ---
 
 <a id="cmd-regexp"></a>
-> **See also**: [`regexp.md`](regexp.md) — Deep-dive analysis of Eagle's `[regexp]` and `[regsub]` internals: .NET regex engine integration, default `Singleline` behavior (`.` matches newlines — opposite of Tcl), the substitution translation layer, three replacement modes, `-extra` substitutions, and all Eagle-specific options.
+> **See also**: [`regexp.md`](regexp.md) — Deep-dive analysis of Eagle's `[regexp]` and `[regsub]` internals: .NET regex engine integration, default `Singleline` behavior (`.` matches newlines — opposite of Tcl), the substitution translation layer, three replacement modes, `-extra` substitutions, and all Eagle-specific options. | [`options.md`](options.md#regexp) — per-option semantics
 
 - **regexp** - Regular expression matching
   - `regexp ?switches? exp string ?matchVar? ?subMatchVar subMatchVar ...?`
@@ -1565,7 +1581,7 @@ String commands belong to ObjectGroup: "string"
 ---
 
 <a id="cmd-regsub"></a>
-> **See also**: [`regexp.md`](regexp.md) — Deep-dive on `[regsub]` substitution translation (`TranslateSubSpec`), the three replacement modes (normal, `-eval`, `-command`/TIP #463), `-extra` extended substitutions (`\P`, `\I`, `\S`, `\M#`, `\N<name>`), and `-strict`/`-nostrict` backslash handling.
+> **See also**: [`regexp.md`](regexp.md) — Deep-dive on `[regsub]` substitution translation (`TranslateSubSpec`), the three replacement modes (normal, `-eval`, `-command`/TIP #463), `-extra` extended substitutions (`\P`, `\I`, `\S`, `\M#`, `\N<name>`), and `-strict`/`-nostrict` backslash handling. | [`options.md`](options.md#regsub) — per-option semantics
 
 - **regsub** - Regular expression substitution
   - `regsub ?switches? exp string subSpec ?varName?`
@@ -1621,6 +1637,8 @@ String commands belong to ObjectGroup: "string"
 ---
 
 <a id="cmd-split"></a>
+> **See also**: [`options.md`](options.md#split) — per-option semantics
+
 - **split** - Split string into list
   - `split string ?splitChars? ?options?`
   - Splits *string* into a list of elements. By default, splits on any whitespace and removes empty elements.
@@ -1639,7 +1657,7 @@ String commands belong to ObjectGroup: "string"
 
 ---
 
-> **See also:** [`string.md`](string.md) — deep-dive analysis of the `string` command, including all 29 sub-commands, the 64-class `string is` type-checking system, culture-aware comparison, extended `string map`, `string format` .NET integration, MatchMode enumeration, and character classification callbacks.
+> **See also:** [`string.md`](string.md) — deep-dive analysis of the `string` command, including all 29 sub-commands, the 64-class `string is` type-checking system, culture-aware comparison, extended `string map`, `string format` .NET integration, MatchMode enumeration, and character classification callbacks. | [`options.md`](options.md#string-equal--string-compare) — per-option semantics
 
 <a id="cmd-string"></a>
 - **string** - String operations (extensive sub-commands)
@@ -2436,6 +2454,8 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
 ---
 
 <a id="cmd-fconfigure"></a>
+> **See also**: [`options.md`](options.md#fconfigure-set-mode) — per-option semantics
+
 - **fconfigure** - Configure channel options
   - `fconfigure channelId ?optionName? ?value? ?optionName value ...?`
   - Gets or sets configuration options for a channel. Without arguments after *channelId*, returns all options. With just *optionName*, returns that option's value.
@@ -2461,6 +2481,8 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
 ---
 
 <a id="cmd-fcopy"></a>
+> **See also**: [`options.md`](options.md#fcopy) — per-option semantics
+
 - **fcopy** - Copy data between channels
   - `fcopy input output ?-size size? ?-command callback?`
   - Copies data from *input* channel to *output* channel efficiently.
@@ -2480,6 +2502,8 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
 ---
 
 <a id="cmd-gets"></a>
+> **See also**: [`options.md`](options.md#gets) — per-option semantics
+
 - **gets** - Read line from channel
   - `gets ?options? channelId ?varName?`
   - Reads a single line from *channelId* (up to but not including the newline by default).
@@ -2518,6 +2542,8 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
 ---
 
 <a id="cmd-open"></a>
+> **See also**: [`options.md`](options.md#open) — per-option semantics
+
 - **open** - Open file or channel
   - `open fileName ?access? ?permissions? ?type? ?options?`
   - Opens a file or other resource and returns a channel identifier.
@@ -2565,6 +2591,8 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
 ---
 
 <a id="cmd-puts"></a>
+> **See also**: [`options.md`](options.md#puts) — per-option semantics
+
 - **puts** - Write to channel
   - `puts ?options? ?channelId? string`
   - Writes *string* to *channelId* (default: `stdout`), followed by a newline unless `-nonewline` is specified.
@@ -2677,7 +2705,7 @@ File system commands belong to ObjectGroup: "fileSystem"
 
 ---
 
-> **See also:** [`file.md`](file.md) — deep-dive analysis of the `file` command, including all 54 sub-commands, Windows ACL/SDDL security, PE file inspection, access control infrastructure, advanced globbing with `MatchMode`, cryptographic temporary paths, interpreter cleanup management, and platform-specific behavior.
+> **See also:** [`file.md`](file.md) — deep-dive analysis of the `file` command, including all 54 sub-commands, Windows ACL/SDDL security, PE file inspection, access control infrastructure, advanced globbing with `MatchMode`, cryptographic temporary paths, interpreter cleanup management, and platform-specific behavior. | [`options.md`](options.md#file-cleanup) — per-option semantics
 
 <a id="cmd-file"></a>
 - **file** - File operations (extensive sub-commands)
@@ -2899,6 +2927,8 @@ File system commands belong to ObjectGroup: "fileSystem"
 ---
 
 <a id="cmd-glob"></a>
+> **See also**: [`options.md`](options.md#glob) — per-option semantics
+
 - **glob** - Glob for files
   - `glob ?options? pattern ?pattern ...?`
   - Returns a list of file names matching the glob pattern(s).
@@ -3035,7 +3065,7 @@ Namespaces provide hierarchical organization of commands and variables, preventi
 
 ---
 
-> **See also:** [`namespace.md`](namespace.md) — deep-dive analysis of the `namespace` command, including all 22 sub-commands, dual-implementation architecture (Namespace1 stub vs. Namespace2 full), `INamespace` object model with parent-child hierarchy and reference counting, name resolution algorithm, call frame integration, import/export mechanism with `IAlias`, per-namespace unknown handler, namespace mappings, pluggable `IResolve` per namespace, and scope integration.
+> **See also:** [`namespace.md`](namespace.md) — deep-dive analysis of the `namespace` command, including all 22 sub-commands, dual-implementation architecture (Namespace1 stub vs. Namespace2 full), `INamespace` object model with parent-child hierarchy and reference counting, name resolution algorithm, call frame integration, import/export mechanism with `IAlias`, per-namespace unknown handler, namespace mappings, pluggable `IResolve` per namespace, and scope integration. | [`options.md`](options.md#namespace-export-namespace1-and-namespace2) — per-option semantics
 
 <a id="cmd-namespace"></a>
 - **namespace** - Namespace operations
@@ -3188,7 +3218,7 @@ Object commands belong to ObjectGroup: "managedEnvironment"
 
 ---
 
-> **See also:** [`object.md`](object.md) — Deep-dive analysis of all 44 sub-commands, the opaque handle system, FixupReturnValue pipeline, method overload resolution, ObjectFlags, MarshalFlags, ByRefArgumentFlags, and practical .NET interop patterns.
+> **See also:** [`object.md`](object.md) — Deep-dive analysis of all 44 sub-commands, the opaque handle system, FixupReturnValue pipeline, method overload resolution, ObjectFlags, MarshalFlags, ByRefArgumentFlags, and practical .NET interop patterns. | [`options.md`](options.md#12-per-command-option-reference) — per-option semantics
 
 <a id="cmd-object"></a>
 - **object** - .NET object operations (comprehensive .NET interop)
@@ -3445,7 +3475,7 @@ The `debug` command provides comprehensive debugging capabilities for Eagle scri
 
 ---
 
-  > **See also:** [`debug.md`](debug.md) for a deep-dive analysis of the debugger architecture, the dual-context suspend/resume model, `BreakpointType` enum, `DebugEmergencyLevel` lifecycle control, `HeaderFlags` display control, variable watchpoints, token-level breakpoints, and all 65+ sub-commands.
+  > **See also:** [`debug.md`](debug.md) for a deep-dive analysis of the debugger architecture, the dual-context suspend/resume model, `BreakpointType` enum, `DebugEmergencyLevel` lifecycle control, `HeaderFlags` display control, variable watchpoints, token-level breakpoints, and all 65+ sub-commands. | [`options.md`](options.md#debug-break) — per-option semantics
 
 <a id="cmd-debug"></a>
 - **debug** - Debugging operations
@@ -4312,7 +4342,7 @@ The `interp` command manages child interpreters, providing sandboxing, isolation
 
   - `interp service path ?options?` - Performs service-related operations on interpreter *path*.
 
-  - **See also**: [`interp.md`](interp.md) for a deep-dive analysis of the interp command's internals, including the safe interpreter security model, command hiding, policy-based access control, resource limits, execution timeouts, and cross-interpreter communication patterns.
+  - **See also**: [`interp.md`](interp.md) for a deep-dive analysis of the interp command's internals, including the safe interpreter security model, command hiding, policy-based access control, resource limits, execution timeouts, and cross-interpreter communication patterns. | [`options.md`](options.md#interp-addcommands) — per-option semantics
 
 ---
 
@@ -4325,7 +4355,7 @@ The `package` command manages Eagle packages - reusable collections of procedure
 ---
 
 <a id="cmd-package"></a>
-> **See also**: [`package.md`](package.md) — Deep-dive analysis of Eagle's `[package]` command internals: multi-source index discovery pipeline (host, filesystem, plugin, bundle), tagged package indexes, auto-path system and interpreter initialization, package aliases, security verification (Authenticode, StrongName, locked/rejected), the four-stage require fallback chain, and `.noPkgIndex` disable markers.
+> **See also**: [`package.md`](package.md) — Deep-dive analysis of Eagle's `[package]` command internals: multi-source index discovery pipeline (host, filesystem, plugin, bundle), tagged package indexes, auto-path system and interpreter initialization, package aliases, security verification (Authenticode, StrongName, locked/rejected), the four-stage require fallback chain, and `.noPkgIndex` disable markers. | [`options.md`](options.md#package-absent) — per-option semantics
 
 - **package** - Package management
 
@@ -4521,6 +4551,8 @@ Eagle provides built-in test commands for unit testing. These commands integrate
 ---
 
 <a id="cmd-test2"></a>
+> **See also**: [`options.md`](options.md#test2) — per-option semantics
+
 - **test2** - Advanced test command (Eagle-specific)
   - `test2 name description ?options?`
   - Defines and executes an advanced test case with full options.
@@ -4590,7 +4622,7 @@ The `sql` command provides database connectivity using ADO.NET, supporting any d
 <a id="cmd-sql"></a>
 - **sql** - Database operations
 
-  > **See also**: [`sql.md`](sql.md) for a deep-dive analysis of the database command internals, including the `-variable` options for automatic resource cleanup via DbTraceCallback, the script bundle database system, the full query execution pipeline with all 30+ options, parameter binding, result formatting, transaction management, performance profiling, and the connection type system.
+  > **See also**: [`sql.md`](sql.md) for a deep-dive analysis of the database command internals, including the `-variable` options for automatic resource cleanup via DbTraceCallback, the script bundle database system, the full query execution pipeline with all 30+ options, parameter binding, result formatting, transaction management, performance profiling, and the connection type system. | [`options.md`](options.md#12-per-command-option-reference) — per-option semantics
 
   #### Connection Management
 
@@ -4712,6 +4744,8 @@ Network commands belong to ObjectGroup: "network"
 ---
 
 <a id="cmd-socket"></a>
+> **See also**: [`options.md`](options.md#socket) — per-option semantics
+
 - **socket** - Socket operations
 
   Creates TCP socket connections for network communication.
@@ -4749,7 +4783,7 @@ Network commands belong to ObjectGroup: "network"
 ---
 
 <a id="cmd-uri"></a>
-> **See also**: [`uri.md`](uri.md) — Deep-dive analysis of Eagle's `[uri]` command internals: 18 sub-commands, four per-interpreter web callbacks (`PreWebClientCallback`, `NewWebClientCallback`, `WebTransferCallback`, `WebErrorCallback`), async transfers with `CommandCallback`, custom `WebClient`-derived classes, retry infrastructure, and offline mode.
+> **See also**: [`uri.md`](uri.md) — Deep-dive analysis of Eagle's `[uri]` command internals: 18 sub-commands, four per-interpreter web callbacks (`PreWebClientCallback`, `NewWebClientCallback`, `WebTransferCallback`, `WebErrorCallback`), async transfers with `CommandCallback`, custom `WebClient`-derived classes, retry infrastructure, and offline mode. | [`options.md`](options.md#uri-compare) — per-option semantics
 
 - **uri** - URI operations (Eagle extension)
 
@@ -5159,7 +5193,7 @@ Eagle can interoperate with native Tcl interpreters, allowing scripts to leverag
 
   - `tcl versionrange ?options?` - Get version range
 
-  - **See also**: [`garuda.md`](garuda.md) (Tcl-to-Eagle direction), [`tcl.md`](tcl.md) (deep-dive analysis)
+  - **See also**: [`garuda.md`](garuda.md) (Tcl-to-Eagle direction), [`tcl.md`](tcl.md) (deep-dive analysis) | [`options.md`](options.md#12-per-command-option-reference) — per-option semantics
 
 ---
 
@@ -5544,7 +5578,7 @@ Time commands belong to ObjectGroup: "time"
 ---
 
 <a id="cmd-clock"></a>
-> **See also**: [`clock.md`](clock.md) — Deep-dive analysis of Eagle's `[clock]` command internals: Tcl-to-.NET format string translation (static mappings + dynamic delegates), custom epoch support, high-resolution performance counters, ISO 8601 formatting, `ClockData`/`IClockData`, fake time injection, and 15 sub-commands including Eagle-specific `buildnumber`, `duration`, `filetime`, `isvalid`, `monthdays`, `now`, `start`/`stop`.
+> **See also**: [`clock.md`](clock.md) — Deep-dive analysis of Eagle's `[clock]` command internals: Tcl-to-.NET format string translation (static mappings + dynamic delegates), custom epoch support, high-resolution performance counters, ISO 8601 formatting, `ClockData`/`IClockData`, fake time injection, and 15 sub-commands including Eagle-specific `buildnumber`, `duration`, `filetime`, `isvalid`, `monthdays`, `now`, `start`/`stop`. | [`options.md`](options.md#clock-days) — per-option semantics
 
 - **clock** - Clock and time operations
 
@@ -5663,6 +5697,8 @@ Time commands belong to ObjectGroup: "time"
 ---
 
 <a id="cmd-time"></a>
+> **See also**: [`options.md`](options.md#time) — per-option semantics
+
 - **time** - Time script execution
   - `time script ?count? ?options?`
   - Executes *script* multiple times and returns timing information. This is the standard way to benchmark code.
@@ -5688,6 +5724,8 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
 ---
 
 <a id="cmd-after"></a>
+> **See also**: [`options.md`](options.md#after-idle-and-after-milliseconds) — per-option semantics
+
 - **after** - Execute script after delay
 
   #### Scheduling Delayed Execution
@@ -5811,6 +5849,8 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
 ---
 
 <a id="cmd-vwait"></a>
+> **See also**: [`options.md`](options.md#vwait) — per-option semantics
+
 - **vwait** - Wait for variable change
   - `vwait ?options? varName`
   - Enters the event loop and waits until variable *varName* is modified (set or unset). This is the standard way to wait for asynchronous operations.
@@ -5836,7 +5876,7 @@ The `info` command is the primary means for querying the state of the interprete
 
 ---
 
-> **See also:** [`info.md`](info.md) — deep-dive analysis of the `info` command, including all 85 sub-commands, safe interpreter sub-command filtering, obfuscated procedure protection, .NET reflection integration, engine metadata (9 attributes), platform variable caching, `info commands` filtering options, `info cmdtype`/`info cmdcount` command analysis, culture/localization queries, Windows window enumeration, and database connection introspection.
+> **See also:** [`info.md`](info.md) — deep-dive analysis of the `info` command, including all 85 sub-commands, safe interpreter sub-command filtering, obfuscated procedure protection, .NET reflection integration, engine metadata (9 attributes), platform variable caching, `info commands` filtering options, `info cmdtype`/`info cmdcount` command analysis, culture/localization queries, Windows window enumeration, and database connection introspection. | [`options.md`](options.md#info-commands) — per-option semantics
 
 <a id="cmd-info"></a>
 - **info** - Introspection operations
@@ -6412,6 +6452,8 @@ These commands control script evaluation and substitution at the core level.
 ---
 
 <a id="cmd-source"></a>
+> **See also**: [`options.md`](options.md#source) — per-option semantics
+
 - **source** - Source script file or script bundle database
   - `source ?options? fileName`
   - Reads and evaluates the contents of *fileName* as a script.  When the file
@@ -6860,6 +6902,8 @@ These commands control script evaluation and substitution at the core level.
 ---
 
 <a id="cmd-subst"></a>
+> **See also**: [`options.md`](options.md#subst) — per-option semantics
+
 - **subst** - Perform substitutions
   - `subst ?-nobackslashes? ?-nocommands? ?-novariables? string`
   - Performs variable, command, and backslash substitutions on *string* without evaluating it as a script.
@@ -7093,6 +7137,8 @@ These commands interact with the operating system and native code.
 ---
 
 <a id="cmd-exit"></a>
+> **See also**: [`options.md`](options.md#exit) — per-option semantics
+
 - **exit** - Exit interpreter
   - `exit ?options? ?returnCode?`
   - Terminates the interpreter with the specified return code (default 0).
@@ -7110,6 +7156,8 @@ These commands interact with the operating system and native code.
 ---
 
 <a id="cmd-kill"></a>
+> **See also**: [`options.md`](options.md#kill) — per-option semantics
+
 - **kill** - Kill process (Eagle extension)
   - `kill ?options? process`
   - Terminates the specified process or processes matching a pattern.
@@ -7421,7 +7469,7 @@ These commands interact with the operating system and native code.
   - **Related Commands**:
     - `[info modules]` - List all loaded native modules
     - `[info delegates]` - List all declared delegates
-  - **See also**: [`library.md`](library.md) for a deep-dive analysis of the library command's internals, including dynamic delegate type creation, module lifecycle and reference counting, the marshalling layer, and comparisons to FFI in other languages.
+  - **See also**: [`library.md`](library.md) for a deep-dive analysis of the library command's internals, including dynamic delegate type creation, module lifecycle and reference counting, the marshalling layer, and comparisons to FFI in other languages. | [`options.md`](options.md#library-declare) — per-option semantics
 
 ---
 
@@ -7450,7 +7498,7 @@ These commands interact with the .NET runtime and the interactive host environme
 
 ---
 
-  > **See also:** [`host.md`](host.md) for a deep-dive analysis of the host interface hierarchy, console lifecycle safety interlocks (`closeCount`/`referenceCount`/`mustBeOpenCount` state machine, read/write level tracking, kiosk mode lock), Windows-native screen buffer management (push/pop stack via `CreateConsoleScreenBuffer`/`SetConsoleActiveScreenBuffer`), `HostFlags` (60+ capability flags), `HostCreateFlags`, color theming, box drawing, and all 33 + 8 sub-commands.
+  > **See also:** [`host.md`](host.md) for a deep-dive analysis of the host interface hierarchy, console lifecycle safety interlocks (`closeCount`/`referenceCount`/`mustBeOpenCount` state machine, read/write level tracking, kiosk mode lock), Windows-native screen buffer management (push/pop stack via `CreateConsoleScreenBuffer`/`SetConsoleActiveScreenBuffer`), `HostFlags` (60+ capability flags), `HostCreateFlags`, color theming, box drawing, and all 33 + 8 sub-commands. | [`options.md`](options.md#host-beep) — per-option semantics
 
 <a id="cmd-host"></a>
 - **host** - Host operations (interactive console host)
@@ -7681,7 +7729,7 @@ These commands interact with the .NET runtime and the interactive host environme
     - `-preview` - Preview load without committing
     - `-update` - Update existing plugin
 
-  > **See also**: [`load.md`](load.md) for a deep-dive analysis of the plugin loading infrastructure, including the full security verification chain, AppDomain isolation, all 20+ options, built-in and enterprise plugins, and practical loading patterns.
+  > **See also**: [`load.md`](load.md) for a deep-dive analysis of the plugin loading infrastructure, including the full security verification chain, AppDomain isolation, all 20+ options, built-in and enterprise plugins, and practical loading patterns. | [`options.md`](options.md#load) — per-option semantics
 
   **Example**:
   ```tcl
@@ -7702,7 +7750,7 @@ These commands interact with the .NET runtime and the interactive host environme
     - `-keeplibrary` - Keep library loaded but remove package
     - `-nocomplain` - Don't error if package not loaded
 
-  > **See also**: [`load.md`](load.md) for a deep-dive analysis of the unloading pipeline, plugin matching, and all unload options.
+  > **See also**: [`load.md`](load.md) for a deep-dive analysis of the unloading pipeline, plugin matching, and all unload options. | [`options.md`](options.md#unload) — per-option semantics
 
   **Example**:
   ```tcl
@@ -7772,6 +7820,8 @@ These commands provide fundamental interpreter operations and utility functions.
 ---
 
 <a id="cmd-rename"></a>
+> **See also**: [`options.md`](options.md#rename) — per-option semantics
+
 - **rename** - Rename or delete identifiers (ObjectGroup: "scriptEnvironment")
   - `rename ?options? oldName newName`
   - Renames identifier *oldName* to *newName*.
@@ -7824,7 +7874,16 @@ These commands provide fundamental interpreter operations and utility functions.
 
 ## Common Option Patterns
 
-Eagle commands use consistent option patterns across many commands. Here are the most common options found in ObjectOps.cs option factory methods:
+> **For a deep-dive analysis** of the command option infrastructure -- including
+> `OptionDictionary`, `OptionFlags`, the `CommandOptions` centralization
+> architecture, parsing methods, mutual-exclusion groups, two-pass processing,
+> and all special patterns -- see [`options.md`](options.md).
+
+Eagle commands use consistent option patterns across many commands. All option
+dictionary creation in the core library is centralized in the `CommandOptions`
+class (`Eagle/Library/Components/Private/CommandOptions.cs`), dispatched via
+the `CommandOptionType` enum (~200 values). The patterns below describe the
+most common options found across commands:
 
 ### Object Creation and Disposal Options
 

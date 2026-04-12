@@ -28,7 +28,8 @@ algorithm instead of just parser syntax.
 | File | Role |
 |------|------|
 | `Eagle/Library/Commands/Exec.cs` | Main command implementation (638 lines) |
-| `Eagle/Library/Components/Private/ObjectOps.cs` | Option definitions (`GetExecOptions`) |
+| `Eagle/Library/Components/Private/CommandOptions.cs` | Centralized option dictionary factory (see [`options.md`](options.md)) |
+| `Eagle/Library/Components/Private/ObjectOps.cs` | Option definitions (`GetExecOptions`), delegated from `CommandOptions` |
 | `Eagle/Library/Components/Private/RuntimeOps.cs` | Command line building and argument escaping |
 | `Eagle/Library/Components/Private/ProcessOps.cs` | Process creation, capture, and result handling |
 | `Eagle/Library/Components/Private/Enumerations.cs` | `EscapeMode` flags enum |
