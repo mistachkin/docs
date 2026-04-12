@@ -1161,7 +1161,292 @@ execution.
 | `[interp]` | Bundle scripts with `IsolationLevel` of `Interpreter` or `Safe` SecurityLevel create child interpreters for evaluation. See [`interp.md`](interp.md). |
 | `[library]` | Native FFI. Complementary: `[sql]` accesses managed databases; `[library]` calls native C functions. See [`library.md`](library.md). |
 
-## 16. References
+## 16. Production Patterns from the SQLite .NET Test Suite
+
+The canonical example of production-grade Eagle database scripting is the
+**System.Data.SQLite test suite** (`sqlite/dotnet/Tests/` — 113 `.eagle`
+test files, backed by the `sqlite/dotnet/lib/System.Data.SQLite/common.eagle`
+library at ~7,000 lines). These patterns have been refined over many years
+of real-world use.
+
+### 16.1 Connection Lifecycle: `setupDb` / `cleanupDb`
+
+Production code never calls `sql open` directly. Instead, a wrapper
+procedure builds the connection string from multiple sources, opens the
+connection, configures PRAGMAs, and runs setup SQL:
+
+```tcl
+proc setupDb {fileName {mode ""} {dateTimeFormat ""} {dateTimeKind ""}
+             {flags ""} {extra ""} {qualify true} {delete true}
+             {uri false} {temporary true} {varName db} {quiet false}} {
+    upvar 1 $varName db
+
+    # Build connection string from multiple sources
+    set connection "Data Source=${fileName};ToFullPath=${qualify}"
+    if {$mode ne ""} { append connection ";Journal Mode=${mode}" }
+    if {$dateTimeFormat ne ""} { append connection ";DateTimeFormat=${dateTimeFormat}" }
+    append connection [getTestProperties $flags $extra]
+
+    # Open connection
+    set db [sql open -type SQLite $connection]
+
+    # Configure temporary directory
+    sql execute $db "PRAGMA temp_store_directory = \"${tempDir}\";"
+
+    # Run per-connection setup SQL (configurable)
+    set setupSql [getExecuteOnSetup]
+    if {$setupSql ne ""} { sql execute $db $setupSql }
+}
+```
+
+Cleanup is equally thorough:
+
+```tcl
+proc cleanupDb {fileName {varName db} {collect true} {qualify true}
+               {delete true} {pool true} {quiet false}} {
+    upvar 1 $varName db
+
+    # Clear connection pools
+    catch {object invoke System.Data.SQLite.SQLiteConnection ClearAllPools}
+
+    # Force garbage collection to release file handles
+    if {$collect} { collectGarbage $::test_channel }
+
+    # Close connection
+    sql close $db
+
+    # Delete associated files (WAL, SHM, main database)
+    if {$delete} {
+        catch {file delete "${fileName}-wal"}
+        catch {file delete "${fileName}-shm"}
+        catch {file delete $fileName}
+    }
+
+    unset db
+}
+```
+
+### 16.2 Connection String Building
+
+Connection strings are assembled from multiple sources with priority
+merging:
+
+```tcl
+# Local flags + global overrides + shared flags
+set flags [combineFlags $localFlags ""]
+if {[info exists ::connection_flags]} {
+    set flags [combineFlags $flags $::connection_flags]
+}
+
+# Extra connection properties
+set extra [combineExtra $::connection_extra $localExtra]
+```
+
+This allows per-user configuration files (`settings.before.username.eagle`)
+to override defaults without modifying test code.
+
+### 16.3 Parameter Binding: Real Syntax
+
+Parameters use `?` placeholders with typed list bindings:
+
+```tcl
+# Check if a table exists (parameterized)
+set sql {SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?;}
+set exists [expr {[sql execute -execute scalar $db $sql \
+    [list param1 String $tableName]] > 0}]
+
+# Insert with typed parameters
+sql execute $db {INSERT INTO t1 (x, y) VALUES(?, ?);} \
+    [list param1 Int64 42] [list param2 String "value"]
+```
+
+Each parameter is a list: `{paramName DbType Value}`. The `paramName` is
+a logical name (the actual binding is positional for `?` placeholders, or
+named for `@param` syntax).
+
+### 16.4 Result Access Patterns
+
+**Scalar results (single value):**
+```tcl
+set count [sql execute -execute scalar $db "SELECT COUNT(*) FROM t1;"]
+```
+
+**Reader with implicit `$rows` array:**
+```tcl
+sql execute -execute reader $db "SELECT x, y, z FROM t1;"
+# $rows(count) = number of rows
+# $rows(names) = column name list
+# $rows(0)     = first row as value list
+# $rows(1)     = second row
+```
+
+**DataReader for streaming large result sets:**
+```tcl
+set reader [sql execute -execute reader -format datareader \
+    -alias $db "SELECT * FROM large_table;"]
+
+while {[$reader Read]} {
+    set id    [$reader GetValue [$reader GetOrdinal "id"]]
+    set name  [$reader GetValue [$reader GetOrdinal "name"]]
+    # Process one row at a time -- constant memory usage
+}
+
+unset reader
+```
+
+**DataTable for materialized results with named column access:**
+```tcl
+set table [sql execute -execute reader -format datatable \
+    $db "SELECT id, name, age FROM users;"]
+
+# Built-in conversion methods (replaces getRowsFromDataTable)
+set rows [$table ToList]          ;# {{1 Alice 30} {2 Bob 25}}
+set dicts [$table ToDictionary]   ;# {{id 1 name Alice age 30} ...}
+set cols [$table GetColumnNames]  ;# {id name age}
+
+# Named column access on individual rows
+object foreach -alias row [$table Rows] {
+    puts "[$row Item name]: [$row Item age]"
+}
+
+# In-memory filtering (no new query needed)
+set filtered [$table Select "age >= 30"]
+
+unset table
+```
+
+The `DataTable` format returns a custom `DataOps.DataTable` object (derived
+from `System.Data.DataTable`) that captures the value formatting parameters
+(`DateTimeBehavior`, `BlobBehavior`, etc.) so that `ToList` and `ToDictionary`
+apply the same conversion pipeline (`MarshalOps.FixupDataValue`) as other
+`[sql execute]` formats. This replaces the manual `getRowsFromDataTable`
+pattern from the SQLite test suite library.
+
+### 16.5 Transaction Management
+
+```tcl
+set transaction [sql transaction begin $db]
+
+if {[catch {
+    sql execute $db "INSERT INTO t1 VALUES(1, 'a');"
+    sql execute $db "INSERT INTO t1 VALUES(2, 'b');"
+    sql transaction commit $transaction
+} error]} {
+    catch {sql transaction rollback $transaction}
+    error $error
+}
+```
+
+**Nested transactions:**
+```tcl
+set outer [sql transaction begin $db]
+set inner [sql transaction begin $db]   ;# savepoint
+
+catch {sql execute $db "INSERT ..."}
+sql transaction rollback $inner         ;# rollback to savepoint
+sql transaction commit $outer           ;# commit the rest
+```
+
+### 16.6 Advanced .NET Interop with Database Objects
+
+The test suite demonstrates deep .NET interop for advanced database
+features:
+
+**Event handlers (authorization callbacks):**
+```tcl
+proc onAuthorize {sender e} {
+    if {[$e ActionCode] eq "CreateTable"} {
+        $e ReturnCode Deny
+    }
+}
+
+set connection [getDbConnection]
+object invoke $connection add_Authorize onAuthorize
+
+# ... use connection ...
+
+# Cleanup ritual: remove handler, remove callback, delete proc
+catch {object invoke $connection remove_Authorize onAuthorize}
+catch {object removecallback onAuthorize}
+rename onAuthorize ""
+```
+
+**Type callbacks (custom marshaling):**
+```tcl
+set callback {-callbackflags +Default readValueCallback}
+set typeCallbacks [object invoke -marshalflags +DynamicCallback \
+    System.Data.SQLite.SQLiteTypeCallbacks Create \
+    null $callback null null]
+
+$connection SetTypeCallbacks "TYPENAME" $typeCallbacks
+```
+
+**Connection pooling:**
+```tcl
+# Enable pooling in connection string
+setupDb $fileName "" "" "" "" "Pooling=True;"
+
+# Explicit pool management
+catch {
+    object invoke -flags +NonPublic \
+        System.Data.SQLite.SQLiteConnectionPool ClearAllPools
+}
+```
+
+### 16.7 Diagnostic and Resource Tracking
+
+```tcl
+# Handle leak detection
+proc getSQLiteHandleCounts {channel} {
+    set counts [list]
+    foreach name {connectionCount statementCount backupCount blobCount} {
+        lappend counts $name [object invoke -flags +NonPublic \
+            System.Data.SQLite.UnsafeNativeMethods \
+            sqlite3_changes_interop ...]
+    }
+    return $counts
+}
+
+# Full shutdown with leak detection
+proc shutdownSQLite {channel} {
+    # Roll back leaked transactions
+    foreach transaction [info transactions] {
+        catch {sql transaction rollback $transaction}
+    }
+    # Close leaked connections
+    foreach connection [info connections] {
+        catch {sql close $connection}
+    }
+}
+```
+
+### 16.8 Test Structure Pattern
+
+Every test follows a consistent lifecycle:
+
+```tcl
+runTest {test data-1.1 "basic CRUD operations" \
+    -setup {
+        setupDb [set fileName data-1.1.db]
+    } \
+    -body {
+        sql execute $db "CREATE TABLE t1(x INTEGER, y TEXT);"
+        sql execute $db "INSERT INTO t1 VALUES(1, 'hello');"
+        set result [sql execute -execute scalar $db \
+            "SELECT y FROM t1 WHERE x = ?;" \
+            [list param1 Int64 1]]
+    } \
+    -cleanup {
+        cleanupDb $fileName
+        unset -nocomplain result
+    } \
+    -constraints {eagle command.sql compile.DATA SQLite \
+        System.Data.SQLite} \
+    -result {hello}
+}
+```
+
+## 17. References
 
 - **Source code**: `Eagle/Library/Commands/Sql.cs` — `[sql]` command implementation (9 sub-commands)
 - **Source code**: `Eagle/Library/Components/Private/DataOps.cs` — database operations, connection creation, result formatting, bundle scripts
@@ -1177,3 +1462,5 @@ execution.
 - **Related documentation**: [`core_script_library.md`](core_script_library.md) — database utility procedures (haveColumnValue, getColumnValue, etc.)
 - **Related documentation**: [`load.md`](load.md) — plugin loading (for database provider assemblies)
 - **Related documentation**: [`interp.md`](interp.md) — interpreter security model (for bundle isolation)
+- **Production reference**: `sqlite/dotnet/Tests/*.eagle` — 113 production test files demonstrating real-world database access patterns
+- **Production reference**: `sqlite/dotnet/lib/System.Data.SQLite/common.eagle` — ~7,000-line test support library with `setupDb`, `cleanupDb`, connection string building, DataTable conversion, and resource management

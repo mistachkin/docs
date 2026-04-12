@@ -4196,17 +4196,97 @@ test2 version-1.1 "Test version format" \
 # Open a SQLite database with -variable for automatic cleanup
 sql open -type SQLite -variable db "Data Source=mydb.db"
 
-# Execute a query
+# Create and populate a table
 sql execute $db "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)"
-sql execute $db "INSERT INTO users (name) VALUES ('Alice')"
+sql execute $db {INSERT INTO users (name) VALUES (?);} \
+    [list param1 String "Alice"]
 
-# Query with results
-set results [sql execute -execute Reader -format DataTable $db "SELECT * FROM users"]
-puts $results
+# Scalar query: get a single value
+set count [sql execute -execute scalar $db \
+    "SELECT COUNT(*) FROM users;"]
 
-# When $db variable is unset or goes out of scope, connection is
-# automatically closed and disposed
+# Reader query: results populate $rows array
+sql execute -execute reader $db "SELECT * FROM users;"
+# $rows(count) = number of rows
+# $rows(names) = {id name}
+# $rows(0)     = first row values
+
+# Parameterized lookup
+set name [sql execute -execute scalar $db \
+    {SELECT name FROM users WHERE id = ?;} \
+    [list param1 Int64 1]]
+
+# When $db variable is unset or goes out of scope, connection
+# is automatically closed and disposed
 unset db
+```
+
+### SQL Transaction with Error Handling
+
+```tcl
+set db [sql open -type SQLite "Data Source=mydb.db"]
+
+set transaction [sql transaction begin $db]
+
+if {[catch {
+    sql execute $db {INSERT INTO users (name) VALUES (?);} \
+        [list param1 String "Bob"]
+    sql execute $db {INSERT INTO users (name) VALUES (?);} \
+        [list param1 String "Carol"]
+    sql transaction commit $transaction
+} error]} {
+    catch {sql transaction rollback $transaction}
+    error $error
+}
+
+sql close $db
+```
+
+### SQL DataReader for Large Result Sets
+
+```tcl
+# Stream results one row at a time (constant memory)
+set reader [sql execute -execute reader -format datareader \
+    -alias $db "SELECT id, name FROM users ORDER BY id;"]
+
+while {[$reader Read]} {
+    set id   [$reader GetValue [$reader GetOrdinal "id"]]
+    set name [$reader GetValue [$reader GetOrdinal "name"]]
+    puts "User $id: $name"
+}
+
+unset reader
+```
+
+### SQL DataTable for Reusable Named-Column Access
+
+```tcl
+# Materialize results as a DataTable object
+set table [sql execute -execute reader -format datatable \
+    $db "SELECT id, name, age FROM users;"]
+
+# Get column names
+puts [$table GetColumnNames]  ;# {id name age}
+
+# Convert to list of row-value lists
+puts [$table ToList]          ;# {1 Alice 30} {2 Bob 25}
+
+# Convert to list of key-value dictionaries
+puts [$table ToDictionary]    ;# {id 1 name Alice age 30} {id 2 ...}
+
+# Named column access on individual rows
+object foreach -alias row [$table Rows] {
+    puts "[$row Item name] is [$row Item age] years old"
+}
+
+# In-memory filtering (no new query needed)
+set seniors [$table Select "age >= 65"]
+
+# Row count
+puts [$table Rows.Count]
+
+# Clean up
+unset table
 ```
 
 ---

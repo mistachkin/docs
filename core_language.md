@@ -4700,42 +4700,44 @@ The `sql` command provides database connectivity using ADO.NET, supporting any d
 
   #### Executing Queries
 
-  - `sql execute ?options? connection query ?{paramName ?paramType? paramValue ?paramSize?} ...?` - Executes a SQL query with optional parameters.
-    - **For SELECT**: Returns results as a list of dictionaries (one per row)
-    - **For INSERT/UPDATE/DELETE**: Returns the number of affected rows
-    - **Arguments**: Specified as lists `{name type value}` for parameterized queries (prevents SQL injection)
-    - **Options**: `-time` (measure execution time)
+  - `sql execute ?options? connection query ?{paramName ?paramType? paramValue} ...?` - Executes a SQL query with optional parameters.
+    - **Execution modes** (`-execute`): `scalar` (single value), `reader` (result set), `none`/absent (affected row count)
+    - **Result formats** (`-format`): `Array` (default), `List`, `Dictionary`, `NestedList`, `NestedDictionary`, `DataReader`, `DataRecord`, `DataTable`, `RawArray`, `RawList`
+    - **Parameters**: Each is a list `{paramName DbType value}` where `DbType` is a .NET `DbType` enum value (Int32, Int64, String, DateTime, Binary, etc.)
+    - **Reader results**: With `-execute reader`, results populate a `$rows` array: `$rows(count)` = row count, `$rows(names)` = column names, `$rows(0)` = first row values, etc.
 
   ---
 
   - `sql foreach ?options? connection query ?params...? body` - Executes a query and iterates over results, executing *body* for each row with column values accessible as variables.
 
-  **Example**:
+  **Examples**:
   ```tcl
-  # Simple scalar query
+  # Scalar query: single value
   set count [sql execute -execute scalar \
-      $conn "SELECT COUNT(*) FROM users"]
+      $conn "SELECT COUNT(*) FROM users;"]
 
-  # Reader query with nested list format
-  set results [sql execute \
-      -execute reader -format nestedlist \
-      $conn "SELECT name, age FROM users"]
-  foreach row $results {
-    lassign $row name age
-    puts "Name: $name, Age: $age"
+  # Reader query: results in $rows array
+  sql execute -execute reader $conn \
+      "SELECT name, age FROM users;"
+  # Access: $rows(count), $rows(names), $rows(0), $rows(1), ...
+
+  # Parameterized query (prevents SQL injection)
+  sql execute -execute reader $conn \
+      {SELECT * FROM users WHERE age > ?;} \
+      [list param1 Int32 21]
+
+  # Scalar with named parameter
+  set name [sql execute -execute scalar $conn \
+      {SELECT name FROM users WHERE id = ?;} \
+      [list param1 Int64 42]]
+
+  # DataReader for streaming large results (constant memory)
+  set reader [sql execute -execute reader -format datareader \
+      -alias $conn "SELECT * FROM large_table;"]
+  while {[$reader Read]} {
+      set val [$reader GetValue [$reader GetOrdinal "column_name"]]
   }
-
-  # Parameterized query (safe from SQL injection)
-  set results [sql execute -execute reader \
-      $conn \
-      "SELECT * FROM users WHERE age > @minAge" \
-      {minAge Int32 21}]
-
-  # Iteration style with sql foreach
-  sql foreach $conn \
-      "SELECT name, age FROM users" {
-    puts "Name: $name, Age: $age"
-  }
+  unset reader
   ```
 
   ---

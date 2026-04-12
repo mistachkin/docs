@@ -711,6 +711,70 @@ For reference, the full set of `OptionFlags` values (from
 
 ---
 
+## 13. The `DataTable` Result Format
+
+Eagle's `[sql execute]` command supports a `DataTable` result format that
+materializes query results as a custom `DataTable` object (derived from
+`System.Data.DataTable`) with value-added methods for Eagle scripting.
+
+### 13.1 Usage
+
+```tcl
+set table [sql execute -execute reader -format datatable $db \
+    "SELECT id, name, age FROM users;"]
+```
+
+The returned opaque handle wraps a `DataOps.DataTable` object that inherits
+all standard `System.Data.DataTable` functionality (Rows, Columns, Select,
+etc.) and adds Eagle-specific convenience methods.
+
+### 13.2 Value-Added Methods
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `ToList` | StringList | Converts all rows to a Tcl list of row-value lists, applying the same value formatting (`FixupDataValue`) as other `[sql execute]` formats. Each row is a sub-list of formatted values. Replaces the manual `getRowsFromDataTable` pattern. |
+| `ToDictionary` | StringList | Like `ToList` but each row is a key-value list: `{colName value colName value ...}`. Enables named column access without positional indexing. |
+| `GetColumnNames` | StringList | Returns column names as a Tcl list. |
+
+### 13.3 Inherited .NET Functionality
+
+Since the class derives from `System.Data.DataTable`, all standard members
+are accessible via `[object invoke]`:
+
+```tcl
+# Row count
+puts [$table Rows.Count]
+
+# Named column access on individual rows
+object foreach -alias row [$table Rows] {
+    puts [$row Item "name"]
+}
+
+# In-memory filtering via DataTable.Select
+set filtered [$table Select "age > 30"]
+
+# Schema inspection
+object foreach -alias col [$table Columns] {
+    puts "[$col ColumnName]: [$col DataType]"
+}
+```
+
+### 13.4 Comparison with Other Formats
+
+| Format | Memory | Reusable | Named Columns | .NET Object |
+|--------|--------|----------|---------------|-------------|
+| `Array` (default) | Script variable | Yes | Via `$rows(names)` | No |
+| `List` | Script string | Yes | No (positional) | No |
+| `DataReader` | Streaming | No (forward-only) | Yes (GetOrdinal) | Yes |
+| `DataTable` | Materialized | Yes | Yes (Item, ToDict) | Yes |
+
+Use `DataTable` when you need to iterate results multiple times, access
+columns by name, pass data to .NET APIs, or filter in memory. Use
+`DataReader` for large result sets where streaming is preferred. Use
+`Array`/`List` for simple script-level processing.
+
+---
+
 ## 12. Per-Command Option Reference
 
 This section documents every option for every command and sub-command,
