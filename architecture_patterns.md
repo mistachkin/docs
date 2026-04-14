@@ -601,6 +601,174 @@ context.
 
 ---
 
+<details>
+<summary><strong>28. Runtime C# Compilation from Script (<code>csharp.eagle</code>)</strong></summary>
+
+`csharp.eagle` provides a complete C# compilation subsystem accessible
+from Eagle scripts. The `compileCSharp` procedure accepts C# source code
+as a string and compiles it into a .NET assembly at runtime, using one of
+two strategies:
+
+- **Desktop .NET Framework**: Uses `Microsoft.CSharp.CSharpCodeProvider`
+  for in-process compilation via the CodeDOM API.
+- **.NET Core / .NET 5+**: Invokes the command-line compiler (`csc.dll`)
+  via `dotnet exec`, since CodeDOM is not available on .NET Core.
+
+The subsystem handles complex .NET Standard reference assembly path
+resolution, SDK version detection, target framework moniker mapping,
+and compiler error/warning extraction. It supports both in-memory and
+disk-based assembly output.
+
+An extensive hook system via `::compileCSharp(*)` array variables allows
+callers to customize compiler parameters, reference assemblies, and
+output paths. The `doesCompileCSharpWork` procedure validates that
+compilation is functional on the current platform before tests depend
+on it.
+
+This enables patterns like compiling a C# class from a test script,
+loading it into the interpreter, and invoking its methods -- all within
+a single test case. The SQLite .NET test suite uses this extensively for
+testing custom type handlers and callback delegates.
+
+**Where**: `lib/Eagle1.0/csharp.eagle`
+
+</details>
+
+---
+
+<details>
+<summary><strong>29. Remote Package Repository Client (<code>pkgt.eagle</code>)</strong></summary>
+
+`pkgt.eagle` (Package Toolset) provides tools for downloading,
+extracting, and managing Eagle packages from remote repositories. It
+acts as Eagle's package manager client, handling:
+
+- **Package Client Toolset** download and extraction
+- **Native Tcl/Tk DLL** downloads for Garuda bridging
+- **Security Toolset** (Harpy and Badge plugins) acquisition
+- **License certificate** requests
+- **Remote script evaluation** in sandboxed environments
+- **Package index** downloads and forced re-scanning
+
+The system uses a URI template pattern with Tcl variable substitution
+(`${baseUri}/${urn}`) and distributes requests across multiple server
+endpoints for load balancing. Environment variable overrides
+(`$::env(...)`) allow runtime reconfiguration for testing.
+
+Platform-specific downloads use `machineToPlatform` and
+`$::tcl_platform(machine)` to select the correct architecture. ZIP
+archive extraction integrates with `Eagle.Unzip`. Remote servers
+return Tcl dictionaries with standardized keys (`returnCode`, `result`,
+`errorLine`).
+
+The `loadPackageClientToolset` procedure loads the repository client
+with optional security features, and `forceScanOfPackages` triggers
+package index re-scanning by requesting a known-nonexistent package
+name -- a deliberate hack that exploits the package system's scan-on-
+miss behavior.
+
+**Where**: `lib/Eagle1.0/pkgt.eagle`
+
+</details>
+
+---
+
+<details>
+<summary><strong>30. Shell Unknown Handler as .NET Type Dispatch</strong></summary>
+
+Eagle's `unknown` command handler (`init.eagle`) forms a multi-level
+resolution chain:
+
+1. **Entry**: Unrecognized command name → `unknown` procedure
+2. **Type resolution**: If `eagleUnknownObjectInvoke` option is enabled,
+   `unknownObjectInvoke` (in `unkobj.eagle`) attempts to resolve the
+   command as a .NET type name via `isManagedType()` / `canGetManagedType()`
+3. **Method invocation**: If a type is found, arguments are merged with
+   `[object invoke]` options via `MergeArguments()` on the active
+   interpreter, and the command is re-dispatched as a .NET static method call
+4. **Chaining**: If resolution fails, `continue` is returned to chain to
+   the next handler (package unknown, namespace unknown, etc.)
+5. **Package fallback**: `tclPkgUnknown` forces package index re-scanning
+   with `-host`, `-bundle`, and optionally `-plugins` flags
+
+Nested member access uses NUL byte (`\x00`) as a separator:
+`System.String.IsNullOrEmpty` becomes `System.String\x00IsNullOrEmpty`
+internally, which the Eagle marshaller interprets as nested member
+resolution.
+
+**Safe interpreters** get a restricted `unknown` handler (defined in
+`safe.eagle`) that only reports errors -- no .NET type resolution is
+allowed. This is a critical security boundary: untrusted scripts cannot
+invoke arbitrary .NET methods through the unknown handler.
+
+The `uplevel [expr {$level + 1}]` pattern in `unknownObjectInvoke`
+skips the intermediate `unknown` call frame so that the resolved
+command executes in the original caller's context, preserving variable
+scope and call frame semantics.
+
+When `eagle_shellUnknown` is enabled (see pattern 31), the resolution
+chain becomes: shell dispatch → .NET type resolution → package fallback.
+The shell handler saves the original `::unknown` as `::savedUnknown` and
+falls back to it on failure, creating a layered resolution system where
+each handler can chain to the next.
+
+**Where**: `lib/Eagle1.0/init.eagle`, `lib/Eagle1.0/unkobj.eagle`,
+`lib/Eagle1.0/safe.eagle`
+
+</details>
+
+---
+
+<details>
+<summary><strong>31. Transparent OS Shell Bridge (<code>eagle_shellUnknown</code>)</strong></summary>
+
+The `eagle_shellUnknown` system transforms Eagle's interactive prompt
+into a transparent OS shell. When enabled via `eagle_enableShellUnknown`,
+it hot-swaps the `unknown` handler: the original `::unknown` is saved as
+`::savedUnknown`, and `::eagle_shellUnknown` takes its place.
+
+When a command isn't found, `eagle_shellUnknown` checks whether the
+input is coming from the interactive loop (via `eagle_isShellScriptLevel`,
+which compares `ScriptLevels` against `InteractiveScriptLevels` plus a
+known procedure depth offset). If so, it delegates to
+`eagle_shellBuildCommand` to construct an `[exec]` invocation targeting
+the OS shell.
+
+`eagle_shellBuildCommand` is the most sophisticated part. It detects the
+current shell (`cmd.exe`, `/bin/bash`, PowerShell, `4nt.exe`, `tcc.exe`)
+and adjusts argument construction accordingly:
+
+- **cmd.exe**: Uses `/C` prefix, `-commandline` for `CommandLineToArgvW`
+  quoting, `-forprocessor` for command processor awareness
+- **PowerShell**: Uses `-Command` prefix, wraps arguments in single
+  quotes with escape-by-doubling (`'` → `'\''`), collapses arguments
+  into a single string
+- **Unix shells**: Uses `-c` flag, optional single-quote wrapping for
+  nested shell invocations
+- **Configurable**: 20+ runtime options (`shellUnknown_ForceShell`,
+  `shellUnknown_ForceDequote`, `shellUnknown_NoCommandProcessor`, etc.)
+  control every aspect of command construction
+
+The system has 8 hook points (`initialShellBuildCommand`,
+`optionsShellBuildCommand`, `beforeShellBuildCommand`,
+`afterShellBuildCommand`, `beforeShellUnknown`, `afterShellUnknown`,
+`shellUnknownError`, `finalShellBuildCommand`) allowing external code
+to intercept and modify command construction at every stage.
+
+If the shell command fails, the error can either propagate or fall back
+to `::savedUnknown` (the original .NET type resolver), controlled by
+`shellUnknown_ErrorFallback` and `shellUnknown_OkFallback` options.
+This creates a resolution chain: try shell → try .NET types → error.
+
+The net effect: typing `ls -la` or `DIR /S` at the Eagle prompt "just
+works" on any platform, with correct quoting for the detected shell.
+
+**Where**: `lib/Eagle1.0/test.eagle` (lines 10390-10781)
+
+</details>
+
+---
+
 ## References
 
 - **Source code**: `Eagle/Library/` -- the complete Eagle core library

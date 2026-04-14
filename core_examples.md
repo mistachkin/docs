@@ -1618,7 +1618,8 @@ parse script {
 <a id="ex-regexp"></a>
 > **See also**: [`regexp.md`](regexp.md) — Deep-dive analysis covering the .NET regex engine, default `Singleline` behavior, Eagle-specific options (`-global`, `-skip`, `-limit`, `-compiled`, `-extra`), pattern mutation prefixes, and practical patterns.
 
-### regexp
+<details>
+<summary><strong>regexp</strong></summary>
 
 ```tcl
 # Simple match test
@@ -1659,12 +1660,13 @@ regexp -indices {(\w+)@(\w+)} "user@host" all user domain
 regexp -compiled -nocase {pattern} "Some Pattern"
 ```
 
----
+</details>
 
 <a id="ex-regsub"></a>
 > **See also**: [`regexp.md`](regexp.md) — Deep-dive on `[regsub]` internals: the three replacement modes (normal, `-eval`, `-command`), `TranslateSubSpec` translation, `-extra` substitutions for named groups, and `-strict`/`-nostrict` behavior.
 
-### regsub
+<details>
+<summary><strong>regsub</strong></summary>
 
 ```tcl
 # Simple substitution
@@ -1702,10 +1704,11 @@ regsub -literal {.} a.b {$1}
 ;# Returns: a$1b
 ```
 
----
+</details>
 
 <a id="ex-split"></a>
-### split
+<details>
+<summary><strong>split</strong></summary>
 
 ```tcl
 # Default (whitespace) split
@@ -1738,12 +1741,13 @@ split /usr/local/bin /
 ;# Returns: {{} usr local bin}
 ```
 
----
+</details>
 
 > **See also:** [`string.md`](string.md) — deep-dive analysis of the `string` command with additional examples covering 29 sub-commands, 64-class type checking, culture-aware operations, extended `string map`, and `string format` .NET integration.
 
 <a id="ex-string"></a>
-### string
+<details>
+<summary><strong>string</strong></summary>
 
 #### String Measurement and Access
 
@@ -1980,14 +1984,15 @@ string classes
 ;# Returns list of all class names
 ```
 
----
+</details>
 
 ## Array Examples
 
 > **See also:** [`array.md`](array.md) — deep-dive analysis of the `array` command with additional examples covering 17 sub-commands, 8 storage backends, deep copy, default values, random access, and iteration patterns.
 
 <a id="ex-array"></a>
-### array
+<details>
+<summary><strong>array</strong></summary>
 
 #### Basic Operations
 
@@ -2094,14 +2099,15 @@ array set data {a 1 b 2 c 3 d 4}
 # array random data "a*"         ;# Random from matching keys only
 ```
 
----
+</details>
 
 <a id="dictionary-examples"></a>
 
 ## Dictionary Examples
 
 <a id="ex-dict"></a>
-### dict
+<details>
+<summary><strong>dict</strong></summary>
 
 #### Creating and Querying
 
@@ -2308,14 +2314,15 @@ dict with d {
 list [dict get $d a] [dict get $d b]  ;# Returns: {11 22}
 ```
 
----
+</details>
 
 <a id="io-examples"></a>
 
 ## I/O and Channel Examples
 
 <a id="ex-close"></a>
-### close
+<details>
+<summary><strong>close</strong></summary>
 
 ```tcl
 set fh [open example.txt w]
@@ -2323,10 +2330,11 @@ puts $fh Hello
 close $fh
 ```
 
----
+</details>
 
 <a id="ex-eof"></a>
-### eof
+<details>
+<summary><strong>eof</strong></summary>
 
 ```tcl
 set fh [open data.txt r]
@@ -2337,10 +2345,11 @@ while {![eof $fh]} {
 close $fh
 ```
 
----
+</details>
 
 <a id="ex-fblocked"></a>
-### fblocked
+<details>
+<summary><strong>fblocked</strong></summary>
 
 ```tcl
 # Check if non-blocking channel would block
@@ -2348,10 +2357,11 @@ close $fh
 # if {[fblocked $sock]} { ... }
 ```
 
----
+</details>
 
 <a id="ex-fconfigure"></a>
-### fconfigure
+<details>
+<summary><strong>fconfigure</strong></summary>
 
 ```tcl
 # Set channel encoding and translation
@@ -2376,10 +2386,11 @@ set enc [fconfigure $fh -encoding]
 close $fh
 ```
 
----
+</details>
 
 <a id="ex-fcopy"></a>
-### fcopy
+<details>
+<summary><strong>fcopy</strong></summary>
 
 ```tcl
 # Copy entire file
@@ -2395,10 +2406,11 @@ close $dst
 fcopy $input $output -size 1024
 ```
 
----
+</details>
 
 <a id="ex-flush"></a>
-### flush
+<details>
+<summary><strong>flush</strong></summary>
 
 ```tcl
 # Force buffered data to be written
@@ -2414,10 +2426,11 @@ puts -nonewline "Enter value: "
 flush stdout
 ```
 
----
+</details>
 
 <a id="ex-gets"></a>
-### gets
+<details>
+<summary><strong>gets</strong></summary>
 
 ```tcl
 # Read line, return content
@@ -2440,10 +2453,11 @@ close $fh
 gets -keepeol true $fh line
 ```
 
----
+</details>
 
 <a id="ex-open"></a>
-### open
+<details>
+<summary><strong>open</strong></summary>
 
 ```tcl
 # Read mode (default)
@@ -2471,10 +2485,11 @@ close $fh
 set fh [open log.txt a -share None -autoflush]
 ```
 
----
+</details>
 
 <a id="ex-puts"></a>
-### puts
+<details>
+<summary><strong>puts</strong></summary>
 
 ```tcl
 # Print to stdout
@@ -2500,10 +2515,11 @@ close $fh
 puts stderr "Warning: something unexpected"
 ```
 
----
+</details>
 
 <a id="ex-read"></a>
-### read
+<details>
+<summary><strong>read</strong></summary>
 
 ```tcl
 # Read entire file
@@ -2526,10 +2542,11 @@ set data [read -nonewline $fh]
 close $fh
 ```
 
----
+</details>
 
 <a id="ex-seek"></a>
-### seek
+<details>
+<summary><strong>seek</strong></summary>
 
 ```tcl
 set fh [open data.txt r]
@@ -2539,10 +2556,11 @@ seek $fh -10 current  ;# Back 10 characters
 close $fh
 ```
 
----
+</details>
 
 <a id="ex-tell"></a>
-### tell
+<details>
+<summary><strong>tell</strong></summary>
 
 ```tcl
 set fh [open data.txt r]
@@ -2551,10 +2569,11 @@ set pos [tell $fh]     ;# Returns offset after reading 100 chars
 close $fh
 ```
 
----
+</details>
 
 <a id="ex-truncate"></a>
-### truncate
+<details>
+<summary><strong>truncate</strong></summary>
 
 ```tcl
 # Eagle extension — truncate file at current position
@@ -2564,12 +2583,13 @@ close $fh
 # close $fh
 ```
 
----
+</details>
 
 ## File System Examples
 
 <a id="ex-cd"></a>
-### cd
+<details>
+<summary><strong>cd</strong></summary>
 
 ```tcl
 # Change to specific directory
@@ -2579,12 +2599,13 @@ close $fh
 # cd
 ```
 
----
+</details>
 
 > **See also:** [`file.md`](file.md) — deep-dive analysis of the `file` command with additional examples covering 54 sub-commands, security descriptors, access control, advanced globbing, and temporary file management.
 
 <a id="ex-file"></a>
-### file
+<details>
+<summary><strong>file</strong></summary>
 
 #### Path Manipulation
 
@@ -2765,10 +2786,11 @@ file channels                            ;# Returns: stdin stdout stderr ...
 file volumes                          ;# Returns: {C:/ D:/}
 ```
 
----
+</details>
 
 <a id="ex-glob"></a>
-### glob
+<details>
+<summary><strong>glob</strong></summary>
 
 ```tcl
 # Find all .txt files
@@ -2796,22 +2818,24 @@ glob -nocomplain /nonexistent/*.xyz
 ;# Returns: {} (empty list, no error)
 ```
 
----
+</details>
 
 <a id="ex-pwd"></a>
-### pwd
+<details>
+<summary><strong>pwd</strong></summary>
 
 ```tcl
 set cwd [pwd]
 ;# Returns current working directory path
 ```
 
----
+</details>
 
 ## Procedure Examples
 
 <a id="ex-proc"></a>
-### proc
+<details>
+<summary><strong>proc</strong></summary>
 
 ```tcl
 # Simple procedure
@@ -2866,10 +2890,11 @@ factorial 5
 ;# Returns: 120
 ```
 
----
+</details>
 
 <a id="ex-nproc"></a>
-### nproc
+<details>
+<summary><strong>nproc</strong></summary>
 
 ```tcl
 # Eagle extension — named (keyword) arguments
@@ -2882,10 +2907,11 @@ connect -host localhost -port 8080 -timeout 60
 ;# Returns: Connecting to localhost:8080 (timeout=60)
 ```
 
----
+</details>
 
 <a id="ex-apply"></a>
-### apply
+<details>
+<summary><strong>apply</strong></summary>
 
 ```tcl
 # Anonymous function (lambda)
@@ -2913,10 +2939,11 @@ set result [apply $transform hello]
 ;# Returns: HELLO
 ```
 
----
+</details>
 
 <a id="ex-napply"></a>
-### napply
+<details>
+<summary><strong>napply</strong></summary>
 
 ```tcl
 # Eagle extension — lambda with named arguments
@@ -2924,14 +2951,15 @@ napply {{x y} {expr {$x + $y}}} -x 3 -y 4
 ;# Returns: 7
 ```
 
----
+</details>
 
 ## Namespace Examples
 
 > **See also:** [`namespace.md`](namespace.md) — deep-dive analysis of the `namespace` command with additional examples covering the dual-implementation architecture, import/export mechanism, per-namespace unknown handlers, and scope integration.
 
 <a id="ex-namespace"></a>
-### namespace
+<details>
+<summary><strong>namespace</strong></summary>
 
 #### Creating and Managing
 
@@ -3071,7 +3099,7 @@ namespace unknown                   ;# Query current handler
 namespace origin add               ;# Returns: ::mathlib::add
 ```
 
----
+</details>
 
 <a id="object-examples"></a>
 
@@ -3080,7 +3108,8 @@ namespace origin add               ;# Returns: ::mathlib::add
 > **See also:** [`object.md`](object.md) — Deep-dive analysis of all 44 sub-commands, the opaque handle system, FixupReturnValue pipeline, method overload resolution, and practical .NET interop patterns.
 
 <a id="ex-object"></a>
-### object
+<details>
+<summary><strong>object</strong></summary>
 
 #### Creating Objects
 
@@ -3144,7 +3173,10 @@ object invokeall $sb {Append Hello} {Append " World"} {ToString}
 object invokeraw $sb Append test
 ```
 
-### Chained .NET Method Calls
+</details>
+
+<details>
+<summary><strong>Chained .NET Method Calls</strong></summary>
 
 ```tcl
 # Create a StringBuilder and chain operations
@@ -3318,14 +3350,15 @@ object untype                ;# Remove custom converters
 object fromvar myObjectVar
 ```
 
----
+</details>
 
 ## Debugging Examples
 
   > **See also:** [`debug.md`](debug.md) for a deep-dive analysis of the debugger architecture, emergency recovery, secure evaluation, variable watchpoints, and practical debugging patterns.
 
 <a id="ex-debug"></a>
-### debug
+<details>
+<summary><strong>debug</strong></summary>
 
 #### Debugger Control
 
@@ -3724,14 +3757,15 @@ debug callback                           ;# Query callback arguments
 debug callback {}                        ;# Clear callback
 ```
 
----
+</details>
 
 <a id="interpreter-examples"></a>
 
 ## Interpreter Management Examples
 
 <a id="ex-interp"></a>
-### interp
+<details>
+<summary><strong>interp</strong></summary>
 
 > **Deep-dive**: For comprehensive analysis of the interp command's internals, including the safe interpreter security model, command hiding, policy-based access control, resource limits, and cross-interpreter communication, see [`interp.md`](interp.md).
 
@@ -3971,14 +4005,15 @@ interp bgerror $child myBgErrorHandler
 interp bgerror $child               ;# Query current handler
 ```
 
----
+</details>
 
 ## Package Examples
 
 <a id="ex-package"></a>
 > **See also**: [`package.md`](package.md) — Deep-dive analysis covering multi-source index discovery, tagged indexes, auto-path integration, package aliases, security verification, the require fallback chain, and all 23 sub-commands.
 
-### package
+<details>
+<summary><strong>package</strong></summary>
 
 #### Loading Packages
 
@@ -4016,7 +4051,10 @@ package ifneeded mypackage 1.0 \
 package scan /usr/local/lib/eagle
 ```
 
-### Package Scanning with Flags
+</details>
+
+<details>
+<summary><strong>Package Scanning with Flags</strong></summary>
 
 ```tcl
 # Scan specific directories for packages
@@ -4089,12 +4127,13 @@ package aliases              ;# List all package aliases
 package relativefilename lib/helper.eagle
 ```
 
----
+</details>
 
 ## Testing Examples
 
 <a id="ex-test1"></a>
-### test1
+<details>
+<summary><strong>test1</strong></summary>
 
 ```tcl
 # Eagle extension — basic test command
@@ -4115,10 +4154,11 @@ test1 list-1.1 "Test list creation" {} {
 } {a b c}
 ```
 
----
+</details>
 
 <a id="ex-test2"></a>
-### test2
+<details>
+<summary><strong>test2</strong></summary>
 
 ```tcl
 # Eagle extension — advanced test with setup/cleanup
@@ -4172,14 +4212,15 @@ test2 version-1.1 "Test version format" \
     -result {*.*.*.*}
 ```
 
----
+</details>
 
 <a id="database-examples"></a>
 
 ## Database (SQL) Examples
 
 <a id="ex-sql"></a>
-### sql
+<details>
+<summary><strong>sql</strong></summary>
 
 > **See also**: [`sql.md`](sql.md) for a deep-dive analysis of the database command, including `-variable` auto-cleanup, script bundles, parameterized queries, result formatting, and practical patterns.
 
@@ -4246,7 +4287,10 @@ test2 version-1.1 "Test version format" \
 # }
 ```
 
-### SQL Connection with Automatic Cleanup
+</details>
+
+<details>
+<summary><strong>SQL Connection with Automatic Cleanup</strong></summary>
 
 ```tcl
 # Open a SQLite database with -variable for automatic cleanup
@@ -4277,7 +4321,10 @@ set name [sql execute -execute scalar $db \
 unset db
 ```
 
-### SQL Transaction with Error Handling
+</details>
+
+<details>
+<summary><strong>SQL Transaction with Error Handling</strong></summary>
 
 ```tcl
 set db [sql open -type SQLite "Data Source=mydb.db"]
@@ -4298,7 +4345,10 @@ if {[catch {
 sql close $db
 ```
 
-### SQL DataReader for Large Result Sets
+</details>
+
+<details>
+<summary><strong>SQL DataReader for Large Result Sets</strong></summary>
 
 ```tcl
 # Stream results one row at a time (constant memory)
@@ -4314,7 +4364,10 @@ while {[$reader Read]} {
 unset reader
 ```
 
-### SQL DataTable for Reusable Named-Column Access
+</details>
+
+<details>
+<summary><strong>SQL DataTable for Reusable Named-Column Access</strong></summary>
 
 ```tcl
 # Materialize results as a DataTable object
@@ -4345,14 +4398,15 @@ puts [$table Rows.Count]
 unset table
 ```
 
----
+</details>
 
 <a id="network-examples"></a>
 
 ## Network and URI Examples
 
 <a id="ex-socket"></a>
-### socket
+<details>
+<summary><strong>socket</strong></summary>
 
 ```tcl
 # Client socket
@@ -4379,12 +4433,13 @@ unset table
 # set sock [socket -async localhost 8080]
 ```
 
----
+</details>
 
 <a id="ex-uri"></a>
 > **See also**: [`uri.md`](uri.md) — Deep-dive analysis covering HTTP download/upload, async callbacks, custom WebClient classes, the four per-interpreter web callbacks, retry infrastructure, and all 18 sub-commands.
 
-### uri
+<details>
+<summary><strong>uri</strong></summary>
 
 #### URI Construction and Parsing
 
@@ -4631,12 +4686,13 @@ uri softwareupdates                ;# Returns update trust status
 # uri softwareupdates false        ;# Disable built-in update keys
 ```
 
----
+</details>
 
 ## XML Examples
 
 <a id="ex-xml"></a>
-### xml
+<details>
+<summary><strong>xml</strong></summary>
 
 #### Serialization
 
@@ -4671,14 +4727,15 @@ set doc {<root>Hello</root>}
 xml validate $schema $doc   ;# Returns: 1 if valid
 ```
 
----
+</details>
 
 <a id="tcl-examples"></a>
 
 ## Tcl Integration Examples
 
 <a id="ex-tcl"></a>
-### tcl
+<details>
+<summary><strong>tcl</strong></summary>
 
 > For a deep-dive on native Tcl integration internals, command bridging, function pointer marshalling, and library discovery, see [`tcl.md`](tcl.md). For the reverse direction (Tcl loading Eagle), see [`garuda.md`](garuda.md).
 
@@ -4821,14 +4878,15 @@ tcl errorline $interp                  ;# Get error line number
 tcl exceptions                         ;# Get/set exception handling
 ```
 
----
+</details>
 
 <a id="expression-examples"></a>
 
 ## Expression Evaluation Examples
 
 <a id="ex-expr"></a>
-### expr
+<details>
+<summary><strong>expr</strong></summary>
 
 ```tcl
 # Basic arithmetic
@@ -4920,10 +4978,11 @@ expr {int(sqrt(pow(3, 2) + pow(4, 2)))}
 ;# Returns: 5 (hypotenuse of 3-4-5 triangle)
 ```
 
----
+</details>
 
 <a id="ex-fpclassify"></a>
-### fpclassify
+<details>
+<summary><strong>fpclassify</strong></summary>
 
 ```tcl
 fpclassify 1.0               ;# Returns: normal
@@ -4932,13 +4991,14 @@ fpclassify [expr {1.0/0}]    ;# Returns: infinite
 fpclassify NaN                ;# Returns: nan
 ```
 
----
+</details>
 
 ## Mathematical Function Examples
 
 <a id="math-function-examples"></a>
 
-### Trigonometric Functions
+<details>
+<summary><strong>Trigonometric Functions</strong></summary>
 
 ```tcl
 expr {sin(0)}                 ;# Returns: 0.0
@@ -4957,7 +5017,10 @@ expr {cosh(0)}                ;# Returns: 1.0
 expr {tanh(0)}                ;# Returns: 0.0
 ```
 
-### Logarithmic and Exponential Functions
+</details>
+
+<details>
+<summary><strong>Logarithmic and Exponential Functions</strong></summary>
 
 ```tcl
 expr {exp(1)}                 ;# Returns: 2.71828... (e)
@@ -4973,7 +5036,10 @@ expr {log2(1024)}             ;# Returns: 10.0
 expr {logx(81, 3)}            ;# Returns: 4.0
 ```
 
-### Rounding Functions
+</details>
+
+<details>
+<summary><strong>Rounding Functions</strong></summary>
 
 ```tcl
 expr {ceil(3.2)}              ;# Returns: 4.0
@@ -4987,7 +5053,10 @@ expr {round2(3.14159, 2)}     ;# Returns: 3.14
 expr {truncate(3.9)}          ;# Returns: 3.0
 ```
 
-### Component Functions
+</details>
+
+<details>
+<summary><strong>Component Functions</strong></summary>
 
 ```tcl
 expr {abs(-42)}               ;# Returns: 42
@@ -5002,14 +5071,20 @@ expr {sign(0)}                ;# Returns: 0
 expr {sign(42)}               ;# Returns: 1
 ```
 
-### Aggregate Functions
+</details>
+
+<details>
+<summary><strong>Aggregate Functions</strong></summary>
 
 ```tcl
 expr {max(1, 5, 3)}           ;# Returns: 5
 expr {min(1, 5, 3)}           ;# Returns: 1
 ```
 
-### Indicator Functions (Eagle extensions)
+</details>
+
+<details>
+<summary><strong>Indicator Functions (Eagle extensions)</strong></summary>
 
 ```tcl
 expr {isnan(0.0/0.0)}         ;# Returns: 1
@@ -5018,7 +5093,10 @@ expr {isfinite(3.14)}         ;# Returns: 1
 expr {isnormal(3.14)}         ;# Returns: 1
 ```
 
-### Random Number Functions
+</details>
+
+<details>
+<summary><strong>Random Number Functions</strong></summary>
 
 ```tcl
 expr {rand()}                 ;# Returns: random float in [0, 1)
@@ -5030,7 +5108,10 @@ expr {int(rand() * 100)}      ;# Random integer 0-99
 expr {random()}               ;# Cryptographic random 64-bit integer
 ```
 
-### Conversion Functions
+</details>
+
+<details>
+<summary><strong>Conversion Functions</strong></summary>
 
 ```tcl
 expr {int(3.9)}               ;# Returns: 3
@@ -5039,7 +5120,10 @@ expr {wide(42)}               ;# Returns: 42 (64-bit)
 expr {bool(1)}                ;# Returns: true
 ```
 
-### Constants
+</details>
+
+<details>
+<summary><strong>Constants</strong></summary>
 
 ```tcl
 expr {pi()}                   ;# Returns: 3.14159265358979...
@@ -5051,19 +5135,23 @@ expr {e()}                    ;# Returns: 2.71828182845904...
 expr {epsilon()}              ;# Returns: smallest eps where 1.0 + eps != 1.0
 ```
 
-### Type Introspection (Eagle extension)
+</details>
+
+<details>
+<summary><strong>Type Introspection (Eagle extension)</strong></summary>
 
 ```tcl
 expr {typeof(42)}             ;# Returns type name of the value
 ```
 
----
+</details>
 
 ## Expression Operator Examples
 
 <a id="operator-examples"></a>
 
-### Arithmetic
+<details>
+<summary><strong>Arithmetic</strong></summary>
 
 ```tcl
 expr {5 + 3}     ;# Returns: 8
@@ -5074,7 +5162,10 @@ expr {15 % 4}    ;# Returns: 3
 expr {2 ** 8}    ;# Returns: 256
 ```
 
-### Comparison
+</details>
+
+<details>
+<summary><strong>Comparison</strong></summary>
 
 ```tcl
 expr {3 == 3}    ;# Returns: 1
@@ -5085,7 +5176,10 @@ expr {3 <= 3}    ;# Returns: 1
 expr {3 >= 5}    ;# Returns: 0
 ```
 
-### String Comparison
+</details>
+
+<details>
+<summary><strong>String Comparison</strong></summary>
 
 ```tcl
 expr {"abc" eq "abc"}  ;# Returns: 1
@@ -5096,7 +5190,10 @@ expr {"abc" le "abc"}  ;# Returns: 1
 expr {"abc" ge "def"}  ;# Returns: 0
 ```
 
-### Logical
+</details>
+
+<details>
+<summary><strong>Logical</strong></summary>
 
 ```tcl
 expr {!0}            ;# Returns: 1
@@ -5111,7 +5208,10 @@ expr {1 -> 1}        ;# Returns: 1 (implication: if P then Q)
 expr {1 <-> 1}       ;# Returns: 1 (equivalence: P iff Q)
 ```
 
-### Bitwise
+</details>
+
+<details>
+<summary><strong>Bitwise</strong></summary>
 
 ```tcl
 expr {~0xFF}         ;# Returns: -256
@@ -5120,7 +5220,10 @@ expr {0x0F | 0xF0}   ;# Returns: 255
 expr {0xFF ^ 0x0F}   ;# Returns: 240
 ```
 
-### Shift and Rotate
+</details>
+
+<details>
+<summary><strong>Shift and Rotate</strong></summary>
 
 ```tcl
 expr {1 << 8}        ;# Returns: 256
@@ -5133,14 +5236,20 @@ expr {1 <<< 31}      ;# Left rotate
 expr {1 >>> 1}       ;# Right rotate
 ```
 
-### List Membership
+</details>
+
+<details>
+<summary><strong>List Membership</strong></summary>
 
 ```tcl
 expr {"x" in {a b c x y z}}   ;# Returns: 1
 expr {"q" ni {a b c}}         ;# Returns: 1
 ```
 
-### Conditional (Ternary)
+</details>
+
+<details>
+<summary><strong>Conditional (Ternary)</strong></summary>
 
 ```tcl
 set age 20
@@ -5148,7 +5257,7 @@ expr {$age >= 18 ? "adult" : "minor"}
 ;# Returns: adult
 ```
 
----
+</details>
 
 <a id="time-examples"></a>
 
@@ -5157,7 +5266,8 @@ expr {$age >= 18 ? "adult" : "minor"}
 <a id="ex-clock"></a>
 > **See also**: [`clock.md`](clock.md) — Deep-dive analysis covering format string translation, custom epochs, high-resolution timing, ISO 8601 modes, build numbering, duration calculation, and all 15 sub-commands.
 
-### clock
+<details>
+<summary><strong>clock</strong></summary>
 
 #### Getting Current Time
 
@@ -5258,10 +5368,11 @@ set start [clock start]
 set elapsed [clock stop $start]
 ```
 
----
+</details>
 
 <a id="ex-time"></a>
-### time
+<details>
+<summary><strong>time</strong></summary>
 
 ```tcl
 # Benchmark a single operation
@@ -5281,14 +5392,15 @@ set list {5 3 1 4 2}
 puts [appendArgs "lsort: " [time {lsort -integer $list} 10000]]
 ```
 
----
+</details>
 
 <a id="event-examples"></a>
 
 ## Event Management Examples
 
 <a id="ex-after"></a>
-### after
+<details>
+<summary><strong>after</strong></summary>
 
 ```tcl
 # Synchronous sleep (1 second)
@@ -5332,10 +5444,11 @@ after flags             ;# Get event processing flags
 after flags SomeFlag    ;# Set event processing flags
 ```
 
----
+</details>
 
 <a id="ex-callback"></a>
-### callback
+<details>
+<summary><strong>callback</strong></summary>
 
 ```tcl
 # Eagle extension — callback queue
@@ -5358,10 +5471,11 @@ callback clear
 callback count           ;# Returns: 0
 ```
 
----
+</details>
 
 <a id="ex-update"></a>
-### update
+<details>
+<summary><strong>update</strong></summary>
 
 ```tcl
 # Process pending events
@@ -5375,10 +5489,11 @@ update
 update idletasks
 ```
 
----
+</details>
 
 <a id="ex-vwait"></a>
-### vwait
+<details>
+<summary><strong>vwait</strong></summary>
 
 ```tcl
 # Wait for variable change
@@ -5392,7 +5507,10 @@ vwait result
 vwait -timeout 5000 result
 ```
 
-### Vwait with Timeout and Event Flags
+</details>
+
+<details>
+<summary><strong>Vwait with Timeout and Event Flags</strong></summary>
 
 ```tcl
 # Wait for a variable change with a 5-second timeout
@@ -5407,7 +5525,10 @@ vwait -timeout 1000 -nocomplain neverSet
 # Returns after 1 second without error due to -nocomplain
 ```
 
-### Vwait with Locked Script
+</details>
+
+<details>
+<summary><strong>Vwait with Locked Script</strong></summary>
 
 ```tcl
 # Atomically read and reset a shared variable
@@ -5417,14 +5538,15 @@ vwait -locked {
 } sharedData
 ```
 
----
+</details>
 
 ## Introspection Examples
 
 > **See also:** [`info.md`](info.md) — deep-dive analysis of the `info` command with additional examples covering 85 sub-commands, safe interpreter filtering, obfuscated procedure protection, .NET reflection, and engine metadata introspection.
 
 <a id="ex-info"></a>
-### info
+<details>
+<summary><strong>info</strong></summary>
 
 #### Procedure Introspection
 
@@ -5744,10 +5866,11 @@ info windowtext $handle      ;# Window title text
 info active                  ;# List active interpreters
 ```
 
----
+</details>
 
 <a id="ex-version"></a>
-### version
+<details>
+<summary><strong>version</strong></summary>
 
 ```tcl
 # Eagle extension
@@ -5759,14 +5882,15 @@ puts [version]               ;# e.g., "1.0.0.0"
 version Default            ;# Base version only
 ```
 
----
+</details>
 
 <a id="engine-examples"></a>
 
 ## Engine Operation Examples
 
 <a id="ex-eval"></a>
-### eval
+<details>
+<summary><strong>eval</strong></summary>
 
 ```tcl
 # Dynamic command execution
@@ -5793,10 +5917,11 @@ eval {
 ;# Returns: 30
 ```
 
----
+</details>
 
 <a id="ex-invoke"></a>
-### invoke
+<details>
+<summary><strong>invoke</strong></summary>
 
 ```tcl
 # Eagle extension — invoke at global level
@@ -5810,10 +5935,11 @@ proc foo {} {
 }
 ```
 
----
+</details>
 
 <a id="ex-source"></a>
-### source
+<details>
+<summary><strong>source</strong></summary>
 
 ```tcl
 # Source a script file
@@ -5848,10 +5974,11 @@ source -bundle true -password $key secure.db
 source -bundleflags {StopOnError|RequireKeyRing} production.db
 ```
 
----
+</details>
 
 <a id="ex-subst"></a>
-### subst
+<details>
+<summary><strong>subst</strong></summary>
 
 ```tcl
 set name World
@@ -5883,12 +6010,13 @@ subst -novariables -nocommands {Tab:\tNewline:\n}
 ;# Returns: Tab:(tab)Newline:(newline)
 ```
 
----
+</details>
 
 ## Native Environment Examples
 
 <a id="ex-exec"></a>
-### exec
+<details>
+<summary><strong>exec</strong></summary>
 
 > For a detailed analysis of argument processing, quoting/escaping, and differences from native Tcl, see [`exec.md`](exec.md).
 
@@ -5953,10 +6081,11 @@ subst -novariables -nocommands {Tab:\tNewline:\n}
 # }
 ```
 
----
+</details>
 
 <a id="ex-exit"></a>
-### exit
+<details>
+<summary><strong>exit</strong></summary>
 
 ```tcl
 # exit              ;# Exit with code 0
@@ -5964,10 +6093,11 @@ subst -novariables -nocommands {Tab:\tNewline:\n}
 # exit -force 2     ;# Force immediate exit
 ```
 
----
+</details>
 
 <a id="ex-kill"></a>
-### kill
+<details>
+<summary><strong>kill</strong></summary>
 
 ```tcl
 # Eagle extension — kill process by PID
@@ -5987,10 +6117,11 @@ subst -novariables -nocommands {Tab:\tNewline:\n}
 # kill -whatIf -all chrome*     ;# Show what would be killed
 ```
 
----
+</details>
 
 <a id="ex-library"></a>
-### library
+<details>
+<summary><strong>library</strong></summary>
 
 > **Deep-dive**: For comprehensive analysis of the library command's internals, dynamic delegate creation, module lifecycle, and marshalling infrastructure, see [`library.md`](library.md).
 
@@ -6032,23 +6163,25 @@ subst -novariables -nocommands {Tab:\tNewline:\n}
 # set handle [library call $delegate -11]
 ```
 
----
+</details>
 
 <a id="ex-pid"></a>
-### pid
+<details>
+<summary><strong>pid</strong></summary>
 
 ```tcl
 puts [appendArgs "My PID: " [pid]]
 ```
 
----
+</details>
 
 ## Managed Environment Examples
 
   > **See also:** [`host.md`](host.md) for a deep-dive analysis of the host lifecycle safety interlocks, Windows-native screen buffer management, color theming, box drawing, and practical patterns.
 
 <a id="ex-host"></a>
-### host
+<details>
+<summary><strong>host</strong></summary>
 
 #### Screen Control
 
@@ -6153,10 +6286,11 @@ host font                            ;# Get current font info
 host font -facename Consolas -fontsize 12 ;# Set console font
 ```
 
----
+</details>
 
 <a id="ex-load"></a>
-### load
+<details>
+<summary><strong>load</strong></summary>
 
 > **See also**: [`load.md`](load.md) for a deep-dive analysis of the plugin loading infrastructure, security verification chain, AppDomain isolation, built-in and enterprise plugins, and practical loading patterns.
 
@@ -6165,10 +6299,11 @@ host font -facename Consolas -fontsize 12 ;# Set console font
 load myextension.dll MyPackage
 ```
 
----
+</details>
 
 <a id="ex-unload"></a>
-### unload
+<details>
+<summary><strong>unload</strong></summary>
 
 > **See also**: [`load.md`](load.md) for a deep-dive analysis of the unloading pipeline, plugin matching, and all unload options.
 
@@ -6178,14 +6313,15 @@ unload myextension.dll MyPackage
 unload -nocomplain myextension.dll
 ```
 
----
+</details>
 
 <a id="core-misc-examples"></a>
 
 ## Core and Miscellaneous Examples
 
 <a id="ex-bgerror"></a>
-### bgerror
+<details>
+<summary><strong>bgerror</strong></summary>
 
 ```tcl
 # Define custom background error handler
@@ -6205,10 +6341,11 @@ update
 ;# bgerror is called with "background failure"
 ```
 
----
+</details>
 
 <a id="ex-nop"></a>
-### nop
+<details>
+<summary><strong>nop</strong></summary>
 
 ```tcl
 # Eagle extension — no operation
@@ -6222,10 +6359,11 @@ time {nop} 100000
 ;# Returns: microseconds per iteration for a no-op
 ```
 
----
+</details>
 
 <a id="ex-rename"></a>
-### rename
+<details>
+<summary><strong>rename</strong></summary>
 
 ```tcl
 # Rename a procedure
@@ -6259,11 +6397,12 @@ proc puts {args} {
 # rename -nodelete myproc newname
 ```
 
----
+</details>
 
 ## Practical Patterns
 
-### Using Script Library Procedures
+<details>
+<summary><strong>Using Script Library Procedures</strong></summary>
 
 The following examples reference procedures from the Eagle script library
 ([`core_script_library.md`](core_script_library.md)).
@@ -6320,7 +6459,10 @@ The following examples reference procedures from the Eagle script library
 # ;# Returns: Alice
 ```
 
-### Error Handling Patterns
+</details>
+
+<details>
+<summary><strong>Error Handling Patterns</strong></summary>
 
 ```tcl
 # Comprehensive error handling
@@ -6343,7 +6485,10 @@ proc safeOperation {args} {
 }
 ```
 
-### Functional Programming Patterns
+</details>
+
+<details>
+<summary><strong>Functional Programming Patterns</strong></summary>
 
 ```tcl
 # Higher-order function: apply a transform to each element
@@ -6369,7 +6514,10 @@ proc pipeline {data args} {
 }
 ```
 
-### .NET Interop Patterns
+</details>
+
+<details>
+<summary><strong>.NET Interop Patterns</strong></summary>
 
 ```tcl
 # StringBuilder pattern (efficient string building)
@@ -6405,7 +6553,10 @@ set home [object invoke System.Environment GetFolderPath Personal]
 set hostname [object invoke System.Net.Dns GetHostName]
 ```
 
-### Scope-Based State Management
+</details>
+
+<details>
+<summary><strong>Scope-Based State Management</strong></summary>
 
 ```tcl
 # Accumulator using scope
@@ -6427,7 +6578,10 @@ accumulate myAcc 5     ;# Returns: 35
 scope destroy myAcc
 ```
 
-### Testing Patterns
+</details>
+
+<details>
+<summary><strong>Testing Patterns</strong></summary>
 
 ```tcl
 # Parameterized test pattern
@@ -6466,3 +6620,5 @@ test2 tempfile-1.1 "Write and read temp file" \
     } \
     -result "eagle test data"
 ```
+
+</details>
