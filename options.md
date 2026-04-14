@@ -732,9 +732,15 @@ etc.) and adds Eagle-specific convenience methods.
 
 | Method | Return Type | Description |
 |--------|-------------|-------------|
-| `ToList` | StringList | Converts all rows to a Tcl list of row-value lists, applying the same value formatting (`FixupDataValue`) as other `[sql execute]` formats. Each row is a sub-list of formatted values. Replaces the manual `getRowsFromDataTable` pattern. |
-| `ToDictionary` | StringList | Like `ToList` but each row is a key-value list: `{colName value colName value ...}`. Enables named column access without positional indexing. |
-| `GetColumnNames` | StringList | Returns column names as a Tcl list. |
+| `ToList` | IStringList | All rows as value lists |
+| `ToList(int limit)` | IStringList | First N rows as value lists |
+| `ToList(string filter, string sort)` | IStringList | Filtered/sorted rows as value lists |
+| `ToList(string filter, string sort, int limit)` | IStringList | Filtered/sorted with limit |
+| `ToDictionary` | IStringList | All rows as key-value lists |
+| `ToDictionary(int limit)` | IStringList | First N rows as key-value lists |
+| `ToDictionary(string filter, string sort)` | IStringList | Filtered/sorted as key-value lists |
+| `ToDictionary(string filter, string sort, int limit)` | IStringList | Filtered/sorted with limit |
+| `GetColumnNames` | IStringList | Column names |
 
 ### 13.3 Inherited .NET Functionality
 
@@ -2001,8 +2007,8 @@ compatibility.
 |--------|-------|-------------|
 | `-options` | RegexOptions | .NET regex options; defaults to `StringOps.DefaultRegExSyntaxOptions` |
 | `-all` | -- | Find all non-overlapping matches |
-| `-global` | -- | Synonym for `-all` |
-| `-debug` | -- | Enable debug output (**unsupported**) |
+| `-global` | -- | Controls whether variable indices reset between match groups; independent of `-all` |
+| `-debug` | -- | Enable debug trace output |
 | `-about` | -- | Show regex engine info (**unsupported**) |
 | `-ecma` | -- | Use ECMAScript regex syntax |
 | `-compiled` | -- | Compile regex for faster repeated execution |
@@ -2031,7 +2037,7 @@ compatibility.
 |--------|-------|-------------|
 | `-options` | RegexOptions | .NET regex options; defaults to `StringOps.DefaultRegExSyntaxOptions` |
 | `-all` | -- | Replace all occurrences (default is first only) |
-| `-count` | int | Store the replacement count in a variable |
+| `-count` | int | Maximum number of replacements to perform |
 | `-ecma` | -- | ECMAScript regex syntax |
 | `-compiled` | -- | Compile regex |
 | `-explicit` | -- | Require named groups |

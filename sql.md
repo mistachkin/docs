@@ -489,12 +489,18 @@ Controls the structure of returned results:
 | Value | Description |
 |-------|-------------|
 | `None` | No result formatting |
-| `List` | Flat list of values |
-| `NestedList` | List of lists (one per row) |
-| `Array` | Tcl array variable (column names as keys) |
-| `Dictionary` | Tcl dictionary |
+| `Invalid` | Invalid format (error signaling) |
+| `Reserved` | Reserved for future use |
 | `RawArray` | Raw array format |
-| `RawDictionary` | Raw dictionary format |
+| `RawList` | Raw list format |
+| `Array` | Tcl array variable (column names as keys) |
+| `List` | Flat list of values |
+| `Dictionary` | Tcl dictionary |
+| `NestedList` | List of lists (one per row) |
+| `NestedDictionary` | Nested dictionary (one dictionary per row) |
+| `DataRecord` | IDataRecord-based access |
+| `DataReader` | IDataReader-based streaming access |
+| `DataTable` | Materialized DataTable with conversion methods |
 
 ### 5.3 Value Handling Options
 
@@ -504,7 +510,7 @@ Controls the structure of returned results:
 | `-nullvalue <string>` | string | String representation for null values |
 | `-dbnullvalue <string>` | string | String representation for `DBNull.Value` |
 | `-errorvalue <string>` | string | String representation for error values |
-| `-datetimebehavior <enum>` | DateTimeBehavior | How to handle DateTime values (Ticks, Format, etc.) |
+| `-datetimebehavior <enum>` | DateTimeBehavior | How to handle DateTime values (Ticks, ToString, etc.) |
 | `-datetimeformat <string>` | string | Format string for DateTime conversion |
 | `-datetimekind <enum>` | DateTimeKind | DateTimeKind for parsed DateTime values (Local, Utc, Unspecified) |
 | `-datetimestyles <enum>` | DateTimeStyles | Styles for DateTime parsing |
@@ -1296,7 +1302,7 @@ unset reader
 
 **DataTable for materialized results with named column access:**
 ```tcl
-set table [sql execute -execute reader -format datatable \
+set table [sql execute -execute reader -format datatable -alias \
     $db "SELECT id, name, age FROM users;"]
 
 # Built-in conversion methods (replaces getRowsFromDataTable)
@@ -1315,7 +1321,7 @@ set filtered [$table Select "age >= 30"]
 unset table
 ```
 
-The `DataTable` format returns a custom `DataOps.DataTable` object (derived
+The `DataTable` format returns a custom `DataOps._DataTable` object (derived
 from `System.Data.DataTable`) that captures the value formatting parameters
 (`DateTimeBehavior`, `BlobBehavior`, etc.) so that `ToList` and `ToDictionary`
 apply the same conversion pipeline (`MarshalOps.FixupDataValue`) as other

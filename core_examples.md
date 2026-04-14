@@ -4371,7 +4371,7 @@ unset reader
 
 ```tcl
 # Materialize results as a DataTable object
-set table [sql execute -execute reader -format datatable \
+set table [sql execute -execute reader -format datatable -alias \
     $db "SELECT id, name, age FROM users;"]
 
 # Get column names

@@ -4666,13 +4666,13 @@ The `sql` command provides database connectivity using ADO.NET, supporting any d
   **Error Conditions:**
   - Invalid connection string (provider-specific format errors)
   - Provider not found (required assembly not loaded)
-  - `"interpreter is not modifiable"` -- interpreter is locked/readonly
+  - Interpreter state errors (disposed, read-only, or immutable)
   - Type/assembly resolution failure with public key token mismatch
   - Connection open failure (network, authentication, etc.)
 
-  **The `-variable` option:** When set, the connection handle is stored in the named variable. Deleting this variable automatically closes and disposes the connection -- providing RAII-style cleanup. This is the recommended pattern for connection lifecycle management.
+  **The `-variable` option:** When set, the connection handle is stored in the named variable. Deleting this variable automatically closes the connection -- providing RAII-style cleanup. This is the recommended pattern for connection lifecycle management.
 
-  **Return value:** A connection name string (e.g., `"db0"`) that can be used with other `sql` sub-commands (`execute`, `transaction`, `close`).
+  **Return value:** A connection name string (e.g., `"SQLiteConnection#0"`) that can be used with other `sql` sub-commands (`execute`, `transaction`, `close`).
 
   ---
 
@@ -4704,7 +4704,7 @@ The `sql` command provides database connectivity using ADO.NET, supporting any d
     - **Execution modes** (`-execute`): `scalar` (single value), `reader` (result set), `none`/absent (affected row count)
     - **Result formats** (`-format`): `Array` (default), `List`, `Dictionary`, `NestedList`, `NestedDictionary`, `DataReader`, `DataRecord`, `DataTable`, `RawArray`, `RawList`
     - **Parameters**: Each is a list `{paramName DbType value}` where `DbType` is a .NET `DbType` enum value (Int32, Int64, String, DateTime, Binary, etc.)
-    - **Reader results**: With `-execute reader`, results populate a `$rows` array: `$rows(count)` = row count, `$rows(names)` = column names, `$rows(0)` = first row values, etc.
+    - **Reader results**: With `-execute reader`, results populate a `$rows` array: `$rows(count)` = row count, `$rows(names)` = column names, `$rows(1)` = first row values, etc.
 
   ---
 
@@ -4719,7 +4719,7 @@ The `sql` command provides database connectivity using ADO.NET, supporting any d
   # Reader query: results in $rows array
   sql execute -execute reader $conn \
       "SELECT name, age FROM users;"
-  # Access: $rows(count), $rows(names), $rows(0), $rows(1), ...
+  # Access: $rows(count), $rows(names), $rows(1), $rows(2), ...
 
   # Parameterized query (prevents SQL injection)
   sql execute -execute reader $conn \
