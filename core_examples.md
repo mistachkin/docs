@@ -81,7 +81,8 @@ This companion file to [`core_language.md`](core_language.md) provides at least 
 ## Control Flow Examples
 
 <a id="ex-if"></a>
-### if
+<details>
+<summary><strong>if</strong></summary>
 
 ```tcl
 # Basic conditional
@@ -130,10 +131,11 @@ if {$code == 200} then {
 ;# Returns: Not Found
 ```
 
----
+</details>
 
 <a id="ex-switch"></a>
-### switch
+<details>
+<summary><strong>switch</strong></summary>
 
 ```tcl
 # Exact matching (default)
@@ -186,10 +188,11 @@ switch -nocase -regexp $input {
 ;# Returns: true
 ```
 
----
+</details>
 
 <a id="ex-break"></a>
-### break
+<details>
+<summary><strong>break</strong></summary>
 
 ```tcl
 # Exit loop early
@@ -215,10 +218,11 @@ while {$i < 100} {
 ;# $i is the first i where i*i > 50
 ```
 
----
+</details>
 
 <a id="ex-catch"></a>
-### catch
+<details>
+<summary><strong>catch</strong></summary>
 
 ```tcl
 # Basic error catching
@@ -256,10 +260,11 @@ set code [catch {mayReturn} result]
 ;# code is 2 (TCL_RETURN), result is "done"
 ```
 
----
+</details>
 
 <a id="ex-continue"></a>
-### continue
+<details>
+<summary><strong>continue</strong></summary>
 
 ```tcl
 # Skip odd numbers
@@ -282,10 +287,11 @@ foreach line [split $lines "\n"] {
 ;# nonEmpty is {one two three}
 ```
 
----
+</details>
 
 <a id="ex-downlevel"></a>
-### downlevel
+<details>
+<summary><strong>downlevel</strong></summary>
 
 ```tcl
 # Eagle extension — execute in the pre-uplevel call frame
@@ -305,10 +311,11 @@ list [deepdown] $a
 ;# {1 3} = deepdown's local 'a', {0 2} = global 'a'
 ```
 
----
+</details>
 
 <a id="ex-error"></a>
-### error
+<details>
+<summary><strong>error</strong></summary>
 
 ```tcl
 # Simple error
@@ -340,10 +347,11 @@ catch {positiveInt -5} msg
 ;# msg is: expected positive integer, got "-5"
 ```
 
----
+</details>
 
 <a id="ex-return"></a>
-### return
+<details>
+<summary><strong>return</strong></summary>
 
 ```tcl
 # Simple return
@@ -379,10 +387,11 @@ proc wrapper {} {
 }
 ```
 
----
+</details>
 
 <a id="ex-throw"></a>
-### throw
+<details>
+<summary><strong>throw</strong></summary>
 
 ```tcl
 # Eagle extension — throw an exception
@@ -392,10 +401,11 @@ catch {
 ;# msg is "connection refused"
 ```
 
----
+</details>
 
 <a id="ex-try"></a>
-### try
+<details>
+<summary><strong>try</strong></summary>
 
 ```tcl
 # Try/finally for resource cleanup
@@ -427,10 +437,11 @@ try {
 # fh is closed and tempFile deleted even though error occurred
 ```
 
----
+</details>
 
 <a id="ex-uplevel"></a>
-### uplevel
+<details>
+<summary><strong>uplevel</strong></summary>
 
 ```tcl
 # Execute in caller's scope
@@ -463,10 +474,11 @@ set x 5
 assert {$x > 0}  ;# Passes
 ```
 
----
+</details>
 
 <a id="ex-do"></a>
-### do
+<details>
+<summary><strong>do</strong></summary>
 
 ```tcl
 # Eagle extension — do-while loop
@@ -499,10 +511,11 @@ proc getPositive {} {
 }
 ```
 
----
+</details>
 
 <a id="ex-for"></a>
-### for
+<details>
+<summary><strong>for</strong></summary>
 
 ```tcl
 # Classic counting loop
@@ -540,10 +553,11 @@ for {set i 0} {$i < 3} {incr i} {
 }
 ```
 
----
+</details>
 
 <a id="ex-foreach"></a>
-### foreach
+<details>
+<summary><strong>foreach</strong></summary>
 
 ```tcl
 # Simple iteration
@@ -579,10 +593,11 @@ foreach {x y z} $coords {
 }
 ```
 
----
+</details>
 
 <a id="ex-lmap"></a>
-### lmap
+<details>
+<summary><strong>lmap</strong></summary>
 
 ```tcl
 # Eagle extension — transform each element
@@ -607,10 +622,11 @@ set formatted [lmap {k v} $pairs {
 ;# Returns: {a=1 b=2 c=3}
 ```
 
----
+</details>
 
 <a id="ex-while"></a>
-### while
+<details>
+<summary><strong>while</strong></summary>
 
 ```tcl
 # Simple while loop
@@ -635,12 +651,13 @@ while {[lindex $items $i] ne "END"} {
 ;# collected is {a b c}
 ```
 
----
+</details>
 
 ## Variable Examples
 
 <a id="ex-append"></a>
-### append
+<details>
+<summary><strong>append</strong></summary>
 
 ```tcl
 # Build a string incrementally
@@ -658,10 +675,11 @@ append html "</html>"
 ;# html is "<html><body>Hello</body></html>"
 ```
 
----
+</details>
 
 <a id="ex-global"></a>
-### global
+<details>
+<summary><strong>global</strong></summary>
 
 ```tcl
 # Access global variable from procedure
@@ -684,10 +702,11 @@ proc configure {key value} {
 }
 ```
 
----
+</details>
 
 <a id="ex-incr"></a>
-### incr
+<details>
+<summary><strong>incr</strong></summary>
 
 ```tcl
 # Increment by 1 (default)
@@ -712,10 +731,11 @@ incr count
 ;# count is 2
 ```
 
----
+</details>
 
 <a id="ex-scope"></a>
-### scope
+<details>
+<summary><strong>scope</strong></summary>
 
 > For a deep-dive on scope internals, the call frame stack model, cloning modes, locking, and namespace integration, see [`scope.md`](scope.md).
 
@@ -792,7 +812,10 @@ accumulate 20   ;# Returns: 30
 accumulate 5    ;# Returns: 35
 ```
 
-### Scope Persistence Pattern
+</details>
+
+<details>
+<summary><strong>Scope Persistence Pattern</strong></summary>
 
 ```tcl
 # Create a scope and demonstrate variable persistence across eval calls
@@ -823,7 +846,10 @@ scope vars myCounter  ;# returns: count label
 scope destroy myCounter
 ```
 
-### Scope Locking for Thread Safety
+</details>
+
+<details>
+<summary><strong>Scope Locking for Thread Safety</strong></summary>
 
 ```tcl
 # Thread-safe shared counter using scope eval -lock
@@ -839,7 +865,10 @@ scope eval -lock true sharedState {
 }
 ```
 
-### Scope Global Sandboxing
+</details>
+
+<details>
+<summary><strong>Scope Global Sandboxing</strong></summary>
 
 ```tcl
 # Redirect the global namespace to a scope
@@ -854,10 +883,11 @@ global myGlobal                    ;# creates in sandbox scope
 scope global -unset
 ```
 
----
+</details>
 
 <a id="ex-set"></a>
-### set
+<details>
+<summary><strong>set</strong></summary>
 
 ```tcl
 # Set and read a variable
@@ -880,10 +910,11 @@ set v [set data(key1)]
 ;# v is "value1"
 ```
 
----
+</details>
 
 <a id="ex-unset"></a>
-### unset
+<details>
+<summary><strong>unset</strong></summary>
 
 ```tcl
 # Remove a variable
@@ -912,10 +943,11 @@ unset data
 ;# data no longer exists
 ```
 
----
+</details>
 
 <a id="ex-upvar"></a>
-### upvar
+<details>
+<summary><strong>upvar</strong></summary>
 
 ```tcl
 # Pass-by-reference pattern
@@ -953,10 +985,11 @@ readGlobal greeting
 ;# Returns: Hello
 ```
 
----
+</details>
 
 <a id="ex-variable"></a>
-### variable
+<details>
+<summary><strong>variable</strong></summary>
 
 ```tcl
 # Declare namespace variables
@@ -979,12 +1012,13 @@ myns::increment
 ;# myns::counter is 2
 ```
 
----
+</details>
 
 ## List Examples
 
 <a id="ex-lappend"></a>
-### lappend
+<details>
+<summary><strong>lappend</strong></summary>
 
 ```tcl
 # Append elements to list
@@ -1000,10 +1034,11 @@ lappend items first second third
 ;# items is {first second third}
 ```
 
----
+</details>
 
 <a id="ex-lassign"></a>
-### lassign
+<details>
+<summary><strong>lassign</strong></summary>
 
 ```tcl
 # Assign list elements to variables
@@ -1023,10 +1058,11 @@ lassign {1 2} a b c
 ;# a="1", b="2", c=""
 ```
 
----
+</details>
 
 <a id="ex-lget"></a>
-### lget
+<details>
+<summary><strong>lget</strong></summary>
 
 ```tcl
 # Eagle extension — get element from list variable
@@ -1042,10 +1078,11 @@ lget matrix end         ;# Returns: {d e f {g h i}}
 lget matrix end end     ;# Returns: {g h i}
 ```
 
----
+</details>
 
 <a id="ex-lindex"></a>
-### lindex
+<details>
+<summary><strong>lindex</strong></summary>
 
 ```tcl
 # Get element by index
@@ -1066,10 +1103,11 @@ lindex $nested 1 0     ;# Returns: 3
 lindex {a b c} 10      ;# Returns: (empty string)
 ```
 
----
+</details>
 
 <a id="ex-linsert"></a>
-### linsert
+<details>
+<summary><strong>linsert</strong></summary>
 
 ```tcl
 # Insert at beginning
@@ -1089,10 +1127,11 @@ linsert {a b c} 999 d e
 ;# Returns: {a b c d e}
 ```
 
----
+</details>
 
 <a id="ex-list"></a>
-### list
+<details>
+<summary><strong>list</strong></summary>
 
 ```tcl
 # Create properly-quoted list
@@ -1108,10 +1147,11 @@ set cmd [list puts $message]
 eval $cmd                     ;# Prints: Hello, World!
 ```
 
----
+</details>
 
 <a id="ex-llength"></a>
-### llength
+<details>
+<summary><strong>llength</strong></summary>
 
 ```tcl
 llength {a b c d}     ;# Returns: 4
@@ -1119,10 +1159,11 @@ llength {}            ;# Returns: 0
 llength {{a b} c}     ;# Returns: 2
 ```
 
----
+</details>
 
 <a id="ex-lrange"></a>
-### lrange
+<details>
+<summary><strong>lrange</strong></summary>
 
 ```tcl
 lrange {a b c d e} 1 3     ;# Returns: {b c d}
@@ -1138,10 +1179,11 @@ set tail [lrange $data 1 end]
 ;# head is 10, tail is {20 30 40 50}
 ```
 
----
+</details>
 
 <a id="ex-lremove"></a>
-### lremove
+<details>
+<summary><strong>lremove</strong></summary>
 
 ```tcl
 # Eagle extension — remove by index
@@ -1153,10 +1195,11 @@ lremove {a b c d e} 1      ;# Returns: {a c d e}
 lremove {{a b c} {d e f}} 1 0   ;# Returns: {{a b c} {e f}}
 ```
 
----
+</details>
 
 <a id="ex-lrepeat"></a>
-### lrepeat
+<details>
+<summary><strong>lrepeat</strong></summary>
 
 ```tcl
 lrepeat 3 a           ;# Returns: {a a a}
@@ -1169,10 +1212,11 @@ lrepeat 0 a b         ;# Returns: {}
 lrepeat 5 0            ;# Returns: {0 0 0 0 0}
 ```
 
----
+</details>
 
 <a id="ex-lreplace"></a>
-### lreplace
+<details>
+<summary><strong>lreplace</strong></summary>
 
 ```tcl
 # Replace elements
@@ -1189,10 +1233,11 @@ lreplace {a b c d e} 1 2          ;# Returns: {a d e}
 lreplace {a b c} 1 0 X            ;# Returns: {a X b c}
 ```
 
----
+</details>
 
 <a id="ex-lreverse"></a>
-### lreverse
+<details>
+<summary><strong>lreverse</strong></summary>
 
 ```tcl
 lreverse {a b c d}    ;# Returns: {d c b a}
@@ -1200,10 +1245,11 @@ lreverse {1 2 3}      ;# Returns: {3 2 1}
 lreverse {}           ;# Returns: {}
 ```
 
----
+</details>
 
 <a id="ex-lsearch"></a>
-### lsearch
+<details>
+<summary><strong>lsearch</strong></summary>
 
 ```tcl
 # Exact search
@@ -1246,10 +1292,11 @@ lsearch -sorted -integer {1 3 5 7 9 11} 7    ;# Returns: 3
 lsearch -index 1 -integer {{a 3} {b 1} {c 2}} 2  ;# Returns: 2
 ```
 
----
+</details>
 
 <a id="ex-lset"></a>
-### lset
+<details>
+<summary><strong>lset</strong></summary>
 
 ```tcl
 # Replace element in place
@@ -1265,10 +1312,11 @@ lset nested 0 1 9
 ;# nested is {{1 9} {3 4}}
 ```
 
----
+</details>
 
 <a id="ex-lsort"></a>
-### lsort
+<details>
+<summary><strong>lsort</strong></summary>
 
 ```tcl
 # Default ASCII sort
@@ -1319,12 +1367,13 @@ lsort -command byLength {cat elephant be a}
 ;# Returns: {a be cat elephant}
 ```
 
----
+</details>
 
 ## String Examples
 
 <a id="ex-base64"></a>
-### base64
+<details>
+<summary><strong>base64</strong></summary>
 
 ```tcl
 # Eagle extension — encode to Base64
@@ -1349,10 +1398,11 @@ expr {$original eq $decoded}    ;# Returns: 1
 base64 encode -encoding utf-8 "Héllo"
 ```
 
----
+</details>
 
 <a id="ex-concat"></a>
-### concat
+<details>
+<summary><strong>concat</strong></summary>
 
 ```tcl
 # Merge lists
@@ -1369,10 +1419,11 @@ concat "  a  " "  b  "    ;# Returns: {a b}
 concat {1 2} {3} {4 5 6}  ;# Returns: {1 2 3 4 5 6}
 ```
 
----
+</details>
 
 <a id="ex-encoding"></a>
-### encoding
+<details>
+<summary><strong>encoding</strong></summary>
 
 ```tcl
 # Convert to UTF-8
@@ -1396,10 +1447,11 @@ encoding system
 encoding getstring $byteArrayObj utf-8
 ```
 
----
+</details>
 
 <a id="ex-format"></a>
-### format
+<details>
+<summary><strong>format</strong></summary>
 
 ```tcl
 # String and integer
@@ -1436,10 +1488,11 @@ format "%s scored %d%% on the %s exam" Bob 95 math
 ;# Returns: Bob scored 95% on the math exam
 ```
 
----
+</details>
 
 <a id="ex-guid"></a>
-### guid
+<details>
+<summary><strong>guid</strong></summary>
 
 ```tcl
 # Eagle extension — generate new GUID
@@ -1467,10 +1520,11 @@ guid compare $a $a            ;# Returns: 0
 guid compare $a $b            ;# Returns: -1 or 1
 ```
 
----
+</details>
 
 <a id="ex-hash"></a>
-### hash
+<details>
+<summary><strong>hash</strong></summary>
 
 ```tcl
 # Eagle extension — SHA-256 hash
@@ -1500,10 +1554,11 @@ hash list normal   ;# Only non-keyed algorithms
 # hash normal -filename sha256 myfile.txt     # Requires: UNSAFE
 ```
 
----
+</details>
 
 <a id="ex-join"></a>
-### join
+<details>
+<summary><strong>join</strong></summary>
 
 ```tcl
 # Default separator (space)
@@ -1531,10 +1586,11 @@ join {line1 line2 line3} "\n"
 join {Alice 30 Boston} ","  ;# Returns: Alice,30,Boston
 ```
 
----
+</details>
 
 <a id="ex-parse"></a>
-### parse
+<details>
+<summary><strong>parse</strong></summary>
 
 ```tcl
 # Eagle extension — parse a command
@@ -1557,7 +1613,7 @@ parse script {
 ;# Returns list of parsed command structures
 ```
 
----
+</details>
 
 <a id="ex-regexp"></a>
 > **See also**: [`regexp.md`](regexp.md) — Deep-dive analysis covering the .NET regex engine, default `Singleline` behavior, Eagle-specific options (`-global`, `-skip`, `-limit`, `-compiled`, `-extra`), pattern mutation prefixes, and practical patterns.

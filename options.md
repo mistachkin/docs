@@ -781,7 +781,8 @@ This section documents every option for every command and sub-command,
 organized alphabetically. For each option: its name, value type (if any),
 and what it controls.
 
-### `[after idle]` and `[after <milliseconds>]`
+<details>
+<summary><code>[after idle]</code> and <code>[after &lt;milliseconds&gt;]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -789,14 +790,20 @@ and what it controls.
 | `-priority` | EventPriority | Scheduling priority relative to other events; defaults to `Idle` for idle events, `After` for timed events |
 | `-flags` | EventFlags | Event behavior flags (e.g., error handling); defaults to `None` |
 
-### `[array copy]`
+</details>
+
+<details>
+<summary><code>[array copy]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-deep` | -- | Perform deep copy: for System.Array-backed variables, creates a new array instance with copied data; without this, both variables share the same underlying storage |
 | `-nosignal` | -- | Suppress the variable "dirty" signal (`EntityOps.SignalDirty`) that normally notifies observers of the change |
 
-### `[array random]`
+</details>
+
+<details>
+<summary><code>[array random]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -806,13 +813,19 @@ and what it controls.
 | `-matchname` | -- | When a pattern argument is given, match it against element names/keys |
 | `-matchvalue` | -- | When a pattern argument is given, match it against element values |
 
-### `[base64 decode]` and `[base64 encode]`
+</details>
+
+<details>
+<summary><code>[base64 decode]</code> and <code>[base64 encode]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-encoding` | Encoding | Character encoding for byte-to-string conversion (decode) or string-to-byte conversion (encode); defaults to binary encoding |
 
-### `[clock days]` / `[clock buildnumber]`
+</details>
+
+<details>
+<summary><code>[clock days]</code> / <code>[clock buildnumber]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -820,7 +833,10 @@ and what it controls.
 | `-epoch` | DateTime | Reference point for calculating elapsed days; defaults to start of year (`days`) or `TimeOps.BuildEpoch` (`buildnumber`) |
 | `-gmt` | boolean | When true, interpret times as UTC; when false, use local time |
 
-### `[clock clicks]`
+</details>
+
+<details>
+<summary><code>[clock clicks]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -830,13 +846,19 @@ and what it controls.
 When neither flag is specified, returns the highest-resolution counter available
 via `PerformanceOps.GetCount()`.
 
-### `[clock duration]`
+</details>
+
+<details>
+<summary><code>[clock duration]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-flags` | DurationFlags | Controls output format; when `DurationFlags.Human` is set, returns human-readable text like "2 days, 3 hours"; otherwise returns raw TimeSpan |
 
-### `[clock filetime]`
+</details>
+
+<details>
+<summary><code>[clock filetime]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -844,7 +866,10 @@ via `PerformanceOps.GetCount()`.
 | `-epoch` | DateTime | Reference epoch; defaults to `TimeOps.UnixEpoch` |
 | `-gmt` | boolean | When true, uses `DateTime.FromFileTimeUtc()`; when false, uses `DateTime.FromFileTime()` |
 
-### `[clock format]`
+</details>
+
+<details>
+<summary><code>[clock format]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -857,13 +882,19 @@ via `PerformanceOps.GetCount()`.
 | `-full` | -- | With `-iso`, use full ISO format instead of compact |
 | `-isotimezone` | -- | With `-iso`, include timezone designator |
 
-### `[clock now]`
+</details>
+
+<details>
+<summary><code>[clock now]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-gmt` | boolean | When true, return UTC DateTime ticks; when false, return local DateTime ticks |
 
-### `[clock scan]`
+</details>
+
+<details>
+<summary><code>[clock scan]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -872,7 +903,10 @@ via `PerformanceOps.GetCount()`.
 | `-epoch` | DateTime | Reference epoch for converting parsed DateTime to seconds; defaults to `TimeOps.UnixEpoch` |
 | `-gmt` | boolean | When true, treat input as UTC; when false, treat as local time |
 
-### `[debug break]`
+</details>
+
+<details>
+<summary><code>[debug break]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -882,7 +916,10 @@ via `PerformanceOps.GetCount()`.
 | `-nocomplain` | -- | Suppress error information on break failure |
 | `-noerror` | -- | Don't set error return code on break failure |
 
-### `[debug emergency]`
+</details>
+
+<details>
+<summary><code>[debug emergency]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -891,28 +928,40 @@ via `PerformanceOps.GetCount()`.
 | `-nocomplain` | -- | Suppress error information |
 | `-noerror` | -- | Don't set error return code on failure |
 
-### `[debug hook]`
+</details>
+
+<details>
+<summary><code>[debug hook]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-type` | TestHookType | Which test hook type to install; defaults to `TestHookType.Default` |
 | `-unset` | boolean | When true, remove the hook instead of installing it |
 
-### `[debug iqueue]`
+</details>
+
+<details>
+<summary><code>[debug iqueue]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-dump` | -- | Dump the interactive command queue contents |
 | `-clear` | -- | Clear the interactive command queue |
 
-### `[debug log]`
+</details>
+
+<details>
+<summary><code>[debug log]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-level` | int | Log severity level |
 | `-category` | string | Log category name for filtering |
 
-### `[debug secureeval]`
+</details>
+
+<details>
+<summary><code>[debug secureeval]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -925,14 +974,20 @@ via `PerformanceOps.GetCount()`.
 | `-events` | boolean | Process events during evaluation |
 | `-noisolatedplugins` | boolean | Disable isolated plugin loading in the sandbox |
 
-### `[debug set]`
+</details>
+
+<details>
+<summary><code>[debug set]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-reference` | int | Reference count adjustment for the object |
 | `-convert` | boolean | Convert the value before setting |
 
-### `[debug shell]`
+</details>
+
+<details>
+<summary><code>[debug shell]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -941,7 +996,10 @@ via `PerformanceOps.GetCount()`.
 | `-loop` | boolean | Enter the interactive loop (vs. single evaluation) |
 | `-asynchronous` | boolean | Run the debug shell asynchronously on a separate thread |
 
-### `[debug subst]`
+</details>
+
+<details>
+<summary><code>[debug subst]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -949,7 +1007,10 @@ via `PerformanceOps.GetCount()`.
 | `-nocommands` | -- | Don't process `[command]` substitutions |
 | `-novariables` | -- | Don't process `$variable` substitutions |
 
-### `[debug trace]`
+</details>
+
+<details>
+<summary><code>[debug trace]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -977,7 +1038,10 @@ via `PerformanceOps.GetCount()`.
 | `-logfilename` | string | Log file path (TEST builds only) |
 | `-logflags` | LogFlags | Log behavior flags (TEST builds only); defaults to `LogFlags.Default` |
 
-### `[debug variable]`
+</details>
+
+<details>
+<summary><code>[debug variable]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -986,7 +1050,10 @@ via `PerformanceOps.GetCount()`.
 | `-links` | -- | Include variable link/alias information |
 | `-empty` | -- | Include empty/unset variables |
 
-### `[exit]`
+</details>
+
+<details>
+<summary><code>[exit]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -997,7 +1064,10 @@ via `PerformanceOps.GetCount()`.
 | `-nocomplain` | -- | Suppress warning/error messages during exit |
 | `-current` | -- | Use the interpreter's current exit code instead of the default success code |
 
-### `[fconfigure]` (set mode)
+</details>
+
+<details>
+<summary><code>[fconfigure]</code> (set mode)</summary>
 
 Used when 4+ arguments: `fconfigure channelId -option value ...`
 
@@ -1008,7 +1078,10 @@ Used when 4+ arguments: `fconfigure channelId -option value ...`
 | `-encoding` | Encoding | Set the channel's character encoding |
 | `-translation` | list | One or two `StreamTranslation` values controlling line-ending translation (input and/or output) |
 
-### `[fconfigure]` (query mode)
+</details>
+
+<details>
+<summary><code>[fconfigure]</code> (query mode)</summary>
 
 Used when exactly 3 arguments: `fconfigure channelId -option`
 
@@ -1022,7 +1095,10 @@ Note: In query mode, `-buffer` is not available. Option flags differ from set
 mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 `MustHaveEncodingValue`).
 
-### `[fcopy]`
+</details>
+
+<details>
+<summary><code>[fcopy]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1030,7 +1106,10 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 | `-command` | string | Callback command for async copy; currently **accepted but not implemented** |
 | `-eventflags` | EventFlags | Controls event processing during the copy loop; defaults to `interpreter.EngineEventFlags` |
 
-### `[file cleanup]`
+</details>
+
+<details>
+<summary><code>[file cleanup]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1042,13 +1121,19 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 | `-nocomplain` | -- | Suppress errors for missing paths |
 | `-now` | -- | Execute cleanup immediately instead of deferring |
 
-### `[file copy]`
+</details>
+
+<details>
+<summary><code>[file copy]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-force` | -- | Overwrite destination if it already exists |
 
-### `[file delete]`
+</details>
+
+<details>
+<summary><code>[file delete]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1056,7 +1141,10 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 | `-force` | -- | Ignore access errors during deletion |
 | `-nocomplain` | -- | Suppress "file not found" errors |
 
-### `[file glob]`
+</details>
+
+<details>
+<summary><code>[file glob]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1068,39 +1156,57 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 | `-directory` | string | Search in this directory instead of current working directory |
 | `-searchpattern` | string | Pattern for the initial filesystem enumeration |
 
-### `[file information]`
+</details>
+
+<details>
+<summary><code>[file information]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-directory` | boolean | Explicitly specify whether the path is a directory (Windows) |
 | `-reparse` | boolean | Follow reparse points such as junctions and symlinks (Windows) |
 
-### `[file normalize]`
+</details>
+
+<details>
+<summary><code>[file normalize]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-legacy` | boolean | Use legacy path normalization for Eagle beta compatibility |
 
-### `[file objectid]`
+</details>
+
+<details>
+<summary><code>[file objectid]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-directory` | boolean | Explicitly specify whether the path is a directory (Windows) |
 | `-create` | boolean | Create the object ID if it does not already exist (Windows) |
 
-### `[file rename]`
+</details>
+
+<details>
+<summary><code>[file rename]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-force` | -- | Overwrite destination if it already exists |
 
-### `[file sddl]`
+</details>
+
+<details>
+<summary><code>[file sddl]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-flags` | SddlFlags | Controls which ACL entries to include and output format; supports `IncludeExplicit`, `IncludeInherited`, `SkipBadRights`, `Remove`, `ToList`; defaults to `SddlFlags.Default` |
 
-### `[file under]`
+</details>
+
+<details>
+<summary><code>[file under]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1110,14 +1216,20 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 | `-contains` | -- | Return list of matching items under the path instead of a boolean |
 | `-failonerror` | -- | Treat filesystem enumeration errors as failures |
 
-### `[file version]`
+</details>
+
+<details>
+<summary><code>[file version]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-full` | -- | Return the complete `FileVersionInfo` string |
 | `-fixed` | -- | Return the fixed version number (major.minor.build.revision) |
 
-### `[gets]`
+</details>
+
+<details>
+<summary><code>[gets]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1127,7 +1239,10 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 | `-keepeol` | boolean | Keep end-of-line characters in the result |
 | `-count` | int | Read exactly N bytes/characters |
 
-### `[glob]`
+</details>
+
+<details>
+<summary><code>[glob]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1139,7 +1254,10 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 | `-nocomplain` | -- | Don't error if no files match the pattern |
 | `-noerror` | -- | Return empty on glob errors instead of raising an error |
 
-### `[hash keyed]`, `[hash mac]`, `[hash normal]`
+</details>
+
+<details>
+<summary><code>[hash keyed]</code>, <code>[hash mac]</code>, <code>[hash normal]</code></summary>
 
 All three sub-commands share identical options:
 
@@ -1150,21 +1268,30 @@ All three sub-commands share identical options:
 | `-filename` | -- | Treat the input argument as a file path and hash the file contents |
 | `-encoding` | Encoding | Character encoding for string-to-bytes conversion; cannot combine with `-object` |
 
-### `[host beep]`
+</details>
+
+<details>
+<summary><code>[host beep]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-frequency` | int | Beep frequency in Hz |
 | `-duration` | int | Beep duration in milliseconds |
 
-### `[host color]`
+</details>
+
+<details>
+<summary><code>[host color]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-fg` / `-foreground` | ConsoleColor | Set foreground console color |
 | `-bg` / `-background` | ConsoleColor | Set background console color |
 
-### `[host font]`
+</details>
+
+<details>
+<summary><code>[host font]</code></summary>
 
 Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 
@@ -1175,7 +1302,10 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | `-save` | boolean | Save font settings before changing |
 | `-restore` | boolean | Restore previously saved font settings |
 
-### `[host namedcolor]`
+</details>
+
+<details>
+<summary><code>[host namedcolor]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1184,7 +1314,10 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | `-fg` / `-foreground` | ConsoleColor | Override foreground color |
 | `-bg` / `-background` | ConsoleColor | Override background color |
 
-### `[host position]`
+</details>
+
+<details>
+<summary><code>[host position]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1193,7 +1326,10 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | `-y` | int | Set absolute cursor Y position |
 | `-rely` | int | Adjust Y position relative to current |
 
-### `[host reset]`
+</details>
+
+<details>
+<summary><code>[host reset]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1210,7 +1346,10 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | `-position` | -- | Reset cursor position |
 | `-colors` | -- | Reset console colors |
 
-### `[host size]`
+</details>
+
+<details>
+<summary><code>[host size]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1221,7 +1360,10 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | `-height` | int | Set absolute height in rows |
 | `-relheight` | int | Adjust height relative to current |
 
-### `[host writebox]`
+</details>
+
+<details>
+<summary><code>[host writebox]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1243,7 +1385,10 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | `-separator` | -- | Convert "null" strings to actual nulls |
 | `-norestore` | -- | Don't restore original colors after drawing |
 
-### `[info commands]`
+</details>
+
+<details>
+<summary><code>[info commands]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1267,7 +1412,10 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | `-hiddenonly` | -- | Show only hidden commands |
 | `-strict` | -- | Use strict filtering rules |
 
-### `[info functions]`
+</details>
+
+<details>
+<summary><code>[info functions]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1276,13 +1424,19 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | `-standard` / `-nonstandard` | -- | Filter by standard/non-standard classification |
 | `-hidden` | -- | Include hidden functions |
 
-### `[info loaded]`
+</details>
+
+<details>
+<summary><code>[info loaded]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-nocore` | -- | Exclude core/system plugins (those with `PluginFlags.System`) |
 
-### `[info operators]`
+</details>
+
+<details>
+<summary><code>[info operators]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1290,19 +1444,28 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | `-standard` / `-nonstandard` | -- | Filter by standard/non-standard classification |
 | `-hidden` | -- | Include hidden operators |
 
-### `[info subcommands]`
+</details>
+
+<details>
+<summary><code>[info subcommands]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-hidden` | boolean | When true, search hidden commands; when false, search visible commands |
 
-### `[info vars]`
+</details>
+
+<details>
+<summary><code>[info vars]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-interpreter` | Interpreter | Query a specific child interpreter |
 
-### `[interp addcommands]`
+</details>
+
+<details>
+<summary><code>[interp addcommands]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1312,7 +1475,10 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | `-safetyoverride` | -- | Override safe interpreter restrictions when adding commands |
 | `-repopulate` | -- | Remove existing commands before adding new ones |
 
-### `[interp cancel]`
+</details>
+
+<details>
+<summary><code>[interp cancel]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1320,7 +1486,10 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | `-nolocal` | -- | Skip canceling the local interpreter |
 | `-unwind` | -- | Unwind the call stack during cancellation |
 
-### `[interp create]`
+</details>
+
+<details>
+<summary><code>[interp create]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1351,14 +1520,20 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | `-nocorepolicies` | -- | Don't install core security policies |
 | `-nopluginpolicies` | -- | Don't install plugin security policies |
 
-### `[interp invokehidden]`
+</details>
+
+<details>
+<summary><code>[interp invokehidden]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-global` | -- | Invoke in the global namespace |
 | `-namespace` | string | Invoke in the specified fully-qualified namespace |
 
-### `[interp policy]`
+</details>
+
+<details>
+<summary><code>[interp policy]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1366,13 +1541,19 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | `-token` | int64 | Security token for policy authorization |
 | `-flags` | PolicyFlags | Policy behavior flags; defaults to `PolicyFlags.Script` |
 
-### `[interp queue]`
+</details>
+
+<details>
+<summary><code>[interp queue]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-when` | DateTime | Schedule the queued script for a specific time |
 
-### `[interp readorgetscriptfile]`
+</details>
+
+<details>
+<summary><code>[interp readorgetscriptfile]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1386,7 +1567,10 @@ This is the most complex option processing pattern in the library. See
 [Section 7.2](#72-scan-then-get-deferred-defaults) for the scan-then-get
 architecture.
 
-### `[interp rename]`
+</details>
+
+<details>
+<summary><code>[interp rename]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1397,7 +1581,10 @@ architecture.
 | `-kind` | IdentifierKind | Type of identifier to rename (Command, Function, Variable, etc.); defaults to `None` |
 | `-newnamevar` | string | Store the actual new name in this variable |
 
-### `[interp resetcancel]`
+</details>
+
+<details>
+<summary><code>[interp resetcancel]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1405,7 +1592,10 @@ architecture.
 | `-nolocal` | -- | Skip resetting the local interpreter |
 | `-force` | -- | Force reset even if cancellation is locked |
 
-### `[interp service]`
+</details>
+
+<details>
+<summary><code>[interp service]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1420,26 +1610,38 @@ architecture.
 | `-eventflags` | EventFlags | Event processing flags; defaults to child interpreter's `ServiceEventFlags` |
 | `-priority` | EventPriority | Minimum event priority to process; defaults to `EventPriority.Service` |
 
-### `[interp source]`
+</details>
+
+<details>
+<summary><code>[interp source]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | (only `--`) | | End-of-options marker is the sole option |
 
-### `[interp stub]`
+</details>
+
+<details>
+<summary><code>[interp stub]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-ensemble` | -- | Create an ensemble stub (with sub-command dispatch) |
 | `-external` | -- | Create an external command stub |
 
-### `[interp subcommand]`
+</details>
+
+<details>
+<summary><code>[interp subcommand]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-flags` | SubCommandFlags | Sub-command registration flags; defaults to `SubCommandFlags.Default` |
 
-### `[interp subst]`
+</details>
+
+<details>
+<summary><code>[interp subst]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1447,7 +1649,10 @@ architecture.
 | `-nocommands` | -- | Don't process `[command]` substitutions |
 | `-novariables` | -- | Don't process `$variable` substitutions |
 
-### `[kill]`
+</details>
+
+<details>
+<summary><code>[kill]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1456,7 +1661,10 @@ architecture.
 | `-whatIf` | -- | Show what would be killed without actually terminating (case-insensitive option name) |
 | `-verbose` | -- | Display detailed information about the operation |
 
-### `[library declare]`
+</details>
+
+<details>
+<summary><code>[library declare]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1476,7 +1684,10 @@ architecture.
 | `-throwonunmappablechar` | boolean | Throw on unmappable Unicode characters |
 | `-delegatename` | string | Name for the created delegate type |
 
-### `[library load]`
+</details>
+
+<details>
+<summary><code>[library load]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1486,18 +1697,27 @@ architecture.
 | `-trustedonly` | -- | Only load modules verified as trusted |
 | `-flags` | ModuleFlags | Module loading behavior flags; defaults to `ModuleFlags.None` |
 
-### `[library resolve]`
+</details>
+
+<details>
+<summary><code>[library resolve]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-module` | string | Which loaded module contains the function |
 | `-functionname` | string | Function name to resolve within the module |
 
-### `[library unresolve]`
+</details>
+
+<details>
+<summary><code>[library unresolve]</code></summary>
 
 No options (only end-of-options marker).
 
-### `[load]`
+</details>
+
+<details>
+<summary><code>[load]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1522,7 +1742,10 @@ No options (only end-of-options marker).
 | `-data` | object | Additional data to associate with the plugin |
 | `-viaresource` | -- | Load from embedded resource instead of file |
 
-### `[lsearch]`
+</details>
+
+<details>
+<summary><code>[lsearch]</code></summary>
 
 **Mutual-exclusion groups:**
 
@@ -1544,7 +1767,10 @@ No options (only end-of-options marker).
 | `-start` | string | Start searching from this index |
 | `-index` | string | Search within sub-elements at this index |
 
-### `[lsort]`
+</details>
+
+<details>
+<summary><code>[lsort]</code></summary>
 
 **Mutual-exclusion groups:**
 
@@ -1560,26 +1786,38 @@ No options (only end-of-options marker).
 | `-command` | string | Custom comparison command/procedure |
 | `-index` | string | Sort by sub-elements at this index in nested lists |
 
-### `[namespace export]` (Namespace1 and Namespace2)
+</details>
+
+<details>
+<summary><code>[namespace export]</code> (Namespace1 and Namespace2)</summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-clear` | -- | Clear existing exports before adding new ones |
 
-### `[namespace import]` (Namespace1 and Namespace2)
+</details>
+
+<details>
+<summary><code>[namespace import]</code> (Namespace1 and Namespace2)</summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-force` | -- | Overwrite existing commands with imported names |
 
-### `[namespace which]` (Namespace1 and Namespace2)
+</details>
+
+<details>
+<summary><code>[namespace which]</code> (Namespace1 and Namespace2)</summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-command` | -- | Search for command names |
 | `-variable` | -- | Search for variable names |
 
-### `[open]`
+</details>
+
+<details>
+<summary><code>[open]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1593,13 +1831,19 @@ No options (only end-of-options marker).
 | `-options` | FileOptions | File opening options; defaults to `FileOptions.None` |
 | `-share` | FileShare | File sharing mode; defaults to `FileShare.Read` |
 
-### `[package absent]`
+</details>
+
+<details>
+<summary><code>[package absent]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-exact` | -- | Require exact version match |
 
-### `[package alias]`
+</details>
+
+<details>
+<summary><code>[package alias]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1607,20 +1851,29 @@ No options (only end-of-options marker).
 | `-disabled` | -- | Create the alias in a disabled state |
 | `-exact` | -- | Exact name matching |
 
-### `[package present]`
+</details>
+
+<details>
+<summary><code>[package present]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-exact` | -- | Require exact version match |
 
-### `[package require]`
+</details>
+
+<details>
+<summary><code>[package require]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-exact` | -- | Require exact version match (no "compatible" version resolution) |
 | `-autoscan` | boolean | Automatically scan for packages if not already found |
 
-### `[package scan]`
+</details>
+
+<details>
+<summary><code>[package scan]</code></summary>
 
 See [Section 7.1](#71-two-pass-option-processing) for the two-pass
 architecture. Pre-options and main options are separate dictionaries.
@@ -1659,7 +1912,10 @@ architecture. Pre-options and main options are separate dictionaries.
 | `-nocomplain` | -- | Suppress scanning errors |
 | `-fileerror` | -- | Don't suppress file I/O errors during scanning |
 
-### `[parse command]`
+</details>
+
+<details>
+<summary><code>[parse command]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1670,7 +1926,10 @@ architecture. Pre-options and main options are separate dictionaries.
 | `-nested` | boolean | Parse as a nested command (within `[...]`) |
 | `-noready` | boolean | Skip the interpreter readiness check |
 
-### `[parse expression]`
+</details>
+
+<details>
+<summary><code>[parse expression]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1680,7 +1939,10 @@ architecture. Pre-options and main options are separate dictionaries.
 | `-characters` | int | Maximum characters to parse |
 | `-noready` | boolean | Skip the interpreter readiness check |
 
-### `[parse options]`
+</details>
+
+<details>
+<summary><code>[parse options]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1696,7 +1958,10 @@ architecture. Pre-options and main options are separate dictionaries.
 | `-noready` | boolean | Skip interpreter readiness check |
 | `-simple` | -- | Use simplified parsing mode |
 
-### `[parse script]`
+</details>
+
+<details>
+<summary><code>[parse script]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1712,7 +1977,10 @@ architecture. Pre-options and main options are separate dictionaries.
 | `-roundtrip` | boolean | Preserve enough information for round-trip reconstruction |
 | `-noready` | boolean | Skip interpreter readiness check |
 
-### `[puts]`
+</details>
+
+<details>
+<summary><code>[puts]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1724,7 +1992,10 @@ architecture. Pre-options and main options are separate dictionaries.
 Note: No `Option.CreateEndOfOptions()` -- `--` is not supported, for Tcl
 compatibility.
 
-### `[regexp]`
+</details>
+
+<details>
+<summary><code>[regexp]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1751,7 +2022,10 @@ compatibility.
 | `-start` | string | Start matching at this position |
 | `-length` | int | Maximum length of input to examine |
 
-### `[regsub]`
+</details>
+
+<details>
+<summary><code>[regsub]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1777,7 +2051,10 @@ compatibility.
 | `-noculture` | -- | Culture-independent matching |
 | `-start` | string | Start replacement at this position |
 
-### `[rename]`
+</details>
+
+<details>
+<summary><code>[rename]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1787,7 +2064,10 @@ compatibility.
 | `-kind` | IdentifierKind | Type of identifier (Command, Function, etc.); defaults to `None` |
 | `-newnamevar` | string | Store the actual new name in this variable |
 
-### `[return]`
+</details>
+
+<details>
+<summary><code>[return]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1795,13 +2075,19 @@ compatibility.
 | `-errorinfo` | string | Error stack trace information |
 | `-errorcode` | string | Machine-readable error code |
 
-### `[scope close]`
+</details>
+
+<details>
+<summary><code>[scope close]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-all` | -- | Close all open scopes, not just the current one |
 
-### `[scope create]`
+</details>
+
+<details>
+<summary><code>[scope create]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1815,7 +2101,10 @@ compatibility.
 | `-strict` | -- | Strict scope mode (error on undefined variables) |
 | `-fast` | -- | Fast/optimized scope mode |
 
-### `[scope eval]`
+</details>
+
+<details>
+<summary><code>[scope eval]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1823,20 +2112,29 @@ compatibility.
 | `-lock` | boolean | Acquire the scope lock during evaluation |
 | `-timeout` | int | Timeout in milliseconds for the evaluation |
 
-### `[scope global]`
+</details>
+
+<details>
+<summary><code>[scope global]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-unset` | -- | Unset variables in the global scope |
 | `-force` | -- | Force the operation |
 
-### `[scope lock]` / `[scope unlock]`
+</details>
+
+<details>
+<summary><code>[scope lock]</code> / <code>[scope unlock]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-nocomplain` | -- | Suppress errors if the lock/unlock operation fails |
 
-### `[scope open]`
+</details>
+
+<details>
+<summary><code>[scope open]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1844,13 +2142,19 @@ compatibility.
 | `-shared` | -- | Open with shared access |
 | `-args` | -- | Pass arguments to the open operation |
 
-### `[scope update]`
+</details>
+
+<details>
+<summary><code>[scope update]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-global` | -- | Update the global scope data |
 
-### `[socket]`
+</details>
+
+<details>
+<summary><code>[socket]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1874,7 +2178,10 @@ compatibility.
 | `-noexclusive` | -- | Allow multiple listeners on the same port; server only |
 | `-trace` | -- | Enable socket operation tracing |
 
-### `[source]`
+</details>
+
+<details>
+<summary><code>[source]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1886,13 +2193,19 @@ compatibility.
 | `-bundle` | boolean | Load from a script bundle resource instead of a file (requires `DATA`) |
 | `-bundleflags` | BundleFlags | Bundle loading behavior; defaults to `BundleFlags.Default` (requires `DATA`) |
 
-### `[split]`
+</details>
+
+<details>
+<summary><code>[split]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-string` | -- | Use string split semantics instead of character-based splitting |
 
-### `[string equal]` / `[string compare]`
+</details>
+
+<details>
+<summary><code>[string equal]</code> / <code>[string compare]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1902,7 +2215,10 @@ compatibility.
 | `-comparison` | StringComparison | .NET `StringComparison` enum value |
 | `-length` | int | Compare only the first N characters |
 
-### `[string ends]` / `[string starts]`
+</details>
+
+<details>
+<summary><code>[string ends]</code> / <code>[string starts]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1910,14 +2226,20 @@ compatibility.
 | `-nocase` | -- | Case-insensitive matching |
 | `-comparison` | StringComparison | .NET comparison type |
 
-### `[string first]` / `[string last]`
+</details>
+
+<details>
+<summary><code>[string first]</code> / <code>[string last]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-nocase` | -- | Case-insensitive search |
 | `-comparison` | StringComparison | .NET comparison type |
 
-### `[string format]`
+</details>
+
+<details>
+<summary><code>[string format]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1928,7 +2250,10 @@ compatibility.
 | `-verbatim` | -- | Pass format string verbatim to `String.Format` |
 | `-valueflags` | ValueFlags | Value conversion flags; defaults to `ValueFlags.AnyNonCharacter` |
 
-### `[string is]`
+</details>
+
+<details>
+<summary><code>[string is]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1942,7 +2267,10 @@ compatibility.
 | `-bad` | string | Store the count of failing characters in this variable |
 | `-failindex` | string | Store the index of the first failing character |
 
-### `[string map]`
+</details>
+
+<details>
+<summary><code>[string map]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1956,20 +2284,29 @@ compatibility.
 | `-regexpoptions` | RegexOptions | Regex options when `-regexp` is active; defaults to `StringOps.DefaultRegExOptions` |
 | `-nocase` | -- | Case-insensitive mapping |
 
-### `[string match]`
+</details>
+
+<details>
+<summary><code>[string match]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-mode` | MatchMode | Matching mode (Exact, Glob, Regexp, SubString, etc.); defaults to `StringOps.DefaultMatchMode` |
 | `-nocase` | -- | Case-insensitive matching |
 
-### `[string toupper]` / `[string tolower]` / `[string totitle]`
+</details>
+
+<details>
+<summary><code>[string toupper]</code> / <code>[string tolower]</code> / <code>[string totitle]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-culture` | CultureInfo | Culture for locale-aware case conversion |
 
-### `[subst]`
+</details>
+
+<details>
+<summary><code>[subst]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -1980,7 +2317,10 @@ compatibility.
 Note: `Option.CreateEndOfOptions()` is deliberately commented out for Tcl
 compatibility.
 
-### `[switch]`
+</details>
+
+<details>
+<summary><code>[switch]</code></summary>
 
 **Mutual-exclusion groups:**
 
@@ -1994,7 +2334,10 @@ compatibility.
 |--------|-------|-------------|
 | `-nocase` | -- | Case-insensitive matching for all modes |
 
-### `[test2]`
+</details>
+
+<details>
+<summary><code>[test2]</code></summary>
 
 **Standard test options (tcltest-compatible):**
 
@@ -2052,7 +2395,10 @@ compatibility.
 | `-noChangeReturnCode` | boolean | Don't modify the return code based on test outcome |
 | `-stopOnHookError` | boolean | Stop test execution if a hook reports an error |
 
-### `[time]`
+</details>
+
+<details>
+<summary><code>[time]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -2066,7 +2412,10 @@ compatibility.
 | `-noEvent` | boolean | Don't process events during timing (case-insensitive) |
 | `-noExit` | boolean | Don't allow exit during timing (case-insensitive) |
 
-### `[unload]`
+</details>
+
+<details>
+<summary><code>[unload]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -2077,7 +2426,10 @@ compatibility.
 | `-nocomplain` | -- | Suppress errors if the plugin is not found |
 | `-match` | MatchMode | Plugin name matching mode; defaults to `StringOps.DefaultUnloadMatchMode` |
 
-### `[unset]`
+</details>
+
+<details>
+<summary><code>[unset]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -2089,7 +2441,10 @@ compatibility.
 | `-zerostring` | -- | Zero out the string memory before freeing (Windows native only; security feature) |
 | `-maybezerostring` | -- | Conditionally zero memory (Windows native; silently ignored on other platforms) |
 
-### `[uri compare]`
+</details>
+
+<details>
+<summary><code>[uri compare]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -2099,7 +2454,10 @@ compatibility.
 | `-comparison` | StringComparison | .NET string comparison type |
 | `-nocase` | -- | Case-insensitive comparison |
 
-### `[uri create]`
+</details>
+
+<details>
+<summary><code>[uri create]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -2110,7 +2468,10 @@ compatibility.
 | `-query` | string | Query string |
 | `-fragment` | string | Fragment identifier |
 
-### `[uri get]`
+</details>
+
+<details>
+<summary><code>[uri get]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -2127,7 +2488,10 @@ compatibility.
 | `-encoding` | Encoding | Character encoding for the response |
 | `-webclientdata` | object | Custom WebClient configuration object |
 
-### `[uri post]`
+</details>
+
+<details>
+<summary><code>[uri post]</code></summary>
 
 Same as `[uri get]` plus:
 
@@ -2137,7 +2501,10 @@ Same as `[uri get]` plus:
 | `-data` | list | Request body data |
 | `-raw` | -- | Send data without encoding transformation |
 
-### `[vwait]`
+</details>
+
+<details>
+<summary><code>[vwait]</code></summary>
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -2153,3 +2520,6 @@ Same as `[uri get]` plus:
 | `-leaveresult` | -- | Don't clear the interpreter result after waiting |
 | `-resetcancel` | -- | Reset cancellation flag after wait completes (restricted) |
 | `-locked` | string | Lock name to acquire during the wait |
+
+</details>
+
