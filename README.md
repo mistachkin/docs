@@ -15,6 +15,7 @@ Eagle (Extensible Adaptable Generalized Logic Engine) is a Tcl-compatible script
 * [Eagle Integration Sub-Projects](integrations.md)
 * [Eagle Updater (Hippogriff)](updater.md)
 * [Eagle Architecture Patterns](architecture_patterns.md)
+* [Eagle Safe Interpreters](safe.md)
 * [Eagle `array` Command Analysis](array.md)
 * [Eagle `clock` Command Analysis](clock.md)
 * [Eagle `debug` Command Analysis](debug.md)
