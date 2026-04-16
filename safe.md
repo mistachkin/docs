@@ -401,6 +401,427 @@ command whitelisting.
 
 ---
 
+## The Policy System In Depth
+
+Eagle's policy system is the primary mechanism for selectively exposing
+unsafe functionality to safe interpreters. It extends Safe Tcl's
+alias-based approach with a formal voting protocol, multiple policy
+types, and integration points throughout the evaluation engine.
+
+### Historical Context: Safe Tcl
+
+In Tcl's Safe Tcl model, the parent interpreter creates `interp alias`
+commands that bridge specific operations from the safe child to the
+parent. For example, to let a safe interpreter read files from one
+directory:
+
+```tcl
+# Safe Tcl approach: alias in child calls proc in parent
+interp alias child safeSource {} safeSourceImpl
+proc safeSourceImpl {path} {
+    if {![string match "/allowed/*" $path]} { error "denied" }
+    source $path
+}
+```
+
+This works but has limitations: every controlled operation requires a
+hand-written alias procedure, there's no standard protocol for access
+decisions, and sub-command filtering requires reimplementing ensemble
+dispatch in the alias.
+
+Eagle retains the alias mechanism (it's still the right tool for
+capability delegation) and adds a formal policy layer on top.
+
+### Policy Architecture
+
+<details>
+<summary><strong>The IPolicyContext Contract</strong></summary>
+
+Every policy check creates an `IPolicyContext` that carries the full
+execution context to the policy callback:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `Execute` | `IExecute` | The command or procedure being evaluated |
+| `Arguments` | `ArgumentList` | The command arguments |
+| `Script` | `IScript` | The script being evaluated (for script policies) |
+| `FileName` | `string` | Source file name (for file policies) |
+| `Bytes` | `byte[]` | Raw content bytes |
+| `Text` | `string` | Text content |
+| `Encoding` | `Encoding` | Content encoding |
+| `AssemblyName` | `AssemblyName` | Assembly identity (for type policies) |
+| `HashValue` | `byte[]` | Cryptographic hash of the content |
+| `HashAlgorithmName` | `string` | Hash algorithm used (default: SHA-512) |
+
+The context also provides a **voting interface**:
+
+- `Undecided()` -- abstain (let other policies decide)
+- `Denied(reason)` -- block execution
+- `Approved(reason)` -- allow execution
+
+</details>
+
+<details>
+<summary><strong>The Voting Protocol</strong></summary>
+
+Multiple policies can be registered for the same command. When a
+protected command is invoked, ALL matching policies are consulted and
+their votes are aggregated:
+
+1. **Any denial wins**: If any policy votes `Denied`, the decision is
+   `Denied` regardless of other votes.
+2. **Approval requires majority**: If approvals outnumber undecided
+   votes, the decision is `Approved`.
+3. **Undecided is conservative**: If undecided votes equal or exceed
+   approvals, the decision is `Undecided` (which defaults to denial).
+
+This is a **pessimistic consensus** model: it's easy to block access
+(one denial suffices) and harder to grant it (majority approval
+required). This design prevents a permissive policy from overriding
+a restrictive one.
+
+**Return code mapping for policy callbacks:**
+
+| Callback Returns | Vote Cast |
+|-----------------|-----------|
+| `ReturnCode.Ok` | `Approved` |
+| `ReturnCode.Error` | `Denied` |
+| `ReturnCode.Continue` | `Undecided` |
+| `ReturnCode.Break` | No vote (skip) |
+
+</details>
+
+<details>
+<summary><strong>Policy Firing Points</strong></summary>
+
+Policies fire at specific points in the evaluation pipeline, controlled
+by `PolicyFlags`:
+
+| Flag | When it fires |
+|------|--------------|
+| `BeforeCommand` | Before a hidden command executes |
+| `BeforeSubCommand` | Before a sub-command of an ensemble |
+| `BeforeProcedure` | Before a procedure call |
+| `BeforeScript` | Before a script is evaluated |
+| `BeforeFile` | Before a file is read (source, etc.) |
+| `BeforeStream` | Before a stream is read |
+| `AfterFile` | After a file has been read |
+| `AfterStream` | After a stream has been read |
+
+The `Before*` hooks can prevent execution entirely. The `After*` hooks
+can reject already-read content (e.g., rejecting a file after hashing
+it and finding it's not in a trusted list).
+
+**Critical detail**: Policy checks only fire for **hidden commands** in
+safe interpreters. Commands that are fully visible (safe commands)
+execute without policy checks. This means policies control the
+boundary between "safe" and "unsafe" -- they don't add overhead to
+normal safe operations.
+
+</details>
+
+### Policy Types
+
+<details>
+<summary><strong>C# Callback Policies</strong></summary>
+
+The most common policy type. A C# delegate receives the `IPolicyContext`
+and casts a vote:
+
+```csharp
+private static ReturnCode FileCommandCallback(
+    Interpreter interpreter,
+    IClientData clientData,
+    ArgumentList arguments,
+    ref Result result
+    )
+{
+    IPolicyContext policyContext =
+        (clientData != null) ?
+            clientData.Data as IPolicyContext : null;
+
+    if (policyContext == null)
+        return ReturnCode.Break; // Skip (no context)
+
+    // Extract the sub-command from arguments
+    string subCommand = PolicyOps.GetSubCommandName(
+        policyContext, arguments);
+
+    // Check against allow-list
+    if (AllowedFileSubCommands.Contains(subCommand))
+    {
+        policyContext.Approved("allowed sub-command");
+        return ReturnCode.Ok;
+    }
+
+    policyContext.Denied("sub-command not allowed");
+    return ReturnCode.Error;
+}
+```
+
+Eagle registers 8 default callback policies for the core ensemble
+commands (`[clock]`, `[file]`, `[info]`, `[interp]`, `[object]`,
+`[package]`, `[source]`, `[uri]`), each enforcing the sub-command
+allow-lists shown in Security Layer 3.
+
+</details>
+
+<details>
+<summary><strong>Script Policies</strong></summary>
+
+Policies can be defined as Eagle scripts, registered via the
+`[interp policy]` command. The script receives arguments and returns
+a decision via its return code:
+
+```tcl
+# Parent installs a script policy on the child interpreter
+# that allows [clock format] but denies [clock scan]
+interp policy -type Clock -flags Script myChild {
+    if {[lindex $args 1] eq "format"} {
+        return   ;# Ok = Approved
+    }
+    error "denied"  ;# Error = Denied
+}
+```
+
+Script policies evaluate in a **separate policy interpreter** -- not
+in the safe child and not in the parent. This prevents the policy
+script from being manipulated by the code it's guarding.
+
+The `[interp policy]` command accepts:
+
+| Option | Description |
+|--------|-------------|
+| `-type type` | The .NET command type being guarded |
+| `-token token` | Numeric token of the specific command |
+| `-flags flags` | `PolicyFlags` controlling when the policy fires |
+
+Only non-safe interpreters can register policies. A safe interpreter
+cannot install, modify, or remove its own policies.
+
+</details>
+
+<details>
+<summary><strong>Sub-Command Policies</strong></summary>
+
+A specialized policy type (`PolicyOps.CheckViaSubCommand`) that filters
+ensemble sub-commands against an allow-list or deny-list. This is the
+mechanism behind the sub-command whitelists in Layer 3.
+
+The implementation:
+1. Extracts the sub-command name from `arguments[1]`
+2. Checks against allowed list (if provided) → approve if found
+3. Checks against disallowed list (if provided) → deny if found
+4. Otherwise → no vote (let other policies decide)
+
+For `[package]`, the policy uses a **deny-list** instead of an
+allow-list: most sub-commands are allowed, but `alias`, `aliases`,
+`indexes`, `relativefilename`, `reset`, `scan`, and `vloaded` are
+blocked.
+
+</details>
+
+<details>
+<summary><strong>Type and URI Policies</strong></summary>
+
+Two additional policy types control .NET type access and URI access:
+
+- **Type policies** (`PolicyOps.CheckViaType`): Validate that a .NET
+  type is permitted for use. Controls which types can be instantiated
+  or invoked via `[object]` when selectively re-enabled.
+
+- **URI policies** (`PolicyOps.CheckViaUri`): Validate URI targets for
+  `[uri get]` and `[uri post]`. Can restrict network access to specific
+  hosts, protocols, or paths.
+
+- **Directory policies** (`PolicyOps.CheckViaDirectory`): Validate
+  filesystem paths for `[source]` and file operations.
+
+</details>
+
+### Integration with the Evaluation Engine
+
+<details>
+<summary><strong>Engine Policy Check Flow</strong></summary>
+
+When a hidden command is invoked in a safe interpreter, the engine
+performs this sequence (in `Engine.cs`, `EvaluateCommand`):
+
+```
+1. Resolve command name → found in hidden command dictionary
+2. Check: is interpreter safe? AND are policies enabled?
+3. If yes:
+   a. Get initial decision from interpreter.CommandInitialDecision
+   b. Call interpreter.CheckCommandPolicies(
+        PolicyFlags.EngineBeforeCommand, command, arguments)
+   c. All matching policies are invoked, votes collected
+   d. Compute final decision via PolicyOps.FinalDecision()
+   e. If Approved → execute the hidden command
+   f. If Denied → return "permission denied" error
+4. If no → "invalid command name" error (command is hidden)
+```
+
+**Recursion prevention**: Policy checks set a `PolicyLevels` counter.
+If a policy callback triggers another command that itself has a policy,
+the nested check is skipped (returns Ok). This prevents infinite loops
+where policy A triggers command B which triggers policy A.
+
+</details>
+
+<details>
+<summary><strong>File and Stream Policy Integration</strong></summary>
+
+File and stream policies fire during `[source]` and related operations:
+
+```
+1. Before reading: CheckBeforeFilePolicies()
+   - Computes SHA-512 hash of the file path
+   - All BeforeFile policies vote
+   - If Denied → file is not read
+2. Read the file content
+3. After reading: CheckAfterFilePolicies()
+   - Computes SHA-512 hash of the file CONTENT
+   - All AfterFile policies vote
+   - If Denied → content is discarded, error returned
+```
+
+The two-phase check enables both path-based and content-based security:
+the "before" phase can reject known-bad paths without reading them, and
+the "after" phase can reject files whose content hash doesn't match a
+trusted list.
+
+</details>
+
+### Rule Sets
+
+<details>
+<summary><strong>IRuleSet: Declarative Access Control</strong></summary>
+
+For applications that need more structured access control than ad-hoc
+policies, Eagle provides the `IRuleSet` interface. A rule set contains
+ordered `IRule` objects, each with:
+
+- `RuleType`: `Allow` or `Deny`
+- `IdentifierKind`: What type of identifier the rule matches
+  (command, procedure, variable, etc.)
+- `MatchMode`: How to match names (`Exact`, `Glob`, `Regexp`,
+  `SubString`)
+- Pattern string
+
+Rules are evaluated in order (first match wins). Rule sets can be
+applied during interpreter creation via the `-ruleset` option:
+
+```tcl
+# Create a safe interpreter with a custom rule set
+interp create -safe -ruleset $myRuleSet myChild
+```
+
+Rule sets integrate with the policy system: they provide the access
+control specification, and policies provide the enforcement mechanism.
+
+</details>
+
+### Practical Policy Patterns
+
+<details>
+<summary><strong>Pattern 1: Exposing Controlled File Access</strong></summary>
+
+```tcl
+# Parent creates safe interpreter with controlled file reading
+set child [interp create -safe myChild]
+
+# Define a safe file reader in the parent
+proc safeRead {child path} {
+    # Validate path is under allowed directory
+    set allowed [file normalize /data/shared]
+    set actual [file normalize $path]
+    if {![string match "${allowed}/*" $actual]} {
+        error "access denied: $path"
+    }
+    # Read and return (executes in parent context)
+    set fd [open $actual r]
+    try {
+        return [read $fd]
+    } finally {
+        close $fd
+    }
+}
+
+# Expose it to the child via alias
+interp alias myChild readShared {} safeRead myChild
+```
+
+</details>
+
+<details>
+<summary><strong>Pattern 2: Script-Based Policy for [clock]</strong></summary>
+
+```tcl
+# Allow [clock format] and [clock seconds] but deny [clock scan]
+interp policy -type Clock myChild {
+    set sub [lindex $args 1]
+    if {$sub in {format seconds}} {
+        return  ;# Approved
+    }
+    error "clock $sub not permitted"  ;# Denied
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Pattern 3: Auditing Policy</strong></summary>
+
+```tcl
+# Log all file access attempts (approve everything but record it)
+interp policy -type File -flags Script myChild {
+    set sub [lindex $args 1]
+    set path [lindex $args 2]
+    puts stderr "AUDIT: [clock format [clock seconds]]: \
+        file $sub $path"
+    return  ;# Approved (audit only)
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Pattern 4: Time-Limited Access</strong></summary>
+
+A C# policy callback can implement time-based access control:
+
+```csharp
+private static ReturnCode TimeBasedPolicy(
+    Interpreter interpreter,
+    IClientData clientData,
+    ArgumentList arguments,
+    ref Result result
+    )
+{
+    IPolicyContext context =
+        (clientData != null) ?
+            clientData.Data as IPolicyContext : null;
+
+    if (context == null)
+        return ReturnCode.Break;
+
+    // Allow during business hours only
+    int hour = DateTime.Now.Hour;
+    if (hour >= 9 && hour < 17)
+    {
+        context.Approved("business hours");
+        return ReturnCode.Ok;
+    }
+
+    context.Denied("outside business hours");
+    return ReturnCode.Error;
+}
+```
+
+</details>
+
+---
+
 ## Practical Use Cases
 
 <details>
