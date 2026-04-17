@@ -346,7 +346,63 @@ You are looking at someone's life's work. Treat it accordingly.
 
 ---
 
-## 6. Conclusion
+## 6. Privilege and Service
+
+Writing software is a privilege, not a right. Not everyone gets to
+spend their days building things that other people depend on. The
+ability to write code that runs on someone else's machine, processes
+their data, or automates their work is an act of trust extended by
+strangers. That trust is not owed. It is earned, and it carries
+responsibility.
+
+Software is written in the service of people. Not in the service of
+shareholders, not in the service of metrics, not in the service of
+the developer's ego -- in the service of the person who will use it,
+often without knowing or caring who wrote it. The moment you forget
+that, the software starts serving itself: accumulating features no one
+asked for, optimizing for benchmarks no one runs, growing complex in
+ways that benefit the author's resume but not the user's workflow.
+
+Love for a project is what keeps this orientation honest. You don't
+add a five-layer security model to impress a reviewer. You add it
+because someone will trust your sandbox with untrusted code, and they
+deserve to be protected. You don't maintain backward compatibility
+across twenty years of .NET evolution for career advancement. You do
+it because someone wrote a script in 2007 and it should still work.
+
+Love is also what drives you to seek out the best tools available --
+not because they are fashionable, but because the project deserves
+every advantage you can give it. During the development of the
+features described in this paper, the author used Claude Code -- an
+AI system built on some of the most sophisticated technology humanity
+has yet created -- to trace threading bugs across three interlocking
+subsystems, to implement cross-platform terminal support that would
+have required weeks of manual research, and to systematically document
+architectural patterns that had accumulated over two decades without
+formal description.
+
+This is not a story about AI replacing developers. It is a story
+about a developer who loved a project enough to invest in the most
+powerful tools available to make it better. The AI did not write Eagle.
+It read Eagle, understood Eagle, and helped its author see things in
+his own code that twenty years of proximity had made invisible.
+
+The privilege of building software includes the privilege of using
+every tool at your disposal in service of the work. The terminal
+color bleed bug that had been intermittent for years was found in one
+session. The `rl_already_prompted` flag that libedit exports but
+doesn't honor was diagnosed through live probing on two platforms
+simultaneously. The `CommandOptions` centralization that the author
+had wanted to do for years was completed in a single sustained effort
+because the mechanical work could be parallelized.
+
+None of this diminishes the author's role. It amplifies it. The best
+tools in the world produce nothing without someone who cares enough
+to wield them in service of something worth building.
+
+---
+
+## 7. Conclusion
 
 Eagle is a scripting language that one person has maintained for
 roughly two decades. It compiles on every .NET platform from 2.0 to
