@@ -584,9 +584,21 @@ interp policy -type Clock -flags Script myChild {
 }
 ```
 
-Script policies evaluate in a **separate policy interpreter** -- not
-in the safe child and not in the parent. This prevents the policy
-script from being manipulated by the code it's guarding.
+By default, script policies evaluate in the **parent interpreter** --
+the one that called `[interp policy]`. This gives the policy script
+access to the parent's full capabilities for making security decisions
+while keeping it isolated from the safe child interpreter's state.
+
+With the `-isolated` flag, the policy script evaluates in a
+**dedicated interpreter** created and owned by the `ScriptPolicy`
+object. This provides complete isolation: the policy script cannot
+read or modify the parent's variables, procedures, or state. The
+isolated interpreter is automatically disposed when the child
+interpreter (or the policy itself) is disposed.
+
+The `-file` option allows full customization of the isolated
+interpreter via an INI or XML settings file. Without `-file`, the
+isolated interpreter uses `CreateFlags.EmbeddedUse` defaults.
 
 The `[interp policy]` command accepts:
 
@@ -595,9 +607,33 @@ The `[interp policy]` command accepts:
 | `-type type` | The .NET command type being guarded |
 | `-token token` | Numeric token of the specific command |
 | `-flags flags` | `PolicyFlags` controlling when the policy fires |
+| `-isolated` | Create a dedicated interpreter for policy evaluation (opt-in) |
+| `-file path` | Load interpreter settings from an INI or XML file for the isolated interpreter |
 
 Only non-safe interpreters can register policies. A safe interpreter
 cannot install, modify, or remove its own policies.
+
+**Examples:**
+
+```tcl
+# Default: policy evaluates in the parent interpreter
+interp policy -type Clock myChild {
+    if {[lindex $args 1] eq "format"} { return }
+    error "denied"
+}
+
+# Isolated: policy gets its own interpreter
+interp policy -type Clock -isolated myChild {
+    if {[lindex $args 1] eq "format"} { return }
+    error "denied"
+}
+
+# Isolated with custom settings file
+interp policy -type Clock -isolated -file /etc/eagle/policy.ini myChild {
+    if {[lindex $args 1] eq "format"} { return }
+    error "denied"
+}
+```
 
 </details>
 
@@ -815,6 +851,27 @@ private static ReturnCode TimeBasedPolicy(
 
     context.Denied("outside business hours");
     return ReturnCode.Error;
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Pattern 5: Isolated Policy with No Parent State</strong></summary>
+
+```tcl
+# The isolated policy interpreter cannot see parent variables
+# or procedures, providing complete separation of concerns
+set sensitiveApiKey "sk-secret-12345"
+
+interp policy -type Uri -isolated myChild {
+    # $sensitiveApiKey does NOT exist here
+    # Only the args variable (command arguments) is available
+    set sub [lindex $args 1]
+    if {$sub in {isvalid}} {
+        return  ;# Approved
+    }
+    error "uri $sub not permitted"
 }
 ```
 
