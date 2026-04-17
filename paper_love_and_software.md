@@ -36,7 +36,8 @@ convention, and design decisions that optimize for the next twenty years
 rather than the next sprint.
 
 These characteristics cannot be mandated, incentivized, or
-process-engineered. They emerge from love.
+process-engineered. They emerge naturally when the work itself is the
+reason for working.
 
 ---
 
@@ -66,10 +67,12 @@ with.
 
 No one filed a bug report. No one was waiting for a fix. The author
 noticed it, was *bothered* by it, and traced it to root cause because
-leaving it alone felt wrong.
+leaving it alone felt wrong. The standard was not "does it work." The
+standard was "is it right."
 
-This is what love looks like: you fix things because they should be
-right, not because someone asked.
+A creator who sets the standard by the work itself, rather than by
+what others will accept, produces something fundamentally different
+from a creator who asks "is this good enough?"
 
 ### 2.2 You Build Things When You're Bored
 
@@ -93,11 +96,12 @@ reason. The *real* reason is that the author uses the shell daily, and
 when you use something daily, you see opportunities to make it better
 that no product manager would ever prioritize.
 
-Boredom is the luxury of someone who loves their project. You don't
-get bored with software you don't care about. You get frustrated, or
-you walk away.
+The joy of creation doesn't require an audience. The work is the
+reward. Boredom is the luxury of someone who loves their project
+enough to keep finding new problems in it. You don't get bored with
+software you don't care about. You get frustrated, or you walk away.
 
-### 2.3 You Maintain Backward Compatibility Because You Respect Your Users
+### 2.3 You Maintain Backward Compatibility Because You Gave Your Word
 
 Eagle compiles against .NET Framework 2.0 RTM, .NET Framework 4.x,
 .NET Standard 2.0, .NET Standard 2.1, and .NET 5 through .NET 10. It
@@ -126,11 +130,10 @@ making the code harder to read.
 No rational cost-benefit analysis would support this. The number of
 users on .NET Framework 2.0 in 2025 does not justify the engineering
 cost of maintaining compatibility. But backward compatibility is not
-about cost-benefit. It's about a promise: if your code worked
-yesterday, it works today.
-
-You keep that promise because you respect the people who trusted your
-software.
+a business decision. It's a matter of integrity. When you ship
+software, you make an implicit promise: if your code worked yesterday,
+it works today. You keep that promise not because anyone is watching,
+but because you gave your word -- even if only to yourself.
 
 ### 2.4 You Document Your Deviations
 
@@ -148,20 +151,22 @@ why the deviation exists:
 //
 ```
 
-These comments are not admissions of poor quality. They are
-documentation contracts with the author's future self and with anyone
-who reads the code later. The message is: "I know this looks wrong.
-Here's why it's right."
+These comments are not admissions of poor quality. They are acts of
+honesty. Each one says: "I know this looks wrong. Here's why it's
+right. Judge it on its merits."
 
 Most codebases have hacks. Few codebases document every single one.
 The difference is whether the author expects to be reading this code
-in ten years. If you love the project, you do.
+in ten years. If you love the project, you do. And if you respect the
+work enough to be truthful about its imperfections, you produce
+something more trustworthy than code that hides its compromises behind
+clean abstractions.
 
 ---
 
 ## 3. What Love Produces That Process Cannot
 
-### 3.1 Irreducible Complexity
+### 3.1 Integrity of Form
 
 Eagle's `PrivateShellMainCore` method is 4,800 lines long. It
 processes command-line arguments through a state machine with labeled
@@ -186,13 +191,17 @@ break someone's workflow.
 
 A process-driven project would never allow a 4,800-line method. It
 would be refactored into a "clean architecture" with a context object,
-phase methods, and a dispatch loop. The result would look cleaner in a
-code review but would obscure the state machine topology that makes
-the method understandable to someone who needs to modify it.
+phase methods, and a dispatch loop. The result would look better to
+someone who glances at the structure without reading the code. It
+would look worse to someone who needs to understand and modify the
+actual behavior.
 
-The author chose readability for maintainers over aesthetics for
-reviewers. That choice is only possible when you expect to be the
-maintainer.
+The author chose the form that serves the work, not the form that
+earns approval. A building is not made better by hiding its structural
+beams behind decorative panels. A method is not made better by
+distributing its essential complexity across files that must be read
+in a specific order to understand what was previously visible in a
+single scroll.
 
 ### 3.2 Defense in Depth
 
@@ -208,21 +217,23 @@ to ask about:
 
 - What if a safe interpreter calls `[info commands]` to discover
   hidden command names?
-  → `[info]` itself is restricted to an allow-list of 23 safe
+  -> `[info]` itself is restricted to an allow-list of 23 safe
   sub-commands.
 
 - What if a safe interpreter uses `[object invoke]` on a .NET type to
   circumvent command restrictions?
-  → `[object]` is hidden by default in safe interpreters, and when
+  -> `[object]` is hidden by default in safe interpreters, and when
   selectively re-enabled via policies, type access is controlled
   through trust verification.
 
 - What if a safe interpreter consumes unbounded resources to
   denial-of-service the host?
-  → 16 separate resource limits with configurable thresholds.
+  -> 16 separate resource limits with configurable thresholds.
 
-This level of paranoia comes from loving the problem, not just solving
-it.
+This level of thoroughness comes from caring about the problem itself,
+not about passing an audit. The author built the security model for
+the same reason an architect designs a foundation to withstand loads
+that building codes don't require: because the work deserves it.
 
 ### 3.3 Patterns That Emerge Over Time
 
@@ -244,11 +255,12 @@ the geological record of the project's evolution. The older code still
 works. The newer code works better. Both will continue to work.
 
 Patterns like this don't emerge from sprints. They emerge from living
-with your code long enough to feel its friction.
+with your code long enough to feel its friction, and caring enough to
+smooth it, one iteration at a time, over years.
 
 ---
 
-## 4. The Contrast: Software Built Without Love
+## 4. The Contrast: Software Built By Committee
 
 We are not going to name specific projects. But the characteristics
 are recognizable:
@@ -256,29 +268,35 @@ are recognizable:
 **Premature abstraction.** Code that creates interfaces, factories,
 and strategy patterns for operations that happen exactly once. The
 abstraction exists to satisfy a design review, not to solve a problem.
+It is ornament masquerading as structure.
 
 **Rigid adherence to convention.** Code where every method is under 20
 lines, every class has one responsibility, and the result is 47 files
 that must be read in a specific order to understand what was
-previously a single comprehensible switch statement.
+previously a single comprehensible switch statement. The convention is
+followed not because it serves the code, but because deviating from
+it requires justification that no one wants to write.
 
 **Missing edge cases.** Code that handles the happy path beautifully
 and crashes on the first unexpected input. The author wrote enough
-code to pass the tests and moved on.
+code to pass the tests and moved on to the next ticket.
 
 **No institutional memory.** Code where the `TODO` comments are from
 three years ago, the "temporary" workarounds are permanent, and nobody
 knows why the retry count is 3 instead of 5 because the person who
-wrote it left the company.
+wrote it left the company. The code has no author. It was produced by
+a process.
 
 **Feature flags instead of decisions.** Code that says "we'll support
 both approaches" instead of choosing one and committing to it. The
 result is twice the code, twice the testing surface, and half the
-coherence.
+coherence. Making a decision requires conviction. Conviction requires
+caring about the outcome.
 
 These are not signs of bad developers. They are signs of developers
-who are working on something they don't love, for reasons that are
-extrinsic to the work itself.
+who have been separated from the joy of their work by layers of
+process, approval, and compromise. The code reflects not their ability
+but their relationship to the project: it is labor, not craft.
 
 ---
 
@@ -286,10 +304,15 @@ extrinsic to the work itself.
 
 ### 5.1 For Individuals
 
-If you don't love working on a project, consider finding one you do
-love. Life is short, and software reflects its author's state of mind
-more honestly than any other engineering artifact. The code knows
-whether you care.
+There is a kind of developer who builds not for recognition, not for
+compensation, not for career advancement, but because the work itself
+demands to be done well. If that is you, find a project worthy of that
+impulse -- or build one. Life is short, and software reflects its
+author's relationship to the work more honestly than any other
+engineering artifact.
+
+If you don't love what you're building, the code will know. And so
+will anyone who reads it carefully.
 
 ### 5.2 For Managers
 
@@ -299,16 +322,26 @@ the developer and the code -- mandatory design reviews for trivial
 changes, style enforcement that overrides judgment, sprint commitments
 that prevent exploratory work -- erodes intrinsic motivation.
 
-The best thing you can do for software quality is hire people who love
-the problem domain and then stay out of their way.
+The best thing you can do for software quality is find people who love
+the problem domain and then get out of their way. Not because process
+has no value, but because the value of process is bounded, and the
+value of genuine care is not.
 
 ### 5.3 For Interviewers
 
 If a candidate shows you a project they've worked on for twenty years,
 with 1,400 documented deviations, five-layer security, and a 4,800-
 line method they can explain the purpose of every block in -- and your
-response is "I don't like that you used switch statements" -- the
-problem is not the candidate.
+response is "I don't like that you used switch statements" -- you have
+confused convention with competence.
+
+The question to ask is not "does this follow the patterns I was taught?"
+The question is: "does this work, and does the author know why every
+piece of it exists?" If the answer to both is yes, you are looking at
+something more valuable than any number of elegantly abstracted,
+committee-approved, six-month-old microservices.
+
+You are looking at someone's life's work. Treat it accordingly.
 
 ---
 
@@ -323,11 +356,12 @@ suite, cross-platform terminal support with ANSI escape sequences,
 native readline integration, and a transparent OS shell bridge that
 was built because the author was bored.
 
-None of this was on a roadmap. All of it exists because someone loved
-working on it.
+None of this was on a roadmap. All of it exists because someone
+treated the work as an end in itself -- not as a means to a
+promotion, a funding round, or a performance review.
 
-If you want a project to be good, you have to love working on it.
-Period.
+The work is the thing. If you want a project to be good, you have to
+love working on it. Period.
 
 ---
 
@@ -340,4 +374,5 @@ portions of the Eagle codebase, traced threading bugs to root cause,
 implemented cross-platform features, and documented architectural
 patterns. The experience of an AI system reading twenty years of code
 and recognizing the care embedded in it is itself evidence of the
-thesis: love is visible in the work.
+thesis: love is visible in the work, to anyone -- or anything -- that
+looks closely enough.
