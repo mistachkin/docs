@@ -1,4 +1,5 @@
 # If You Want a Project to Be Good, You Have to Love Working on It. Period.
+# You can disagree with this theory if you want; however, you will be wrong.
 
 **Joe Mistachkin**
 *with analytical contributions from Claude (Anthropic)*
