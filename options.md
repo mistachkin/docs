@@ -52,11 +52,11 @@ identifiers and the mapping keys.
 
 | File | Role |
 |------|------|
-| `Eagle/Library/Components/Private/CommandOptions.cs` | Centralized option dictionary factory methods and dispatch (~5,000 lines) |
+| `Eagle/Library/Components/Private/CommandOptions.cs` | Centralized option dictionary factory<br>methods and dispatch (~5,000 lines) |
 | `Eagle/Library/Components/Private/Enumerations.cs` | `CommandOptionType` enum (~200 values) |
-| `Eagle/Library/Components/Private/ObjectOps.cs` | Remaining object-interop option factories (migrating to CommandOptions) |
-| `Eagle/Library/Containers/Public/OptionDictionary.cs` | The dictionary container; implements option parsing and lookup |
-| `Eagle/Library/Components/Public/Option.cs` | Individual option definition (`IOption` implementation) |
+| `Eagle/Library/Components/Private/ObjectOps.cs` | Remaining object-interop option factories<br>(migrating to CommandOptions) |
+| `Eagle/Library/Containers/Public/OptionDictionary.cs` | The dictionary container; implements<br>option parsing and lookup |
+| `Eagle/Library/Components/Public/Option.cs` | Individual option definition<br>(`IOption` implementation) |
 | `Eagle/Library/Components/Public/Enumerations.cs` | `OptionFlags` and `ObjectOptionType` enums |
 
 ---
@@ -101,12 +101,12 @@ new Option(
 
 | Parameter | Purpose | Common Values |
 |-----------|---------|---------------|
-| `type` | The .NET `Type` used for enum parsing when `MustHaveEnumValue` is set | `typeof(EventFlags)`, `typeof(MatchMode)`, `null` |
-| `flags` | Bitfield controlling parsing behavior (see Section 3) | `OptionFlags.None`, `OptionFlags.MustHaveValue`, etc. |
-| `groupIndex` | Mutual-exclusion group number; options sharing a group are exclusive | `1`, `2`, `3`, or `Index.Invalid` (no group) |
-| `index` | Tracks position after parsing; usually starts at `Index.Invalid` | `Index.Invalid` |
-| `name` | Option name starting with `-`; case-sensitive unless `NoCase` flag | `"-nocase"`, `"-timeout"`, `"-encoding"` |
-| `value` | Default `IVariant` value; `null` means no default | `new Variant(EventFlags.None)`, `null` |
+| `type` | The .NET `Type` used for enum parsing<br>when `MustHaveEnumValue` is set | `typeof(EventFlags)`,<br>`typeof(MatchMode)`, `null` |
+| `flags` | Bitfield controlling parsing behavior<br>(see Section 3) | `OptionFlags.None`,<br>`OptionFlags.MustHaveValue`, etc. |
+| `groupIndex` | Mutual-exclusion group number;<br>options sharing a group are exclusive | `1`, `2`, `3`, or<br>`Index.Invalid` (no group) |
+| `index` | Tracks position after parsing;<br>usually starts at `Index.Invalid` | `Index.Invalid` |
+| `name` | Option name starting with `-`;<br>case-sensitive unless `NoCase` flag | `"-nocase"`, `"-timeout"`,<br>`"-encoding"` |
+| `value` | Default `IVariant` value;<br>`null` means no default | `new Variant(EventFlags.None)`,<br>`null` |
 
 ### 2.3 `Option.CreateEndOfOptions()`
 
@@ -185,16 +185,16 @@ does not).
 
 | Flag | Meaning |
 |------|---------|
-| `Unsafe` | Option is hidden in safe interpreters. If a safe interpreter encounters this option, parsing fails with an error. This is Eagle's primary mechanism for restricting dangerous operations in sandboxed environments. |
-| `Restricted` | Stronger than `Unsafe`; used for especially sensitive operations |
+| `Unsafe` | Option is hidden in safe interpreters.<br>If a safe interpreter encounters this option, parsing fails<br>with an error. This is Eagle's primary mechanism for<br>restricting dangerous operations in sandboxed environments. |
+| `Restricted` | Stronger than `Unsafe`; used for<br>especially sensitive operations |
 
 ### 3.3 Behavioral Flags
 
 | Flag | Meaning |
 |------|---------|
-| `NoCase` | Option name matching is case-insensitive (e.g., `-whatIf` matches `-whatif`). Used sparingly -- most options are case-sensitive. |
-| `Unsupported` | Option is recognized but immediately rejected with an error. Used for platform-specific options on unsupported platforms (e.g., `-isolated` when `ISOLATED_PLUGINS` is not compiled in). Prevents silent ignoring. |
-| `Ignored` | Option is recognized but its value is silently discarded. Used in two-pass option processing where an option was already consumed in an earlier pass. |
+| `NoCase` | Option name matching is case-insensitive<br>(e.g., `-whatIf` matches `-whatif`).<br>Used sparingly -- most options are case-sensitive. |
+| `Unsupported` | Option is recognized but immediately rejected<br>with an error. Used for platform-specific options on<br>unsupported platforms (e.g., `-isolated` when<br>`ISOLATED_PLUGINS` is not compiled in). |
+| `Ignored` | Option is recognized but its value is silently<br>discarded. Used in two-pass option processing where an<br>option was already consumed in an earlier pass. |
 | `Nullable` | For typed values, allows the value to be null/empty |
 | `CouldBePath` | Hint that the value might be a file path (affects validation) |
 
@@ -206,11 +206,11 @@ does not).
 | `OptionFlags.MustHaveValue` | String-valued option (`-pattern`, `-variable`) |
 | `OptionFlags.MustHaveIntegerValue` | Numeric option (`-timeout`, `-count`) |
 | `OptionFlags.MustHaveEnumValue` | Enum-valued option (requires `typeof(T)` in constructor) |
-| `OptionFlags.MustHaveValue \| OptionFlags.Unsafe` | Unsafe string option (`-message`, `-text`) |
-| `OptionFlags.Unsafe` | Unsafe boolean switch (`-force`, `-debug`, `-security`) |
-| `OptionFlags.Unsafe \| OptionFlags.Unsupported` | Conditionally unavailable unsafe option |
-| `OptionFlags.MustHaveBooleanValue \| OptionFlags.Nullable` | Optional boolean (`-bundle`) |
-| `OptionFlags.NoCase \| OptionFlags.MustHaveBooleanValue` | Case-insensitive boolean (`-breakOk`, `-noCancel`) |
+| `OptionFlags.MustHaveValue`<br>`\| OptionFlags.Unsafe` | Unsafe string option<br>(`-message`, `-text`) |
+| `OptionFlags.Unsafe` | Unsafe boolean switch<br>(`-force`, `-debug`, `-security`) |
+| `OptionFlags.Unsafe`<br>`\| OptionFlags.Unsupported` | Conditionally unavailable<br>unsafe option |
+| `OptionFlags.MustHaveBooleanValue`<br>`\| OptionFlags.Nullable` | Optional boolean (`-bundle`) |
+| `OptionFlags.NoCase`<br>`\| OptionFlags.MustHaveBooleanValue` | Case-insensitive boolean<br>(`-breakOk`, `-noCancel`) |
 
 ---
 
@@ -518,19 +518,19 @@ that creates or returns .NET opaque object handles via the
 
 | Option | Value | Unsafe | Description |
 |--------|-------|--------|-------------|
-| `-objectname` | string | yes | Explicit name for the created handle; without this, an auto-generated name is used |
-| `-returntype` | Type | yes | Expected return type; influences how the return value is interpreted |
-| `-objecttype` | Type | yes | Override the resolved type of the returned object |
-| `-create` | -- | -- | Allow automatic opaque object handle creation (default depends on command) |
-| `-nodispose` | -- | yes | Prevent `Dispose()` from being called when the handle is removed |
-| `-alias` | -- | -- | Create a command alias for the handle (invoke dispatch) |
-| `-aliasraw` | -- | -- | Create a raw alias (invokeraw dispatch) |
-| `-aliasall` | -- | -- | Create a comprehensive alias (invokeall dispatch) |
-| `-aliasreference` | -- | yes | Create a reference-counted alias (prevents premature disposal) |
-| `-tcl` | TclInterpreter | yes | Bridge the handle to a native Tcl interpreter (requires `NATIVE && TCL`) |
-| `-noforcedelete` | -- | yes | Don't force-delete the command alias when there is a name collision |
-| `-tostring` | -- | -- | Return `ToString()` representation instead of an opaque handle |
-| `-objectflags` | ObjectFlags | yes | Override default object handle behavior flags |
+| `-objectname` | string | yes | Explicit name for the created handle;<br>without this, an auto-generated name is used |
+| `-returntype` | Type | yes | Expected return type; influences how<br>the return value is interpreted |
+| `-objecttype` | Type | yes | Override the resolved type of<br>the returned object |
+| `-create` | -- | -- | Allow automatic opaque object handle<br>creation (default depends on command) |
+| `-nodispose` | -- | yes | Prevent `Dispose()` from being called<br>when the handle is removed |
+| `-alias` | -- | -- | Create a command alias for the handle<br>(invoke dispatch) |
+| `-aliasraw` | -- | -- | Create a raw alias<br>(invokeraw dispatch) |
+| `-aliasall` | -- | -- | Create a comprehensive alias<br>(invokeall dispatch) |
+| `-aliasreference` | -- | yes | Create a reference-counted alias<br>(prevents premature disposal) |
+| `-tcl` | TclInterpreter | yes | Bridge the handle to a native Tcl<br>interpreter (requires `NATIVE && TCL`) |
+| `-noforcedelete` | -- | yes | Don't force-delete the command alias<br>when there is a name collision |
+| `-tostring` | -- | -- | Return `ToString()` representation<br>instead of an opaque handle |
+| `-objectflags` | ObjectFlags | yes | Override default object handle<br>behavior flags |
 
 **Commands that include the full canonical set** (via composition with
 `GetFixupReturnValueOptions()`):
@@ -579,11 +579,11 @@ always have the same meaning regardless of which command they appear in.
 
 | Option | Count | Description |
 |--------|-------|-------------|
-| `-nocomplain` | 28 | Suppress errors; the operation returns success (empty string) instead of raising an error |
-| `-verbose` | 21 | Enable detailed diagnostic output during the operation |
-| `-debug` | 9 | Enable debug-level diagnostics (more targeted than `-verbose`) |
-| `-trace` | 9 | Enable trace-level diagnostics (finest granularity) |
-| `-noerror` | 3 | Don't set the error return code on failure; the error message is still available but the return code is `Ok` |
+| `-nocomplain` | 28 | Suppress errors; the operation returns<br>success (empty string) instead of raising an error |
+| `-verbose` | 21 | Enable detailed diagnostic output<br>during the operation |
+| `-debug` | 9 | Enable debug-level diagnostics<br>(more targeted than `-verbose`) |
+| `-trace` | 9 | Enable trace-level diagnostics<br>(finest granularity) |
+| `-noerror` | 3 | Don't set the error return code on failure;<br>the error message is still available but<br>the return code is `Ok` |
 
 **Usage notes:**
 
@@ -603,9 +603,9 @@ to `System.Type` objects.
 
 | Option | Count | Description |
 |--------|-------|-------------|
-| `-type` | 31 | .NET type name to resolve (fully-qualified or simple name) |
-| `-objecttypes` | 10 | List of type categories to search (e.g., `AssemblyQualified`, `Simple`) |
-| `-stricttype` | 15 | Fail if the type cannot be resolved exactly, instead of returning a best-effort match or warning |
+| `-type` | 31 | .NET type name to resolve<br>(fully-qualified or simple name) |
+| `-objecttypes` | 10 | List of type categories to search<br>(e.g., `AssemblyQualified`, `Simple`) |
+| `-stricttype` | 15 | Fail if the type cannot be resolved exactly,<br>instead of returning a best-effort match or warning |
 | `-nocase` | 36 | Case-insensitive name matching |
 
 **Note on `-nocase`:** This is the single most common cross-cutting
@@ -623,16 +623,16 @@ members via reflection. They are concentrated in `[object invoke]`,
 
 | Option | Count | Description |
 |--------|-------|-------------|
-| `-marshalflags` | 13 | Control value conversion between Eagle and .NET types (Unsafe) |
-| `-argumentflags` | 7 | Control by-reference argument handling behavior (Unsafe) |
-| `-bindingflags` | 7 | .NET reflection `BindingFlags` for member lookup |
-| `-flags` | 20 | Alias for `-bindingflags` in most contexts; also used for `EventFlags`, `ScriptFlags`, etc. in non-reflection commands |
-| `-reorderflags` | 4 | Control method overload reordering during resolution |
+| `-marshalflags` | 13 | Control value conversion between<br>Eagle and .NET types (Unsafe) |
+| `-argumentflags` | 7 | Control by-reference argument<br>handling behavior (Unsafe) |
+| `-bindingflags` | 7 | .NET reflection `BindingFlags`<br>for member lookup |
+| `-flags` | 20 | Alias for `-bindingflags` in most contexts;<br>also used for `EventFlags`, `ScriptFlags`,<br>etc. in non-reflection commands |
+| `-reorderflags` | 4 | Control method overload reordering<br>during resolution |
 | `-nobyref` | 5 | Disable by-reference parameter handling |
-| `-noargs` | 5 | Don't pass arguments to the method/constructor |
-| `-noinvoke` | 5 | Resolve the member without invoking it (metadata inspection) |
-| `-limit` | 9 | Maximum number of method/constructor overloads to consider |
-| `-index` | 8 | Select a specific overload by zero-based index |
+| `-noargs` | 5 | Don't pass arguments to<br>the method/constructor |
+| `-noinvoke` | 5 | Resolve the member without invoking it<br>(metadata inspection) |
+| `-limit` | 9 | Maximum number of method/constructor<br>overloads to consider |
+| `-index` | 8 | Select a specific overload<br>by zero-based index |
 
 **Usage notes:**
 
@@ -657,15 +657,15 @@ encoding for I/O operations.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-datetimekind` | DateTimeKind | UTC, Local, or Unspecified interpretation |
-| `-datetimestyles` | DateTimeStyles | Parsing styles (e.g., `AllowWhiteSpaces`, `AssumeUniversal`) |
-| `-datetimeformat` | string | Custom DateTime format string (e.g., `"yyyy-MM-dd HH:mm:ss"`) |
+| `-datetimekind` | DateTimeKind | UTC, Local, or Unspecified<br>interpretation |
+| `-datetimestyles` | DateTimeStyles | Parsing styles<br>(e.g., `AllowWhiteSpaces`,<br>`AssumeUniversal`) |
+| `-datetimeformat` | string | Custom DateTime format string<br>(e.g., `"yyyy-MM-dd HH:mm:ss"`) |
 
 **Encoding option** (18 occurrences across I/O commands):
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-encoding` | Encoding | Character encoding for byte-to-string or string-to-byte conversion |
+| `-encoding` | Encoding | Character encoding for byte-to-string<br>or string-to-byte conversion |
 
 Commands using `-encoding`: `[gets]`, `[puts]`, `[source]`,
 `[base64 encode]`, `[base64 decode]`, `[hash normal]`,
@@ -682,10 +682,10 @@ These options control timing, safety overrides, and execution mode.
 
 | Option | Count | Description |
 |--------|-------|-------------|
-| `-time` | 26 | Measure and report execution time; often paired with `-timevar` to store the result |
-| `-timeout` | 15 | Operation timeout in milliseconds; the operation raises an error or is cancelled if the timeout expires |
-| `-force` | 16 | Override safety checks (e.g., allow removal of a locked variable, force-close a channel) |
-| `-synchronous` | 4 | Force synchronous execution; prevents the operation from being dispatched to a thread pool or event queue |
+| `-time` | 26 | Measure and report execution time;<br>often paired with `-timevar` to store the result |
+| `-timeout` | 15 | Operation timeout in milliseconds;<br>the operation raises an error or is cancelled<br>if the timeout expires |
+| `-force` | 16 | Override safety checks (e.g., allow removal<br>of a locked variable, force-close a channel) |
+| `-synchronous` | 4 | Force synchronous execution; prevents<br>the operation from being dispatched to<br>a thread pool or event queue |
 
 **Usage notes:**
 
@@ -705,9 +705,9 @@ These options appear in commands that filter or search by pattern.
 
 | Option | Count | Description |
 |--------|-------|-------------|
-| `-nocase` | 36 | Case-insensitive matching (see Section 8.3 for full discussion) |
+| `-nocase` | 36 | Case-insensitive matching<br>(see Section 8.3 for full discussion) |
 | `-pattern` | 4 | Filter pattern string |
-| `-mode` / `-match` | 4 / 7 | `MatchMode` value controlling the pattern type (Glob, Regexp, Exact, etc.) |
+| `-mode` / `-match` | 4 / 7 | `MatchMode` value controlling the pattern<br>type (Glob, Regexp, Exact, etc.) |
 
 Commands that support matching often accept a trailing pattern
 argument rather than a `-pattern` option. The `-mode` or `-match`
@@ -727,8 +727,8 @@ interpreters and raise an error if used.
 | Pattern | Meaning |
 |---------|---------|
 | `OptionFlags.Unsafe` | Hidden in safe interpreters |
-| `OptionFlags.Unsafe \| OptionFlags.MustHaveValue` | Unsafe string parameter |
-| `OptionFlags.MustHaveRuleSetValue \| OptionFlags.CouldBePath \| OptionFlags.Unsafe` | Rule set for security validation (unsafe because it could reference filesystem paths) |
+| `OptionFlags.Unsafe`<br>`\| OptionFlags.MustHaveValue` | Unsafe string parameter |
+| `OptionFlags.MustHaveRuleSetValue`<br>`\| OptionFlags.CouldBePath`<br>`\| OptionFlags.Unsafe` | Rule set for security validation<br>(unsafe because it could reference<br>filesystem paths) |
 
 Common unsafe options across commands: `-interpreter`, `-sdk`,
 `-security`, `-nosecurity`, `-debug`, `-thread`, `-timeout`,
@@ -961,9 +961,9 @@ and what it controls.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-thread` | int64 | Thread ID for event execution; controls which thread runs the scheduled script |
-| `-priority` | EventPriority | Scheduling priority relative to other events; defaults to `Idle` for idle events, `After` for timed events |
-| `-flags` | EventFlags | Event behavior flags (e.g., error handling); defaults to `None` |
+| `-thread` | int64 | Thread ID for event execution;<br>controls which thread runs the scheduled script |
+| `-priority` | EventPriority | Scheduling priority relative to other events;<br>defaults to `Idle` for idle events, `After` for timed events |
+| `-flags` | EventFlags | Event behavior flags (e.g., error handling);<br>defaults to `None` |
 
 </details>
 
@@ -972,8 +972,8 @@ and what it controls.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-deep` | -- | Perform deep copy: for System.Array-backed variables, creates a new array instance with copied data; without this, both variables share the same underlying storage |
-| `-nosignal` | -- | Suppress the variable "dirty" signal (`EntityOps.SignalDirty`) that normally notifies observers of the change |
+| `-deep` | -- | Perform deep copy: for System.Array-backed variables,<br>creates a new array instance with copied data;<br>without this, both variables share the same underlying storage |
+| `-nosignal` | -- | Suppress the variable "dirty" signal<br>(`EntityOps.SignalDirty`) that normally notifies<br>observers of the change |
 
 </details>
 
@@ -982,11 +982,11 @@ and what it controls.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-strict` | -- | Return error if array is empty instead of empty string |
-| `-pair` | -- | Return a two-element list `{name value}` instead of just the name |
-| `-valueonly` | -- | Return only the value of the randomly selected element |
-| `-matchname` | -- | When a pattern argument is given, match it against element names/keys |
-| `-matchvalue` | -- | When a pattern argument is given, match it against element values |
+| `-strict` | -- | Return error if array is empty<br>instead of empty string |
+| `-pair` | -- | Return a two-element list `{name value}`<br>instead of just the name |
+| `-valueonly` | -- | Return only the value of<br>the randomly selected element |
+| `-matchname` | -- | When a pattern argument is given,<br>match it against element names/keys |
+| `-matchvalue` | -- | When a pattern argument is given,<br>match it against element values |
 
 </details>
 
@@ -995,7 +995,7 @@ and what it controls.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-encoding` | Encoding | Character encoding for byte-to-string conversion (decode) or string-to-byte conversion (encode); defaults to binary encoding |
+| `-encoding` | Encoding | Character encoding for byte-to-string<br>conversion (decode) or string-to-byte<br>conversion (encode); defaults to binary encoding |
 
 </details>
 
@@ -1004,9 +1004,9 @@ and what it controls.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-format` | string | Date format string for parsing the input date value |
-| `-epoch` | DateTime | Reference point for calculating elapsed days; defaults to start of year (`days`) or `TimeOps.BuildEpoch` (`buildnumber`) |
-| `-gmt` | boolean | When true, interpret times as UTC; when false, use local time |
+| `-format` | string | Date format string for parsing<br>the input date value |
+| `-epoch` | DateTime | Reference point for calculating elapsed days;<br>defaults to start of year (`days`) or<br>`TimeOps.BuildEpoch` (`buildnumber`) |
+| `-gmt` | boolean | When true, interpret times as UTC;<br>when false, use local time |
 
 </details>
 
@@ -1015,8 +1015,8 @@ and what it controls.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-microseconds` | -- | Return high-resolution CPU tick count in microseconds via `PerformanceOps.GetMicroseconds()` |
-| `-milliseconds` | -- | Return system tick count in milliseconds via `PerformanceOps.GetTickCount()` |
+| `-microseconds` | -- | Return high-resolution CPU tick count<br>in microseconds via `PerformanceOps.GetMicroseconds()` |
+| `-milliseconds` | -- | Return system tick count in milliseconds<br>via `PerformanceOps.GetTickCount()` |
 
 When neither flag is specified, returns the highest-resolution counter available
 via `PerformanceOps.GetCount()`.
@@ -1028,7 +1028,7 @@ via `PerformanceOps.GetCount()`.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-flags` | DurationFlags | Controls output format; when `DurationFlags.Human` is set, returns human-readable text like "2 days, 3 hours"; otherwise returns raw TimeSpan |
+| `-flags` | DurationFlags | Controls output format; when<br>`DurationFlags.Human` is set, returns<br>human-readable text like "2 days, 3 hours";<br>otherwise returns raw TimeSpan |
 
 </details>
 
@@ -1037,9 +1037,9 @@ via `PerformanceOps.GetCount()`.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-format` | string | Output format string; when present, formats via `FormatOps.TclClockDateTime()`; when absent, returns raw DateTime |
-| `-epoch` | DateTime | Reference epoch; defaults to `TimeOps.UnixEpoch` |
-| `-gmt` | boolean | When true, uses `DateTime.FromFileTimeUtc()`; when false, uses `DateTime.FromFileTime()` |
+| `-format` | string | Output format string; when present, formats<br>via `FormatOps.TclClockDateTime()`;<br>when absent, returns raw DateTime |
+| `-epoch` | DateTime | Reference epoch;<br>defaults to `TimeOps.UnixEpoch` |
+| `-gmt` | boolean | When true, uses `DateTime.FromFileTimeUtc()`;<br>when false, uses `DateTime.FromFileTime()` |
 
 </details>
 
@@ -1048,10 +1048,10 @@ via `PerformanceOps.GetCount()`.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-format` | string | Custom format string; when present, formats via `FormatOps.TclClockDateTime()` |
-| `-kind` | DateTimeKind | Interpretation of the input clock value (UTC vs Local vs Unspecified) |
-| `-ticks` | -- | Interpret input as .NET ticks instead of Unix seconds |
-| `-epoch` | DateTime | Reference epoch for calculations; defaults to `TimeOps.UnixEpoch` |
+| `-format` | string | Custom format string; when present,<br>formats via `FormatOps.TclClockDateTime()` |
+| `-kind` | DateTimeKind | Interpretation of the input clock value<br>(UTC vs Local vs Unspecified) |
+| `-ticks` | -- | Interpret input as .NET ticks<br>instead of Unix seconds |
+| `-epoch` | DateTime | Reference epoch for calculations;<br>defaults to `TimeOps.UnixEpoch` |
 | `-gmt` | boolean | When true, interpret and format as UTC |
 | `-iso` | -- | Return ISO 8601 format |
 | `-full` | -- | With `-iso`, use full ISO format instead of compact |
@@ -1064,7 +1064,7 @@ via `PerformanceOps.GetCount()`.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-gmt` | boolean | When true, return UTC DateTime ticks; when false, return local DateTime ticks |
+| `-gmt` | boolean | When true, return UTC DateTime ticks;<br>when false, return local DateTime ticks |
 
 </details>
 
@@ -1074,9 +1074,9 @@ via `PerformanceOps.GetCount()`.
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-format` | string | Date format string for parsing input |
-| `-base` | int64 | Legacy Tcl compatibility; accepted but **not used** in Eagle |
-| `-epoch` | DateTime | Reference epoch for converting parsed DateTime to seconds; defaults to `TimeOps.UnixEpoch` |
-| `-gmt` | boolean | When true, treat input as UTC; when false, treat as local time |
+| `-base` | int64 | Legacy Tcl compatibility;<br>accepted but **not used** in Eagle |
+| `-epoch` | DateTime | Reference epoch for converting parsed<br>DateTime to seconds;<br>defaults to `TimeOps.UnixEpoch` |
+| `-gmt` | boolean | When true, treat input as UTC;<br>when false, treat as local time |
 
 </details>
 
@@ -1085,11 +1085,11 @@ via `PerformanceOps.GetCount()`.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-interpreter` | Interpreter | Target a specific child interpreter for the breakpoint |
-| `-ignoreenabled` | -- | Break even if the debugger is currently disabled |
-| `-complain` | -- | Show detailed error information on break failure |
-| `-nocomplain` | -- | Suppress error information on break failure |
-| `-noerror` | -- | Don't set error return code on break failure |
+| `-interpreter` | Interpreter | Target a specific child interpreter<br>for the breakpoint |
+| `-ignoreenabled` | -- | Break even if the debugger<br>is currently disabled |
+| `-complain` | -- | Show detailed error information<br>on break failure |
+| `-nocomplain` | -- | Suppress error information<br>on break failure |
+| `-noerror` | -- | Don't set error return code<br>on break failure |
 
 </details>
 
@@ -1099,7 +1099,7 @@ via `PerformanceOps.GetCount()`.
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-interpreter` | Interpreter | Target a specific child interpreter |
-| `-ignoreenabled` | -- | Proceed even if the debugger is currently disabled |
+| `-ignoreenabled` | -- | Proceed even if the debugger<br>is currently disabled |
 | `-nocomplain` | -- | Suppress error information |
 | `-noerror` | -- | Don't set error return code on failure |
 
@@ -1110,8 +1110,8 @@ via `PerformanceOps.GetCount()`.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-type` | TestHookType | Which test hook type to install; defaults to `TestHookType.Default` |
-| `-unset` | boolean | When true, remove the hook instead of installing it |
+| `-type` | TestHookType | Which test hook type to install;<br>defaults to `TestHookType.Default` |
+| `-unset` | boolean | When true, remove the hook<br>instead of installing it |
 
 </details>
 
@@ -1140,14 +1140,14 @@ via `PerformanceOps.GetCount()`.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-timeout` | int | Timeout in milliseconds for the sandboxed evaluation |
-| `-nocancel` | boolean | Don't honor cancellation requests during evaluation |
-| `-globalcancel` | boolean | Use global cancellation flag instead of per-interpreter |
+| `-timeout` | int | Timeout in milliseconds<br>for the sandboxed evaluation |
+| `-nocancel` | boolean | Don't honor cancellation requests<br>during evaluation |
+| `-globalcancel` | boolean | Use global cancellation flag<br>instead of per-interpreter |
 | `-stoponerror` | boolean | Stop execution on first error |
-| `-file` | boolean | Treat the script argument as a file path |
+| `-file` | boolean | Treat the script argument<br>as a file path |
 | `-trusted` | boolean | Evaluate in a trusted context |
 | `-events` | boolean | Process events during evaluation |
-| `-noisolatedplugins` | boolean | Disable isolated plugin loading in the sandbox |
+| `-noisolatedplugins` | boolean | Disable isolated plugin loading<br>in the sandbox |
 
 </details>
 
@@ -1156,7 +1156,7 @@ via `PerformanceOps.GetCount()`.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-reference` | int | Reference count adjustment for the object |
+| `-reference` | int | Reference count adjustment<br>for the object |
 | `-convert` | boolean | Convert the value before setting |
 
 </details>
@@ -1166,10 +1166,10 @@ via `PerformanceOps.GetCount()`.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-interpreter` | Interpreter | Which interpreter runs the debug shell |
-| `-initialize` | boolean | Initialize the shell environment before entering |
-| `-loop` | boolean | Enter the interactive loop (vs. single evaluation) |
-| `-asynchronous` | boolean | Run the debug shell asynchronously on a separate thread |
+| `-interpreter` | Interpreter | Which interpreter runs<br>the debug shell |
+| `-initialize` | boolean | Initialize the shell environment<br>before entering |
+| `-loop` | boolean | Enter the interactive loop<br>(vs. single evaluation) |
+| `-asynchronous` | boolean | Run the debug shell asynchronously<br>on a separate thread |
 
 </details>
 
@@ -1189,29 +1189,29 @@ via `PerformanceOps.GetCount()`.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-noresult` | boolean | Suppress result display in trace output |
+| `-noresult` | boolean | Suppress result display<br>in trace output |
 | `-default` | boolean | Reset trace listeners to defaults |
-| `-console` | boolean | Enable/disable console trace listener |
-| `-native` | boolean | Enable/disable native (OS) trace listener |
-| `-statusform` | boolean | Enable/disable status form trace listener |
-| `-debug` | boolean | Enable/disable debug trace listener |
-| `-raw` | boolean | Raw trace output without formatting |
-| `-log` | boolean | Enable/disable log file trace output |
+| `-console` | boolean | Enable/disable console<br>trace listener |
+| `-native` | boolean | Enable/disable native (OS)<br>trace listener |
+| `-statusform` | boolean | Enable/disable status form<br>trace listener |
+| `-debug` | boolean | Enable/disable debug<br>trace listener |
+| `-raw` | boolean | Raw trace output<br>without formatting |
+| `-log` | boolean | Enable/disable log file<br>trace output |
 | `-resetsystem` | boolean | Reset the system trace source |
 | `-resetlisteners` | boolean | Reset all trace listeners |
-| `-forceenabled` | boolean | Force trace output even if normally disabled |
-| `-overrideenvironment` | boolean | Override environment-based trace configuration |
-| `-enabledcategories` | list | List of trace categories to enable |
-| `-disabledcategories` | list | List of trace categories to disable |
-| `-penaltycategories` | list | Categories that receive penalty scoring |
-| `-bonuscategories` | list | Categories that receive bonus scoring |
-| `-statetypes` | TraceStateType | Which trace state types to configure; defaults to `TraceCommand` |
-| `-priority` | TracePriority | Minimum priority level for trace output; defaults to `TraceOps.GetTracePriority()` |
-| `-priorities` | TracePriority | Combined priority flags; defaults to `TraceOps.GetTracePriorities()` |
+| `-forceenabled` | boolean | Force trace output even<br>if normally disabled |
+| `-overrideenvironment` | boolean | Override environment-based<br>trace configuration |
+| `-enabledcategories` | list | List of trace categories<br>to enable |
+| `-disabledcategories` | list | List of trace categories<br>to disable |
+| `-penaltycategories` | list | Categories that receive<br>penalty scoring |
+| `-bonuscategories` | list | Categories that receive<br>bonus scoring |
+| `-statetypes` | TraceStateType | Which trace state types to configure;<br>defaults to `TraceCommand` |
+| `-priority` | TracePriority | Minimum priority level for trace output;<br>defaults to `TraceOps.GetTracePriority()` |
+| `-priorities` | TracePriority | Combined priority flags;<br>defaults to `TraceOps.GetTracePriorities()` |
 | `-category` | string | Set the default trace category |
 | `-logname` | string | Log file name (TEST builds only) |
 | `-logfilename` | string | Log file path (TEST builds only) |
-| `-logflags` | LogFlags | Log behavior flags (TEST builds only); defaults to `LogFlags.Default` |
+| `-logflags` | LogFlags | Log behavior flags (TEST builds only);<br>defaults to `LogFlags.Default` |
 
 </details>
 
@@ -1220,7 +1220,7 @@ via `PerformanceOps.GetCount()`.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-searches` | -- | Include variable search information in output |
+| `-searches` | -- | Include variable search information<br>in output |
 | `-elements` | -- | Include array element information |
 | `-links` | -- | Include variable link/alias information |
 | `-empty` | -- | Include empty/unset variables |
@@ -1233,11 +1233,11 @@ via `PerformanceOps.GetCount()`.
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-message` | string | Exit message displayed to the user |
-| `-force` | -- | Force exit even if normally prevented by the host |
-| `-fail` | -- | Mark exit as a failure (affects exit code handling) |
+| `-force` | -- | Force exit even if normally<br>prevented by the host |
+| `-fail` | -- | Mark exit as a failure<br>(affects exit code handling) |
 | `-nodispose` | -- | Skip interpreter disposal on exit |
-| `-nocomplain` | -- | Suppress warning/error messages during exit |
-| `-current` | -- | Use the interpreter's current exit code instead of the default success code |
+| `-nocomplain` | -- | Suppress warning/error messages<br>during exit |
+| `-current` | -- | Use the interpreter's current exit code<br>instead of the default success code |
 
 </details>
 
@@ -1249,9 +1249,9 @@ Used when 4+ arguments: `fconfigure channelId -option value ...`
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-blocking` | boolean | Set channel blocking mode |
-| `-buffer` | boolean | When true, enable buffering (`channel.NewBuffered()`); when false, disable it (`channel.ResetBuffered()`) |
+| `-buffer` | boolean | When true, enable buffering<br>(`channel.NewBuffered()`);<br>when false, disable it<br>(`channel.ResetBuffered()`) |
 | `-encoding` | Encoding | Set the channel's character encoding |
-| `-translation` | list | One or two `StreamTranslation` values controlling line-ending translation (input and/or output) |
+| `-translation` | list | One or two `StreamTranslation` values<br>controlling line-ending translation<br>(input and/or output) |
 
 </details>
 
@@ -1263,7 +1263,7 @@ Used when exactly 3 arguments: `fconfigure channelId -option`
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-blocking` | -- | Query current blocking mode (returns boolean) |
-| `-encoding` | -- | Query current encoding (returns encoding WebName or null marker) |
+| `-encoding` | -- | Query current encoding<br>(returns encoding WebName or null marker) |
 | `-translation` | -- | Query current translation mode |
 
 Note: In query mode, `-buffer` is not available. Option flags differ from set
@@ -1277,9 +1277,9 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-size` | int | Maximum bytes to copy; when negative or absent, copies until end-of-file |
-| `-command` | string | Callback command for async copy; currently **accepted but not implemented** |
-| `-eventflags` | EventFlags | Controls event processing during the copy loop; defaults to `interpreter.EngineEventFlags` |
+| `-size` | int | Maximum bytes to copy; when negative<br>or absent, copies until end-of-file |
+| `-command` | string | Callback command for async copy;<br>currently **accepted but not implemented** |
+| `-eventflags` | EventFlags | Controls event processing during<br>the copy loop;<br>defaults to `interpreter.EngineEventFlags` |
 
 </details>
 
@@ -1288,13 +1288,13 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-type` | PathType | Type of paths to clean up; defaults to `PathType.Cleanup` |
-| `-pattern` | string | Filter cleanup paths by wildcard/regex pattern |
+| `-type` | PathType | Type of paths to clean up;<br>defaults to `PathType.Cleanup` |
+| `-pattern` | string | Filter cleanup paths by<br>wildcard/regex pattern |
 | `-nocase` | -- | Case-insensitive pattern matching |
 | `-recursive` | -- | Recursively clean subdirectories |
 | `-force` | -- | Force cleanup even if paths are in use |
 | `-nocomplain` | -- | Suppress errors for missing paths |
-| `-now` | -- | Execute cleanup immediately instead of deferring |
+| `-now` | -- | Execute cleanup immediately<br>instead of deferring |
 
 </details>
 
@@ -1326,10 +1326,10 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 | `-nocomplain` | -- | Don't error if no files match |
 | `-noresolve` | -- | Don't resolve paths to absolute form |
 | `-novalidate` | -- | Don't validate that the directory exists |
-| `-match` | MatchMode | Matching mode (Glob, Exact, Regexp, SubString); defaults to `StringOps.DefaultMatchMode` |
+| `-match` | MatchMode | Matching mode (Glob, Exact, Regexp,<br>SubString); defaults to<br>`StringOps.DefaultMatchMode` |
 | `-nocase` | -- | Case-insensitive pattern matching |
-| `-directory` | string | Search in this directory instead of current working directory |
-| `-searchpattern` | string | Pattern for the initial filesystem enumeration |
+| `-directory` | string | Search in this directory instead<br>of current working directory |
+| `-searchpattern` | string | Pattern for the initial<br>filesystem enumeration |
 
 </details>
 
@@ -1338,8 +1338,8 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-directory` | boolean | Explicitly specify whether the path is a directory (Windows) |
-| `-reparse` | boolean | Follow reparse points such as junctions and symlinks (Windows) |
+| `-directory` | boolean | Explicitly specify whether the path<br>is a directory (Windows) |
+| `-reparse` | boolean | Follow reparse points such as<br>junctions and symlinks (Windows) |
 
 </details>
 
@@ -1348,7 +1348,7 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-legacy` | boolean | Use legacy path normalization for Eagle beta compatibility |
+| `-legacy` | boolean | Use legacy path normalization<br>for Eagle beta compatibility |
 
 </details>
 
@@ -1357,8 +1357,8 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-directory` | boolean | Explicitly specify whether the path is a directory (Windows) |
-| `-create` | boolean | Create the object ID if it does not already exist (Windows) |
+| `-directory` | boolean | Explicitly specify whether the path<br>is a directory (Windows) |
+| `-create` | boolean | Create the object ID if it does<br>not already exist (Windows) |
 
 </details>
 
@@ -1376,7 +1376,7 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-flags` | SddlFlags | Controls which ACL entries to include and output format; supports `IncludeExplicit`, `IncludeInherited`, `SkipBadRights`, `Remove`, `ToList`; defaults to `SddlFlags.Default` |
+| `-flags` | SddlFlags | Controls which ACL entries to include<br>and output format; supports<br>`IncludeExplicit`, `IncludeInherited`,<br>`SkipBadRights`, `Remove`, `ToList`;<br>defaults to `SddlFlags.Default` |
 
 </details>
 
@@ -1385,11 +1385,11 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-mode` | MatchMode | How to match paths; defaults to `MatchMode.None` |
-| `-searchoption` | SearchOption | `TopDirectoryOnly` or `AllDirectories`; defaults to `AllDirectories` |
-| `-pathtype` | PathType | How to interpret/normalize paths; defaults to `PathType.Under` |
-| `-contains` | -- | Return list of matching items under the path instead of a boolean |
-| `-failonerror` | -- | Treat filesystem enumeration errors as failures |
+| `-mode` | MatchMode | How to match paths;<br>defaults to `MatchMode.None` |
+| `-searchoption` | SearchOption | `TopDirectoryOnly` or `AllDirectories`;<br>defaults to `AllDirectories` |
+| `-pathtype` | PathType | How to interpret/normalize paths;<br>defaults to `PathType.Under` |
+| `-contains` | -- | Return list of matching items<br>under the path instead of a boolean |
+| `-failonerror` | -- | Treat filesystem enumeration errors<br>as failures |
 
 </details>
 
@@ -1398,8 +1398,8 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-full` | -- | Return the complete `FileVersionInfo` string |
-| `-fixed` | -- | Return the fixed version number (major.minor.build.revision) |
+| `-full` | -- | Return the complete<br>`FileVersionInfo` string |
+| `-fixed` | -- | Return the fixed version number<br>(major.minor.build.revision) |
 
 </details>
 
@@ -1409,9 +1409,9 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-encoding` | Encoding | Character encoding for channel I/O |
-| `-usecount` | -- | Read a count-prefixed record (first N bytes specify data length) |
-| `-noblock` | -- | Non-blocking read; return immediately if no data is available |
-| `-keepeol` | boolean | Keep end-of-line characters in the result |
+| `-usecount` | -- | Read a count-prefixed record<br>(first N bytes specify data length) |
+| `-noblock` | -- | Non-blocking read; return immediately<br>if no data is available |
+| `-keepeol` | boolean | Keep end-of-line characters<br>in the result |
 | `-count` | int | Read exactly N bytes/characters |
 
 </details>
@@ -1421,13 +1421,13 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-path` | string | Prepend this path prefix to all results; conflicts with `-directory` |
-| `-directory` | string | Search in this directory; conflicts with `-path` |
+| `-path` | string | Prepend this path prefix to all results;<br>conflicts with `-directory` |
+| `-directory` | string | Search in this directory;<br>conflicts with `-path` |
 | `-types` | list | File type filter dictionary |
-| `-join` | -- | Join multiple pattern arguments before matching |
-| `-tails` | -- | Return only filenames, not full paths (requires `-path` or `-directory`) |
-| `-nocomplain` | -- | Don't error if no files match the pattern |
-| `-noerror` | -- | Return empty on glob errors instead of raising an error |
+| `-join` | -- | Join multiple pattern arguments<br>before matching |
+| `-tails` | -- | Return only filenames, not full paths<br>(requires `-path` or `-directory`) |
+| `-nocomplain` | -- | Don't error if no files match<br>the pattern |
+| `-noerror` | -- | Return empty on glob errors<br>instead of raising an error |
 
 </details>
 
@@ -1438,10 +1438,10 @@ All three sub-commands share identical options:
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-object` | -- | Input is an opaque object handle (byte array) instead of a string |
-| `-raw` | -- | Return hash as raw ByteList instead of hexadecimal string |
-| `-filename` | -- | Treat the input argument as a file path and hash the file contents |
-| `-encoding` | Encoding | Character encoding for string-to-bytes conversion; cannot combine with `-object` |
+| `-object` | -- | Input is an opaque object handle<br>(byte array) instead of a string |
+| `-raw` | -- | Return hash as raw ByteList<br>instead of hexadecimal string |
+| `-filename` | -- | Treat the input argument as a file path<br>and hash the file contents |
+| `-encoding` | Encoding | Character encoding for string-to-bytes<br>conversion; cannot combine with `-object` |
 
 </details>
 
@@ -1508,7 +1508,7 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-sizetype` | HostSizeType | Which size dimension to reset (Default, Buffer, Window) |
+| `-sizetype` | HostSizeType | Which size dimension to reset<br>(Default, Buffer, Window) |
 | `-all` | -- | Reset all host state |
 | `-channels` | -- | Reset standard I/O channels |
 | `-flags` | -- | Reset host flags |
@@ -1528,8 +1528,8 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-sizetype` | HostSizeType | Which size to get/set (Default, Buffer, Window) |
-| `-norestore` | -- | Don't restore original size if setting a new size fails |
+| `-sizetype` | HostSizeType | Which size to get/set<br>(Default, Buffer, Window) |
+| `-norestore` | -- | Don't restore original size<br>if setting a new size fails |
 | `-width` | int | Set absolute width in columns |
 | `-relwidth` | int | Adjust width relative to current |
 | `-height` | int | Set absolute height in rows |
@@ -1544,21 +1544,21 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 |--------|-------|-------------|
 | `-theme` | string | Color theme for box rendering |
 | `-name` | string | Box style/layout name |
-| `-x` / `-relx` | int | Absolute / relative X position for the box |
-| `-y` / `-rely` | int | Absolute / relative Y position for the box |
+| `-x` / `-relx` | int | Absolute / relative X position<br>for the box |
+| `-y` / `-rely` | int | Absolute / relative Y position<br>for the box |
 | `-fg` / `-foreground` | ConsoleColor | Text foreground color |
 | `-bg` / `-background` | ConsoleColor | Text background color |
 | `-boxfg` / `-boxforeground` | ConsoleColor | Box border foreground color |
 | `-boxbg` / `-boxbackground` | ConsoleColor | Box border background color |
-| `-nohandle` | -- | Don't interpret the argument as an object handle |
-| `-multiple` | -- | Treat the argument as a list of items; write each one |
-| `-noposition` | -- | Don't query current cursor position; use (0,0) |
+| `-nohandle` | -- | Don't interpret the argument<br>as an object handle |
+| `-multiple` | -- | Treat the argument as a list of items;<br>write each one |
+| `-noposition` | -- | Don't query current cursor position;<br>use (0,0) |
 | `-noboxcolors` | -- | Don't apply box-specific colors |
 | `-nocolors` | -- | Don't apply any colors |
 | `-pairs` | -- | Parse the list as key-value pairs |
 | `-newline` | -- | Write a newline after the box |
-| `-separator` | -- | Convert "null" strings to actual nulls |
-| `-norestore` | -- | Don't restore original colors after drawing |
+| `-separator` | -- | Convert "null" strings<br>to actual nulls |
+| `-norestore` | -- | Don't restore original colors<br>after drawing |
 
 </details>
 
@@ -1568,21 +1568,21 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-interpreter` | Interpreter | Query a specific child interpreter |
-| `-sdk` | SdkType | SDK filter (Default, Tcl, Snit, etc.); defaults to `SdkType.Default` |
+| `-sdk` | SdkType | SDK filter (Default, Tcl, Snit, etc.);<br>defaults to `SdkType.Default` |
 | `-breakpoint` | -- | Include breakpoint commands |
 | `-core` | -- | Include core/system commands |
 | `-library` | -- | Include library-defined commands |
 | `-nocore` | -- | Exclude core/system commands |
 | `-nolibrary` | -- | Exclude library-defined commands |
 | `-interactive` | -- | Include interactive-only commands |
-| `-nocommands` | -- | Exclude regular commands (show only procedures, aliases, etc.) |
+| `-nocommands` | -- | Exclude regular commands (show only<br>procedures, aliases, etc.) |
 | `-noprocedures` | -- | Exclude user-defined procedures |
 | `-noexecutes` | -- | Exclude execute-type procedures |
 | `-noaliases` | -- | Exclude command aliases |
-| `-safe` | -- | Include only commands safe for sandboxed interpreters |
+| `-safe` | -- | Include only commands safe<br>for sandboxed interpreters |
 | `-unsafe` | -- | Include only unsafe commands |
 | `-standard` | -- | Include only standard commands |
-| `-nonstandard` | -- | Include only non-standard (extension) commands |
+| `-nonstandard` | -- | Include only non-standard<br>(extension) commands |
 | `-hidden` | -- | Include hidden commands |
 | `-hiddenonly` | -- | Show only hidden commands |
 | `-strict` | -- | Use strict filtering rules |
@@ -1595,8 +1595,8 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-interpreter` | Interpreter | Query a specific child interpreter |
-| `-safe` / `-unsafe` | -- | Filter by safe/unsafe classification |
-| `-standard` / `-nonstandard` | -- | Filter by standard/non-standard classification |
+| `-safe` / `-unsafe` | -- | Filter by safe/unsafe<br>classification |
+| `-standard` / `-nonstandard` | -- | Filter by standard/non-standard<br>classification |
 | `-hidden` | -- | Include hidden functions |
 
 </details>
@@ -1606,7 +1606,7 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-nocore` | -- | Exclude core/system plugins (those with `PluginFlags.System`) |
+| `-nocore` | -- | Exclude core/system plugins<br>(those with `PluginFlags.System`) |
 
 </details>
 
@@ -1626,7 +1626,7 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-hidden` | boolean | When true, search hidden commands; when false, search visible commands |
+| `-hidden` | boolean | When true, search hidden commands;<br>when false, search visible commands |
 
 </details>
 
@@ -1644,11 +1644,11 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-createflags` | CreateFlags | Override interpreter creation flags for command population |
+| `-createflags` | CreateFlags | Override interpreter creation flags<br>for command population |
 | `-interpreterflags` | InterpreterFlags | Override interpreter flags |
-| `-ruleset` | IRuleSet | Custom rule set for security validation of added commands |
-| `-safetyoverride` | -- | Override safe interpreter restrictions when adding commands |
-| `-repopulate` | -- | Remove existing commands before adding new ones |
+| `-ruleset` | IRuleSet | Custom rule set for security validation<br>of added commands |
+| `-safetyoverride` | -- | Override safe interpreter restrictions<br>when adding commands |
+| `-repopulate` | -- | Remove existing commands<br>before adding new ones |
 
 </details>
 
@@ -1657,9 +1657,9 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-global` | -- | Cancel all interpreters, not just the target |
+| `-global` | -- | Cancel all interpreters,<br>not just the target |
 | `-nolocal` | -- | Skip canceling the local interpreter |
-| `-unwind` | -- | Unwind the call stack during cancellation |
+| `-unwind` | -- | Unwind the call stack<br>during cancellation |
 
 </details>
 
@@ -1668,32 +1668,32 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-creationflagtypes` | CreationFlagTypes | Which sets of creation flags to apply; defaults to `Defaults.CreationFlagTypes` |
-| `-ruleset` | IRuleSet | Security rule set for the new interpreter |
-| `-peer` | PeerType | Peer relationship type; defaults to `PeerType.Default` |
-| `-namespaces` | -- | Enable namespace support in the new interpreter |
+| `-creationflagtypes` | CreationFlagTypes | Which sets of creation flags to apply;<br>defaults to `Defaults.CreationFlagTypes` |
+| `-ruleset` | IRuleSet | Security rule set<br>for the new interpreter |
+| `-peer` | PeerType | Peer relationship type;<br>defaults to `PeerType.Default` |
+| `-namespaces` | -- | Enable namespace support<br>in the new interpreter |
 | `-nocommands` | -- | Don't populate standard commands |
 | `-nofunctions` | -- | Don't populate standard functions |
 | `-nonamespaces` | -- | Don't create default namespaces |
 | `-novariables` | -- | Don't create standard variables |
-| `-noloader` | -- | Don't initialize the script/plugin loader |
+| `-noloader` | -- | Don't initialize<br>the script/plugin loader |
 | `-noinitialize` | -- | Skip interpreter initialization entirely |
-| `-alias` | -- | Create a command alias for the new interpreter |
+| `-alias` | -- | Create a command alias<br>for the new interpreter |
 | `-safe` | -- | Create a safe (sandboxed) interpreter |
-| `-sdk` | SdkType | SDK type for the interpreter (DEBUG builds only) |
-| `-nohidden` | -- | Don't hide unsafe commands in the new interpreter |
+| `-sdk` | SdkType | SDK type for the interpreter<br>(DEBUG builds only) |
+| `-nohidden` | -- | Don't hide unsafe commands<br>in the new interpreter |
 | `-standard` | -- | Use standard command set only |
 | `-unsafeinitialize` | -- | Allow unsafe initialization steps |
-| `-isolated` | -- | Create in an isolated AppDomain (requires `ISOLATED_INTERPRETERS`) |
-| `-debug` | -- | Enable debugger in the new interpreter (requires `DEBUGGER`) |
-| `-test` | -- | Enable test mode (requires `TEST_PLUGIN` or `DEBUG`) |
-| `-monitor` | -- | Enable notification monitoring (requires `NOTIFY && NOTIFY_ARGUMENTS`) |
-| `-probing` | -- | Enable assembly probing paths (requires `APPDOMAINS`) |
+| `-isolated` | -- | Create in an isolated AppDomain<br>(requires `ISOLATED_INTERPRETERS`) |
+| `-debug` | -- | Enable debugger in the new interpreter<br>(requires `DEBUGGER`) |
+| `-test` | -- | Enable test mode<br>(requires `TEST_PLUGIN` or `DEBUG`) |
+| `-monitor` | -- | Enable notification monitoring<br>(requires `NOTIFY && NOTIFY_ARGUMENTS`) |
+| `-probing` | -- | Enable assembly probing paths<br>(requires `APPDOMAINS`) |
 | `-noprobing` | -- | Disable assembly probing paths |
 | `-security` | -- | Enable security subsystem |
 | `-nosecurity` | -- | Disable security subsystem |
 | `-nocorepolicies` | -- | Don't install core security policies |
-| `-nopluginpolicies` | -- | Don't install plugin security policies |
+| `-nopluginpolicies` | -- | Don't install plugin<br>security policies |
 
 </details>
 
@@ -1703,7 +1703,7 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-global` | -- | Invoke in the global namespace |
-| `-namespace` | string | Invoke in the specified fully-qualified namespace |
+| `-namespace` | string | Invoke in the specified<br>fully-qualified namespace |
 
 </details>
 
@@ -1714,7 +1714,7 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 |--------|-------|-------------|
 | `-type` | Type | .NET type of the policy callback |
 | `-token` | int64 | Security token for policy authorization |
-| `-flags` | PolicyFlags | Policy behavior flags; defaults to `PolicyFlags.Script` |
+| `-flags` | PolicyFlags | Policy behavior flags;<br>defaults to `PolicyFlags.Script` |
 
 </details>
 
@@ -1723,7 +1723,7 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-when` | DateTime | Schedule the queued script for a specific time |
+| `-when` | DateTime | Schedule the queued script<br>for a specific time |
 
 </details>
 
@@ -1732,11 +1732,11 @@ Only available when `CONSOLE && NATIVE && WINDOWS` is compiled in.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-encoding` | Encoding | Character encoding for reading the script file |
-| `-variable` | string | Store the script content in this variable instead of evaluating |
+| `-encoding` | Encoding | Character encoding for reading<br>the script file |
+| `-variable` | string | Store the script content in this<br>variable instead of evaluating |
 | `-package` | boolean | Treat the file as a package script |
-| `-scriptflags` | ScriptFlags | Override script evaluation flags; defaults to child interpreter's current flags |
-| `-engineflags` | EngineFlags | Override engine flags; defaults to child interpreter's current flags |
+| `-scriptflags` | ScriptFlags | Override script evaluation flags;<br>defaults to child interpreter's current flags |
+| `-engineflags` | EngineFlags | Override engine flags;<br>defaults to child interpreter's current flags |
 
 This is the most complex option processing pattern in the library. See
 [Section 7.2](#72-scan-then-get-deferred-defaults) for the scan-then-get
@@ -1749,12 +1749,12 @@ architecture.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-nodelete` | -- | Keep the original name (create a copy, not a rename) |
+| `-nodelete` | -- | Keep the original name<br>(create a copy, not a rename) |
 | `-all` | -- | Rename all matching identifiers |
 | `-hidden` | -- | Make the new name hidden from enumeration |
 | `-hiddenonly` | -- | Make both old and new names hidden |
-| `-kind` | IdentifierKind | Type of identifier to rename (Command, Function, Variable, etc.); defaults to `None` |
-| `-newnamevar` | string | Store the actual new name in this variable |
+| `-kind` | IdentifierKind | Type of identifier to rename<br>(Command, Function, Variable, etc.);<br>defaults to `None` |
+| `-newnamevar` | string | Store the actual new name<br>in this variable |
 
 </details>
 
@@ -1763,9 +1763,9 @@ architecture.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-global` | -- | Reset cancellation for all interpreters |
+| `-global` | -- | Reset cancellation<br>for all interpreters |
 | `-nolocal` | -- | Skip resetting the local interpreter |
-| `-force` | -- | Force reset even if cancellation is locked |
+| `-force` | -- | Force reset even if cancellation<br>is locked |
 
 </details>
 
@@ -1775,15 +1775,15 @@ architecture.
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-dedicated` | -- | Use a dedicated service thread |
-| `-nocancel` | -- | Don't honor cancellation during servicing |
+| `-nocancel` | -- | Don't honor cancellation<br>during servicing |
 | `-noglobalcancel` | -- | Ignore global cancellation flag |
-| `-erroronempty` | -- | Return error when the event queue is empty |
+| `-erroronempty` | -- | Return error when the event queue<br>is empty |
 | `-userinterface` | -- | Process user interface events |
 | `-nocomplain` | -- | Suppress service errors |
 | `-thread` | int64 | Target thread for event servicing |
-| `-limit` | int | Maximum number of events to process per call |
-| `-eventflags` | EventFlags | Event processing flags; defaults to child interpreter's `ServiceEventFlags` |
-| `-priority` | EventPriority | Minimum event priority to process; defaults to `EventPriority.Service` |
+| `-limit` | int | Maximum number of events<br>to process per call |
+| `-eventflags` | EventFlags | Event processing flags; defaults to<br>child interpreter's `ServiceEventFlags` |
+| `-priority` | EventPriority | Minimum event priority to process;<br>defaults to `EventPriority.Service` |
 
 </details>
 
@@ -1811,7 +1811,7 @@ architecture.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-flags` | SubCommandFlags | Sub-command registration flags; defaults to `SubCommandFlags.Default` |
+| `-flags` | SubCommandFlags | Sub-command registration flags;<br>defaults to `SubCommandFlags.Default` |
 
 </details>
 
@@ -1831,10 +1831,10 @@ architecture.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-all` | -- | Kill all processes matching the given name, not just one |
-| `-force` | -- | Force termination without graceful shutdown |
-| `-whatIf` | -- | Show what would be killed without actually terminating (case-insensitive option name) |
-| `-verbose` | -- | Display detailed information about the operation |
+| `-all` | -- | Kill all processes matching<br>the given name, not just one |
+| `-force` | -- | Force termination<br>without graceful shutdown |
+| `-whatIf` | -- | Show what would be killed<br>without actually terminating<br>(case-insensitive option name) |
+| `-verbose` | -- | Display detailed information<br>about the operation |
 
 </details>
 
@@ -1843,20 +1843,20 @@ architecture.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-alias` | -- | Create an alias for the declared function |
-| `-module` | string | Module containing the native function |
+| `-alias` | -- | Create an alias<br>for the declared function |
+| `-module` | string | Module containing<br>the native function |
 | `-functionname` | string | Override the function name |
-| `-address` | int64 | Direct memory address of the function |
+| `-address` | int64 | Direct memory address<br>of the function |
 | `-returntype` | Type | .NET return type of the function |
 | `-parametertypes` | Type list | .NET types of all function parameters |
-| `-callingconvention` | CallingConvention | Calling convention (Cdecl, StdCall, etc.) |
-| `-assemblyname` | string | Assembly name for the generated delegate |
+| `-callingconvention` | CallingConvention | Calling convention<br>(Cdecl, StdCall, etc.) |
+| `-assemblyname` | string | Assembly name<br>for the generated delegate |
 | `-modulename` | string | Module builder name |
-| `-typename` | string | Type name for the generated delegate wrapper |
-| `-bestfitmapping` | boolean | Enable best-fit character mapping for Unicode conversion |
-| `-charset` | CharSet | Character set for P/Invoke marshaling |
-| `-setlasterror` | boolean | Preserve Windows `GetLastError()` codes |
-| `-throwonunmappablechar` | boolean | Throw on unmappable Unicode characters |
+| `-typename` | string | Type name for the generated<br>delegate wrapper |
+| `-bestfitmapping` | boolean | Enable best-fit character mapping<br>for Unicode conversion |
+| `-charset` | CharSet | Character set<br>for P/Invoke marshaling |
+| `-setlasterror` | boolean | Preserve Windows<br>`GetLastError()` codes |
+| `-throwonunmappablechar` | boolean | Throw on unmappable<br>Unicode characters |
 | `-delegatename` | string | Name for the created delegate type |
 
 </details>
@@ -1867,10 +1867,10 @@ architecture.
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-modulename` | string | Native library module name |
-| `-locked` | -- | Lock the module in memory, preventing unloading |
-| `-maybetrustedonly` | -- | Only load if verified trusted (lenient) |
-| `-trustedonly` | -- | Only load modules verified as trusted |
-| `-flags` | ModuleFlags | Module loading behavior flags; defaults to `ModuleFlags.None` |
+| `-locked` | -- | Lock the module in memory,<br>preventing unloading |
+| `-maybetrustedonly` | -- | Only load if verified trusted<br>(lenient) |
+| `-trustedonly` | -- | Only load modules verified<br>as trusted |
+| `-flags` | ModuleFlags | Module loading behavior flags;<br>defaults to `ModuleFlags.None` |
 
 </details>
 
@@ -1879,8 +1879,8 @@ architecture.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-module` | string | Which loaded module contains the function |
-| `-functionname` | string | Function name to resolve within the module |
+| `-module` | string | Which loaded module contains<br>the function |
+| `-functionname` | string | Function name to resolve<br>within the module |
 
 </details>
 
@@ -1896,26 +1896,26 @@ No options (only end-of-options marker).
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-ruleset` | IRuleSet | Custom rule set for plugin security validation |
-| `-needclientdata` | -- | Auto-create client data if not provided by caller |
-| `-anythread` | -- | Allow loading on any thread, not just the main thread |
-| `-nocommands` | -- | Don't register commands defined by the plugin |
-| `-nofunctions` | -- | Don't register functions defined by the plugin |
-| `-nopolicies` | -- | Don't install security policies from the plugin |
-| `-notraces` | -- | Don't install trace callbacks from the plugin |
-| `-noprovide` | -- | Don't call the plugin's `Provide` method |
+| `-ruleset` | IRuleSet | Custom rule set for plugin<br>security validation |
+| `-needclientdata` | -- | Auto-create client data<br>if not provided by caller |
+| `-anythread` | -- | Allow loading on any thread,<br>not just the main thread |
+| `-nocommands` | -- | Don't register commands<br>defined by the plugin |
+| `-nofunctions` | -- | Don't register functions<br>defined by the plugin |
+| `-nopolicies` | -- | Don't install security policies<br>from the plugin |
+| `-notraces` | -- | Don't install trace callbacks<br>from the plugin |
+| `-noprovide` | -- | Don't call the plugin's<br>`Provide` method |
 | `-noresources` | -- | Don't load resource definitions |
-| `-verifiedonly` | -- | Only load plugins with verified digital signatures |
-| `-maybeverifiedonly` | -- | Verified-only (lenient; allowed in safe interpreters) |
-| `-trustedonly` | -- | Only load plugins in the trusted set |
-| `-maybetrustedonly` | -- | Trusted-only (lenient; allowed in safe interpreters) |
-| `-publickeytoken` | string | Verify the plugin's public key token matches |
-| `-isolated` / `-noisolated` | -- | Load into isolated / default AppDomain |
-| `-preview` / `-nopreview` | -- | Enable/disable plugin metadata preview for update checking |
-| `-update` / `-noupdate` | -- | Check/skip checking for updated plugin version |
+| `-verifiedonly` | -- | Only load plugins with verified<br>digital signatures |
+| `-maybeverifiedonly` | -- | Verified-only (lenient;<br>allowed in safe interpreters) |
+| `-trustedonly` | -- | Only load plugins<br>in the trusted set |
+| `-maybetrustedonly` | -- | Trusted-only (lenient;<br>allowed in safe interpreters) |
+| `-publickeytoken` | string | Verify the plugin's public key<br>token matches |
+| `-isolated` / `-noisolated` | -- | Load into isolated /<br>default AppDomain |
+| `-preview` / `-nopreview` | -- | Enable/disable plugin metadata<br>preview for update checking |
+| `-update` / `-noupdate` | -- | Check/skip checking for<br>updated plugin version |
 | `-clientdata` | object | Supply custom client data object |
-| `-data` | object | Additional data to associate with the plugin |
-| `-viaresource` | -- | Load from embedded resource instead of file |
+| `-data` | object | Additional data to associate<br>with the plugin |
+| `-viaresource` | -- | Load from embedded resource<br>instead of file |
 
 </details>
 
@@ -1926,17 +1926,17 @@ No options (only end-of-options marker).
 
 | Group | Options | Description |
 |-------|---------|-------------|
-| 1 (value type) | `-ascii`, `-dictionary`, `-integer`, `-real` | How to interpret list elements for comparison |
-| 2 (sort order) | `-decreasing`, `-increasing` | Sort direction for `-sorted` mode |
-| 3 (match mode) | `-exact`, `-substring`, `-glob`, `-regexp`, `-sorted` | How to match the pattern against elements |
+| 1 (value type) | `-ascii`, `-dictionary`, `-integer`, `-real` | How to interpret list elements<br>for comparison |
+| 2 (sort order) | `-decreasing`, `-increasing` | Sort direction for<br>`-sorted` mode |
+| 3 (match mode) | `-exact`, `-substring`, `-glob`, `-regexp`, `-sorted` | How to match the pattern<br>against elements |
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-variable` | -- | First argument is a variable name containing the list |
-| `-inverse` | -- | Return indices of non-matching elements |
-| `-subindices` | -- | Return sub-indices when searching nested lists |
-| `-all` | -- | Return all matching indices instead of just the first |
-| `-inline` | -- | Return matched elements instead of their indices |
+| `-variable` | -- | First argument is a variable name<br>containing the list |
+| `-inverse` | -- | Return indices of<br>non-matching elements |
+| `-subindices` | -- | Return sub-indices when<br>searching nested lists |
+| `-all` | -- | Return all matching indices<br>instead of just the first |
+| `-inline` | -- | Return matched elements<br>instead of their indices |
 | `-nocase` | -- | Case-insensitive matching |
 | `-not` | -- | Logical inversion of the match result |
 | `-start` | string | Start searching from this index |
@@ -1996,14 +1996,14 @@ No options (only end-of-options marker).
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-objecttypes` | Type list | Resolve the object against these .NET types |
+| `-objecttypes` | Type list | Resolve the object against<br>these .NET types |
 | `-aliasname` | string | Name for the command alias |
 | `-aliasraw` | -- | Use raw dispatch for the alias |
 | `-aliasall` | -- | Use invokeall dispatch for the alias |
-| `-aliasreference` | -- | Use reference-counted handle for the alias |
+| `-aliasreference` | -- | Use reference-counted handle<br>for the alias |
 | `-nocase` | -- | Case-insensitive type name matching |
-| `-stricttype` | -- | Require exact type match during object resolution |
-| `-verbose` | -- | Enable verbose type resolution diagnostics |
+| `-stricttype` | -- | Require exact type match<br>during object resolution |
+| `-verbose` | -- | Enable verbose type resolution<br>diagnostics |
 
 </details>
 
@@ -2012,10 +2012,10 @@ No options (only end-of-options marker).
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-pattern` | string | Match object names against this pattern |
-| `-referencecount` | int | Only clean up objects with this specific reference count |
-| `-references` | -- | Include reference-counted objects in cleanup |
-| `-noremove` | -- | Keep objects in the table (dispose but don't remove) |
+| `-pattern` | string | Match object names<br>against this pattern |
+| `-referencecount` | int | Only clean up objects with this<br>specific reference count |
+| `-references` | -- | Include reference-counted objects<br>in cleanup |
+| `-noremove` | -- | Keep objects in the table<br>(dispose but don't remove) |
 | `-synchronous` | -- | Perform disposal synchronously |
 | `-nodispose` | -- | Don't call `Dispose()` on the objects |
 | `-nocomplain` | -- | Suppress errors during cleanup |
@@ -2031,45 +2031,45 @@ Includes [object handle management](#fixupreturnvalue-options) options
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-objectname` | string | Name for the created opaque object handle |
+| `-objectname` | string | Name for the created<br>opaque object handle |
 | `-type` | Type | .NET type to instantiate |
 | `-objecttypes` | Type list | Additional types for resolution |
-| `-methodtypes` | Type list | Constructor method type constraints |
-| `-parametertypes` | Type list | Constructor parameter type constraints |
+| `-methodtypes` | Type list | Constructor method<br>type constraints |
+| `-parametertypes` | Type list | Constructor parameter<br>type constraints |
 | `-parametermarshalflags` | MarshalFlags list | Per-parameter marshaling flags |
-| `-debug` | -- | Enable debug diagnostics for the creation |
-| `-trace` | -- | Enable trace output for the creation |
-| `-argumentflags` | ByRefArgumentFlags | By-reference argument handling flags |
-| `-objectvalueflags` | ValueFlags | Value conversion flags for object resolution |
+| `-debug` | -- | Enable debug diagnostics<br>for the creation |
+| `-trace` | -- | Enable trace output<br>for the creation |
+| `-argumentflags` | ByRefArgumentFlags | By-reference argument<br>handling flags |
+| `-objectvalueflags` | ValueFlags | Value conversion flags<br>for object resolution |
 | `-marshalflags` | MarshalFlags | Marshaling behavior flags |
-| `-reorderflags` | ReorderFlags | Constructor overload reordering flags |
-| `-nocreate` | -- | Don't create an opaque object handle |
-| `-nodispose` | -- | Don't mark the object for automatic disposal |
-| `-noinvoke` | -- | Don't invoke the constructor (type resolution only) |
+| `-reorderflags` | ReorderFlags | Constructor overload<br>reordering flags |
+| `-nocreate` | -- | Don't create an opaque<br>object handle |
+| `-nodispose` | -- | Don't mark the object<br>for automatic disposal |
+| `-noinvoke` | -- | Don't invoke the constructor<br>(type resolution only) |
 | `-noargs` | -- | Don't pass constructor arguments |
-| `-limit` | int | Maximum number of constructor overloads to consider |
-| `-index` | int | Select a specific constructor overload by index |
-| `-alias` | -- | Create a command alias for the new object |
+| `-limit` | int | Maximum number of constructor<br>overloads to consider |
+| `-index` | int | Select a specific constructor<br>overload by index |
+| `-alias` | -- | Create a command alias<br>for the new object |
 | `-aliasraw` | -- | Use raw dispatch for the alias |
 | `-aliasall` | -- | Use invokeall dispatch for the alias |
-| `-aliasreference` | -- | Use reference-counted handle for the alias |
-| `-tcl` | TclInterpreter | Bridge the object to a Tcl interpreter (requires `NATIVE && TCL`) |
-| `-noforcedelete` | -- | Don't force-delete the alias on cleanup |
-| `-tostring` | -- | Return the `ToString()` representation instead of an opaque handle |
-| `-arrayasvalue` | -- | Treat array results as values rather than opaque handles |
-| `-arrayaslink` | -- | Link array results to Eagle variables |
-| `-nomutatebindingflags` | -- | Don't automatically adjust binding flags for primitive/value types |
-| `-stricttype` | -- | Require exact type match during resolution |
+| `-aliasreference` | -- | Use reference-counted handle<br>for the alias |
+| `-tcl` | TclInterpreter | Bridge the object to a Tcl interpreter<br>(requires `NATIVE && TCL`) |
+| `-noforcedelete` | -- | Don't force-delete the alias<br>on cleanup |
+| `-tostring` | -- | Return the `ToString()` representation<br>instead of an opaque handle |
+| `-arrayasvalue` | -- | Treat array results as values<br>rather than opaque handles |
+| `-arrayaslink` | -- | Link array results<br>to Eagle variables |
+| `-nomutatebindingflags` | -- | Don't automatically adjust binding<br>flags for primitive/value types |
+| `-stricttype` | -- | Require exact type match<br>during resolution |
 | `-strictmember` | -- | Require exact constructor match |
 | `-strictargs` | -- | Require exact argument count match |
-| `-nocase` | -- | Case-insensitive type and member name matching |
-| `-default` | -- | Use default value when constructor argument is missing |
+| `-nocase` | -- | Case-insensitive type and<br>member name matching |
+| `-default` | -- | Use default value when constructor<br>argument is missing |
 | `-verbose` | -- | Enable verbose diagnostics |
-| `-nobyref` | -- | Don't use by-reference parameter handling |
+| `-nobyref` | -- | Don't use by-reference<br>parameter handling |
 | `-flags` | BindingFlags | .NET reflection binding flags |
 | `-bindingflags` | BindingFlags | Alias for `-flags` |
 | `-objectflags` | ObjectFlags | Object handle behavior flags |
-| `-byrefobjectflags` | ObjectFlags | Object flags for by-reference parameters |
+| `-byrefobjectflags` | ObjectFlags | Object flags for<br>by-reference parameters |
 
 </details>
 
@@ -2079,8 +2079,8 @@ Includes [object handle management](#fixupreturnvalue-options) options
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-synchronous` | -- | Perform disposal synchronously |
-| `-nodispose` | -- | Remove the handle without calling `Dispose()` |
-| `-nocomplain` | -- | Suppress errors if the object is not found or disposal fails |
+| `-nodispose` | -- | Remove the handle without<br>calling `Dispose()` |
+| `-nocomplain` | -- | Suppress errors if the object<br>is not found or disposal fails |
 
 </details>
 
@@ -2092,21 +2092,21 @@ Includes [object handle management](#fixupreturnvalue-options) options
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-synchronous` | -- | Perform disposal synchronously after iteration |
-| `-objectname` | string | Name for the per-iteration opaque object handle |
+| `-synchronous` | -- | Perform disposal synchronously<br>after iteration |
+| `-objectname` | string | Name for the per-iteration<br>opaque object handle |
 | `-type` | Type | Expected .NET type of elements |
-| `-collect` | boolean | Force garbage collection after iteration |
-| `-nocreate` | -- | Don't create opaque object handles for elements |
-| `-nodispose` | -- | Don't dispose element handles after each iteration |
-| `-alias` | -- | Create a command alias for each element |
-| `-aliasraw` | -- | Use raw dispatch for element aliases |
-| `-aliasall` | -- | Use invokeall dispatch for element aliases |
-| `-aliasreference` | -- | Use reference-counted handles for element aliases |
-| `-tcl` | TclInterpreter | Bridge elements to a Tcl interpreter (requires `NATIVE && TCL`) |
-| `-noforcedelete` | -- | Don't force-delete aliases on cleanup |
-| `-tostring` | -- | Use `ToString()` representation for elements |
+| `-collect` | boolean | Force garbage collection<br>after iteration |
+| `-nocreate` | -- | Don't create opaque object handles<br>for elements |
+| `-nodispose` | -- | Don't dispose element handles<br>after each iteration |
+| `-alias` | -- | Create a command alias<br>for each element |
+| `-aliasraw` | -- | Use raw dispatch<br>for element aliases |
+| `-aliasall` | -- | Use invokeall dispatch<br>for element aliases |
+| `-aliasreference` | -- | Use reference-counted handles<br>for element aliases |
+| `-tcl` | TclInterpreter | Bridge elements to a Tcl interpreter<br>(requires `NATIVE && TCL`) |
+| `-noforcedelete` | -- | Don't force-delete aliases<br>on cleanup |
+| `-tostring` | -- | Use `ToString()` representation<br>for elements |
 | `-nocase` | -- | Case-insensitive type name matching |
-| `-objectflags` | ObjectFlags | Object handle behavior flags for elements |
+| `-objectflags` | ObjectFlags | Object handle behavior flags<br>for elements |
 
 </details>
 
@@ -2126,26 +2126,26 @@ This command's options are composed from three groups: InvokeOnly (unique to
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-reorderflags` | ReorderFlags | Method overload reordering flags |
-| `-limit` | int | Maximum number of method overloads to consider |
-| `-index` | int | Select a specific method overload by index |
-| `-invoke` | -- | *(Ignored)* Marker for invoke mode (active in `[object invokeall]`) |
+| `-limit` | int | Maximum number of method<br>overloads to consider |
+| `-index` | int | Select a specific method<br>overload by index |
+| `-invoke` | -- | *(Ignored)* Marker for invoke mode<br>(active in `[object invokeall]`) |
 | `-invokeraw` | -- | Switch to raw invoke mode |
-| `-membervalueflags` | ValueFlags | Value conversion flags for member resolution |
-| `-nonestedmember` | -- | Don't resolve nested member paths (e.g., `Prop.SubProp`) |
+| `-membervalueflags` | ValueFlags | Value conversion flags<br>for member resolution |
+| `-nonestedmember` | -- | Don't resolve nested member paths<br>(e.g., `Prop.SubProp`) |
 | `-strictmember` | -- | Require exact member match |
 | `-strictargs` | -- | Require exact argument count match |
-| `-membertypes` | MemberTypes | Filter by member type (Method, Property, Field, etc.) |
-| `-identity` | -- | Return the object identity rather than invoking |
-| `-typeidentity` | -- | Return the type identity rather than invoking |
+| `-membertypes` | MemberTypes | Filter by member type<br>(Method, Property, Field, etc.) |
+| `-identity` | -- | Return the object identity<br>rather than invoking |
+| `-typeidentity` | -- | Return the type identity<br>rather than invoking |
 
 **InvokeShared options (shared with `[object invokeraw]`):**
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-datetimekind` | DateTimeKind | DateTime interpretation for arguments |
-| `-datetimestyles` | DateTimeStyles | DateTime parsing styles for arguments |
-| `-datetimeformat` | string | DateTime format string for arguments |
-| `-type` | Type | Target .NET type for static member invocation |
+| `-datetimekind` | DateTimeKind | DateTime interpretation<br>for arguments |
+| `-datetimestyles` | DateTimeStyles | DateTime parsing styles<br>for arguments |
+| `-datetimeformat` | string | DateTime format string<br>for arguments |
+| `-type` | Type | Target .NET type for static<br>member invocation |
 | `-objecttype` | Type | Override the object's resolved type |
 | `-proxytype` | Type | Proxy type for member dispatch |
 | `-objecttypes` | Type list | Additional types for resolution |
@@ -2154,22 +2154,22 @@ This command's options are composed from three groups: InvokeOnly (unique to
 | `-parametermarshalflags` | MarshalFlags list | Per-parameter marshaling flags |
 | `-debug` | -- | Enable debug diagnostics |
 | `-trace` | -- | Enable trace output |
-| `-argumentflags` | ByRefArgumentFlags | By-reference argument handling flags |
+| `-argumentflags` | ByRefArgumentFlags | By-reference argument<br>handling flags |
 | `-marshalflags` | MarshalFlags | Marshaling behavior flags |
-| `-noinvoke` | -- | Don't invoke the member (resolution only) |
+| `-noinvoke` | -- | Don't invoke the member<br>(resolution only) |
 | `-noargs` | -- | Don't pass arguments to the member |
 | `-arrayasvalue` | -- | Treat array results as values |
-| `-arrayaslink` | -- | Link array results to Eagle variables |
+| `-arrayaslink` | -- | Link array results<br>to Eagle variables |
 | `-verbose` | -- | Enable verbose diagnostics |
-| `-nocase` | -- | Case-insensitive member name matching |
-| `-default` | -- | Use default value when argument is missing |
-| `-objectvalueflags` | ValueFlags | Value conversion flags for object resolution |
+| `-nocase` | -- | Case-insensitive member<br>name matching |
+| `-default` | -- | Use default value when<br>argument is missing |
+| `-objectvalueflags` | ValueFlags | Value conversion flags<br>for object resolution |
 | `-nonestedobject` | -- | Don't resolve nested object paths |
 | `-stricttype` | -- | Require exact type match |
-| `-nobyref` | -- | Don't use by-reference parameter handling |
+| `-nobyref` | -- | Don't use by-reference<br>parameter handling |
 | `-flags` | BindingFlags | .NET reflection binding flags |
 | `-bindingflags` | BindingFlags | Alias for `-flags` |
-| `-byrefobjectflags` | ObjectFlags | Object flags for by-reference parameters |
+| `-byrefobjectflags` | ObjectFlags | Object flags for<br>by-reference parameters |
 
 Plus [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 `-returntype`, `-objecttype`, `-create`, `-nodispose`, `-alias`, `-aliasraw`,
@@ -2184,13 +2184,13 @@ Plus [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-objecttypes` | Type list | Additional types for resolution |
-| `-objectvalueflags` | ValueFlags | Value conversion flags for object resolution |
+| `-objectvalueflags` | ValueFlags | Value conversion flags<br>for object resolution |
 | `-marshalflags` | MarshalFlags | Marshaling behavior flags |
 | `-nocase` | -- | Case-insensitive type name matching |
 | `-stricttype` | -- | Require exact type match |
-| `-verbose` | -- | Enable verbose type resolution diagnostics |
-| `-nocomplain` | -- | Suppress errors if the object handle is invalid |
-| `-assignable` | -- | Check assignability (base class/interface) instead of exact type match |
+| `-verbose` | -- | Enable verbose type resolution<br>diagnostics |
+| `-nocomplain` | -- | Suppress errors if the object handle<br>is invalid |
+| `-assignable` | -- | Check assignability (base class/interface)<br>instead of exact type match |
 
 </details>
 
@@ -2202,35 +2202,35 @@ Includes [object handle management](#fixupreturnvalue-options) options
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-namespace` | string | Target namespace for imported types |
-| `-objectname` | string | Name for the loaded assembly's opaque object handle |
-| `-type` | Type | Expected .NET type within the assembly |
-| `-create` | -- | Create an opaque object handle for the loaded assembly |
-| `-nodispose` | -- | Don't mark the assembly handle for automatic disposal |
-| `-alias` | -- | Create a command alias for the assembly |
+| `-namespace` | string | Target namespace<br>for imported types |
+| `-objectname` | string | Name for the loaded assembly's<br>opaque object handle |
+| `-type` | Type | Expected .NET type<br>within the assembly |
+| `-create` | -- | Create an opaque object handle<br>for the loaded assembly |
+| `-nodispose` | -- | Don't mark the assembly handle<br>for automatic disposal |
+| `-alias` | -- | Create a command alias<br>for the assembly |
 | `-aliasraw` | -- | Use raw dispatch for the alias |
 | `-aliasall` | -- | Use invokeall dispatch for the alias |
-| `-aliasreference` | -- | Use reference-counted handle for the alias |
-| `-tcl` | TclInterpreter | Bridge the assembly to a Tcl interpreter (requires `NATIVE && TCL`) |
-| `-reflectiononly` | -- | Load assembly in reflection-only context |
-| `-fromobject` | -- | Load assembly from an existing opaque object handle |
-| `-noforcedelete` | -- | Don't force-delete the alias on cleanup |
+| `-aliasreference` | -- | Use reference-counted handle<br>for the alias |
+| `-tcl` | TclInterpreter | Bridge the assembly to a Tcl<br>interpreter (requires `NATIVE && TCL`) |
+| `-reflectiononly` | -- | Load assembly in<br>reflection-only context |
+| `-fromobject` | -- | Load assembly from an existing<br>opaque object handle |
+| `-noforcedelete` | -- | Don't force-delete the alias<br>on cleanup |
 | `-tostring` | -- | Return the `ToString()` representation |
-| `-import` | -- | Import public types from the assembly into the current namespace |
+| `-import` | -- | Import public types from the assembly<br>into the current namespace |
 | `-importnonpublic` | -- | Also import non-public types |
-| `-importmode` | MatchMode | Matching mode for import type filtering |
-| `-importpattern` | string | Pattern for filtering imported type names |
-| `-importnocase` | -- | Case-insensitive import pattern matching |
-| `-declare` | -- | Declare types from the assembly for simplified access |
+| `-importmode` | MatchMode | Matching mode for import<br>type filtering |
+| `-importpattern` | string | Pattern for filtering<br>imported type names |
+| `-importnocase` | -- | Case-insensitive import<br>pattern matching |
+| `-declare` | -- | Declare types from the assembly<br>for simplified access |
 | `-declarenonpublic` | -- | Also declare non-public types |
-| `-declaremode` | MatchMode | Matching mode for declare type filtering |
-| `-declarepattern` | string | Pattern for filtering declared type names |
-| `-declarenocase` | -- | Case-insensitive declare pattern matching |
-| `-loadtype` | LoadType | Assembly loading strategy (e.g., File, Name) |
+| `-declaremode` | MatchMode | Matching mode for declare<br>type filtering |
+| `-declarepattern` | string | Pattern for filtering<br>declared type names |
+| `-declarenocase` | -- | Case-insensitive declare<br>pattern matching |
+| `-loadtype` | LoadType | Assembly loading strategy<br>(e.g., File, Name) |
 | `-objectflags` | ObjectFlags | Object handle behavior flags |
 | `-trustedonly` | -- | Only load trusted assemblies |
 | `-maybetrustedonly` | -- | Trusted-only (lenient) |
-| `-verifiedonly` | -- | Only load assemblies with verified digital signatures |
+| `-verifiedonly` | -- | Only load assemblies with<br>verified digital signatures |
 | `-maybeverifiedonly` | -- | Verified-only (lenient) |
 
 </details>
@@ -2240,22 +2240,22 @@ Includes [object handle management](#fixupreturnvalue-options) options
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-mode` | MatchMode | Pattern matching mode (Glob, Exact, Regexp, SubString) |
+| `-mode` | MatchMode | Pattern matching mode<br>(Glob, Exact, Regexp, SubString) |
 | `-type` | Type | .NET type to enumerate members from |
 | `-objecttypes` | Type list | Additional types for resolution |
 | `-pattern` | string | Filter member names by pattern |
-| `-attributes` | -- | Include custom attribute information in output |
+| `-attributes` | -- | Include custom attribute information<br>in output |
 | `-nocase` | -- | Case-insensitive pattern matching |
-| `-stricttype` | -- | Require exact type match during resolution |
+| `-stricttype` | -- | Require exact type match<br>during resolution |
 | `-verbose` | -- | Enable verbose diagnostics |
-| `-signatures` | -- | Include full method signatures in output |
-| `-qualified` | -- | Use fully qualified type names in output |
-| `-matchnameonly` | -- | Match the pattern against member names only (not signatures) |
-| `-nameonly` | -- | Return member names only (not full details) |
-| `-membertypes` | MemberTypes | Filter by member type (Method, Property, Field, Event, etc.) |
+| `-signatures` | -- | Include full method signatures<br>in output |
+| `-qualified` | -- | Use fully qualified type names<br>in output |
+| `-matchnameonly` | -- | Match the pattern against member<br>names only (not signatures) |
+| `-nameonly` | -- | Return member names only<br>(not full details) |
+| `-membertypes` | MemberTypes | Filter by member type<br>(Method, Property, Field, Event, etc.) |
 | `-flags` | BindingFlags | .NET reflection binding flags |
 | `-bindingflags` | BindingFlags | Alias for `-flags` |
-| `-objectvalueflags` | ValueFlags | Value conversion flags for object resolution |
+| `-objectvalueflags` | ValueFlags | Value conversion flags<br>for object resolution |
 | `-marshalflags` | MarshalFlags | Marshaling behavior flags |
 
 </details>
@@ -2265,8 +2265,8 @@ Includes [object handle management](#fixupreturnvalue-options) options
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-objecttypes` | Type list | Filter results by these .NET types |
-| `-objectvalueflags` | ValueFlags | Value conversion flags for object resolution |
+| `-objecttypes` | Type list | Filter results by<br>these .NET types |
+| `-objectvalueflags` | ValueFlags | Value conversion flags<br>for object resolution |
 | `-marshalflags` | MarshalFlags | Marshaling behavior flags |
 | `-noshowname` | -- | Don't include object names in output |
 | `-nonamespace` | -- | Don't include namespace information |
@@ -2284,15 +2284,15 @@ Includes [object handle management](#fixupreturnvalue-options) options
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-stdin` / `-stdout` / `-stderr` | -- | Open the corresponding standard stream (mutually exclusive; requires `CONSOLE`) |
-| `-channelid` | string | Assign a custom identifier to the opened channel |
+| `-stdin` / `-stdout` / `-stderr` | -- | Open the corresponding standard stream<br>(mutually exclusive; requires `CONSOLE`) |
+| `-channelid` | string | Assign a custom identifier<br>to the opened channel |
 | `-buffersize` | int | Internal buffer size for the channel |
 | `-nullencoding` | -- | Use null encoding mode |
 | `-autoflush` | -- | Automatically flush after every write |
-| `-rawendofstream` | -- | Raw end-of-stream behavior without platform filtering |
-| `-streamflags` | HostStreamFlags | Stream behavior flags; defaults to `HostStreamFlags.Default` |
-| `-options` | FileOptions | File opening options; defaults to `FileOptions.None` |
-| `-share` | FileShare | File sharing mode; defaults to `FileShare.Read` |
+| `-rawendofstream` | -- | Raw end-of-stream behavior<br>without platform filtering |
+| `-streamflags` | HostStreamFlags | Stream behavior flags;<br>defaults to `HostStreamFlags.Default` |
+| `-options` | FileOptions | File opening options;<br>defaults to `FileOptions.None` |
+| `-share` | FileShare | File sharing mode;<br>defaults to `FileShare.Read` |
 
 </details>
 
@@ -2330,8 +2330,8 @@ Includes [object handle management](#fixupreturnvalue-options) options
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-exact` | -- | Require exact version match (no "compatible" version resolution) |
-| `-autoscan` | boolean | Automatically scan for packages if not already found |
+| `-exact` | -- | Require exact version match<br>(no "compatible" version resolution) |
+| `-autoscan` | boolean | Automatically scan for packages<br>if not already found |
 
 </details>
 
@@ -2345,21 +2345,21 @@ architecture. Pre-options and main options are separate dictionaries.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-interpreter` | -- | Use the specified child interpreter's flags as defaults |
+| `-interpreter` | -- | Use the specified child interpreter's<br>flags as defaults |
 
 **Main options:**
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-flags` | PackageIndexFlags | Override package index scanning flags; defaults to interpreter's `PackageIndexFlags` |
+| `-flags` | PackageIndexFlags | Override package index scanning flags;<br>defaults to interpreter's `PackageIndexFlags` |
 | `-reset` | -- | Reset package index before scanning |
-| `-autopath` | -- | Include auto-path directories in the scan |
-| `-whatIf` | -- | Show what would be scanned without actually scanning (disables Host, Bundle, Plugin flags; adds WhatIf) |
-| `-preferfilesystem` | -- | Prefer filesystem over host-provided packages |
+| `-autopath` | -- | Include auto-path directories<br>in the scan |
+| `-whatIf` | -- | Show what would be scanned without<br>actually scanning (disables Host, Bundle,<br>Plugin flags; adds WhatIf) |
+| `-preferfilesystem` | -- | Prefer filesystem over<br>host-provided packages |
 | `-preferhost` | -- | Prefer host-provided packages over filesystem |
 | `-host` / `-nohost` | -- | Enable/disable host-provided package scanning |
 | `-bundle` / `-nobundle` | -- | Enable/disable bundle-based package scanning |
-| `-plugin` / `-noplugin` | -- | Enable/disable plugin-based package scanning (requires `APPDOMAINS`) |
+| `-plugin` / `-noplugin` | -- | Enable/disable plugin-based package<br>scanning (requires `APPDOMAINS`) |
 | `-temporary` | -- | Mark scanned packages as temporary |
 | `-primary` / `-noprimary` | -- | Enable/disable primary package flag |
 | `-tagged` / `-notagged` | -- | Enable/disable tagged package index support |
@@ -2373,7 +2373,7 @@ architecture. Pre-options and main options are separate dictionaries.
 | `-notrusted` | -- | Skip trusted-only verification |
 | `-noverified` | -- | Skip signature verification |
 | `-nocomplain` | -- | Suppress scanning errors |
-| `-fileerror` | -- | Don't suppress file I/O errors during scanning |
+| `-fileerror` | -- | Don't suppress file I/O errors<br>during scanning |
 
 </details>
 
@@ -2382,12 +2382,12 @@ architecture. Pre-options and main options are separate dictionaries.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-engineflags` | EngineFlags | Override engine flags; defaults to `interpreter.EngineFlags` |
-| `-substitutionflags` | SubstitutionFlags | Override substitution flags; defaults to `interpreter.SubstitutionFlags` |
-| `-startindex` | int | Start parsing from this character index |
+| `-engineflags` | EngineFlags | Override engine flags;<br>defaults to `interpreter.EngineFlags` |
+| `-substitutionflags` | SubstitutionFlags | Override substitution flags;<br>defaults to<br>`interpreter.SubstitutionFlags` |
+| `-startindex` | int | Start parsing from this<br>character index |
 | `-characters` | int | Maximum characters to parse |
-| `-nested` | boolean | Parse as a nested command (within `[...]`) |
-| `-noready` | boolean | Skip the interpreter readiness check |
+| `-nested` | boolean | Parse as a nested command<br>(within `[...]`) |
+| `-noready` | boolean | Skip the interpreter<br>readiness check |
 
 </details>
 
@@ -2409,8 +2409,8 @@ architecture. Pre-options and main options are separate dictionaries.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-flags` | OptionBehaviorFlags | Option parsing behavior; defaults to `OptionBehaviorFlags.Default` |
-| `-optionsvar` | string | Store parsed options dictionary in this variable |
+| `-flags` | OptionBehaviorFlags | Option parsing behavior;<br>defaults to `OptionBehaviorFlags.Default` |
+| `-optionsvar` | string | Store parsed options dictionary<br>in this variable |
 | `-indexes` | -- | Return option index positions |
 | `-allowinteger` | -- | Allow integer values for options |
 | `-strict` | -- | Strict option validation |
@@ -2430,14 +2430,14 @@ architecture. Pre-options and main options are separate dictionaries.
 |--------|-------|-------------|
 | `-engineflags` | EngineFlags | Override engine flags |
 | `-substitutionflags` | SubstitutionFlags | Override substitution flags |
-| `-filename` | string | Associate a filename with the parsed script (for error reporting) |
-| `-currentline` | int | Starting line number for error reporting |
+| `-filename` | string | Associate a filename with the parsed<br>script (for error reporting) |
+| `-currentline` | int | Starting line number<br>for error reporting |
 | `-startindex` | int | Start parsing from this character index |
 | `-characters` | int | Maximum characters to parse |
 | `-nested` | boolean | Parse as nested script |
 | `-syntax` | boolean | Syntax-check only (don't evaluate) |
 | `-strict` | boolean | Strict parsing mode |
-| `-roundtrip` | boolean | Preserve enough information for round-trip reconstruction |
+| `-roundtrip` | boolean | Preserve enough information<br>for round-trip reconstruction |
 | `-noready` | boolean | Skip interpreter readiness check |
 
 </details>
@@ -2462,22 +2462,22 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-options` | RegexOptions | .NET regex options; defaults to `StringOps.DefaultRegExSyntaxOptions` |
+| `-options` | RegexOptions | .NET regex options; defaults to<br>`StringOps.DefaultRegExSyntaxOptions` |
 | `-all` | -- | Find all non-overlapping matches |
-| `-global` | -- | Controls whether variable indices reset between match groups; independent of `-all` |
+| `-global` | -- | Controls whether variable indices reset<br>between match groups;<br>independent of `-all` |
 | `-debug` | -- | Enable debug trace output |
 | `-about` | -- | Show regex engine info (**unsupported**) |
 | `-ecma` | -- | Use ECMAScript regex syntax |
-| `-compiled` | -- | Compile regex for faster repeated execution |
-| `-explicit` | -- | Require all capturing groups to be named |
+| `-compiled` | -- | Compile regex for faster<br>repeated execution |
+| `-explicit` | -- | Require all capturing groups<br>to be named |
 | `-reverse` | -- | Reverse search direction |
-| `-expanded` | -- | Allow whitespace and comments in the pattern |
-| `-indexes` / `-indices` | -- | Return start/end positions instead of matched strings |
+| `-expanded` | -- | Allow whitespace and comments<br>in the pattern |
+| `-indexes` / `-indices` | -- | Return start/end positions<br>instead of matched strings |
 | `-inline` | -- | Return matched strings directly |
 | `-skip` | int | Skip the first N matches |
 | `-limit` | int | Maximum number of matches to return |
-| `-line` | -- | Single-line mode (dot does not match newline) |
-| `-lineanchor` | -- | `^` and `$` match line boundaries |
+| `-line` | -- | Single-line mode<br>(dot does not match newline) |
+| `-lineanchor` | -- | `^` and `$` match<br>line boundaries |
 | `-linestop` | -- | Stop matching at line boundaries |
 | `-nocase` | -- | Case-insensitive matching |
 | `-noempty` | -- | Skip empty matches |
@@ -2492,21 +2492,21 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-options` | RegexOptions | .NET regex options; defaults to `StringOps.DefaultRegExSyntaxOptions` |
-| `-all` | -- | Replace all occurrences (default is first only) |
-| `-count` | int | Maximum number of replacements to perform |
+| `-options` | RegexOptions | .NET regex options; defaults to<br>`StringOps.DefaultRegExSyntaxOptions` |
+| `-all` | -- | Replace all occurrences<br>(default is first only) |
+| `-count` | int | Maximum number of replacements<br>to perform |
 | `-ecma` | -- | ECMAScript regex syntax |
 | `-compiled` | -- | Compile regex |
 | `-explicit` | -- | Require named groups |
-| `-quote` | -- | Quote regex metacharacters in the pattern |
+| `-quote` | -- | Quote regex metacharacters<br>in the pattern |
 | `-nostrict` | -- | Non-strict substitution mode |
 | `-reverse` | -- | Reverse replacement direction |
-| `-eval` | string | Evaluate this script for each match to compute replacement |
-| `-command` | -- | Use TIP #463 command-based replacement |
-| `-literal` | -- | Treat replacement as a literal string (no backslash substitution) |
+| `-eval` | string | Evaluate this script for each match<br>to compute replacement |
+| `-command` | -- | Use TIP #463 command-based<br>replacement |
+| `-literal` | -- | Treat replacement as a literal string<br>(no backslash substitution) |
 | `-verbatim` | -- | Verbatim replacement |
-| `-extra` | -- | Enable extended `\P`, `\I`, `\S`, `\M#`, `\N<name>` substitutions |
-| `-expanded` | -- | Allow whitespace and comments in pattern |
+| `-extra` | -- | Enable extended `\P`, `\I`, `\S`,<br>`\M#`, `\N<name>` substitutions |
+| `-expanded` | -- | Allow whitespace and comments<br>in pattern |
 | `-line` | -- | Single-line regex mode |
 | `-lineanchor` | -- | `^`/`$` match line boundaries |
 | `-linestop` | -- | Stop at line boundaries |
@@ -2524,8 +2524,8 @@ compatibility.
 | `-nodelete` | -- | Keep the original name (creates a copy) |
 | `-hidden` | -- | Make the new name hidden |
 | `-hiddenonly` | -- | Make both old and new names hidden |
-| `-kind` | IdentifierKind | Type of identifier (Command, Function, etc.); defaults to `None` |
-| `-newnamevar` | string | Store the actual new name in this variable |
+| `-kind` | IdentifierKind | Type of identifier<br>(Command, Function, etc.);<br>defaults to `None` |
+| `-newnamevar` | string | Store the actual new name<br>in this variable |
 
 </details>
 
@@ -2534,7 +2534,7 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-code` | ReturnCode | Return code (Ok, Error, Return, Break, Continue) |
+| `-code` | ReturnCode | Return code<br>(Ok, Error, Return, Break, Continue) |
 | `-errorinfo` | string | Error stack trace information |
 | `-errorcode` | string | Machine-readable error code |
 
@@ -2545,7 +2545,7 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-all` | -- | Close all open scopes, not just the current one |
+| `-all` | -- | Close all open scopes,<br>not just the current one |
 
 </details>
 
@@ -2555,8 +2555,8 @@ compatibility.
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-args` | -- | Pass arguments to the scope constructor |
-| `-clone` | -- | Clone variables from an existing scope |
-| `-byref` | -- | Create by-reference scope (variables are shared, not copied) |
+| `-clone` | -- | Clone variables<br>from an existing scope |
+| `-byref` | -- | Create by-reference scope<br>(variables are shared, not copied) |
 | `-global` | -- | Create in the global scope context |
 | `-open` | -- | Automatically open the scope after creation |
 | `-procedure` | -- | Create a procedure-scoped scope |
@@ -2571,7 +2571,7 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-eventwaitflags` | EventWaitFlags | Event waiting behavior during evaluation; defaults to `interpreter.EventWaitFlags` |
+| `-eventwaitflags` | EventWaitFlags | Event waiting behavior during evaluation;<br>defaults to `interpreter.EventWaitFlags` |
 | `-lock` | boolean | Acquire the scope lock during evaluation |
 | `-timeout` | int | Timeout in milliseconds for the evaluation |
 
@@ -2592,7 +2592,7 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-nocomplain` | -- | Suppress errors if the lock/unlock operation fails |
+| `-nocomplain` | -- | Suppress errors if the lock/unlock<br>operation fails |
 
 </details>
 
@@ -2621,24 +2621,24 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-timeouttype` | TimeoutType | Timeout semantics (Infinite, Default) |
-| `-addressfamily` | AddressFamily | IPv4, IPv6, or other address family |
+| `-timeouttype` | TimeoutType | Timeout semantics<br>(Infinite, Default) |
+| `-addressfamily` | AddressFamily | IPv4, IPv6, or other<br>address family |
 | `-keepalive` | boolean | Enable TCP keep-alive |
-| `-server` | string | Server callback command; presence makes this a server socket |
+| `-server` | string | Server callback command; presence<br>makes this a server socket |
 | `-buffer` | int | Socket buffer size in bytes |
-| `-timeout` | int | General operation timeout in milliseconds |
+| `-timeout` | int | General operation timeout<br>in milliseconds |
 | `-sendtimeout` | int | Send operation timeout |
 | `-receivetimeout` | int | Receive operation timeout |
-| `-availabletimeout` | int | Timeout for checking data availability |
+| `-availabletimeout` | int | Timeout for checking<br>data availability |
 | `-readtimeout` | int | Read operation timeout |
 | `-writetimeout` | int | Write operation timeout |
 | `-myaddr` | string | Local address to bind to |
 | `-myport` | string | Local port to bind to |
 | `-async` | -- | Asynchronous mode (**unsupported**) |
 | `-channelid` | string | Custom channel identifier |
-| `-nodelay` | -- | Disable Nagle algorithm (TCP_NODELAY); client only |
-| `-nobuffer` | -- | Disable socket buffering; client only |
-| `-noexclusive` | -- | Allow multiple listeners on the same port; server only |
+| `-nodelay` | -- | Disable Nagle algorithm<br>(TCP_NODELAY); client only |
+| `-nobuffer` | -- | Disable socket buffering;<br>client only |
+| `-noexclusive` | -- | Allow multiple listeners on<br>the same port; server only |
 | `-trace` | -- | Enable socket operation tracing |
 
 </details>
@@ -2648,13 +2648,13 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-encoding` | Encoding | Character encoding for the source file |
-| `-withinfo` | boolean | Return source file metadata along with result |
+| `-encoding` | Encoding | Character encoding<br>for the source file |
+| `-withinfo` | boolean | Return source file metadata<br>along with result |
 | `-time` | boolean | Measure and return execution time |
-| `-password` | byte[] | Decryption password for encrypted script files |
+| `-password` | byte[] | Decryption password<br>for encrypted script files |
 | `-library` | boolean | Treat the file as library code |
-| `-bundle` | boolean | Load from a script bundle resource instead of a file (requires `DATA`) |
-| `-bundleflags` | BundleFlags | Bundle loading behavior; defaults to `BundleFlags.Default` (requires `DATA`) |
+| `-bundle` | boolean | Load from a script bundle resource<br>instead of a file (requires `DATA`) |
+| `-bundleflags` | BundleFlags | Bundle loading behavior;<br>defaults to `BundleFlags.Default`<br>(requires `DATA`) |
 
 </details>
 
@@ -2663,7 +2663,7 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-string` | -- | Use string split semantics instead of character-based splitting |
+| `-string` | -- | Use string split semantics instead<br>of character-based splitting |
 
 </details>
 
@@ -2677,27 +2677,27 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-execute` | DbExecuteType | Execution mode (None, NonQuery, Scalar, Reader, ReaderAndCount) |
-| `-format` | DbResultFormat | Result format (None, List, Dictionary, DataReader, DataTable, etc.) |
-| `-transaction` | string | Variable name containing the transaction object to use |
-| `-commandtype` | CommandType | ADO.NET command type (Text, StoredProcedure, TableDirect) |
+| `-execute` | DbExecuteType | Execution mode (None, NonQuery, Scalar,<br>Reader, ReaderAndCount) |
+| `-format` | DbResultFormat | Result format (None, List, Dictionary,<br>DataReader, DataTable, etc.) |
+| `-transaction` | string | Variable name containing the<br>transaction object to use |
+| `-commandtype` | CommandType | ADO.NET command type<br>(Text, StoredProcedure, TableDirect) |
 | `-behavior` | CommandBehavior | ADO.NET command behavior flags |
 | `-time` | -- | Measure and report execution time |
-| `-timevar` | string | Store timing information in this variable |
+| `-timevar` | string | Store timing information<br>in this variable |
 | `-timeout` | int | Command timeout in milliseconds |
-| `-limit` | int | Maximum number of result rows to return |
-| `-rowsvar` | string | Store the affected row count in this variable |
-| `-rowvar` | string | Store per-row data in this variable |
+| `-limit` | int | Maximum number of result rows<br>to return |
+| `-rowsvar` | string | Store the affected row count<br>in this variable |
+| `-rowvar` | string | Store per-row data<br>in this variable |
 | `-nested` | boolean | Enable nested result set handling |
 | `-allownull` | boolean | Allow null values in results |
 | `-nullvalue` | string | String representation for null values |
-| `-dbnullvalue` | string | String representation for `DBNull` values |
-| `-errorvalue` | string | String representation for error values |
+| `-dbnullvalue` | string | String representation<br>for `DBNull` values |
+| `-errorvalue` | string | String representation<br>for error values |
 | `-pairs` | boolean | Return results as key-value pairs |
 | `-names` | boolean | Include column names in results |
 | `-nofixup` | boolean | Skip result fixup processing |
-| `-nocreate` | -- | Don't create opaque object handles for results |
-| `-verbatim` | -- | Return values without formatting conversion |
+| `-nocreate` | -- | Don't create opaque object handles<br>for results |
+| `-verbatim` | -- | Return values without<br>formatting conversion |
 | `-changed` | callback | Callback for row change notifications |
 | `-culture` | CultureInfo | Culture for value formatting |
 
@@ -2705,7 +2705,7 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-datetimekind` | DateTimeKind | DateTime interpretation for result values |
+| `-datetimekind` | DateTimeKind | DateTime interpretation<br>for result values |
 | `-datetimestyles` | DateTimeStyles | DateTime parsing styles |
 | `-datetimeformat` | string | DateTime format string |
 | `-datetimebehavior` | DateTimeBehavior | DateTime handling behavior |
@@ -2729,8 +2729,8 @@ Plus [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-stricttype` | -- | Require exact type match during type resolution |
-| `-verbose` | -- | Enable verbose type resolution diagnostics |
+| `-stricttype` | -- | Require exact type match<br>during type resolution |
+| `-verbose` | -- | Enable verbose type resolution<br>diagnostics |
 | `-nocase` | -- | Case-insensitive type name matching |
 
 </details>
@@ -2742,21 +2742,21 @@ Plus [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-type` | DbConnectionType | Database connection type (e.g., SQLite, SqlServer) |
-| `-type1` | DbConnectionType | Primary connection type for fallback resolution |
-| `-type2` | DbConnectionType | Secondary connection type for fallback resolution |
-| `-variable` | string | Store the connection object in this variable |
-| `-assemblyfilename` | string | Assembly file containing the ADO.NET provider |
-| `-typename` | string | Short type name of the connection class |
-| `-typefullname` | string | Fully qualified type name of the connection class |
-| `-valueflags` | ValueFlags | Value conversion flags for type resolution |
-| `-trustedonly` | -- | Only load trusted provider assemblies |
+| `-type` | DbConnectionType | Database connection type<br>(e.g., SQLite, SqlServer) |
+| `-type1` | DbConnectionType | Primary connection type<br>for fallback resolution |
+| `-type2` | DbConnectionType | Secondary connection type<br>for fallback resolution |
+| `-variable` | string | Store the connection object<br>in this variable |
+| `-assemblyfilename` | string | Assembly file containing<br>the ADO.NET provider |
+| `-typename` | string | Short type name<br>of the connection class |
+| `-typefullname` | string | Fully qualified type name<br>of the connection class |
+| `-valueflags` | ValueFlags | Value conversion flags<br>for type resolution |
+| `-trustedonly` | -- | Only load trusted<br>provider assemblies |
 | `-maybetrustedonly` | -- | Trusted-only (lenient) |
-| `-publickeytoken1` | string | Primary public key token for assembly verification |
-| `-publickeytoken2` | string | Secondary public key token for assembly verification |
-| `-stricttype` | -- | *(Ignored)* Carried over from pre-options pass |
-| `-verbose` | -- | *(Ignored)* Carried over from pre-options pass |
-| `-nocase` | -- | *(Ignored)* Carried over from pre-options pass |
+| `-publickeytoken1` | string | Primary public key token<br>for assembly verification |
+| `-publickeytoken2` | string | Secondary public key token<br>for assembly verification |
+| `-stricttype` | -- | *(Ignored)* Carried over<br>from pre-options pass |
+| `-verbose` | -- | *(Ignored)* Carried over<br>from pre-options pass |
+| `-nocase` | -- | *(Ignored)* Carried over<br>from pre-options pass |
 
 </details>
 
@@ -2767,8 +2767,8 @@ Plus [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-isolation` | IsolationLevel | Transaction isolation level (e.g., ReadCommitted, Serializable) |
-| `-variable` | string | Store the transaction object in this variable |
+| `-isolation` | IsolationLevel | Transaction isolation level<br>(e.g., ReadCommitted, Serializable) |
+| `-variable` | string | Store the transaction object<br>in this variable |
 
 </details>
 
@@ -2777,8 +2777,8 @@ Plus [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-culture` | CultureInfo | Culture for locale-aware comparison (requires `NET_20_SP2` or `NET_40`) |
-| `-options` | CompareOptions | Fine-grained comparison control (requires `NET_20_SP2` or `NET_40`) |
+| `-culture` | CultureInfo | Culture for locale-aware comparison<br>(requires `NET_20_SP2` or `NET_40`) |
+| `-options` | CompareOptions | Fine-grained comparison control<br>(requires `NET_20_SP2` or `NET_40`) |
 | `-nocase` | -- | Case-insensitive comparison |
 | `-comparison` | StringComparison | .NET `StringComparison` enum value |
 | `-length` | int | Compare only the first N characters |
@@ -2811,12 +2811,12 @@ Plus [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-valueformat` | string | Custom format specification for values |
-| `-datetimekind` | DateTimeKind | DateTime interpretation; defaults to `interpreter.DateTimeKind` |
-| `-datetimestyles` | DateTimeStyles | DateTime parsing styles; defaults to `ObjectOps.GetDefaultDateTimeStyles()` |
+| `-valueformat` | string | Custom format specification<br>for values |
+| `-datetimekind` | DateTimeKind | DateTime interpretation;<br>defaults to `interpreter.DateTimeKind` |
+| `-datetimestyles` | DateTimeStyles | DateTime parsing styles; defaults to<br>`ObjectOps.GetDefaultDateTimeStyles()` |
 | `-culture` | CultureInfo | Culture for formatting |
-| `-verbatim` | -- | Pass format string verbatim to `String.Format` |
-| `-valueflags` | ValueFlags | Value conversion flags; defaults to `ValueFlags.AnyNonCharacter` |
+| `-verbatim` | -- | Pass format string verbatim<br>to `String.Format` |
+| `-valueflags` | ValueFlags | Value conversion flags;<br>defaults to `ValueFlags.AnyNonCharacter` |
 
 </details>
 
@@ -2825,15 +2825,15 @@ Plus [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-strict` | -- | Return false (instead of true) for empty strings |
+| `-strict` | -- | Return false (instead of true)<br>for empty strings |
 | `-nocomplain` | -- | Suppress detailed error messages |
-| `-not` | boolean | Invert the test result; default comes from parsing `"not"` prefix words |
-| `-any` | boolean | Match if any character satisfies the test (vs. all characters) |
+| `-not` | boolean | Invert the test result; default comes<br>from parsing `"not"` prefix words |
+| `-any` | boolean | Match if any character satisfies<br>the test (vs. all characters) |
 | `-via` | boolean | Use alternate checking path |
 | `-count` | int | Check only the first N characters |
-| `-good` | string | Store the count of passing characters in this variable |
-| `-bad` | string | Store the count of failing characters in this variable |
-| `-failindex` | string | Store the index of the first failing character |
+| `-good` | string | Store the count of passing<br>characters in this variable |
+| `-bad` | string | Store the count of failing<br>characters in this variable |
+| `-failindex` | string | Store the index of the first<br>failing character |
 
 </details>
 
@@ -2842,14 +2842,14 @@ Plus [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-multipass` | -- | Apply mapping repeatedly until no more substitutions occur |
-| `-regexp` | -- | Use regex patterns instead of literal strings |
-| `-subspec` | -- | Allow sub-specifications in replacement patterns |
-| `-eval` | -- | Evaluate replacement strings as scripts |
+| `-multipass` | -- | Apply mapping repeatedly until<br>no more substitutions occur |
+| `-regexp` | -- | Use regex patterns instead of<br>literal strings |
+| `-subspec` | -- | Allow sub-specifications<br>in replacement patterns |
+| `-eval` | -- | Evaluate replacement strings<br>as scripts |
 | `-maximum` | int | Maximum number of replacements |
-| `-countvar` | string | Store the replacement count in this variable |
+| `-countvar` | string | Store the replacement count<br>in this variable |
 | `-comparison` | StringComparison | .NET comparison type for matching |
-| `-regexpoptions` | RegexOptions | Regex options when `-regexp` is active; defaults to `StringOps.DefaultRegExOptions` |
+| `-regexpoptions` | RegexOptions | Regex options when `-regexp` is active;<br>defaults to `StringOps.DefaultRegExOptions` |
 | `-nocase` | -- | Case-insensitive mapping |
 
 </details>
@@ -2859,7 +2859,7 @@ Plus [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-mode` | MatchMode | Matching mode (Exact, Glob, Regexp, SubString, etc.); defaults to `StringOps.DefaultMatchMode` |
+| `-mode` | MatchMode | Matching mode (Exact, Glob, Regexp,<br>SubString, etc.); defaults to<br>`StringOps.DefaultMatchMode` |
 | `-nocase` | -- | Case-insensitive matching |
 
 </details>
@@ -2869,7 +2869,7 @@ Plus [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-culture` | CultureInfo | Culture for locale-aware case conversion |
+| `-culture` | CultureInfo | Culture for locale-aware<br>case conversion |
 
 </details>
 
@@ -2922,12 +2922,12 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-alias` | -- | Create a command alias for the new Tcl interpreter |
+| `-alias` | -- | Create a command alias<br>for the new Tcl interpreter |
 | `-noinitialize` | -- | Skip Tcl interpreter initialization |
-| `-memory` | -- | Enable memory debugging in the Tcl interpreter |
-| `-safe` | -- | Create a safe (sandboxed) Tcl interpreter |
-| `-nobridge` | -- | Don't create the Eagle-to-Tcl bridge |
-| `-noforcedelete` | -- | Don't force-delete the interpreter on cleanup |
+| `-memory` | -- | Enable memory debugging<br>in the Tcl interpreter |
+| `-safe` | -- | Create a safe (sandboxed)<br>Tcl interpreter |
+| `-nobridge` | -- | Don't create the<br>Eagle-to-Tcl bridge |
+| `-noforcedelete` | -- | Don't force-delete the interpreter<br>on cleanup |
 | `-nocomplain` | -- | Suppress errors during creation |
 
 </details>
@@ -2964,18 +2964,18 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-flags` | FindFlags | Tcl library search flags; defaults to `interpreter.TclFindFlags` |
-| `-robustify` | -- | Apply robustness heuristics to the search |
+| `-flags` | FindFlags | Tcl library search flags;<br>defaults to `interpreter.TclFindFlags` |
+| `-robustify` | -- | Apply robustness heuristics<br>to the search |
 | `-architecture` | -- | Filter by processor architecture |
 | `-trustedonly` | -- | Only find trusted Tcl libraries |
 | `-maybetrustedonly` | -- | Trusted-only (lenient) |
 | `-verbose` | -- | Enable verbose search diagnostics |
-| `-eval` | string | Script to evaluate for each candidate found |
-| `-full` | -- | Return full path and version information |
+| `-eval` | string | Script to evaluate<br>for each candidate found |
+| `-full` | -- | Return full path and<br>version information |
 | `-minimumversion` | Version | Minimum acceptable Tcl version |
 | `-maximumversion` | Version | Maximum acceptable Tcl version |
-| `-unknownversion` | Version | Version to use when the actual version cannot be determined |
-| `-errorsvar` | string | Store search errors in this variable |
+| `-unknownversion` | Version | Version to use when the actual<br>version cannot be determined |
+| `-errorsvar` | string | Store search errors<br>in this variable |
 
 </details>
 
@@ -2986,7 +2986,7 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-noforcedelete` | -- | Don't force-delete the Tcl command on cleanup |
+| `-noforcedelete` | -- | Don't force-delete the Tcl command<br>on cleanup |
 | `-nocomplain` | -- | Suppress errors during creation |
 
 </details>
@@ -3000,18 +3000,18 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-findflags` | FindFlags | Tcl library search flags; defaults to `interpreter.TclFindFlags` |
-| `-loadflags` | LoadFlags | Tcl library loading flags; defaults to `interpreter.TclLoadFlags` |
-| `-robustify` | -- | Apply robustness heuristics to the load |
+| `-findflags` | FindFlags | Tcl library search flags;<br>defaults to `interpreter.TclFindFlags` |
+| `-loadflags` | LoadFlags | Tcl library loading flags;<br>defaults to `interpreter.TclLoadFlags` |
+| `-robustify` | -- | Apply robustness heuristics<br>to the load |
 | `-trustedonly` | -- | Only load trusted Tcl libraries |
 | `-maybetrustedonly` | -- | Trusted-only (lenient) |
 | `-eval` | string | Script to evaluate after loading |
-| `-bridge` | -- | Create the Eagle-to-Tcl bridge after loading |
+| `-bridge` | -- | Create the Eagle-to-Tcl bridge<br>after loading |
 | `-noforcedelete` | -- | Don't force-delete on cleanup |
 | `-nocomplain` | -- | Suppress errors during loading |
 | `-minimumversion` | Version | Minimum acceptable Tcl version |
 | `-maximumversion` | Version | Maximum acceptable Tcl version |
-| `-unknownversion` | Version | Version to use when the actual version cannot be determined |
+| `-unknownversion` | Version | Version to use when the actual<br>version cannot be determined |
 
 </details>
 
@@ -3062,7 +3062,7 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-flags` | FindFlags | Tcl library search flags; defaults to `interpreter.TclFindFlags` |
+| `-flags` | FindFlags | Tcl library search flags;<br>defaults to `interpreter.TclFindFlags` |
 | `-robustify` | -- | Apply robustness heuristics to the search |
 | `-architecture` | -- | Filter by processor architecture |
 | `-trustedonly` | -- | Only select trusted Tcl libraries |
@@ -3071,9 +3071,9 @@ compatibility.
 | `-eval` | string | Script to evaluate for each candidate |
 | `-minimumversion` | Version | Minimum acceptable Tcl version |
 | `-maximumversion` | Version | Maximum acceptable Tcl version |
-| `-unknownversion` | Version | Version to use when the actual version cannot be determined |
+| `-unknownversion` | Version | Version to use when the actual<br>version cannot be determined |
 | `-errorsvar` | string | Store search errors in this variable |
-| `-allerrors` | -- | Include all errors (not just the first) in the errors variable |
+| `-allerrors` | -- | Include all errors (not just the first)<br>in the errors variable |
 
 </details>
 
@@ -3126,7 +3126,7 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-flags` | FindFlags | Tcl library search flags; defaults to `interpreter.TclFindFlags` |
+| `-flags` | FindFlags | Tcl library search flags;<br>defaults to `interpreter.TclFindFlags` |
 | `-robustify` | -- | Apply robustness heuristics |
 | `-trustedonly` | -- | Only consider trusted Tcl libraries |
 | `-maybetrustedonly` | -- | Trusted-only (lenient) |
@@ -3134,8 +3134,8 @@ compatibility.
 | `-maximumversion` | Version | Maximum version in the range |
 | `-majorincrement` | int | Major version increment step |
 | `-minorincrement` | int | Minor version increment step |
-| `-intermediateminimum` | int | Minimum intermediate version number |
-| `-intermediatemaximum` | int | Maximum intermediate version number |
+| `-intermediateminimum` | int | Minimum intermediate<br>version number |
+| `-intermediatemaximum` | int | Maximum intermediate<br>version number |
 
 </details>
 
@@ -3146,18 +3146,18 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-constraints` | string | Constraint expression that must be true for the test to run |
+| `-constraints` | string | Constraint expression that must be<br>true for the test to run |
 | `-setup` | string | Script to run before the test body |
 | `-body` | string | The test script to evaluate |
-| `-cleanup` | string | Script to run after the test (always runs) |
+| `-cleanup` | string | Script to run after the test<br>(always runs) |
 | `-result` | string | Expected result to compare against |
 | `-output` | string | Expected stdout output |
-| `-errorOutput` | string | Expected stderr output (case-insensitive option name) |
-| `-returnCodes` | list | Acceptable return codes (case-insensitive) |
-| `-execReturnCodes` | list | Acceptable execution return codes (case-insensitive) |
+| `-errorOutput` | string | Expected stderr output<br>(case-insensitive option name) |
+| `-returnCodes` | list | Acceptable return codes<br>(case-insensitive) |
+| `-execReturnCodes` | list | Acceptable execution return codes<br>(case-insensitive) |
 | `-exitCode` | ExitCode | Expected exit code (case-insensitive) |
 | `-execExitCode` | ExitCode | Expected execution exit code (case-insensitive) |
-| `-match` | MatchMode | How to compare actual vs. expected result; defaults to `StringOps.DefaultResultMatchMode` |
+| `-match` | MatchMode | How to compare actual vs. expected result;<br>defaults to `StringOps.DefaultResultMatchMode` |
 
 **Eagle-specific options:**
 
@@ -3165,17 +3165,17 @@ compatibility.
 |--------|-------|-------------|
 | `-debug` | boolean | Enable debug mode during test execution |
 | `-trace` | boolean | Enable trace output during test |
-| `-captureTrace` | boolean | Capture trace output for comparison (TEST builds only) |
-| `-time` | boolean | Measure and report test execution time |
-| `-once` | boolean | Run the test only once (skip repeat logic) |
+| `-captureTrace` | boolean | Capture trace output for comparison<br>(TEST builds only) |
+| `-time` | boolean | Measure and report<br>test execution time |
+| `-once` | boolean | Run the test only once<br>(skip repeat logic) |
 | `-text` | string | Additional text to display with test results |
 | `-argv` | list | Additional arguments for the test |
 | `-timeout` | int | Timeout in milliseconds |
-| `-ruleSet` | IRuleSet | Security rule set for the test (case-insensitive) |
-| `-noCase` | boolean | Case-insensitive result comparison (case-insensitive option name) |
-| `-visibleSpace` | boolean | Make whitespace visible in output (case-insensitive) |
-| `-regExOptions` | RegexOptions | Regex options for `-match regexp`; defaults to `TestOps.RegExOptions` |
-| `-constraintExpression` | string | Additional constraint expression (case-insensitive) |
+| `-ruleSet` | IRuleSet | Security rule set for the test<br>(case-insensitive) |
+| `-noCase` | boolean | Case-insensitive result comparison<br>(case-insensitive option name) |
+| `-visibleSpace` | boolean | Make whitespace visible in output<br>(case-insensitive) |
+| `-regExOptions` | RegexOptions | Regex options for `-match regexp`;<br>defaults to `TestOps.RegExOptions` |
+| `-constraintExpression` | string | Additional constraint expression<br>(case-insensitive) |
 | `-repeatCount` | int | Number of times to repeat the test |
 | `-noCleanup` | boolean | Skip cleanup even if defined |
 | `-noCancel` / `-globalCancel` | boolean | Cancellation control |
@@ -3188,15 +3188,15 @@ compatibility.
 | `-ignoreMatch` | MatchMode | Match mode for ignore patterns |
 | `-ignorePatterns` | list | Patterns for output to ignore in comparison |
 | `-libraryPath` | string | Override library search path |
-| `-isolationLevel` | IsolationLevel | Test isolation level; defaults to `IsolationLevel.Default` |
-| `-isolationPassDetail` / `-isolationFailDetail` | IsolationDetail | Detail level for pass/fail in isolation mode |
-| `-isolationPathType` | TestPathType | Path type for isolated test execution |
+| `-isolationLevel` | IsolationLevel | Test isolation level;<br>defaults to `IsolationLevel.Default` |
+| `-isolationPassDetail` / `-isolationFailDetail` | IsolationDetail | Detail level for pass/fail<br>in isolation mode |
+| `-isolationPathType` | TestPathType | Path type for isolated<br>test execution |
 | `-isolationUnicode` | boolean | Unicode mode for isolated tests |
-| `-isolationTemplate` | string | Template for isolated test execution |
-| `-isolationOtherArguments` / `-isolationLastArguments` | list | Additional arguments for isolated execution |
-| `-isolationFileName` / `-isolationLogFile` | string | File paths for isolated test output |
-| `-noChangeReturnCode` | boolean | Don't modify the return code based on test outcome |
-| `-stopOnHookError` | boolean | Stop test execution if a hook reports an error |
+| `-isolationTemplate` | string | Template for isolated<br>test execution |
+| `-isolationOtherArguments` / `-isolationLastArguments` | list | Additional arguments<br>for isolated execution |
+| `-isolationFileName` / `-isolationLogFile` | string | File paths for isolated<br>test output |
+| `-noChangeReturnCode` | boolean | Don't modify the return code<br>based on test outcome |
+| `-stopOnHookError` | boolean | Stop test execution if a hook<br>reports an error |
 
 </details>
 
@@ -3205,15 +3205,15 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-timeout` | int | Timeout in milliseconds for the timed command |
-| `-statistics` | boolean | Return detailed execution statistics instead of simple timing |
-| `-breakOk` | boolean | Allow `break` return code without error (case-insensitive) |
-| `-errorOk` | boolean | Allow `error` return code without error (case-insensitive) |
-| `-noCancel` | boolean | Don't honor cancellation during timing (case-insensitive) |
-| `-globalCancel` | boolean | Use global cancellation (case-insensitive) |
-| `-noHalt` | boolean | Don't halt on timeout (case-insensitive) |
-| `-noEvent` | boolean | Don't process events during timing (case-insensitive) |
-| `-noExit` | boolean | Don't allow exit during timing (case-insensitive) |
+| `-timeout` | int | Timeout in milliseconds<br>for the timed command |
+| `-statistics` | boolean | Return detailed execution statistics<br>instead of simple timing |
+| `-breakOk` | boolean | Allow `break` return code without<br>error (case-insensitive) |
+| `-errorOk` | boolean | Allow `error` return code without<br>error (case-insensitive) |
+| `-noCancel` | boolean | Don't honor cancellation during<br>timing (case-insensitive) |
+| `-globalCancel` | boolean | Use global cancellation<br>(case-insensitive) |
+| `-noHalt` | boolean | Don't halt on timeout<br>(case-insensitive) |
+| `-noEvent` | boolean | Don't process events during<br>timing (case-insensitive) |
+| `-noExit` | boolean | Don't allow exit during<br>timing (case-insensitive) |
 
 </details>
 
@@ -3225,9 +3225,9 @@ compatibility.
 | `-clientdata` | object | Client data for the unload operation |
 | `-data` | object | Additional data for unload |
 | `-nocase` | -- | Case-insensitive plugin name matching |
-| `-keeplibrary` | -- | Keep the underlying library loaded after plugin unload |
-| `-nocomplain` | -- | Suppress errors if the plugin is not found |
-| `-match` | MatchMode | Plugin name matching mode; defaults to `StringOps.DefaultUnloadMatchMode` |
+| `-keeplibrary` | -- | Keep the underlying library loaded<br>after plugin unload |
+| `-nocomplain` | -- | Suppress errors if the plugin<br>is not found |
+| `-match` | MatchMode | Plugin name matching mode;<br>defaults to<br>`StringOps.DefaultUnloadMatchMode` |
 
 </details>
 
@@ -3236,13 +3236,13 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-nocomplain` | -- | Don't error if the variable does not exist |
-| `-unlinkonly` | -- | Only unlink from parent scope; don't delete the underlying variable |
-| `-remove` | -- | Remove the variable entirely from all scopes |
-| `-notrace` | -- | Don't fire variable trace callbacks during unset |
-| `-purge` | -- | Purge the variable from internal caches |
-| `-zerostring` | -- | Zero out the string memory before freeing (Windows native only; security feature) |
-| `-maybezerostring` | -- | Conditionally zero memory (Windows native; silently ignored on other platforms) |
+| `-nocomplain` | -- | Don't error if the variable<br>does not exist |
+| `-unlinkonly` | -- | Only unlink from parent scope;<br>don't delete the underlying variable |
+| `-remove` | -- | Remove the variable entirely<br>from all scopes |
+| `-notrace` | -- | Don't fire variable trace callbacks<br>during unset |
+| `-purge` | -- | Purge the variable<br>from internal caches |
+| `-zerostring` | -- | Zero out the string memory before<br>freeing (Windows native only;<br>security feature) |
+| `-maybezerostring` | -- | Conditionally zero memory<br>(Windows native; silently ignored<br>on other platforms) |
 
 </details>
 
@@ -3251,9 +3251,9 @@ compatibility.
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-kind` | UriKind | URI kind constraint (Absolute, Relative, RelativeOrAbsolute) |
-| `-components` | UriComponents | Which URI components to compare; defaults to `AbsoluteUri` |
-| `-format` | UriFormat | How to format components before comparison |
+| `-kind` | UriKind | URI kind constraint (Absolute,<br>Relative, RelativeOrAbsolute) |
+| `-components` | UriComponents | Which URI components to compare;<br>defaults to `AbsoluteUri` |
+| `-format` | UriFormat | How to format components<br>before comparison |
 | `-comparison` | StringComparison | .NET string comparison type |
 | `-nocase` | -- | Case-insensitive comparison |
 
@@ -3282,14 +3282,14 @@ compatibility.
 | `-retries` | int | Number of retry attempts on failure |
 | `-timeout` | int | Timeout in milliseconds per attempt |
 | `-callback` | list | Async callback script |
-| `-callbackflags` | CallbackFlags | Callback behavior flags; defaults to `CallbackFlags.Default` |
+| `-callbackflags` | CallbackFlags | Callback behavior flags;<br>defaults to `CallbackFlags.Default` |
 | `-inline` / `-noinline` | -- | Control inline result handling |
 | `-trusted` | -- | Trust the remote server's certificate |
-| `-yesprotocol` / `-noprotocol` | -- | Protocol selection control (TEST builds only) |
-| `-obsolete` | -- | Allow obsolete protocols (TEST builds only) |
+| `-yesprotocol` / `-noprotocol` | -- | Protocol selection control<br>(TEST builds only) |
+| `-obsolete` | -- | Allow obsolete protocols<br>(TEST builds only) |
 | `-encodingtype` | EncodingType | Response encoding type |
-| `-encoding` | Encoding | Character encoding for the response |
-| `-webclientdata` | object | Custom WebClient configuration object |
+| `-encoding` | Encoding | Character encoding<br>for the response |
+| `-webclientdata` | object | Custom WebClient<br>configuration object |
 
 </details>
 
@@ -3311,18 +3311,18 @@ Same as `[uri get]` plus:
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-handle` | object | Wait on a specific event handle object |
-| `-eventwaitflags` | EventWaitFlags | Event waiting behavior; defaults to `interpreter.EventWaitFlags` |
-| `-variableflags` | VariableFlags | Variable watch flags; defaults to `interpreter.EventVariableFlags` |
+| `-handle` | object | Wait on a specific event<br>handle object |
+| `-eventwaitflags` | EventWaitFlags | Event waiting behavior;<br>defaults to `interpreter.EventWaitFlags` |
+| `-variableflags` | VariableFlags | Variable watch flags; defaults to<br>`interpreter.EventVariableFlags` |
 | `-thread` | int64 | Target thread for event processing |
-| `-limit` | int | Maximum number of events to process |
+| `-limit` | int | Maximum number of events<br>to process |
 | `-timeout` | int | Timeout in milliseconds |
-| `-clear` | -- | Clear pending events before waiting |
-| `-force` | -- | Force wait even if no events are pending |
+| `-clear` | -- | Clear pending events<br>before waiting |
+| `-force` | -- | Force wait even if no events<br>are pending |
 | `-nocomplain` | -- | Suppress timeout errors |
-| `-leaveresult` | -- | Don't clear the interpreter result after waiting |
-| `-resetcancel` | -- | Reset cancellation flag after wait completes (restricted) |
-| `-locked` | string | Lock name to acquire during the wait |
+| `-leaveresult` | -- | Don't clear the interpreter result<br>after waiting |
+| `-resetcancel` | -- | Reset cancellation flag after<br>wait completes (restricted) |
+| `-locked` | string | Lock name to acquire<br>during the wait |
 
 </details>
 
@@ -3335,21 +3335,21 @@ Same as `[uri get]` plus:
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-objectname` | string | Name for the deserialized opaque object handle |
+| `-objectname` | string | Name for the deserialized<br>opaque object handle |
 | `-type` | Type | .NET type to deserialize into |
-| `-nocreate` | -- | Don't create an opaque object handle for the result |
-| `-nodispose` | -- | Don't mark the object for automatic disposal |
-| `-tostring` | -- | Return the `ToString()` representation instead of an opaque handle |
-| `-stricttype` | -- | Require exact type match during object resolution |
-| `-verbose` | -- | Enable verbose type resolution diagnostics |
+| `-nocreate` | -- | Don't create an opaque object handle<br>for the result |
+| `-nodispose` | -- | Don't mark the object<br>for automatic disposal |
+| `-tostring` | -- | Return the `ToString()` representation<br>instead of an opaque handle |
+| `-stricttype` | -- | Require exact type match<br>during object resolution |
+| `-verbose` | -- | Enable verbose type resolution<br>diagnostics |
 | `-nocase` | -- | Case-insensitive type name matching |
-| `-alias` | -- | Create a command alias for the deserialized object |
+| `-alias` | -- | Create a command alias<br>for the deserialized object |
 | `-aliasraw` | -- | Use raw dispatch for the alias |
 | `-aliasall` | -- | Use invokeall dispatch for the alias |
-| `-aliasreference` | -- | Use reference-counted handle for the alias |
-| `-tcl` | TclInterpreter | Bridge the object to a Tcl interpreter (requires `NATIVE && TCL`) |
+| `-aliasreference` | -- | Use reference-counted handle<br>for the alias |
+| `-tcl` | TclInterpreter | Bridge the object to a Tcl interpreter<br>(requires `NATIVE && TCL`) |
 | `-noforcedelete` | -- | Don't force-delete the alias on cleanup |
-| `-encoding` | Encoding | Character encoding for deserialization |
+| `-encoding` | Encoding | Character encoding<br>for deserialization |
 | `-objectflags` | ObjectFlags | Object handle behavior flags |
 
 </details>
@@ -3360,8 +3360,8 @@ Same as `[uri get]` plus:
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-file` | -- | Treat the XML argument as a file path |
-| `-namespaces` | dictionary | XML namespace prefix-to-URI mappings for XPath evaluation |
-| `-xpaths` | list | List of XPath expressions to iterate over |
+| `-namespaces` | dictionary | XML namespace prefix-to-URI mappings<br>for XPath evaluation |
+| `-xpaths` | list | List of XPath expressions<br>to iterate over |
 
 Plus all [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 `-returntype`, `-objecttype`, `-create`, `-nodispose`, `-alias`, `-aliasraw`,
@@ -3377,10 +3377,10 @@ Plus all [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-stricttype` | -- | Require exact type match during object resolution |
-| `-verbose` | -- | Enable verbose type resolution diagnostics |
+| `-stricttype` | -- | Require exact type match<br>during object resolution |
+| `-verbose` | -- | Enable verbose type resolution<br>diagnostics |
 | `-nocase` | -- | Case-insensitive type name matching |
-| `-encoding` | Encoding | Character encoding for serialization output |
+| `-encoding` | Encoding | Character encoding<br>for serialization output |
 
 </details>
 
