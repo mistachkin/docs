@@ -494,60 +494,235 @@ Most option dictionaries include `Option.CreateEndOfOptions()` to allow
 
 ## 8. Common Option Patterns Across Commands
 
-### 8.1 Object Handle Management Options
+Many options appear across 10-30+ commands with identical semantics.
+This section consolidates them into named groups so per-command entries
+(Section 13) can reference the group instead of re-explaining every
+option. When a Section 13 entry says "includes the standard
+[object handle options](#81-object-handle-management-the-fixupreturnvalue-set),"
+it means every option in that group is present with the behavior
+described here.
 
-These options appear in any command that creates or returns .NET object handles:
+Occurrence counts reflect the total number of distinct
+command/sub-command option sets (across both `CommandOptions.cs` and
+`ObjectOps.cs`) that include the option. The count tells you how
+"universal" an option is.
 
-| Option | Flags | Purpose |
-|--------|-------|---------|
-| `-objectname` | `MustHaveValue` | Explicit name for the created handle |
-| `-create` | configurable | Allow automatic object creation |
-| `-nocreate` | configurable | Disallow automatic object creation |
-| `-nodispose` | configurable | Prevent disposal when handle is removed |
-| `-alias` | configurable | Create command alias for the handle |
-| `-aliasraw` | `None` | Create raw (minimal processing) alias |
-| `-aliasall` | `None` | Create comprehensive alias |
-| `-aliasreference` | `None` | Create reference-tracking alias |
-| `-tcl` | `None` | Bridge handle to a native Tcl interpreter |
-| `-noforcedelete` | `None` | Don't force-delete the alias on cleanup |
-| `-tostring` | `None` | Convert the result to string representation |
-| `-objectflags` | `MustHaveEnumValue` | Override default `ObjectFlags` |
+### 8.1 Object Handle Management (the FixupReturnValue Set)
 
-These are centralized in `ObjectOps.GetFixupReturnValueOptions()` and composed
-into commands via the two-collection constructor.
+<a id="fixupreturnvalue-options"></a>
 
-### 8.2 Type Resolution Options
+These 13 options form a canonical set defined in
+`ObjectOps.GetFixupReturnValueOptions()`. They appear in any command
+that creates or returns .NET opaque object handles via the
+`MarshalOps.FixupReturnValue` or `Utility.FixupReturnValue` pipeline.
 
-Commands that resolve .NET types commonly include:
+| Option | Value | Unsafe | Description |
+|--------|-------|--------|-------------|
+| `-objectname` | string | yes | Explicit name for the created handle; without this, an auto-generated name is used |
+| `-returntype` | Type | yes | Expected return type; influences how the return value is interpreted |
+| `-objecttype` | Type | yes | Override the resolved type of the returned object |
+| `-create` | -- | -- | Allow automatic opaque object handle creation (default depends on command) |
+| `-nodispose` | -- | yes | Prevent `Dispose()` from being called when the handle is removed |
+| `-alias` | -- | -- | Create a command alias for the handle (invoke dispatch) |
+| `-aliasraw` | -- | -- | Create a raw alias (invokeraw dispatch) |
+| `-aliasall` | -- | -- | Create a comprehensive alias (invokeall dispatch) |
+| `-aliasreference` | -- | yes | Create a reference-counted alias (prevents premature disposal) |
+| `-tcl` | TclInterpreter | yes | Bridge the handle to a native Tcl interpreter (requires `NATIVE && TCL`) |
+| `-noforcedelete` | -- | yes | Don't force-delete the command alias when there is a name collision |
+| `-tostring` | -- | -- | Return `ToString()` representation instead of an opaque handle |
+| `-objectflags` | ObjectFlags | yes | Override default object handle behavior flags |
 
-| Option | Purpose |
-|--------|---------|
-| `-type` | .NET type name to resolve |
-| `-objecttypes` | List of `ObjectOps` type categories to search |
-| `-nocase` | Case-insensitive type name matching |
-| `-stricttype` | Fail if type cannot be resolved (instead of warning) |
-| `-verbose` | Show detailed type resolution information |
+**Commands that include the full canonical set** (via composition with
+`GetFixupReturnValueOptions()`):
 
-### 8.3 Method Invocation Options
+- `[object invoke]`, `[object invokeraw]`, `[object invokeall]`
+  (via `GetInvokeSharedOptions()`)
+- `[sql execute]` (via `GetSqlExecuteOptions()`)
+- `[read]` (via `GetReadOptions()`)
+- `[xml foreach]` (via `GetXmlForEachOptions()`)
 
-Commands that invoke .NET methods include:
+**Commands that include a subset** of handle management options
+(defined inline rather than via composition):
 
-| Option | Purpose |
-|--------|---------|
-| `-marshalflags` | Control value conversion between Eagle and .NET |
-| `-argumentflags` | Control by-reference argument handling |
-| `-bindingflags` | .NET reflection binding flags for member lookup |
-| `-objectflags` | Object handle management flags |
-| `-byrefobjectflags` | Flags for by-reference return values |
-| `-reorderflags` | Control parameter reordering for overload resolution |
-| `-nobyref` | Disable by-reference argument passing |
-| `-debug` | Enable debug output during invocation |
-| `-trace` | Enable trace output during invocation |
-| `-limit` / `-index` | Control overload selection when multiple match |
+- `[object create]` -- includes `-objectname`, `-nocreate`,
+  `-nodispose`, `-alias`, `-aliasraw`, `-aliasall`, `-aliasreference`,
+  `-tcl`, `-noforcedelete`, `-tostring`, `-objectflags`,
+  `-byrefobjectflags`
+- `[object foreach]` -- includes `-objectname`, `-nocreate`,
+  `-nodispose`, `-alias`, `-aliasraw`, `-aliasall`, `-aliasreference`,
+  `-tcl`, `-noforcedelete`, `-tostring`, `-objectflags`
+- `[object get]` -- includes `-objectname`, `-nocreate`, `-nodispose`,
+  `-alias`, `-aliasraw`, `-aliasall`, `-aliasreference`, `-tcl`,
+  `-noforcedelete`, `-tostring`, `-objectflags`, `-byrefobjectflags`
+- `[object load]` -- includes `-objectname`, `-create`, `-nodispose`,
+  `-alias`, `-aliasraw`, `-aliasall`, `-aliasreference`, `-tcl`,
+  `-noforcedelete`, `-tostring`, `-objectflags`
+- `[library call]` -- includes `-objectname`, `-create`, `-nodispose`,
+  `-alias`, `-aliasraw`, `-aliasall`, `-aliasreference`, `-tcl`,
+  `-noforcedelete`, `-tostring`, `-objectflags`, `-byrefobjectflags`
+- `[callback dequeue]` -- includes `-objectname`, `-nodispose`,
+  `-alias`, `-aliasraw`, `-aliasall`, `-aliasreference`, `-tcl`,
+  `-noforcedelete`, `-tostring`, `-objectflags`
+- `[xml deserialize]` -- includes `-objectname`, `-create`,
+  `-nodispose`, `-alias`, `-aliasraw`, `-aliasall`,
+  `-aliasreference`, `-tcl`, `-noforcedelete`, `-tostring`,
+  `-objectflags`
+- `[debug exception]` -- includes `-objectname`, `-create`,
+  `-nodispose`, `-alias`, `-aliasraw`, `-aliasall`,
+  `-aliasreference`, `-tcl`, `-noforcedelete`, `-tostring`,
+  `-objectflags`
 
-### 8.4 Security Options
+### 8.2 Error and Output Control
 
-Many commands include options restricted to unsafe interpreters:
+These options control diagnostic output and error suppression. They
+always have the same meaning regardless of which command they appear in.
+
+| Option | Count | Description |
+|--------|-------|-------------|
+| `-nocomplain` | 28 | Suppress errors; the operation returns success (empty string) instead of raising an error |
+| `-verbose` | 21 | Enable detailed diagnostic output during the operation |
+| `-debug` | 9 | Enable debug-level diagnostics (more targeted than `-verbose`) |
+| `-trace` | 9 | Enable trace-level diagnostics (finest granularity) |
+| `-noerror` | 3 | Don't set the error return code on failure; the error message is still available but the return code is `Ok` |
+
+**Usage notes:**
+
+- `-nocomplain` is the most common cross-cutting option. It appears in
+  object lifecycle commands (`[object dispose]`, `[object cleanup]`),
+  type resolution, information queries, and more.
+- `-verbose`, `-debug`, and `-trace` form a diagnostic hierarchy but
+  are not always present together. Some commands offer only `-verbose`;
+  reflection-heavy commands (create, invoke) offer all three.
+- In safe interpreters, `-debug` and `-trace` are sometimes marked
+  `Unsafe` because their output could leak implementation details.
+
+### 8.3 Type Resolution
+
+These options appear in commands that need to resolve .NET type names
+to `System.Type` objects.
+
+| Option | Count | Description |
+|--------|-------|-------------|
+| `-type` | 31 | .NET type name to resolve (fully-qualified or simple name) |
+| `-objecttypes` | 10 | List of type categories to search (e.g., `AssemblyQualified`, `Simple`) |
+| `-stricttype` | 15 | Fail if the type cannot be resolved exactly, instead of returning a best-effort match or warning |
+| `-nocase` | 36 | Case-insensitive name matching |
+
+**Note on `-nocase`:** This is the single most common cross-cutting
+option (36 occurrences). It appears in four distinct contexts -- type
+name matching, member/method name matching, string/pattern matching,
+and file path matching -- but always means "case-insensitive." The
+context determines *what* is matched case-insensitively.
+
+### 8.4 Method Invocation and Reflection
+
+These options appear in commands that invoke .NET methods or access
+members via reflection. They are concentrated in `[object invoke]`,
+`[object invokeraw]`, `[object invokeall]`, `[object create]`, and
+`[library call]`.
+
+| Option | Count | Description |
+|--------|-------|-------------|
+| `-marshalflags` | 13 | Control value conversion between Eagle and .NET types (Unsafe) |
+| `-argumentflags` | 7 | Control by-reference argument handling behavior (Unsafe) |
+| `-bindingflags` | 7 | .NET reflection `BindingFlags` for member lookup |
+| `-flags` | 20 | Alias for `-bindingflags` in most contexts; also used for `EventFlags`, `ScriptFlags`, etc. in non-reflection commands |
+| `-reorderflags` | 4 | Control method overload reordering during resolution |
+| `-nobyref` | 5 | Disable by-reference parameter handling |
+| `-noargs` | 5 | Don't pass arguments to the method/constructor |
+| `-noinvoke` | 5 | Resolve the member without invoking it (metadata inspection) |
+| `-limit` | 9 | Maximum number of method/constructor overloads to consider |
+| `-index` | 8 | Select a specific overload by zero-based index |
+
+**Usage notes:**
+
+- `-marshalflags` and `-argumentflags` are almost always `Unsafe`
+  because they can alter how values cross the managed/unmanaged
+  boundary.
+- `-flags` is overloaded: in reflection commands it means
+  `BindingFlags`; in event commands it means `EventFlags`; in
+  `[source]` it means `ScriptFlags`. The value type is always
+  appropriate to the context.
+- `-limit` and `-index` work together: `-limit` narrows the candidate
+  set, `-index` picks one from it.
+
+### 8.5 DateTime and Encoding
+
+These options control temporal value interpretation and character
+encoding for I/O operations.
+
+**DateTime options** (6 occurrences each, concentrated in
+`[library call]`, `[object invoke]`, `[object invokeraw]`,
+`[sql execute]`, `[clock]` sub-commands):
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-datetimekind` | DateTimeKind | UTC, Local, or Unspecified interpretation |
+| `-datetimestyles` | DateTimeStyles | Parsing styles (e.g., `AllowWhiteSpaces`, `AssumeUniversal`) |
+| `-datetimeformat` | string | Custom DateTime format string (e.g., `"yyyy-MM-dd HH:mm:ss"`) |
+
+**Encoding option** (18 occurrences across I/O commands):
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-encoding` | Encoding | Character encoding for byte-to-string or string-to-byte conversion |
+
+Commands using `-encoding`: `[gets]`, `[puts]`, `[source]`,
+`[base64 encode]`, `[base64 decode]`, `[hash normal]`,
+`[hash keyed]`, `[hash mac]`, `[read]`, `[xml serialize]`,
+`[xml deserialize]`, and others.
+
+In safe interpreters, `-encoding` is sometimes marked `Unsafe`
+(e.g., in `[gets]` and `[puts]`) because it could affect
+security-sensitive I/O operations.
+
+### 8.6 Execution Control
+
+These options control timing, safety overrides, and execution mode.
+
+| Option | Count | Description |
+|--------|-------|-------------|
+| `-time` | 26 | Measure and report execution time; often paired with `-timevar` to store the result |
+| `-timeout` | 15 | Operation timeout in milliseconds; the operation raises an error or is cancelled if the timeout expires |
+| `-force` | 16 | Override safety checks (e.g., allow removal of a locked variable, force-close a channel) |
+| `-synchronous` | 4 | Force synchronous execution; prevents the operation from being dispatched to a thread pool or event queue |
+
+**Usage notes:**
+
+- `-time` is very common (26 occurrences) and always has the same
+  behavior: wraps the operation in a stopwatch and reports elapsed
+  time. Many commands also support `-timevar` to store the timing
+  result in a variable.
+- `-timeout` appears in network operations (`[uri download]`,
+  `[uri upload]`), database operations (`[sql execute]`), and
+  synchronization (`[object wait]`). The unit is always milliseconds.
+- `-force` semantics vary slightly by command but always mean "proceed
+  despite a condition that would normally prevent the operation."
+
+### 8.7 Matching and Filtering
+
+These options appear in commands that filter or search by pattern.
+
+| Option | Count | Description |
+|--------|-------|-------------|
+| `-nocase` | 36 | Case-insensitive matching (see Section 8.3 for full discussion) |
+| `-pattern` | 4 | Filter pattern string |
+| `-mode` / `-match` | 4 / 7 | `MatchMode` value controlling the pattern type (Glob, Regexp, Exact, etc.) |
+
+Commands that support matching often accept a trailing pattern
+argument rather than a `-pattern` option. The `-mode` or `-match`
+option then specifies how to interpret that pattern. Typical
+combinations:
+
+- `-nocase` + trailing pattern: `[info commands ?pattern?]`
+- `-match` + argument: `[lsearch -match regexp $list $pattern]`
+- `-mode` + `-pattern` + `-nocase`: `[object members]`
+
+### 8.8 Security Options
+
+Many commands include options restricted to unsafe interpreters.
+These options are hidden (not visible in option enumeration) in safe
+interpreters and raise an error if used.
 
 | Pattern | Meaning |
 |---------|---------|
@@ -555,17 +730,11 @@ Many commands include options restricted to unsafe interpreters:
 | `OptionFlags.Unsafe \| OptionFlags.MustHaveValue` | Unsafe string parameter |
 | `OptionFlags.MustHaveRuleSetValue \| OptionFlags.CouldBePath \| OptionFlags.Unsafe` | Rule set for security validation (unsafe because it could reference filesystem paths) |
 
-Common unsafe options across commands: `-interpreter`, `-sdk`, `-security`,
-`-nosecurity`, `-debug`, `-thread`, `-timeout`, `-ruleset`.
-
-### 8.5 Encoding Options
-
-Commands dealing with I/O consistently use:
-
-| Option | Flags | Commands |
-|--------|-------|----------|
-| `-encoding` | `MustHaveEncodingValue` | `gets`, `puts`, `source`, `base64`, `hash`, `read`, etc. |
-| `-encoding` | `MustHaveEncodingValue \| Unsafe` | `gets`, `puts` (unsafe because it could affect security-sensitive I/O) |
+Common unsafe options across commands: `-interpreter`, `-sdk`,
+`-security`, `-nosecurity`, `-debug`, `-thread`, `-timeout`,
+`-ruleset`, `-objectname`, `-returntype`, `-objecttype`, `-nodispose`,
+`-aliasreference`, `-tcl`, `-noforcedelete`, `-objectflags`,
+`-marshalflags`, `-argumentflags`.
 
 ---
 
@@ -1856,6 +2025,10 @@ No options (only end-of-options marker).
 <details>
 <summary><code>[object create]</code></summary>
 
+Includes [object handle management](#fixupreturnvalue-options) options
+(subset), [type resolution](#83-type-resolution) options, and
+[method invocation](#84-method-invocation-and-reflection) options.
+
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-objectname` | string | Name for the created opaque object handle |
@@ -1914,6 +2087,9 @@ No options (only end-of-options marker).
 <details>
 <summary><code>[object foreach]</code></summary>
 
+Includes [object handle management](#fixupreturnvalue-options) options
+(subset).
+
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-synchronous` | -- | Perform disposal synchronously after iteration |
@@ -1938,8 +2114,12 @@ No options (only end-of-options marker).
 <summary><code>[object invoke]</code></summary>
 
 This command's options are composed from three groups: InvokeOnly (unique to
-`[object invoke]`), InvokeShared (shared with `[object invokeraw]`), and
-FixupReturnValue (shared with all handle-producing commands).
+`[object invoke]`), InvokeShared (shared with `[object invokeraw]` -- includes
+[method invocation](#84-method-invocation-and-reflection),
+[type resolution](#83-type-resolution), and
+[DateTime](#85-datetime-and-encoding) options), and
+[FixupReturnValue](#fixupreturnvalue-options)
+(shared with all handle-producing commands).
 
 **InvokeOnly options (unique to `[object invoke]`):**
 
@@ -2016,6 +2196,9 @@ Plus [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 
 <details>
 <summary><code>[object load]</code></summary>
+
+Includes [object handle management](#fixupreturnvalue-options) options
+(subset).
 
 | Option | Value | Description |
 |--------|-------|-------------|
@@ -2487,7 +2670,8 @@ compatibility.
 <details>
 <summary><code>[sql execute]</code></summary>
 
-> Requires `DATA`.
+> Requires `DATA`. Includes [DateTime](#85-datetime-and-encoding)
+> and [execution control](#86-execution-control) options.
 
 **SQL execution options:**
 
@@ -3145,7 +3329,9 @@ Same as `[uri get]` plus:
 <details>
 <summary><code>[xml deserialize]</code></summary>
 
-> Requires `XML && SERIALIZATION`.
+> Requires `XML && SERIALIZATION`. Includes
+> [object handle management](#fixupreturnvalue-options) options (subset)
+> and [type resolution](#83-type-resolution) options.
 
 | Option | Value | Description |
 |--------|-------|-------------|
