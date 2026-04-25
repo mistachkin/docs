@@ -73,7 +73,8 @@ This guide covers Eagle's unique capabilities and highest-value patterns. Each s
 
 ## String Handling
 
-### appendArgs: The Right Way to Concatenate Strings
+<details>
+<summary><strong>appendArgs: The Right Way to Concatenate Strings</strong></summary>
 
 The `appendArgs` library procedure concatenates all its arguments into a single string verbatim. Unlike `concat`, which joins arguments with spaces and treats them as list elements, `appendArgs` performs simple string concatenation without introducing whitespace or altering the structure of values.
 
@@ -112,9 +113,12 @@ Use `appendArgs` whenever you need to join string fragments. It is the idiomatic
 
 ---
 
+</details>
+
 ## .NET Interop Patterns
 
-### The object Command: Full .NET Access
+<details>
+<summary><strong>The object Command: Full .NET Access</strong></summary>
 
 The `object` command is Eagle's gateway to the .NET ecosystem. It lets you load assemblies, create objects, call methods, access properties, iterate collections, and manage object lifecycles.
 
@@ -204,7 +208,10 @@ object types *DataTable*
 
 ---
 
-### Object Lifecycle: try/finally + dispose
+</details>
+
+<details>
+<summary><strong>Object Lifecycle: try/finally + dispose</strong></summary>
 
 .NET objects that implement `IDisposable` must be cleaned up. The canonical pattern acquires resources inside `try` and uses `[info exists]` in the `finally` block to guard cleanup:
 
@@ -248,7 +255,10 @@ Using `catch` inside `finally` prevents a disposal error from masking the origin
 
 ---
 
-### Compiling C# from Eagle
+</details>
+
+<details>
+<summary><strong>Compiling C# from Eagle</strong></summary>
 
 Eagle can compile C# code at runtime using the script library procedures from `csharp.eagle`. This enables dynamic code generation, testing of C# snippets, and hybrid Eagle/C# workflows.
 
@@ -283,9 +293,12 @@ set assembly [compileViaDotNetCoreCSharp $source true false false \
 
 ---
 
+</details>
+
 ## Procedures and Functions
 
-### Procedure Annotations
+<details>
+<summary><strong>Procedure Annotations</strong></summary>
 
 Eagle provides a procedure annotation system that controls how procedures are created, called, and managed. Annotations are embedded as specially formatted comments in the procedure body.
 
@@ -390,7 +403,10 @@ proc secureHelper {x} {; # <<private>> <<fast>>
 
 ---
 
-### Named Arguments with nproc and napply
+</details>
+
+<details>
+<summary><strong>Named Arguments with nproc and napply</strong></summary>
 
 Eagle extends Tcl's procedure system with named (keyword) arguments via `nproc` and `napply`.
 
@@ -423,7 +439,10 @@ Named arguments are valuable for procedures with many parameters where positiona
 
 ---
 
-### Persistent State with scope
+</details>
+
+<details>
+<summary><strong>Persistent State with scope</strong></summary>
 
 The `scope` command creates persistent variable environments that survive across procedure calls. This enables stateful procedures without using global variables.
 
@@ -490,9 +509,12 @@ The `-procedure` option auto-generates the scope name from the enclosing procedu
 
 ---
 
+</details>
+
 ## Control Flow Enhancements
 
-### do: Do-While and Do-Until Loops
+<details>
+<summary><strong>do: Do-While and Do-Until Loops</strong></summary>
 
 Eagle adds the `do` loop, which executes the body at least once before testing the condition. This is not available in standard Tcl.
 
@@ -526,7 +548,10 @@ do {
 
 ---
 
-### try/finally: Guaranteed Cleanup
+</details>
+
+<details>
+<summary><strong>try/finally: Guaranteed Cleanup</strong></summary>
 
 Eagle's `try`/`finally` guarantees the finally block runs even if the try block executes `return`, `break`, `continue`, or raises an error:
 
@@ -569,9 +594,12 @@ try {
 
 ---
 
+</details>
+
 ## List Operations
 
-### lget: Deep Nested List Access
+<details>
+<summary><strong>lget: Deep Nested List Access</strong></summary>
 
 `lget` combines variable lookup with list indexing in a single operation. Multiple indices navigate nested lists:
 
@@ -592,7 +620,10 @@ This is more concise than `lindex [set data] 1 0` and operates directly on the v
 
 ---
 
-### lmap: Functional List Transformation
+</details>
+
+<details>
+<summary><strong>lmap: Functional List Transformation</strong></summary>
 
 `lmap` works like `foreach` but collects the result of each iteration into a new list. Use `continue` to skip (filter out) elements:
 
@@ -619,7 +650,10 @@ set formatted [lmap {k v} $pairs {
 
 ---
 
-### lremove: Remove Elements by Index
+</details>
+
+<details>
+<summary><strong>lremove: Remove Elements by Index</strong></summary>
 
 `lremove` removes an element at a given index. Multiple indices perform
 nested-path removal, where each successive index drills into the sublist
@@ -638,11 +672,14 @@ lremove {{a b c} {d e f}} 1 0
 
 ---
 
+</details>
+
 ## Expression Enhancements
 
 Eagle extends Tcl's expression system with additional operators and functions.
 
-### Bitwise Operators: ^^, ->, <->
+<details>
+<summary><strong>Bitwise Operators: ^^, ->, <-></strong></summary>
 
 | Operator | Name | Description |
 |----------|------|-------------|
@@ -664,7 +701,10 @@ expr {1 <-> 0}    ;# Returns: 0 (bitwise equivalence)
 
 ---
 
-### Bit Rotation: <<<, >>>
+</details>
+
+<details>
+<summary><strong>Bit Rotation: <<<, >>></strong></summary>
 
 Bit rotation shifts bits and wraps them around instead of discarding them:
 
@@ -675,7 +715,10 @@ expr {1 >>> 1}     ;# Right rotate
 
 ---
 
-### Variable Assignment in Expressions: :=
+</details>
+
+<details>
+<summary><strong>Variable Assignment in Expressions: :=</strong></summary>
 
 The `:=` operator assigns a value to a variable within an expression. The variable name must be quoted:
 
@@ -690,7 +733,10 @@ expr {"sum" := 10 + 20 + 30}
 
 ---
 
-### List Membership: in, ni
+</details>
+
+<details>
+<summary><strong>List Membership: in, ni</strong></summary>
 
 Test whether a string is a member of a list, without numeric type conversion:
 
@@ -702,7 +748,10 @@ expr {"d" ni {a b c}}     ;# Returns: 1 (ni = not in)
 
 ---
 
-### Mathematical Functions: log2, logx, random, randstr
+</details>
+
+<details>
+<summary><strong>Mathematical Functions: log2, logx, random, randstr</strong></summary>
 
 Eagle adds several mathematical functions not found in standard Tcl:
 
@@ -734,9 +783,12 @@ expr {epsilon()}            ;# Machine epsilon
 
 ---
 
+</details>
+
 ## Data and Encoding
 
-### base64: Built-in Base64 Encoding
+<details>
+<summary><strong>base64: Built-in Base64 Encoding</strong></summary>
 
 Eagle includes a native `base64` command for encoding and decoding:
 
@@ -762,7 +814,10 @@ base64 encode -encoding utf-8 Hello
 
 ---
 
-### hash: Cryptographic Hashing
+</details>
+
+<details>
+<summary><strong>hash: Cryptographic Hashing</strong></summary>
 
 The `hash` command provides access to .NET's cryptographic hash algorithms:
 
@@ -789,7 +844,10 @@ hash list normal
 
 ---
 
-### guid: GUID Generation
+</details>
+
+<details>
+<summary><strong>guid: GUID Generation</strong></summary>
 
 Generate and validate GUIDs/UUIDs:
 
@@ -813,9 +871,12 @@ guid compare $a $b            ;# Returns: -1 or 1
 
 ---
 
+</details>
+
 ## Networking and Data
 
-### uri: URI Parsing and Construction
+<details>
+<summary><strong>uri: URI Parsing and Construction</strong></summary>
 
 The `uri` command provides URI handling and HTTP client functionality:
 
@@ -852,7 +913,10 @@ uri ping example.com 5000
 
 ---
 
-### sql: ADO.NET Database Access
+</details>
+
+<details>
+<summary><strong>sql: ADO.NET Database Access</strong></summary>
 
 The `sql` command provides database access through ADO.NET:
 
@@ -906,7 +970,10 @@ Always use parameterized queries with `{name type value}` argument lists to prev
 
 ---
 
-### xml: XML Serialization
+</details>
+
+<details>
+<summary><strong>xml: XML Serialization</strong></summary>
 
 The `xml` command handles XML serialization, deserialization, and validation:
 
@@ -932,11 +999,14 @@ xml validate $schemaXml $documentXml
 
 ---
 
+</details>
+
 ## Regular Expression Enhancements
 
 Eagle extends Tcl's `regexp` and `regsub` commands with several .NET-powered options.
 
-### -compiled: Precompiled Regexes
+<details>
+<summary><strong>-compiled: Precompiled Regexes</strong></summary>
 
 The `-compiled` flag compiles the regex into .NET IL code for faster repeated matching:
 
@@ -946,7 +1016,10 @@ regexp -compiled -nocase {pattern} $text
 
 Use this when matching the same pattern against many strings in a loop.
 
-### -command and -eval: Programmatic Replacement
+</details>
+
+<details>
+<summary><strong>-command and -eval: Programmatic Replacement</strong></summary>
 
 `regsub` supports `-command` and `-eval` modes for dynamic replacement logic:
 
@@ -957,7 +1030,10 @@ regsub -all -eval {expr {[string range {&} 0 end] * 10}} \
     -- {\d+} "item1 item2 item3" ""
 ```
 
-### -options: Direct .NET RegexOptions
+</details>
+
+<details>
+<summary><strong>-options: Direct .NET RegexOptions</strong></summary>
 
 Pass .NET `RegexOptions` enum values directly for fine-grained control:
 
@@ -983,9 +1059,12 @@ Additional Eagle-specific switches:
 
 ---
 
+</details>
+
 ## Security and Sandboxing
 
-### Safe Interpreters
+<details>
+<summary><strong>Safe Interpreters</strong></summary>
 
 Eagle supports safe (sandboxed) interpreters that restrict access to dangerous operations like file I/O, process execution, and .NET reflection.
 
@@ -1040,9 +1119,12 @@ interp invokehidden $safe source trusted_script.tcl
 
 ---
 
+</details>
+
 ## Testing
 
-### Built-in Test Framework: test1 and test2
+<details>
+<summary><strong>Built-in Test Framework: test1 and test2</strong></summary>
 
 Eagle includes built-in test commands for writing and running tests.
 
@@ -1122,11 +1204,14 @@ Common constraints: `unix`, `win`, `mac`, `knownBug`, `interactive`, `network`, 
 
 ---
 
+</details>
+
 ## Debugging
 
 Eagle includes a built-in debugger with variable watchpoints, single-stepping, and breakpoints.
 
-### Variable Watchpoints
+<details>
+<summary><strong>Variable Watchpoints</strong></summary>
 
 Monitor variable reads, writes, and unsets:
 
@@ -1137,7 +1222,10 @@ debug watch myVar                ;# Query current watch flags
 debug watch                      ;# List all watched variables
 ```
 
-### Single-Stepping
+</details>
+
+<details>
+<summary><strong>Single-Stepping</strong></summary>
 
 Step through script execution one command at a time:
 
@@ -1154,7 +1242,10 @@ debug steps 100              ;# Execute 100 steps then pause
 debug steps                  ;# Query current step counter
 ```
 
-### Breakpoints and Inspection
+</details>
+
+<details>
+<summary><strong>Breakpoints and Inspection</strong></summary>
 
 #### Demand Breakpoints
 
@@ -1197,11 +1288,14 @@ debug run {
 
 ---
 
+</details>
+
 ## Script Library Utilities
 
 The Eagle script library (`Eagle1.0`) provides commonly used utility procedures. These are available after `package require Eagle.Library`.
 
-### Platform Detection: isEagle, isWindows, isMono, isDotNetCore
+<details>
+<summary><strong>Platform Detection: isEagle, isWindows, isMono, isDotNetCore</strong></summary>
 
 ```tcl
 if {[isEagle]} then {
@@ -1227,7 +1321,10 @@ These procedures return non-zero if the condition is true, zero otherwise.
 
 ---
 
-### Dictionary Operations: dict and getDictionaryValue
+</details>
+
+<details>
+<summary><strong>Dictionary Operations: dict and getDictionaryValue</strong></summary>
 
 Eagle provides the `dict` command for full dictionary support, compatible with Tcl 8.6:
 
@@ -1254,7 +1351,10 @@ getDictionaryValue $data country unknown
 
 ---
 
-### List Helpers: filter
+</details>
+
+<details>
+<summary><strong>List Helpers: filter</strong></summary>
 
 The `filter` procedure returns list elements for which a script evaluates to true:
 
@@ -1268,7 +1368,10 @@ set evens [filter $numbers {expr {$item % 2 == 0}}]
 
 ---
 
-### File Discovery: findFilesRecursive
+</details>
+
+<details>
+<summary><strong>File Discovery: findFilesRecursive</strong></summary>
 
 Recursively find files matching a glob pattern:
 
@@ -1279,6 +1382,8 @@ set scripts [findFilesRecursive *.eagle]
 - **See also**: [core_script_library.md](core_script_library.md) — File Finder (file3.eagle)
 
 ---
+
+</details>
 
 ## Showcase: Unique Things Eagle Can Do
 
@@ -1292,7 +1397,8 @@ resources cleans up after itself.
 
 ---
 
-### One-Liners and Quick Wins
+<details>
+<summary><strong>One-Liners and Quick Wins</strong></summary>
 
 These work at the interactive shell prompt — just paste and go.
 
@@ -1329,7 +1435,10 @@ expr {0xBEEF >>> 8}  ;# right-rotate
 
 ---
 
-### Fetch and Extract Live Data
+</details>
+
+<details>
+<summary><strong>Fetch and Extract Live Data</strong></summary>
 
 These examples hit freely available public APIs. They require the
 `Eagle.Test` package for JSON path support.
@@ -1378,7 +1487,10 @@ puts [string trim [uri get https://api.ipify.org]]
 
 ---
 
-### Instant Cryptography Toolkit
+</details>
+
+<details>
+<summary><strong>Instant Cryptography Toolkit</strong></summary>
 
 No `openssl` binary, no `pip install cryptography` — it is all built in.
 
@@ -1428,7 +1540,10 @@ apply {{path expected} {
 
 ---
 
-### Regex-Powered Text Transforms
+</details>
+
+<details>
+<summary><strong>Regex-Powered Text Transforms</strong></summary>
 
 Eagle's `regsub` has three replacement modes — the `-command` and `-eval`
 modes are unique and eliminate the need for multi-step pipelines.
@@ -1464,7 +1579,10 @@ apply {{text} {
 
 ---
 
-### Console Wizardry (Windows)
+</details>
+
+<details>
+<summary><strong>Console Wizardry (Windows)</strong></summary>
 
 Eagle's `[host]` command gives you direct control over the console that
 no other scripting language provides without native extensions.
@@ -1523,7 +1641,10 @@ host font
 
 ---
 
-### Live .NET Reflection
+</details>
+
+<details>
+<summary><strong>Live .NET Reflection</strong></summary>
 
 Explore the entire .NET type system interactively — no IDE required.
 
@@ -1548,7 +1669,10 @@ apply {{type method args} {
 
 ---
 
-### Build a REST Micro-Client in Five Lines
+</details>
+
+<details>
+<summary><strong>Build a REST Micro-Client in Five Lines</strong></summary>
 
 ```tcl
 # A reusable one-shot JSON GET that returns a parsed field
@@ -1565,7 +1689,10 @@ built in, you can script against most REST APIs with zero setup.
 
 ---
 
-### Windows Security Descriptors from Script
+</details>
+
+<details>
+<summary><strong>Windows Security Descriptors from Script</strong></summary>
 
 Eagle can read and decode Windows NTFS security descriptors — try doing
 *that* in Python without `pywin32`.
@@ -1595,7 +1722,10 @@ apply {{path} {
 
 ---
 
-### Hot-Compile and Run C# from a Script
+</details>
+
+<details>
+<summary><strong>Hot-Compile and Run C# from a Script</strong></summary>
 
 Eagle can compile C# source code at runtime and call the resulting types
 immediately — no external toolchain, no temp files left behind. This
@@ -1627,7 +1757,10 @@ apply {{} {
 
 ---
 
-### Self-Contained SQLite Pipeline
+</details>
+
+<details>
+<summary><strong>Self-Contained SQLite Pipeline</strong></summary>
 
 Create, populate, query, and tear down a database — all in one
 self-cleaning block. No files left on disk.
@@ -1684,7 +1817,10 @@ apply {{} {
 
 ---
 
-### The Debugger is a Command
+</details>
+
+<details>
+<summary><strong>The Debugger is a Command</strong></summary>
 
 In most languages, the debugger is a separate tool you attach. In Eagle,
 the debugger is a built-in command ensemble you can script against.
@@ -1723,7 +1859,10 @@ debug run {
 
 ---
 
-### Scope: Persistent Closures Without the Mess
+</details>
+
+<details>
+<summary><strong>Scope: Persistent Closures Without the Mess</strong></summary>
 
 The `[scope]` command creates named, persistent variable environments
 that survive across procedure calls — like closures, but explicit and
@@ -1771,7 +1910,10 @@ apply {{} {
 
 ---
 
-### Safe Interpreter: Run Untrusted Code in a Sandbox
+</details>
+
+<details>
+<summary><strong>Safe Interpreter: Run Untrusted Code in a Sandbox</strong></summary>
 
 Eagle's safe interpreter is a first-class security boundary — no
 filesystem access, no network access, no .NET reflection, resource
@@ -1797,3 +1939,6 @@ apply {{} {
   }
 }}
 ```
+
+</details>
+

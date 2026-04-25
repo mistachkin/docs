@@ -269,7 +269,8 @@ Quick reference to all Eagle commands with links to their detailed documentation
 
 ## Commands by Category
 
-### Control Flow
+<details>
+<summary><strong>Control Flow</strong></summary>
 
 #### Conditional Commands (ObjectGroup: "conditional")
 
@@ -606,7 +607,10 @@ Quick reference to all Eagle commands with links to their detailed documentation
 
 ---
 
-### Variables
+</details>
+
+<details>
+<summary><strong>Variables</strong></summary>
 
 All variable commands belong to ObjectGroup: "variable"
 
@@ -1047,7 +1051,10 @@ All variable commands belong to ObjectGroup: "variable"
 
 ---
 
-### Lists
+</details>
+
+<details>
+<summary><strong>Lists</strong></summary>
 
 All list commands belong to ObjectGroup: "list"
 
@@ -1347,7 +1354,10 @@ Many list commands accept index arguments. Valid index formats include:
 
 ---
 
-### Strings
+</details>
+
+<details>
+<summary><strong>Strings</strong></summary>
 
 String commands belong to ObjectGroup: "string"
 
@@ -2073,7 +2083,10 @@ String commands belong to ObjectGroup: "string"
 
 ---
 
-### Arrays
+</details>
+
+<details>
+<summary><strong>Arrays</strong></summary>
 
 Array operations belong to ObjectGroup: "variable"
 
@@ -2215,7 +2228,10 @@ Arrays in Eagle are associative arrays (hash tables) that map string keys to str
 
 ---
 
-### Dictionaries
+</details>
+
+<details>
+<summary><strong>Dictionaries</strong></summary>
 
 Dictionary commands belong to ObjectGroup: "list"
 
@@ -2421,7 +2437,10 @@ Dictionaries in Eagle are value types represented as lists with an even number o
 
 ---
 
-### I/O and Channels
+</details>
+
+<details>
+<summary><strong>I/O and Channels</strong></summary>
 
 Channel commands belong to ObjectGroup: "channel"
 
@@ -2691,7 +2710,10 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
 
 ---
 
-### File System
+</details>
+
+<details>
+<summary><strong>File System</strong></summary>
 
 File system commands belong to ObjectGroup: "fileSystem"
 
@@ -2959,7 +2981,10 @@ File system commands belong to ObjectGroup: "fileSystem"
 
 ---
 
-### Procedures
+</details>
+
+<details>
+<summary><strong>Procedures</strong></summary>
 
 Procedure commands belong to ObjectGroup: "procedure"
 
@@ -3057,7 +3082,10 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
 
 ---
 
-### Namespaces
+</details>
+
+<details>
+<summary><strong>Namespaces</strong></summary>
 
 Namespace commands belong to ObjectGroup: "scriptEnvironment"
 
@@ -3212,7 +3240,10 @@ Namespaces provide hierarchical organization of commands and variables, preventi
 
 ---
 
-### Objects (.NET Interop)
+</details>
+
+<details>
+<summary><strong>Objects (.NET Interop)</strong></summary>
 
 Object commands belong to ObjectGroup: "managedEnvironment"
 
@@ -3480,7 +3511,10 @@ Object commands belong to ObjectGroup: "managedEnvironment"
 
 ---
 
-### Debugging
+</details>
+
+<details>
+<summary><strong>Debugging</strong></summary>
 
 Debug command belongs to ObjectGroup: "debug"
 
@@ -4008,7 +4042,10 @@ The `debug` command provides comprehensive debugging capabilities for Eagle scri
 
 ---
 
-### Interpreter Management
+</details>
+
+<details>
+<summary><strong>Interpreter Management</strong></summary>
 
 Interpreter commands belong to ObjectGroup: "scriptEnvironment"
 
@@ -4376,7 +4413,10 @@ The `interp` command manages child interpreters, providing sandboxing, isolation
 
 ---
 
-### Packages
+</details>
+
+<details>
+<summary><strong>Packages</strong></summary>
 
 Package commands belong to ObjectGroup: "scriptEnvironment"
 
@@ -4547,7 +4587,10 @@ The `package` command manages Eagle packages - reusable collections of procedure
 
 ---
 
-### Testing
+</details>
+
+<details>
+<summary><strong>Testing</strong></summary>
 
 Test commands belong to ObjectGroup: "test"
 
@@ -4641,7 +4684,10 @@ Eagle provides built-in test commands for unit testing. These commands integrate
 
 ---
 
-### Database (SQL)
+</details>
+
+<details>
+<summary><strong>Database (SQL)</strong></summary>
 
 SQL commands belong to ObjectGroup: "managedEnvironment"
 
@@ -4783,7 +4829,10 @@ The `sql` command provides database connectivity using ADO.NET, supporting any d
 
 ---
 
-### Network and URI
+</details>
+
+<details>
+<summary><strong>Network and URI</strong></summary>
 
 Network commands belong to ObjectGroup: "network"
 
@@ -4939,7 +4988,10 @@ Network commands belong to ObjectGroup: "network"
 
 ---
 
-### XML
+</details>
+
+<details>
+<summary><strong>XML</strong></summary>
 
 XML commands belong to ObjectGroup: "managedEnvironment"
 
@@ -5012,7 +5064,10 @@ The `xml` command provides XML processing capabilities using the .NET XML infras
 
 ---
 
-### Tcl Integration
+</details>
+
+<details>
+<summary><strong>Tcl Integration</strong></summary>
 
 Tcl commands belong to ObjectGroup: "nativeEnvironment"
 
@@ -5243,7 +5298,10 @@ Eagle can interoperate with native Tcl interpreters, allowing scripts to leverag
 
 ---
 
-### Expression Evaluation
+</details>
+
+<details>
+<summary><strong>Expression Evaluation</strong></summary>
 
 Expression commands belong to ObjectGroup: "expression"
 
@@ -5278,7 +5336,10 @@ Expression commands belong to ObjectGroup: "expression"
 
 ---
 
-### Mathematical Functions
+</details>
+
+<details>
+<summary><strong>Mathematical Functions</strong></summary>
 
 Mathematical functions are used within expressions (via `expr`) to perform calculations. Functions are called using the syntax `func(arg1, arg2, ...)` within an expression.
 
@@ -5483,7 +5544,10 @@ Mathematical functions are used within expressions (via `expr`) to perform calcu
 
 ---
 
-### Expression Operators
+</details>
+
+<details>
+<summary><strong>Expression Operators</strong></summary>
 
 Operators are used within expressions to perform calculations, comparisons, and logical operations. Eagle supports both infix notation (`a + b`) and prefix function-call notation (`+(a, b)`).
 
@@ -5617,7 +5681,10 @@ Operators are used within expressions to perform calculations, comparisons, and 
 
 ---
 
-### Time and Clock
+</details>
+
+<details>
+<summary><strong>Time and Clock</strong></summary>
 
 Time commands belong to ObjectGroup: "time"
 
@@ -5761,7 +5828,10 @@ Time commands belong to ObjectGroup: "time"
 
 ---
 
-### Event Management
+</details>
+
+<details>
+<summary><strong>Event Management</strong></summary>
 
 Event commands belong to ObjectGroup: "event"
 
@@ -5937,7 +6007,10 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
 
 ---
 
-### Introspection
+</details>
+
+<details>
+<summary><strong>Introspection</strong></summary>
 
 Introspection commands belong to ObjectGroup: "introspection"
 
@@ -6405,7 +6478,10 @@ The `info` command is the primary means for querying the state of the interprete
 
 ---
 
-### Delegates and Aliases
+</details>
+
+<details>
+<summary><strong>Delegates and Aliases</strong></summary>
 
 Aliases and delegates provide mechanisms to create command shortcuts and manage callable objects.
 
@@ -6448,7 +6524,10 @@ Aliases and delegates provide mechanisms to create command shortcuts and manage 
 
 ---
 
-### Ensemble Commands
+</details>
+
+<details>
+<summary><strong>Ensemble Commands</strong></summary>
 
 Ensemble commands belong to ObjectGroup: "ensemble"
 
@@ -6460,7 +6539,10 @@ The `Ensemble` class (`Commands/Ensemble.cs`) and `Stub` class (`Commands/Stub.c
 
 ---
 
-### Engine Operations
+</details>
+
+<details>
+<summary><strong>Engine Operations</strong></summary>
 
 Engine commands belong to ObjectGroup: "engine"
 
@@ -6993,7 +7075,10 @@ These commands control script evaluation and substitution at the core level.
 
 ---
 
-### Native Environment
+</details>
+
+<details>
+<summary><strong>Native Environment</strong></summary>
 
 Native environment commands belong to ObjectGroup: "nativeEnvironment"
 
@@ -7559,7 +7644,10 @@ These commands interact with the operating system and native code.
 
 ---
 
-### Managed Environment
+</details>
+
+<details>
+<summary><strong>Managed Environment</strong></summary>
 
 Managed environment commands belong to ObjectGroup: "managedEnvironment"
 
@@ -7830,7 +7918,10 @@ These commands interact with the .NET runtime and the interactive host environme
 
 ---
 
-### Core and Miscellaneous
+</details>
+
+<details>
+<summary><strong>Core and Miscellaneous</strong></summary>
 
 These commands provide fundamental interpreter operations and utility functions.
 
@@ -7941,6 +8032,8 @@ These commands provide fundamental interpreter operations and utility functions.
 
 ---
 
+</details>
+
 ## Common Option Patterns
 
 > **For a deep-dive analysis** of the command option infrastructure -- including
@@ -7954,7 +8047,8 @@ class (`Eagle/Library/Components/Private/CommandOptions.cs`), dispatched via
 the `CommandOptionType` enum (~200 values). The patterns below describe the
 most common options found across commands:
 
-### Object Creation and Disposal Options
+<details>
+<summary><strong>Object Creation and Disposal Options</strong></summary>
 
 **-create / -nocreate**
 - Controls whether objects should be automatically created
@@ -7971,7 +8065,10 @@ most common options found across commands:
 - Used in: object dispose, object cleanup
 - Default: asynchronous (no immediate GC)
 
-### Object Invocation Options
+</details>
+
+<details>
+<summary><strong>Object Invocation Options</strong></summary>
 
 **-alias / -aliasraw / -aliasall / -aliasreference**
 - Controls object aliasing behavior
@@ -7989,7 +8086,10 @@ most common options found across commands:
 - Type specification for .NET interop
 - Used in: object create, object alias, library call
 
-### Marshaling and Binding Options
+</details>
+
+<details>
+<summary><strong>Marshaling and Binding Options</strong></summary>
 
 **-marshalflags**
 - Controls value marshaling behavior
@@ -8021,7 +8121,10 @@ most common options found across commands:
 - Used in: object create
 - Default: ReorderFlags.Default
 
-### Common Utility Options
+</details>
+
+<details>
+<summary><strong>Common Utility Options</strong></summary>
 
 **-verbose**
 - Enables verbose output
@@ -8054,7 +8157,10 @@ most common options found across commands:
 - Enables strict type/member checking
 - Used in: object operations, library call
 
-### Execution and Timing Options
+</details>
+
+<details>
+<summary><strong>Execution and Timing Options</strong></summary>
 
 **-time**
 - Times the operation execution
@@ -8068,7 +8174,10 @@ most common options found across commands:
 - Sets limits on operations
 - Used in: library call, object create
 
-### Pattern Matching Options
+</details>
+
+<details>
+<summary><strong>Pattern Matching Options</strong></summary>
 
 **-pattern**
 - Specifies pattern for matching
@@ -8078,7 +8187,10 @@ most common options found across commands:
 - Specifies matching mode
 - Used in: array names, array values
 
-### Other Common Options
+</details>
+
+<details>
+<summary><strong>Other Common Options</strong></summary>
 
 **-noinvoke**
 - Prevents automatic invocation
@@ -8102,11 +8214,14 @@ most common options found across commands:
 
 ---
 
+</details>
+
 ## Test Functions
 
 The Eagle test suite (in Eagle/Library/Tests/Default.cs) provides a dedicated test class with managed methods that support comprehensive testing of the Eagle engine. A subset of these methods are exposed as script commands via AddExecuteCallback, AddCommand, and AddSubCommands method calls:
 
-### Core Test Script Commands (via TestAddCommands)
+<details>
+<summary><strong>Core Test Script Commands (via TestAddCommands)</strong></summary>
 
 - **seti** - Set variable immutability
   - `seti varName ?immutable?`
@@ -8132,7 +8247,10 @@ The Eagle test suite (in Eagle/Library/Tests/Default.cs) provides a dedicated te
 - **vunlock** - Unlock a variable
   - `vunlock varName`
 
-### Expression Test Commands
+</details>
+
+<details>
+<summary><strong>Expression Test Commands</strong></summary>
 
 - **testExpr** - Test expression evaluation with flags
   - `testExpr flags arg ?arg ...?`
@@ -8140,7 +8258,10 @@ The Eagle test suite (in Eagle/Library/Tests/Default.cs) provides a dedicated te
 - **calc** - Calculator/expression evaluation
   - `calc arg ?arg ...?`
 
-### Callback Test Commands (via TestAddBuiltInExecuteCallbacks)
+</details>
+
+<details>
+<summary><strong>Callback Test Commands (via TestAddBuiltInExecuteCallbacks)</strong></summary>
 
 - **appendArgs** - Append arguments to a result
   - `appendArgs ?arg ...?`
@@ -8148,7 +8269,10 @@ The Eagle test suite (in Eagle/Library/Tests/Default.cs) provides a dedicated te
 - **lappendArgs** - List append arguments to a result
   - `lappendArgs ?arg ...?`
 
-### Definition Commands (via TestAddDefinitionCommands)
+</details>
+
+<details>
+<summary><strong>Definition Commands (via TestAddDefinitionCommands)</strong></summary>
 
 - **define** - Define a macro or definition
   - `define name ?value?`
@@ -8156,7 +8280,10 @@ The Eagle test suite (in Eagle/Library/Tests/Default.cs) provides a dedicated te
 - **include** - Include a file
   - `include fileName`
 
-### Rule Set Commands (via TestAddRuleSetCommands)
+</details>
+
+<details>
+<summary><strong>Rule Set Commands (via TestAddRuleSetCommands)</strong></summary>
 
 - **rule** - Add a rule to the rule set
   - `rule ?options? pattern body`
@@ -8188,7 +8315,10 @@ The Eagle test suite (in Eagle/Library/Tests/Default.cs) provides a dedicated te
 - **introspect** - Introspect the current rule set state
   - `introspect ?options?`
 
-### Delegate Test Commands (dynamically created)
+</details>
+
+<details>
+<summary><strong>Delegate Test Commands (dynamically created)</strong></summary>
 
 - **integerDelegate** - Test delegate returning integer
 - **objectDelegate** - Test delegate returning object
@@ -8198,11 +8328,14 @@ The Eagle test suite (in Eagle/Library/Tests/Default.cs) provides a dedicated te
 
 ---
 
+</details>
+
 ## Advanced: Design Philosophy, Project Structure, and Build System
 
 This section provides a comprehensive overview of Eagle's design philosophy, the rationale behind its directory structure, the organization of its solutions and projects, and the purpose and architecture of its custom MSBuild targets system.
 
-### Design Philosophy
+<details>
+<summary><strong>Design Philosophy</strong></summary>
 
 Eagle (Extensible Adaptable Generalized Logic Engine) is an implementation of the Tcl scripting language for the Common Language Runtime (CLR), written entirely in C#. Several core design principles shape the project:
 
@@ -8218,7 +8351,10 @@ Eagle (Extensible Adaptable Generalized Logic Engine) is an implementation of th
 
 **Security as a First-Class Concern.** The build system incorporates strong name signing, Authenticode signing (with dual-algorithm timestamping for long-term validation), embedded certificate handling, and script verification (via the Harpy plugin). Code Access Security (CAS) policy support is maintained for older .NET Framework deployments. The `EagleMaybeEnterpriseLockdown` flag enables enterprise-grade script execution restrictions.
 
-### Repository Directory Structure
+</details>
+
+<details>
+<summary><strong>Repository Directory Structure</strong></summary>
 
 The Eagle repository is organized into several top-level directories, each serving a distinct role:
 
@@ -8283,7 +8419,10 @@ externals/                    Shared external dependencies
 
 **Rationale.** The separation of the core library (`Library/`) from the shell (`Shell/`), services (`Service/`), management tools (`Management/`), and plugins (`Plugins/`) follows the principle of deploying only what is needed. The core library can be embedded as a scripting engine in any .NET application without pulling in the interactive shell, PowerShell cmdlets, or Windows service infrastructure. The `Targets/` directory is kept at the solution level because the MSBuild targets are shared across all projects -- they define the build policy for the entire Eagle ecosystem.
 
-### Solution and Project Organization
+</details>
+
+<details>
+<summary><strong>Solution and Project Organization</strong></summary>
 
 Eagle maintains multiple `.sln` files to support different Visual Studio versions and build configurations:
 
@@ -8312,7 +8451,10 @@ Within each solution, projects follow a versioned naming convention:
 
 **Rationale for per-version project files.** Each Visual Studio version introduced changes to the `.csproj` format, default property values, and implicit imports. Rather than relying on format auto-migration (which is lossy and can produce incorrect builds), Eagle maintains explicit project files for each toolchain. This guarantees that building with Visual Studio 2008 produces an identical binary to what was tested, and that newer MSBuild features do not leak into builds targeting older frameworks. The `20XX` suffix directly indicates the minimum required toolchain version.
 
-### Custom MSBuild Targets Architecture
+</details>
+
+<details>
+<summary><strong>Custom MSBuild Targets Architecture</strong></summary>
 
 The build system is factored into four primary `.targets` files in `Eagle/Targets/`, each with a specific responsibility:
 
@@ -8409,7 +8551,10 @@ Contains the actual MSBuild `<Target>` elements that perform build-time actions.
 - **`Eagle.MonoDevelop.targets`** / **`Eagle.MonoDevelop.Settings.targets`** (in `MonoDevelop/Targets/`) -- MonoDevelop-specific overrides for building with the Mono toolchain.
 - **Plugin targets** (in `Plugins/*/Targets/`) -- Each enterprise plugin has its own targets file that extends the core build system with plugin-specific signing, resource embedding, and post-processing steps.
 
-### Build Types and Feature Flags
+</details>
+
+<details>
+<summary><strong>Build Types and Feature Flags</strong></summary>
 
 The following table summarizes the official and special-purpose build types and their key characteristics:
 
@@ -8433,11 +8578,14 @@ The complete set of feature flags is documented in the comments within `Eagle.Se
 
 ---
 
+</details>
+
 ## Advanced Topics and Patterns
 
 This section documents advanced language features, edge cases, and patterns discovered through comprehensive analysis of the Eagle test suite.
 
-### Parser Behavior and Edge Cases
+<details>
+<summary><strong>Parser Behavior and Edge Cases</strong></summary>
 
 #### Escape Sequences
 
@@ -8543,7 +8691,10 @@ set y {# also not a comment}
 # No block comments - each line needs #
 ```
 
-### Expression Evaluation Details
+</details>
+
+<details>
+<summary><strong>Expression Evaluation Details</strong></summary>
 
 #### Numeric Types and Precision
 
@@ -8672,7 +8823,10 @@ expr {0 && [expensive_proc]}   ;# [expensive_proc] not called
 expr {1 || [expensive_proc]}   ;# [expensive_proc] not called
 ```
 
-### List Operations Advanced Patterns
+</details>
+
+<details>
+<summary><strong>List Operations Advanced Patterns</strong></summary>
 
 #### List Manipulation Idioms
 
@@ -8768,7 +8922,10 @@ lsort -decreasing {3 1 2}  ;# Returns: {3 2 1}
 lsort -dictionary {a1 a10 a2}  ;# Returns: {a1 a2 a10}
 ```
 
-### Array Operations Advanced Patterns
+</details>
+
+<details>
+<summary><strong>Array Operations Advanced Patterns</strong></summary>
 
 #### Array Iteration Patterns
 
@@ -8815,7 +8972,10 @@ array names myArray -regexp {^prefix}
 array statistics myArray
 ```
 
-### Namespace Advanced Patterns
+</details>
+
+<details>
+<summary><strong>Namespace Advanced Patterns</strong></summary>
 
 #### Variable Resolution Order
 
@@ -8836,7 +8996,10 @@ namespace eval ns {
 }
 ```
 
-### .NET Integration Patterns
+</details>
+
+<details>
+<summary><strong>.NET Integration Patterns</strong></summary>
 
 #### Object Lifecycle Management
 
@@ -8908,7 +9071,10 @@ set pi [object invoke System.Math PI]
 set result [object invoke System.Math Max 10 20]
 ```
 
-### Control Flow Edge Cases
+</details>
+
+<details>
+<summary><strong>Control Flow Edge Cases</strong></summary>
 
 #### Return Codes and Exception Handling
 
@@ -8970,7 +9136,10 @@ if {[catch {
 }
 ```
 
-### Procedure Definition Patterns
+</details>
+
+<details>
+<summary><strong>Procedure Definition Patterns</strong></summary>
 
 #### Variable Arguments
 
@@ -9011,7 +9180,10 @@ lmap x {1 2 3 4} {apply {{n} {expr {$n * $n}}} $x}  ;# {1 4 9 16}
 
 <a id="procedure-body-annotations"></a>
 
-### Procedure Body Annotations
+</details>
+
+<details>
+<summary><strong>Procedure Body Annotations</strong></summary>
 
 Eagle provides a procedure annotation system that allows developers to embed
 declarative metadata directly in procedure and lambda bodies using specially
@@ -9581,7 +9753,10 @@ apply {{key value} {; # <<atomic>>
 }} myKey myValue
 ```
 
-### Tcl Integration (Native Tcl Interop)
+</details>
+
+<details>
+<summary><strong>Tcl Integration (Native Tcl Interop)</strong></summary>
 
 #### Cross-Interpreter Communication
 
@@ -9619,7 +9794,10 @@ if {[haveGaruda]} then {
 }
 ```
 
-### Script Cancellation (TIP #285)
+</details>
+
+<details>
+<summary><strong>Script Cancellation (TIP #285)</strong></summary>
 
 Eagle supports cooperative script cancellation:
 
@@ -9646,7 +9824,10 @@ if {[catch {long_operation} result]} then {
 }
 ```
 
-### String Pattern Matching Details
+</details>
+
+<details>
+<summary><strong>String Pattern Matching Details</strong></summary>
 
 #### Glob Patterns
 
@@ -9694,7 +9875,10 @@ regexp -expanded {
 regexp -all -inline {[0-9]+} a1b2c3    ;# {1 2 3}
 ```
 
-### Channel I/O Patterns
+</details>
+
+<details>
+<summary><strong>Channel I/O Patterns</strong></summary>
 
 #### File Operations with Encoding
 
@@ -9749,7 +9933,10 @@ proc acceptConnection {channel clientAddr clientPort} {
 }
 ```
 
-### Debug Command Sub-Commands Reference
+</details>
+
+<details>
+<summary><strong>Debug Command Sub-Commands Reference</strong></summary>
 
 The `debug` command provides extensive debugging capabilities:
 
@@ -9792,11 +9979,14 @@ The `debug` command provides extensive debugging capabilities:
 
 ---
 
+</details>
+
 ## Flags Enumeration Semantics
 
 Eagle provides a powerful and flexible system for working with .NET `[Flags]` enumeration types from scripts. This is integrated with the "Universal Option Parser" used throughout Eagle's command infrastructure.
 
-### Flag Operators
+<details>
+<summary><strong>Flag Operators</strong></summary>
 
 When specifying a flags enumeration value, you can prefix the flag name with an operator to control how it is combined with the current value:
 
@@ -9808,13 +9998,19 @@ When specifying a flags enumeration value, you can prefix the flag name with an 
 | `:` | Set-Add | Sets the value, then switches to add mode | Sets value, subsequent use `+` |
 | `&` | Keep | Keeps only the specified flag bits | `current & value` (bitwise AND) |
 
-### Default Behavior
+</details>
+
+<details>
+<summary><strong>Default Behavior</strong></summary>
 
 - The default operator when no prefix is specified is `:` (Set-Add)
 - This means the first value encountered sets the base value
 - Subsequent values without operators are added to that base
 
-### Basic Examples
+</details>
+
+<details>
+<summary><strong>Basic Examples</strong></summary>
 
 ```tcl
 # Add NonPublic to the default binding flags
@@ -9830,7 +10026,10 @@ object members -membertypes {+All -Method} System.Console
 object create -objectflags =NoDispose System.Text.StringBuilder
 ```
 
-### Detailed Usage Patterns
+</details>
+
+<details>
+<summary><strong>Detailed Usage Patterns</strong></summary>
 
 #### Adding Flags (+)
 
@@ -9888,7 +10087,10 @@ The `&` operator performs a bitwise AND, keeping only flags that are in both the
 object invoke -flags {&Instance} $obj Method
 ```
 
-### Integration with the Universal Option Parser
+</details>
+
+<details>
+<summary><strong>Integration with the Universal Option Parser</strong></summary>
 
 Eagle's "Universal Option Parser" (implemented in `Interpreter.GetOptions*` methods) automatically handles flags enumeration options. When an option's value type is a `[Flags]` enumeration, the parser:
 
@@ -9900,7 +10102,10 @@ Eagle's "Universal Option Parser" (implemented in `Interpreter.GetOptions*` meth
 
 This means any command option typed as a flags enumeration supports this syntax automatically.
 
-### Common Flags Enumeration Options
+</details>
+
+<details>
+<summary><strong>Common Flags Enumeration Options</strong></summary>
 
 Several Eagle commands accept flags enumeration options:
 
@@ -9915,7 +10120,10 @@ Several Eagle commands accept flags enumeration options:
 | `object members` | `-bindingflags` | BindingFlags | Reflection binding flags |
 | `interp policy` | `-flags` | PolicyFlags | Interpreter policy flags |
 
-### BindingFlags Reference
+</details>
+
+<details>
+<summary><strong>BindingFlags Reference</strong></summary>
 
 The most commonly used flags enumeration is `System.Reflection.BindingFlags`:
 
@@ -9938,7 +10146,10 @@ The most commonly used flags enumeration is `System.Reflection.BindingFlags`:
 
 **Default for `object invoke`**: Typically includes `Public`, `Instance`, and `InvokeMethod`.
 
-### ObjectFlags Reference
+</details>
+
+<details>
+<summary><strong>ObjectFlags Reference</strong></summary>
 
 Eagle-specific flags for object handle management:
 
@@ -9951,7 +10162,10 @@ Eagle-specific flags for object handle management:
 | `Alias` | Create an aliased object handle |
 | `Verbose` | Verbose output during object operations |
 
-### Combining Library Procedures
+</details>
+
+<details>
+<summary><strong>Combining Library Procedures</strong></summary>
 
 The `combineFlags` procedure in `object.eagle` provides a script-level way to combine flags:
 
@@ -9963,7 +10177,10 @@ set result [combineFlags $flags1 $flags2 $excludeFlags]
 set combined [combineFlags "Public Instance" NonPublic Static]
 ```
 
-### Error Handling
+</details>
+
+<details>
+<summary><strong>Error Handling</strong></summary>
 
 Invalid flag names or operators produce descriptive error messages:
 
@@ -9977,7 +10194,10 @@ object invoke -flags %Public $obj Method
 # Error: bad BindingFlags flags operator '%', must be '/', '+', '-', '=', ':', or '&'
 ```
 
-### Tips for Using Flags
+</details>
+
+<details>
+<summary><strong>Tips for Using Flags</strong></summary>
 
 1. **Use `+` for adding access**: When you need to access non-public members, use `+NonPublic` rather than rebuilding all flags
 
@@ -9991,11 +10211,14 @@ object invoke -flags %Public $obj Method
 
 ---
 
+</details>
+
 ## Core Marshaller and Command Callbacks
 
 Eagle provides powerful .NET integration through its core marshaller, which handles type conversion between script values and .NET types. One of its most sophisticated features is the **command callback mechanism**, which enables transparent creation and execution of .NET delegates using Eagle scripts.
 
-### Overview: Script-Backed Delegates
+<details>
+<summary><strong>Overview: Script-Backed Delegates</strong></summary>
 
 The command callback mechanism allows Eagle scripts (procedures, lambda expressions, or arbitrary script code) to be used wherever .NET code expects a delegate. When .NET code invokes the delegate, Eagle automatically:
 
@@ -10009,7 +10232,10 @@ This enables powerful scenarios like:
 - Asynchronous callbacks for .NET async patterns
 - Thread entry points for multi-threaded applications
 
-### How Command Callbacks Work
+</details>
+
+<details>
+<summary><strong>How Command Callbacks Work</strong></summary>
 
 #### Creating a Callback from Script
 
@@ -10042,7 +10268,10 @@ The generated delegate acts as a "trampoline" - when .NET code invokes it, execu
          → Return value to .NET
 ```
 
-### Callback Script Syntax
+</details>
+
+<details>
+<summary><strong>Callback Script Syntax</strong></summary>
 
 A callback script can include optional configuration flags before the script body:
 
@@ -10063,7 +10292,10 @@ object invoke $button add_Click {myClickHandler}
 object invoke $list Sort {compareItems}
 ```
 
-### Callback Options Reference
+</details>
+
+<details>
+<summary><strong>Callback Options Reference</strong></summary>
 
 Callback options can be embedded at the beginning of the callback script to customize behavior:
 
@@ -10088,7 +10320,10 @@ object invoke $list Sort {-returntype System.Int32 -- {compareItems $a $b}}
 object invoke $timer add_Elapsed {-callbackflags {+Complain +ResetCancel} -- {handleTimer}}
 ```
 
-### CallbackFlags Reference
+</details>
+
+<details>
+<summary><strong>CallbackFlags Reference</strong></summary>
 
 The `CallbackFlags` enumeration controls how callbacks are executed:
 
@@ -10122,7 +10357,10 @@ The `CallbackFlags` enumeration controls how callbacks are executed:
 
 **Default flags:** `Arguments | Create | Dispose | Alias | Complain | ReturnValue | AddReference`
 
-### MarshalFlags for Callbacks
+</details>
+
+<details>
+<summary><strong>MarshalFlags for Callbacks</strong></summary>
 
 The `MarshalFlags` enumeration controls type marshalling behavior:
 
@@ -10137,7 +10375,10 @@ The `MarshalFlags` enumeration controls type marshalling behavior:
 | `ThrowOnBindFailure` | Throw exception on delegate binding failure |
 | `SimpleCallback` | Use simple (non-command) callback binding |
 
-### Supported Delegate Types
+</details>
+
+<details>
+<summary><strong>Supported Delegate Types</strong></summary>
 
 Eagle's command callback subsystem has built-in support for specific delegate types. Other delegate types are handled via dynamic delegate generation.
 
@@ -10167,7 +10408,10 @@ Eagle's command callback subsystem has built-in support for specific delegate ty
 
 **Note**: Delegate types like `Action<T>`, `Func<T>`, `Predicate<T>`, and `Comparison<T>` are usable but are not directly supported by the callback subsystem. They are handled as custom delegate types unless their signature happens to exactly match one of the built-in types (e.g., `Action` with no parameters matches `GenericCallback`).
 
-### Dynamic Delegate Generation
+</details>
+
+<details>
+<summary><strong>Dynamic Delegate Generation</strong></summary>
 
 For delegate types not in the built-in list, Eagle can dynamically generate delegates using MSIL emission (when `EMIT` is enabled). This process:
 
@@ -10178,7 +10422,10 @@ For delegate types not in the built-in list, Eagle can dynamically generate dele
 
 This enables Eagle scripts to implement virtually any .NET delegate type.
 
-### Practical Examples
+</details>
+
+<details>
+<summary><strong>Practical Examples</strong></summary>
 
 #### Event Handler
 
@@ -10257,7 +10504,10 @@ proc isEven {n} {
 set evenNumbers [object invoke $list FindAll {isEven}]
 ```
 
-### ByRef Parameter Handling
+</details>
+
+<details>
+<summary><strong>ByRef Parameter Handling</strong></summary>
 
 When a delegate has `ref` or `out` parameters, Eagle handles them specially:
 
@@ -10277,7 +10527,10 @@ proc tryParseNumber {text resultVar} {
 }
 ```
 
-### Callback Lifetime Management
+</details>
+
+<details>
+<summary><strong>Callback Lifetime Management</strong></summary>
 
 **Important considerations:**
 
@@ -10286,7 +10539,10 @@ proc tryParseNumber {text resultVar} {
 3. **Identifier**: Use `-identifier` for distinguishing multiple pending callbacks
 4. **Dispose**: Callbacks are cleaned up when the interpreter is disposed or explicitly removed
 
-### Error Handling in Callbacks
+</details>
+
+<details>
+<summary><strong>Error Handling in Callbacks</strong></summary>
 
 When a callback script returns an error:
 
@@ -10314,14 +10570,20 @@ object invoke $validator Validate {
 }
 ```
 
-### Performance Considerations
+</details>
+
+<details>
+<summary><strong>Performance Considerations</strong></summary>
 
 1. **Callback caching**: Eagle caches CommandCallback objects by script content to avoid recreating them
 2. **Delegate reuse**: Generated delegates are reused when the same callback is requested multiple times
 3. **Dynamic vs static**: Built-in delegate types are faster than dynamically generated ones
 4. **Marshalling overhead**: Complex argument types incur marshalling costs; simple types are faster
 
-### Integration with the ScriptBinder
+</details>
+
+<details>
+<summary><strong>Integration with the ScriptBinder</strong></summary>
 
 The `ScriptBinder` class provides custom type binding for Eagle:
 
@@ -10334,11 +10596,14 @@ This enables seamless type conversion between Eagle's string-based values and .N
 
 ---
 
+</details>
+
 ## Built-in Virtual Scripts
 
 Eagle provides several built-in virtual scripts that are embedded as resources within the core library assembly. These scripts are cryptographically signed and are used for security-critical operations such as enabling/disabling security policies, managing interpreter state during safe interpreter creation, and managing key rings for script signing verification.
 
-### Overview
+<details>
+<summary><strong>Overview</strong></summary>
 
 These virtual scripts:
 - Are stored in `Eagle/Library/Resources/library.resx` as embedded resources
@@ -10347,7 +10612,10 @@ These virtual scripts:
 - Are signed with trusted keys (either the core library script signing key or the Eagle Enterprise Trust Root key)
 - Cannot be modified without re-signing (signature verification would fail)
 
-### Security Scripts
+</details>
+
+<details>
+<summary><strong>Security Scripts</strong></summary>
 
 #### enableSecurity
 
@@ -10390,7 +10658,10 @@ package require Security.Core; keyring clear; security force false
 
 ---
 
-### Interpreter Cleanup Scripts
+</details>
+
+<details>
+<summary><strong>Interpreter Cleanup Scripts</strong></summary>
 
 These scripts are signed with the **Eagle Enterprise Trust Root** key (embedded in the Harpy assembly) rather than the normal core library script signing key. This is necessary because they are used during the trusted key ring loading process, when the normal signing key is not yet available.
 
@@ -10475,7 +10746,10 @@ apply [list [list] {
 
 ---
 
-### Key Ring Management Scripts
+</details>
+
+<details>
+<summary><strong>Key Ring Management Scripts</strong></summary>
 
 These scripts manage the trusted key ring used for script signature verification.
 
@@ -10522,7 +10796,10 @@ Note: `{0}` is a format placeholder that gets replaced with the actual key ring 
 
 ---
 
-### Security Considerations
+</details>
+
+<details>
+<summary><strong>Security Considerations</strong></summary>
 
 1. **Immutability**: These scripts cannot be modified without access to the signing keys. Any modification will cause signature verification to fail.
 
@@ -10540,11 +10817,14 @@ This enables seamless type conversion between Eagle's string-based values and .N
 
 ---
 
+</details>
+
 ## Managed Assembly Plugin Loader Subsystem
 
 The Eagle plugin loader subsystem provides a comprehensive framework for loading, managing, and unloading managed (.NET) assembly plugins at runtime. This subsystem extends Eagle's functionality by allowing dynamic loading of compiled extensions that can add commands, functions, policies, traces, and other entities to the interpreter.
 
-### Overview
+<details>
+<summary><strong>Overview</strong></summary>
 
 The plugin loader subsystem consists of several key components:
 
@@ -10554,7 +10834,10 @@ The plugin loader subsystem consists of several key components:
 4. **Security Integration**: Strong name verification, Authenticode trust checking, and policy enforcement
 5. **AppDomain Isolation**: Optional loading of plugins into isolated application domains
 
-### The `[load]` Command
+</details>
+
+<details>
+<summary><strong>The `[load]` Command</strong></summary>
 
 **Syntax**: `load ?options? fileName ?packageName? ?interp?`
 
@@ -10638,7 +10921,10 @@ load -isolated -- /path/to/UntrustedPlugin.dll
 load -nocommands -nofunctions -- /path/to/Plugin.dll
 ```
 
-### The `[unload]` Command
+</details>
+
+<details>
+<summary><strong>The `[unload]` Command</strong></summary>
 
 **Syntax**: `unload ?options? fileName ?packageName? ?interp?`
 
@@ -10688,7 +10974,10 @@ unload -nocase /path/to/Plugin.dll mypackage
 unload -nocomplain /path/to/Plugin.dll
 ```
 
-### The Eagle.Loader Script Package
+</details>
+
+<details>
+<summary><strong>The Eagle.Loader Script Package</strong></summary>
 
 The `Eagle.Loader` package (source: `Eagle/Library/Resources/loader.eagle`) provides helper procedures for constructing `[package ifneeded]` scripts that can dynamically load binary plugins.
 
@@ -10830,7 +11119,10 @@ if {$buildType ni [list Bare]} then {
 }
 ```
 
-### PluginFlags Enumeration
+</details>
+
+<details>
+<summary><strong>PluginFlags Enumeration</strong></summary>
 
 The `PluginFlags` enumeration controls plugin loading and behavior. Flags can be set via command options or programmatically.
 
@@ -10934,7 +11226,10 @@ The `PluginFlags` enumeration controls plugin loading and behavior. Flags can be
 |------|-------|-------------|
 | `LoadOnAnyThread` | 0x4000000000000000 | Allow loading on any thread |
 
-### Plugin Lifecycle
+</details>
+
+<details>
+<summary><strong>Plugin Lifecycle</strong></summary>
 
 #### Loading Phase
 
@@ -10965,7 +11260,10 @@ The `PluginFlags` enumeration controls plugin loading and behavior. Flags can be
 5. **Post-Unload Notification**: Sends `NotifyFlags.Unload` notification
 6. **AppDomain Unload**: If isolated, unloads the associated AppDomain
 
-### Isolated Plugin Loading
+</details>
+
+<details>
+<summary><strong>Isolated Plugin Loading</strong></summary>
 
 Isolated plugins are loaded into separate AppDomains, providing:
 
@@ -10997,7 +11295,10 @@ load /path/to/Plugin.dll
 3. **Debugging**: Isolated plugins are harder to debug
 4. **Static State**: Each AppDomain has its own static state
 
-### Security Integration
+</details>
+
+<details>
+<summary><strong>Security Integration</strong></summary>
 
 #### Policy-Based Security
 
@@ -11042,7 +11343,10 @@ load -trustedonly /path/to/Plugin.dll
 load -maybeverifiedonly -maybetrustedonly /path/to/OfficialPlugin.dll
 ```
 
-### Resource-Based Loading
+</details>
+
+<details>
+<summary><strong>Resource-Based Loading</strong></summary>
 
 Plugins can be loaded from embedded resources instead of files:
 
@@ -11055,7 +11359,10 @@ load -viaresource MyPlugin.dll
 
 This is used internally for loading plugins embedded in the host application.
 
-### Testing Plugin Loading
+</details>
+
+<details>
+<summary><strong>Testing Plugin Loading</strong></summary>
 
 The test file `Eagle/Library/Tests/load.eagle` provides comprehensive test coverage:
 
@@ -11077,7 +11384,10 @@ runTest {test load-1.1.1 {load/unload isolated plugin assembly} -setup {
 }}
 ```
 
-### Introspection
+</details>
+
+<details>
+<summary><strong>Introspection</strong></summary>
 
 **`[info loaded]`**: Lists loaded plugins
 ```tcl
@@ -11093,7 +11403,10 @@ info loaded "" "" "*Sample*"
 
 **`[info load]`**: Returns low-level load information
 
-### Error Handling
+</details>
+
+<details>
+<summary><strong>Error Handling</strong></summary>
 
 Plugin loading can fail for various reasons:
 
@@ -11113,6 +11426,8 @@ if {[catch {load /path/to/Plugin.dll} err]} then {
 ```
 
 ---
+
+</details>
 
 ## Notes
 
@@ -11141,7 +11456,8 @@ if {[catch {load /path/to/Plugin.dll} err]} then {
 
 Eagle provides extensive mechanisms for customizing interpreter behavior at runtime. This section documents the advanced customization APIs available for modifying commands, sub-commands, and name resolution.
 
-### Sub-Command Manipulation
+<details>
+<summary><strong>Sub-Command Manipulation</strong></summary>
 
 Eagle ensemble commands (like `string`, `file`, `info`, etc.) use an `EnsembleDictionary` to map sub-command names to their implementations. These dictionaries can be accessed and modified at runtime.
 
@@ -11228,7 +11544,10 @@ interp subcommand {} string myLength {string_myLength}
 interp subcommand -flags UseExecuteArguments {} string upper {myUpperProc}
 ```
 
-### Creating Custom Sub-Commands
+</details>
+
+<details>
+<summary><strong>Creating Custom Sub-Commands</strong></summary>
 
 For more control, you can create custom `ISubCommand` implementations. The test infrastructure provides an example class `Eagle._Tests.Default+SubCommand`:
 
@@ -11294,7 +11613,10 @@ set newSubCommand [object create -alias Eagle._Tests.Default+SubCommand \
 $subCommands Item length $newSubCommand
 ```
 
-### Custom Name Resolution (IResolve Interface)
+</details>
+
+<details>
+<summary><strong>Custom Name Resolution (IResolve Interface)</strong></summary>
 
 Eagle allows installing custom resolvers that intercept name lookup for variables, commands, namespaces, and call frames. This is useful for:
 
@@ -11380,7 +11702,10 @@ Resolvers can be configured with flags that modify their behavior:
 | `AlwaysUseNamespaceFrame` | Always use namespace's frame |
 | `NextUseNamespaceFrame` | Use namespace frame on next call |
 
-### Command Object Manipulation
+</details>
+
+<details>
+<summary><strong>Command Object Manipulation</strong></summary>
 
 Beyond sub-commands, you can modify command objects directly:
 
@@ -11398,7 +11723,10 @@ set flags [$command CommandFlags]
 set obj [$command -create -alias Object]
 ```
 
-### Best Practices
+</details>
+
+<details>
+<summary><strong>Best Practices</strong></summary>
 
 1. **Use `object flags +NoDispose`** when accessing interpreter-owned objects to prevent premature disposal.
 
@@ -11424,7 +11752,10 @@ set obj [$command -create -alias Object]
    debug restore  ;# Restores all core commands to original state
    ```
 
-### See Also
+</details>
+
+<details>
+<summary><strong>See Also</strong></summary>
 
 - `Eagle/Library/Tests/redefine.eagle` - Comprehensive test suite for customization features
 - `Eagle/Library/Tests/Default.cs` - Test support classes including SubCommand and Resolve
@@ -11432,11 +11763,14 @@ set obj [$command -create -alias Object]
 
 ---
 
+</details>
+
 ## Advanced: Automatic Command Mapping Subsystem
 
 Eagle provides a powerful mechanism for automatically exposing .NET type methods as script commands through the **Automatic Command Mapping** subsystem. This feature dynamically maps .NET methods to script sub-commands, providing direct access to .NET functionality without writing custom command classes.
 
-### Overview
+<details>
+<summary><strong>Overview</strong></summary>
 
 The automatic command system creates ensemble commands where each sub-command corresponds to a method on a .NET type. Method overloads are automatically resolved based on parameter count, and delegates are dynamically created for efficient invocation.
 
@@ -11449,7 +11783,10 @@ The automatic command system creates ensemble commands where each sub-command co
 | `TypedInstance` | Wraps a type and optional object instance for method invocation |
 | `AddAutomaticCommands` | Interpreter method to register automatic commands |
 
-### Creating Automatic Commands
+</details>
+
+<details>
+<summary><strong>Creating Automatic Commands</strong></summary>
 
 Automatic commands are created using the `Interpreter.AddAutomaticCommands` method:
 
@@ -11491,7 +11828,10 @@ set code [$interpreter AddAutomaticCommands \
 # etc.
 ```
 
-### TypedInstance
+</details>
+
+<details>
+<summary><strong>TypedInstance</strong></summary>
 
 A `TypedInstance` encapsulates the information needed for automatic command creation:
 
@@ -11512,7 +11852,10 @@ set typedInstance [object create -alias TypedInstance \
 | `fullObjectName` | Optional fallback name if `objectName` is null |
 | `extraParts` | Additional name components (rarely used) |
 
-### Command Syntax
+</details>
+
+<details>
+<summary><strong>Command Syntax</strong></summary>
 
 Once created, automatic commands follow this syntax:
 
@@ -11532,7 +11875,10 @@ myObject SomeMethod arg1 arg2
 myObject -flags +NonPublic GetPrivateData
 ```
 
-### Command Options
+</details>
+
+<details>
+<summary><strong>Command Options</strong></summary>
 
 Automatic commands support extensive options (shared with `[library call]` and `[object invoke]`):
 
@@ -11606,7 +11952,10 @@ Automatic commands support extensive options (shared with `[library call]` and `
 | `-autoflush <bool>` | Clear cached delegates (true = delegates only, false = all) |
 | `-autostatus <bool>` | Report count of mapped types/delegates |
 
-### Method Resolution
+</details>
+
+<details>
+<summary><strong>Method Resolution</strong></summary>
 
 The automatic command system resolves methods based on:
 
@@ -11622,7 +11971,10 @@ The automatic command system resolves methods based on:
 4. Create/cache delegate for the selected method
 5. Invoke the delegate with converted arguments
 
-### Safety and Security
+</details>
+
+<details>
+<summary><strong>Safety and Security</strong></summary>
 
 Methods can be annotated with `[CommandFlags]` attributes to control accessibility:
 
@@ -11645,7 +11997,10 @@ When running in a safe interpreter:
 - Methods with `CommandFlags.Unsafe` are blocked with "permission denied"
 - Methods with `CommandFlags.None` follow the interpreter's default policy
 
-### DelegateFlags
+</details>
+
+<details>
+<summary><strong>DelegateFlags</strong></summary>
 
 The `DelegateFlags` enumeration controls automatic command behavior:
 
@@ -11667,7 +12022,10 @@ The `DelegateFlags` enumeration controls automatic command behavior:
 | `MakeIntoObject` | Convert unsupported return types to object handles |
 | `WrapReturnType` | Force wrapping of return values |
 
-### AddAutomaticCommands Method
+</details>
+
+<details>
+<summary><strong>AddAutomaticCommands Method</strong></summary>
 
 ```csharp
 public ReturnCode AddAutomaticCommands(
@@ -11685,7 +12043,10 @@ public ReturnCode AddAutomaticCommands(
 )
 ```
 
-### DelegateMapper
+</details>
+
+<details>
+<summary><strong>DelegateMapper</strong></summary>
 
 The `DelegateMapper` class maintains the mapping between .NET methods and script delegates:
 
@@ -11699,7 +12060,10 @@ The `DelegateMapper` class maintains the mapping between .NET methods and script
 - `ToList(...)` - Get available sub-commands for help/completion
 - `CreateEnsemble(type, argCount)` - Create EnsembleDictionary for sub-command dispatch
 
-### Complete Example
+</details>
+
+<details>
+<summary><strong>Complete Example</strong></summary>
 
 ```tcl
 # Create an automatic command for a custom test class
@@ -11741,7 +12105,10 @@ automatic -autoflush false             ;# Clear all mappings
 automatic -flags +NonPublic get_SomePrivateProperty
 ```
 
-### Error Handling
+</details>
+
+<details>
+<summary><strong>Error Handling</strong></summary>
 
 When method resolution or invocation fails, the automatic command provides detailed error messages:
 
@@ -11763,7 +12130,10 @@ permission denied: safe interpreter cannot use method overload System.Type.Unsaf
 # (Uses -autoindex to select specific overload)
 ```
 
-### Implementation Files
+</details>
+
+<details>
+<summary><strong>Implementation Files</strong></summary>
 
 | File | Description |
 |------|-------------|
@@ -11775,7 +12145,10 @@ permission denied: safe interpreter cannot use method overload System.Type.Unsaf
 | `Eagle/Library/Components/Public/TypedInstance.cs` | Type/instance wrapper class |
 | `Eagle/Library/Components/Public/Interpreter.cs` | `AddAutomaticCommands()` method |
 
-### See Also
+</details>
+
+<details>
+<summary><strong>See Also</strong></summary>
 
 - `Eagle/Library/Tests/interp-exited.eagle` - Test "interp-1.70001" demonstrates automatic commands
 - `Eagle/Library/Tests/Default.cs` - `Automatic` test class with various method signatures
@@ -11783,6 +12156,8 @@ permission denied: safe interpreter cannot use method overload System.Type.Unsaf
 - `[object invoke]` command - Related object invocation functionality
 
 ---
+
+</details>
 
 ## Advanced: Core Library Command Infrastructure
 
@@ -11793,7 +12168,8 @@ Eagle's command system is built on a class hierarchy of C# types in the `Eagle._
 
 This section documents the eight infrastructure command classes and how they relate to user-visible functionality.
 
-### Class Hierarchy
+<details>
+<summary><strong>Class Hierarchy</strong></summary>
 
 ```
 Default (public)                     ← Base class for ALL commands
@@ -11806,7 +12182,10 @@ Default (public)                     ← Base class for ALL commands
 └── Ensemble (public)                ← Structured ensemble with sub-commands
 ```
 
-### Class Reference
+</details>
+
+<details>
+<summary><strong>Class Reference</strong></summary>
 
 | Class | Source File | ObjectGroup | Base Class | NoPopulate/NoAdd | Purpose |
 |-------|-----------|-------------|------------|------------------|---------|
@@ -11819,7 +12198,10 @@ Default (public)                     ← Base class for ALL commands
 | `Ensemble` | `Commands/Ensemble.cs` | `"ensemble"` | `Default` | Yes | Structured ensemble command |
 | `Stub` | `Commands/Stub.cs` | `"ensemble"` | `Core` | Yes | Minimal ensemble placeholder |
 
-### Per-Class Documentation
+</details>
+
+<details>
+<summary><strong>Per-Class Documentation</strong></summary>
 
 #### Default
 
@@ -11957,7 +12339,10 @@ interp stub {} myensemble
 # Sub-commands can then be added to the stub
 ```
 
-### User Interaction Summary
+</details>
+
+<details>
+<summary><strong>User Interaction Summary</strong></summary>
 
 | Class | How Users Create/Use It | User-Facing Command |
 |-------|------------------------|-------------------|
@@ -11970,7 +12355,10 @@ interp stub {} myensemble
 | `Ensemble` | Created by plugins or infrastructure | The ensemble command name |
 | `Stub` | `interp stub` | The stub command name |
 
-### Implementation Files
+</details>
+
+<details>
+<summary><strong>Implementation Files</strong></summary>
 
 | File | Description |
 |------|-------------|
@@ -11985,7 +12373,10 @@ interp stub {} myensemble
 | `Eagle/Library/Components/Public/Interpreter.cs` | `AddAlias()`, `AddStub()`, `AddAutomaticCommands()` methods |
 | `Eagle/Library/Tests/Default.cs` | Test classes: `Automatic` (method/property mapping tests), `Ensemble` (ensemble with sub-commands), `SubCommand` (sub-command execution infrastructure), execute callbacks |
 
-### See Also
+</details>
+
+<details>
+<summary><strong>See Also</strong></summary>
 
 - [Advanced: Interpreter Customization Hooks](#advanced-interpreter-customization-hooks) - Sub-command manipulation and name resolution
 - [Advanced: Automatic Command Mapping Subsystem](#advanced-automatic-command-mapping-subsystem) - Automatic command details
@@ -11994,13 +12385,16 @@ interp stub {} myensemble
 
 ---
 
+</details>
+
 ## Advanced: Complaint Subsystem
 
 <a id="complaint-subsystem"></a>
 
 The complaint subsystem is designed to "loudly" report issues that cannot be gracefully surfaced as script errors or through other means — for example, errors that occur within cleanup code, on secondary threads, inside `finally` blocks, during interpreter disposal, or in any context where a normal `ReturnCode.Error` has no recipient. The philosophy is that these errors should **never be silently swallowed**; they should always be reported through at least one channel, even when every normal error reporting pathway has failed. The full implementation resides in `DebugOps.cs`.
 
-### Design Philosophy
+<details>
+<summary><strong>Design Philosophy</strong></summary>
 
 In a complex runtime like Eagle, errors routinely arise in contexts where there is no script-level caller to receive them:
 
@@ -12012,7 +12406,10 @@ In a complex runtime like Eagle, errors routinely arise in contexts where there 
 
 In these situations, suppressing the error creates a debugging nightmare: the symptom (e.g., a resource leak or corrupted state) manifests far from the cause, with no diagnostic trail. The complaint subsystem addresses this by providing a **resilient, multi-channel, last-resort error reporting mechanism** that is designed to never throw exceptions itself.
 
-### Core Invariant
+</details>
+
+<details>
+<summary><strong>Core Invariant</strong></summary>
 
 The single most important property of the complaint subsystem is stated in the source code:
 
@@ -12022,7 +12419,10 @@ Every output channel is individually wrapped in exception handlers. If the host 
 
 ---
 
-### Architecture Overview
+</details>
+
+<details>
+<summary><strong>Architecture Overview</strong></summary>
 
 ```
                     DebugOps.Complain(interpreter, code, result)
@@ -12098,7 +12498,10 @@ Every output channel is individually wrapped in exception handlers. If the host 
 
 ---
 
-### The Complain Method
+</details>
+
+<details>
+<summary><strong>The Complain Method</strong></summary>
 
 The public API consists of two overloads:
 
@@ -12122,7 +12525,10 @@ Both are marked `[MethodImpl(MethodImplOptions.NoInlining)]` to ensure accurate 
 
 ---
 
-### Output Channels
+</details>
+
+<details>
+<summary><strong>Output Channels</strong></summary>
 
 The private complaint engine processes output through multiple channels in priority order. Each channel is independently protected by exception handlers.
 
@@ -12212,7 +12618,10 @@ Quiet mode suppresses *visibility*, not *recording*.
 
 ---
 
-### Complaint Recording and History
+</details>
+
+<details>
+<summary><strong>Complaint Recording and History</strong></summary>
 
 Every complaint (at nesting level 1) is recorded in a global `ComplaintList`:
 
@@ -12244,7 +12653,10 @@ In addition to the global history, each complaint is stored on:
 
 ---
 
-### Counters and Monitoring
+</details>
+
+<details>
+<summary><strong>Counters and Monitoring</strong></summary>
 
 The subsystem maintains four counters for monitoring complaint activity:
 
@@ -12270,7 +12682,10 @@ The `IsComplainPending()` method returns `true` if complaint processing is curre
 
 ---
 
-### Recursion Prevention and Retry
+</details>
+
+<details>
+<summary><strong>Recursion Prevention and Retry</strong></summary>
 
 The complaint subsystem must handle the case where filing a complaint itself triggers another complaint (e.g., when the trace listener or host throws, and the exception handler calls `Complain()` again). This is handled through a per-thread nesting level counter:
 
@@ -12290,7 +12705,10 @@ The `finally` block always decrements the nesting level, ensuring the subsystem 
 
 ---
 
-### Complaint Formatting
+</details>
+
+<details>
+<summary><strong>Complaint Formatting</strong></summary>
 
 Complaints are formatted by `FormatOps.Complaint()`, which produces a structured message containing:
 
@@ -12304,7 +12722,10 @@ The formatted string is used consistently across all output channels.
 
 ---
 
-### Configuration Reference
+</details>
+
+<details>
+<summary><strong>Configuration Reference</strong></summary>
 
 ---
 
@@ -12397,7 +12818,10 @@ The `NoComplain` pattern appears across many flag enumerations throughout the li
 
 ---
 
-### Script-Level Access
+</details>
+
+<details>
+<summary><strong>Script-Level Access</strong></summary>
 
 ---
 
@@ -12424,7 +12848,10 @@ When the interactive shell's `HeaderFlags` include `ComplaintInfo` (included in 
 
 ---
 
-### Integration Across the Library
+</details>
+
+<details>
+<summary><strong>Integration Across the Library</strong></summary>
 
 The complaint subsystem is called from **421 call sites across 73 source files**, covering virtually every subsystem in the Eagle library. Representative usage patterns include:
 
@@ -12463,7 +12890,10 @@ DebugOps.Complain(interpreter, ReturnCode.Error, "host write failed");
 
 ---
 
-### Testing Infrastructure
+</details>
+
+<details>
+<summary><strong>Testing Infrastructure</strong></summary>
 
 The test framework provides several pre-built `ComplainCallback` implementations for verifying complaint behavior:
 
@@ -12488,7 +12918,10 @@ These flags allow the test suite to treat any unexpected complaint as a test fai
 
 ---
 
-### Conditional Compilation
+</details>
+
+<details>
+<summary><strong>Conditional Compilation</strong></summary>
 
 The complaint subsystem adapts to the build configuration through conditional compilation:
 
@@ -12503,7 +12936,10 @@ The complaint subsystem adapts to the build configuration through conditional co
 
 ---
 
-### Design Principles Summary
+</details>
+
+<details>
+<summary><strong>Design Principles Summary</strong></summary>
 
 1. **Never silent** — Every error that cannot be returned to a script caller is reported through at least one channel, even if that channel is just an incrementing counter.
 2. **Never throws** — The `Complain()` method absorbs all exceptions from all output channels. A complaint about a complaint must not itself become a problem.
@@ -12515,7 +12951,10 @@ The complaint subsystem adapts to the build configuration through conditional co
 
 ---
 
-### See Also
+</details>
+
+<details>
+<summary><strong>See Also</strong></summary>
 
 - [`debug complaint`](#cmd-debug) — Script-level access to the most recent complaint
 - [`debug break -complain`](#cmd-debug) — Breakpoint with complaint error reporting
@@ -12527,13 +12966,16 @@ The complaint subsystem adapts to the build configuration through conditional co
 
 ---
 
+</details>
+
 ## Advanced: Security Policy Subsystem
 
 <a id="security-policy-subsystem"></a>
 
 The security policy subsystem is the primary access-control facility for the Eagle interpreter. It provides a voting-based, callback-driven policy evaluation pipeline that governs which commands, sub-commands, files, streams, URIs, types, and assemblies may be accessed from script code — particularly within safe (sandboxed) interpreters. The full implementation spans `PolicyOps.cs` (core policy implementations), `PolicyContext.cs` (vote aggregation), `Interpreter.cs` (policy management and checking), `Engine.cs` (policy integration points), `Utility.cs` (public API wrappers), and `ScriptPolicy.cs` (script-based policy class). Script-level access is provided by `interp policy`, `interp nopolicy`, `interp makesafe`, and `interp marktrusted`.
 
-### Design Philosophy
+<details>
+<summary><strong>Design Philosophy</strong></summary>
 
 Eagle's security policy subsystem is designed around several core principles:
 
@@ -12553,7 +12995,10 @@ Eagle's security policy subsystem is designed around several core principles:
 
 ---
 
-### Architecture Overview
+</details>
+
+<details>
+<summary><strong>Architecture Overview</strong></summary>
 
 ```
    Script: interp eval $safe {file exists /etc/passwd}
@@ -12600,7 +13045,10 @@ Eagle's security policy subsystem is designed around several core principles:
 
 ---
 
-### Policy Check Integration Points
+</details>
+
+<details>
+<summary><strong>Policy Check Integration Points</strong></summary>
 
 The policy subsystem is invoked by the interpreter at several key points during execution. Each integration point corresponds to a specific `PolicyFlags` value and a wrapper method on the `Interpreter` class.
 
@@ -12622,7 +13070,10 @@ The policy subsystem is invoked by the interpreter at several key points during 
 
 ---
 
-### Vote Aggregation (PolicyContext)
+</details>
+
+<details>
+<summary><strong>Vote Aggregation (PolicyContext)</strong></summary>
 
 The `PolicyContext` class maintains three thread-safe counters (using `Interlocked.Increment`):
 
@@ -12651,7 +13102,10 @@ The aggregated `Decision` property applies the following rules in order:
 
 ---
 
-### Policy Implementation Types (CheckVia* Methods)
+</details>
+
+<details>
+<summary><strong>Policy Implementation Types (CheckVia* Methods)</strong></summary>
 
 `PolicyOps` provides six policy implementation methods, each designed for a specific type of access control check. All follow the same pattern: extract the `IPolicyContext` from the `clientData`, verify the command type matches, then cast a vote based on the check result.
 
@@ -12744,7 +13198,10 @@ Evaluates a script in the `policyInterpreter` to make the policy decision. The s
 
 ---
 
-### Default Core Command Policies
+</details>
+
+<details>
+<summary><strong>Default Core Command Policies</strong></summary>
 
 When a safe interpreter is created (via `interp create -safe` or `interp makesafe`), the `SetupPolicies` method installs eight default command policy callbacks from the `PolicyOps.CommandCallbacks` array. Each callback restricts a specific command to a safe subset of its sub-commands or validated resources.
 
@@ -12792,7 +13249,10 @@ This ensures that safe interpreters can only source scripts from known-good loca
 
 ---
 
-### Trust Model
+</details>
+
+<details>
+<summary><strong>Trust Model</strong></summary>
 
 The policy subsystem maintains several trust validation methods in `PolicyOps` for checking whether specific resources are permitted in safe interpreters. These are called by the engine and command implementations (not by the policy callbacks themselves).
 
@@ -12844,7 +13304,10 @@ Validates a file by computing its cryptographic hash and comparing it against a 
 
 ---
 
-### PolicyDecision Enumeration
+</details>
+
+<details>
+<summary><strong>PolicyDecision Enumeration</strong></summary>
 
 | Name | Value | Description |
 |------|-------|-------------|
@@ -12862,7 +13325,10 @@ Validates a file by computing its cryptographic hash and comparing it against a 
 
 ---
 
-### PolicyFlags Enumeration
+</details>
+
+<details>
+<summary><strong>PolicyFlags Enumeration</strong></summary>
 
 `PolicyFlags` is a `[Flags]` enumeration that controls when a policy is invoked and what kind of check it performs.
 
@@ -12932,7 +13398,10 @@ Validates a file by computing its cryptographic hash and comparing it against a 
 
 ---
 
-### PolicyDecisionType Enumeration
+</details>
+
+<details>
+<summary><strong>PolicyDecisionType Enumeration</strong></summary>
 
 `PolicyDecisionType` is a `[Flags]` enumeration that classifies policy decisions by the type of operation being checked and whether it is an initial or final check.
 
@@ -12956,7 +13425,10 @@ The interpreter maintains separate `InitialDecision` and `FinalDecision` propert
 
 ---
 
-### PolicyType Enumeration
+</details>
+
+<details>
+<summary><strong>PolicyType Enumeration</strong></summary>
 
 `PolicyType` classifies the nature of the resource being protected by a policy.
 
@@ -12975,7 +13447,10 @@ The interpreter maintains separate `InitialDecision` and `FinalDecision` propert
 
 ---
 
-### Script-Level Interface
+</details>
+
+<details>
+<summary><strong>Script-Level Interface</strong></summary>
 
 #### `interp policy` — Add a Policy
 
@@ -13011,7 +13486,10 @@ Marks the interpreter as trusted, effectively bypassing policy checks. This is u
 
 ---
 
-### TrustFlags Enumeration
+</details>
+
+<details>
+<summary><strong>TrustFlags Enumeration</strong></summary>
 
 Controls the behavior of trusted (elevated) evaluation within safe interpreters.
 
@@ -13028,7 +13506,10 @@ Controls the behavior of trusted (elevated) evaluation within safe interpreters.
 
 ---
 
-### Public API (Utility.cs)
+</details>
+
+<details>
+<summary><strong>Public API (Utility.cs)</strong></summary>
 
 The `Utility` class provides public wrapper methods for each `PolicyOps.CheckVia*` method. These are the intended API for embedders and plugin authors who need to implement custom policies.
 
@@ -13045,7 +13526,10 @@ All methods share the same return convention: `ReturnCode.Ok` means the policy c
 
 ---
 
-### IPolicyContext Interface
+</details>
+
+<details>
+<summary><strong>IPolicyContext Interface</strong></summary>
 
 The `IPolicyContext` interface provides the complete context for a policy decision. It is passed to policy callbacks via the `IClientData` wrapper.
 
@@ -13084,7 +13568,10 @@ The `IPolicyContext` interface provides the complete context for a policy decisi
 
 ---
 
-### Internal Tunable Parameters
+</details>
+
+<details>
+<summary><strong>Internal Tunable Parameters</strong></summary>
 
 <a id="policy-internal-tunables"></a>
 
@@ -13131,7 +13618,10 @@ Commands that implement `IPolicyEnsemble` expose their allowed/disallowed sub-co
 
 ---
 
-### Compile-Time Flags
+</details>
+
+<details>
+<summary><strong>Compile-Time Flags</strong></summary>
 
 | Symbol | Effect |
 |--------|--------|
@@ -13139,7 +13629,10 @@ Commands that implement `IPolicyEnsemble` expose their allowed/disallowed sub-co
 
 ---
 
-### See Also
+</details>
+
+<details>
+<summary><strong>See Also</strong></summary>
 
 - [`interp policy`](#cmd-interp) — Add a policy to an interpreter
 - [`interp nopolicy`](#cmd-interp) — Remove a policy from an interpreter
@@ -13156,13 +13649,16 @@ Commands that implement `IPolicyEnsemble` expose their allowed/disallowed sub-co
 
 ---
 
+</details>
+
 ## Advanced: Tracing Subsystem
 
 <a id="tracing-subsystem"></a>
 
 The tracing subsystem is the primary diagnostic output facility for the Eagle interpreter runtime. It provides structured, priority-filtered, category-aware trace message routing through configurable listeners with rate limiting, custom formatting, managed code filter callbacks, and per-interpreter or global configuration. The full implementation spans `TraceOps.cs` (core pipeline), `DebugOps.cs` (listener management), `TraceLimits.cs` (rate limiting), `Delegates.cs` (filter callback delegate), and `Default.cs` (test listener implementations). Script-level access is provided by the `debug trace` command.
 
-### Design Philosophy
+<details>
+<summary><strong>Design Philosophy</strong></summary>
 
 Eagle's tracing subsystem is designed around several core principles:
 
@@ -13182,7 +13678,10 @@ Eagle's tracing subsystem is designed around several core principles:
 
 ---
 
-### Architecture Overview
+</details>
+
+<details>
+<summary><strong>Architecture Overview</strong></summary>
 
 ```
    Script: debug trace -priority Notice "message"
@@ -13245,7 +13744,10 @@ Eagle's tracing subsystem is designed around several core principles:
 
 ---
 
-### The `debug trace` Command
+</details>
+
+<details>
+<summary><strong>The `debug trace` Command</strong></summary>
 
 The `debug trace` command is the script-level interface to the tracing subsystem. It serves three roles: writing trace messages, querying trace status, and configuring the trace subsystem at runtime.
 
@@ -13308,7 +13810,10 @@ When called **without a message argument**, the command returns a key-value list
 
 ---
 
-### TracePriority Enumeration
+</details>
+
+<details>
+<summary><strong>TracePriority Enumeration</strong></summary>
 
 <a id="trace-priority"></a>
 
@@ -13570,7 +14075,10 @@ The `Default` composite is `Medium`, which means a plain `debug trace "message"`
 
 ---
 
-### Trace Format Strings
+</details>
+
+<details>
+<summary><strong>Trace Format Strings</strong></summary>
 
 The subsystem formats each trace message using `String.Format` with 12 positional parameters. A format string template selects which parameters appear in the output and in what order.
 
@@ -13609,7 +14117,10 @@ The format can be selected by:
 
 ---
 
-### Trace Listeners
+</details>
+
+<details>
+<summary><strong>Trace Listeners</strong></summary>
 
 Listeners are the output endpoints for trace messages. Eagle supports several listener types, managed through `DebugOps`.
 
@@ -13653,7 +14164,10 @@ debug trace
 
 ---
 
-### TraceFilterCallback — Managed Code Callbacks
+</details>
+
+<details>
+<summary><strong>TraceFilterCallback — Managed Code Callbacks</strong></summary>
 
 <a id="trace-filter-callback"></a>
 
@@ -13718,7 +14232,10 @@ The `Default.cs` test infrastructure class provides six pre-built `TraceFilterCa
 
 ---
 
-### Trace Listeners in Default.cs
+</details>
+
+<details>
+<summary><strong>Trace Listeners in Default.cs</strong></summary>
 
 The `Default.cs` test infrastructure class provides several specialized `TraceListener` implementations that demonstrate advanced tracing patterns.
 
@@ -13803,7 +14320,10 @@ Persists trace messages to a SQL database via parameterized `INSERT` statements.
 
 ---
 
-### Rate Limiting (TraceLimits)
+</details>
+
+<details>
+<summary><strong>Rate Limiting (TraceLimits)</strong></summary>
 
 The `TraceLimits` class provides automatic rate limiting to prevent high-volume trace categories from overwhelming output channels.
 
@@ -13836,7 +14356,10 @@ Messages suppressed by rate limiting increment the `traceTripped` counter.
 
 ---
 
-### Categories
+</details>
+
+<details>
+<summary><strong>Categories</strong></summary>
 
 Trace categories are free-form strings that group related messages. The subsystem maintains four independent category dictionaries:
 
@@ -13860,7 +14383,10 @@ Categories can also be configured via environment variables before startup:
 
 ---
 
-### Environment Variables
+</details>
+
+<details>
+<summary><strong>Environment Variables</strong></summary>
 
 The tracing subsystem reads the following environment variables at initialization time. These provide a way to configure tracing before any script code runs — essential for diagnosing startup issues.
 
@@ -13887,7 +14413,10 @@ The tracing subsystem reads the following environment variables at initializatio
 
 ---
 
-### Internal Tunable Parameters
+</details>
+
+<details>
+<summary><strong>Internal Tunable Parameters</strong></summary>
 
 <a id="trace-internal-tunables"></a>
 
@@ -13948,7 +14477,10 @@ The following parameters are not exposed through `debug trace` options but can b
 
 ---
 
-### TraceStateType Enumeration
+</details>
+
+<details>
+<summary><strong>TraceStateType Enumeration</strong></summary>
 
 `TraceStateType` is a `[Flags]` enumeration that controls which aspects of the tracing subsystem are modified when calling `ForceEnabledOrDisabled()` or when using the `-statetypes` option of `debug trace`. Each flag corresponds to one configurable dimension of the subsystem.
 
@@ -14007,7 +14539,10 @@ The following parameters are not exposed through `debug trace` options but can b
 
 ---
 
-### TraceCategoryType Enumeration
+</details>
+
+<details>
+<summary><strong>TraceCategoryType Enumeration</strong></summary>
 
 Controls which category dictionary is being configured.
 
@@ -14025,7 +14560,10 @@ Controls which category dictionary is being configured.
 
 ---
 
-### Statistics and Monitoring
+</details>
+
+<details>
+<summary><strong>Statistics and Monitoring</strong></summary>
 
 The tracing subsystem maintains the following performance counters, accessible via `debug trace` (no arguments) or via `[object invoke]` on `TraceOps`:
 
@@ -14044,7 +14582,10 @@ The tracing subsystem maintains the following performance counters, accessible v
 
 ---
 
-### Compile-Time Flags
+</details>
+
+<details>
+<summary><strong>Compile-Time Flags</strong></summary>
 
 The tracing subsystem's compiled behavior depends on several conditional compilation symbols:
 
@@ -14064,7 +14605,10 @@ The tracing subsystem's compiled behavior depends on several conditional compila
 
 ---
 
-### See Also
+</details>
+
+<details>
+<summary><strong>See Also</strong></summary>
 
 - [`debug trace`](#cmd-debug) — Script-level access to the tracing subsystem
 - [Advanced: Complaint Subsystem](#complaint-subsystem) — Related error-reporting subsystem that can route through tracing
@@ -14079,11 +14623,14 @@ The tracing subsystem's compiled behavior depends on several conditional compila
 
 ---
 
+</details>
+
 ## Eagle Shell Command Line Options
 
 > **Important**: The command line options documented in this section apply only when using the **Eagle shell** executable (e.g., `EagleShell.exe` or equivalent). They are not necessarily available when the Eagle core library is embedded directly into a host application. When no command line arguments are supplied, or after all arguments have been processed, the interactive loop is entered (unless it has been disabled).
 
-### Command Line Notes
+<details>
+<summary><strong>Command Line Notes</strong></summary>
 
 - Option names are **case-insensitive**.
 - Most options are processed in the order they are encountered.
@@ -14091,7 +14638,10 @@ The tracing subsystem's compiled behavior depends on several conditional compila
 - If a file named `EagleShell.exe.argv` (or supported per-user, per-machine, or per-domain variations thereof) exists in the executable directory, its contents are read and inserted before any preexisting arguments, prior to further argument processing.
 - If any unrecognized argument is encountered, it will be passed to the shell argument callback, if any; otherwise, an error will be generated.
 
-### Command Line Options Reference
+</details>
+
+<details>
+<summary><strong>Command Line Options Reference</strong></summary>
 
 | Option | Arguments | Description |
 |--------|-----------|-------------|
@@ -14150,7 +14700,10 @@ The tracing subsystem's compiled behavior depends on several conditional compila
 | `-vendorPath` | `<path>` | Sets the vendor path (i.e. the name of an additional sub-directory within each directory searched when attempting to locate files specific to the user and/or application) and then continues processing arguments. |
 | `-version` | | Displays detailed version information and then exits. |
 
-### Special Short-Form Help Arguments
+</details>
+
+<details>
+<summary><strong>Special Short-Form Help Arguments</strong></summary>
 
 In addition to the named options above, the shell recognizes these special argument forms:
 
@@ -14163,13 +14716,16 @@ In addition to the named options above, the shell recognizes these special argum
 
 ---
 
+</details>
+
 ## Interactive Commands
 
 > **Important**: The interactive commands documented in this section are only available within the **standard interactive loop** provided by the `Interpreter` class (i.e., when using the Eagle shell interactively or when the interactive debugger is active). They are not regular Eagle scripting commands and are not available in scripts.
 
 Interactive commands are prefixed with `#` (the number sign character). When typing at the interactive prompt, lines that begin with `#` are interpreted as interactive commands rather than Eagle scripts. Use `##` for interactive system commands, `###` for interactive verbatim commands, and `####` for interactive verbatim system commands.
 
-### Interactive Commands Reference
+<details>
+<summary><strong>Interactive Commands Reference</strong></summary>
 
 #### Session and Display
 
@@ -14404,11 +14960,14 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 
 ---
 
+</details>
+
 ## Environment Variables
 
 > **Note**: Environment variable names may be case-sensitive depending on the underlying operating system (e.g., case-sensitive on Linux, case-insensitive on Windows). Some of these environment variables are specific to the Eagle shell; however, many are processed by the core library itself and are therefore applicable when Eagle is embedded in any host application. Determining exactly which variables are universally applicable versus shell-specific can be context-dependent, so all are listed here for completeness.
 
-### Script Library and Path Configuration
+<details>
+<summary><strong>Script Library and Path Configuration</strong></summary>
 
 | Variable | Description |
 |----------|-------------|
@@ -14421,7 +14980,10 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 | `VendorPath` | If set, interpreted as the name of an additional sub-directory within each directory searched when attempting to locate files specific to the user and/or application. |
 | `StrictBasePath` | If set, assumptions about the directory layout of the application domain will be minimized. |
 
-### Interpreter Creation and Initialization
+</details>
+
+<details>
+<summary><strong>Interpreter Creation and Initialization</strong></summary>
 
 | Variable | Description |
 |----------|-------------|
@@ -14439,7 +15001,10 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 | `NativePackagePreInitialize` | If set, its value is used as the script to evaluate just prior to initializing an interpreter created by the native package. |
 | `ShellPreInitialize` | If set, the default shell will pre-scan for a `-preInitialize` option, causing the interpreter to evaluate the specified script very early during its creation process. |
 
-### Mode and Behavior
+</details>
+
+<details>
+<summary><strong>Mode and Behavior</strong></summary>
 
 | Variable | Description |
 |----------|-------------|
@@ -14457,7 +15022,10 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 | `NoColor` | If set, the console output will not be in color. |
 | `UserInteractive` | If set, its value overrides user interactivity detection. |
 
-### Console and Host
+</details>
+
+<details>
+<summary><strong>Console and Host</strong></summary>
 
 | Variable | Description |
 |----------|-------------|
@@ -14475,7 +15043,10 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 | `UseForce` | If set, the existing console status will be ignored. |
 | `NoWritePrompt` | If set, no prompts for important configuration settings will be written to the console. |
 
-### Debugging and Tracing
+</details>
+
+<details>
+<summary><strong>Debugging and Tracing</strong></summary>
 
 | Variable | Description |
 |----------|-------------|
@@ -14505,7 +15076,10 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 | `IncludeResultStack` | If set, created result objects will include managed call stack information in their string representations. |
 | `PopulateResultStack` | If set, created result objects will capture managed call stack information. |
 
-### Garbage Collection
+</details>
+
+<details>
+<summary><strong>Garbage Collection</strong></summary>
 
 | Variable | Description |
 |----------|-------------|
@@ -14514,7 +15088,10 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 | `NeverWaitForGC` | If set, internal GC calls will never wait for all pending finalizers to complete. |
 | `NeverCompactForGC` | If set, internal GC calls will never compact the large object heap. |
 
-### Security and Trust
+</details>
+
+<details>
+<summary><strong>Security and Trust</strong></summary>
 
 | Variable | Description |
 |----------|-------------|
@@ -14531,7 +15108,10 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 | `NoSecurityUpdate` | If set, plugin update checks will be skipped for the security package. |
 | `NoVerified` | If set, assembly strong name signatures will not be verified during interpreter creation. |
 
-### Native Tcl Integration
+</details>
+
+<details>
+<summary><strong>Native Tcl Integration</strong></summary>
 
 | Variable | Description |
 |----------|-------------|
@@ -14541,14 +15121,20 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 | `Eagle_Tcl_Shell` / `Tcl_Shell` | If set, used as file locations to check for native Tcl shells. |
 | `Eagle_Tk_Shell` / `Tk_Shell` | If set, used as file locations to check for native Tk shells. |
 
-### Temporary Files and Testing
+</details>
+
+<details>
+<summary><strong>Temporary Files and Testing</strong></summary>
 
 | Variable | Description |
 |----------|-------------|
 | `EAGLE_TEST_TEMP` / `EAGLE_TEMP` / `XDG_RUNTIME_DIR` | If set, their values are used by the test suite as the directory for temporary files. |
 | `TestCommands` | If set, extra commands, functions, etc., may be added by the test plugin to all created interpreters. |
 
-### Threading and Performance
+</details>
+
+<details>
+<summary><strong>Threading and Performance</strong></summary>
 
 | Variable | Description |
 |----------|-------------|
@@ -14557,14 +15143,20 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 | `MeasureTime` | If set, various time measurements will be made to help troubleshoot performance issues. |
 | `UseNamedEvents` | If set, the internal wrapper class will be used for named events. |
 
-### Caching
+</details>
+
+<details>
+<summary><strong>Caching</strong></summary>
 
 | Variable | Description |
 |----------|-------------|
 | `BumpCacheLevel` | If set, its value alters or sets the default cache level. Ignored if the value cannot be converted to an integer. |
 | `CacheFlags` | If set, its value alters or sets the cache flags for the interpreter. Ignored if the value cannot be converted. |
 
-### Network
+</details>
+
+<details>
+<summary><strong>Network</strong></summary>
 
 | Variable | Description |
 |----------|-------------|
@@ -14572,7 +15164,10 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 | `NoUpdates` | If set, checking for updates will be disabled. Only applies to automatic checks within the core library. |
 | `WebClientTag*` | If set, the value will be included within library-created HTTP/1.0 "User-Agent" header values. |
 
-### Application Settings
+</details>
+
+<details>
+<summary><strong>Application Settings</strong></summary>
 
 | Variable | Description |
 |----------|-------------|
@@ -14581,7 +15176,10 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 | `RefreshAppSettings` | If set, application settings will be refreshed before the next time they are used. |
 | `UseXmlFiles` | If set, application settings from applicable XML files will be favored over those provided by the runtime. |
 
-### Miscellaneous
+</details>
+
+<details>
+<summary><strong>Miscellaneous</strong></summary>
 
 | Variable | Description |
 |----------|-------------|
@@ -14600,3 +15198,6 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 | `TreatAsFramework40` | If set, attempt to treat the current runtime as .NET Framework 4.0. May cause functionality to be disabled and/or malfunction. |
 | `TreatAsMono` | If set, attempt to treat the current runtime as Mono. May cause functionality to be disabled and/or malfunction. |
 | `UtilityPath` | If set, interpreted as the name of the file or directory where the optional native utility library is located. |
+
+</details>
+
