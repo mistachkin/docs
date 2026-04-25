@@ -1282,8 +1282,8 @@ set count [sql execute -execute scalar $db "SELECT COUNT(*) FROM t1;"]
 sql execute -execute reader $db "SELECT x, y, z FROM t1;"
 # $rows(count) = number of rows
 # $rows(names) = column name list
-# $rows(0)     = first row as value list
-# $rows(1)     = second row
+# $rows(1)     = first row as value list
+# $rows(2)     = second row
 ```
 
 **DataReader for streaming large result sets:**

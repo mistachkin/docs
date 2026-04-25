@@ -711,13 +711,13 @@ For reference, the full set of `OptionFlags` values (from
 
 ---
 
-## 13. The `DataTable` Result Format
+## 12. The `DataTable` Result Format
 
 Eagle's `[sql execute]` command supports a `DataTable` result format that
 materializes query results as a custom `DataTable` object (derived from
 `System.Data.DataTable`) with value-added methods for Eagle scripting.
 
-### 13.1 Usage
+### 12.1 Usage
 
 ```tcl
 set table [sql execute -execute reader -format datatable $db \
@@ -728,7 +728,7 @@ The returned opaque handle wraps a `DataOps.DataTable` object that inherits
 all standard `System.Data.DataTable` functionality (Rows, Columns, Select,
 etc.) and adds Eagle-specific convenience methods.
 
-### 13.2 Value-Added Methods
+### 12.2 Value-Added Methods
 
 | Method | Return Type | Description |
 |--------|-------------|-------------|
@@ -742,7 +742,7 @@ etc.) and adds Eagle-specific convenience methods.
 | `ToDictionary(string filter, string sort, int limit)` | IStringList | Filtered/sorted with limit |
 | `GetColumnNames` | IStringList | Column names |
 
-### 13.3 Inherited .NET Functionality
+### 12.3 Inherited .NET Functionality
 
 Since the class derives from `System.Data.DataTable`, all standard members
 are accessible via `[object invoke]`:
@@ -765,7 +765,7 @@ object foreach -alias col [$table Columns] {
 }
 ```
 
-### 13.4 Comparison with Other Formats
+### 12.4 Comparison with Other Formats
 
 | Format | Memory | Reusable | Named Columns | .NET Object |
 |--------|--------|----------|---------------|-------------|
@@ -781,7 +781,7 @@ columns by name, pass data to .NET APIs, or filter in memory. Use
 
 ---
 
-## 12. Per-Command Option Reference
+## 13. Per-Command Option Reference
 
 This section documents every option for every command and sub-command,
 organized alphabetically. For each option: its name, value type (if any),
@@ -1823,6 +1823,280 @@ No options (only end-of-options marker).
 </details>
 
 <details>
+<summary><code>[object alias]</code></summary>
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-objecttypes` | Type list | Resolve the object against these .NET types |
+| `-aliasname` | string | Name for the command alias |
+| `-aliasraw` | -- | Use raw dispatch for the alias |
+| `-aliasall` | -- | Use invokeall dispatch for the alias |
+| `-aliasreference` | -- | Use reference-counted handle for the alias |
+| `-nocase` | -- | Case-insensitive type name matching |
+| `-stricttype` | -- | Require exact type match during object resolution |
+| `-verbose` | -- | Enable verbose type resolution diagnostics |
+
+</details>
+
+<details>
+<summary><code>[object cleanup]</code></summary>
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-pattern` | string | Match object names against this pattern |
+| `-referencecount` | int | Only clean up objects with this specific reference count |
+| `-references` | -- | Include reference-counted objects in cleanup |
+| `-noremove` | -- | Keep objects in the table (dispose but don't remove) |
+| `-synchronous` | -- | Perform disposal synchronously |
+| `-nodispose` | -- | Don't call `Dispose()` on the objects |
+| `-nocomplain` | -- | Suppress errors during cleanup |
+
+</details>
+
+<details>
+<summary><code>[object create]</code></summary>
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-objectname` | string | Name for the created opaque object handle |
+| `-type` | Type | .NET type to instantiate |
+| `-objecttypes` | Type list | Additional types for resolution |
+| `-methodtypes` | Type list | Constructor method type constraints |
+| `-parametertypes` | Type list | Constructor parameter type constraints |
+| `-parametermarshalflags` | MarshalFlags list | Per-parameter marshaling flags |
+| `-debug` | -- | Enable debug diagnostics for the creation |
+| `-trace` | -- | Enable trace output for the creation |
+| `-argumentflags` | ByRefArgumentFlags | By-reference argument handling flags |
+| `-objectvalueflags` | ValueFlags | Value conversion flags for object resolution |
+| `-marshalflags` | MarshalFlags | Marshaling behavior flags |
+| `-reorderflags` | ReorderFlags | Constructor overload reordering flags |
+| `-nocreate` | -- | Don't create an opaque object handle |
+| `-nodispose` | -- | Don't mark the object for automatic disposal |
+| `-noinvoke` | -- | Don't invoke the constructor (type resolution only) |
+| `-noargs` | -- | Don't pass constructor arguments |
+| `-limit` | int | Maximum number of constructor overloads to consider |
+| `-index` | int | Select a specific constructor overload by index |
+| `-alias` | -- | Create a command alias for the new object |
+| `-aliasraw` | -- | Use raw dispatch for the alias |
+| `-aliasall` | -- | Use invokeall dispatch for the alias |
+| `-aliasreference` | -- | Use reference-counted handle for the alias |
+| `-tcl` | TclInterpreter | Bridge the object to a Tcl interpreter (requires `NATIVE && TCL`) |
+| `-noforcedelete` | -- | Don't force-delete the alias on cleanup |
+| `-tostring` | -- | Return the `ToString()` representation instead of an opaque handle |
+| `-arrayasvalue` | -- | Treat array results as values rather than opaque handles |
+| `-arrayaslink` | -- | Link array results to Eagle variables |
+| `-nomutatebindingflags` | -- | Don't automatically adjust binding flags for primitive/value types |
+| `-stricttype` | -- | Require exact type match during resolution |
+| `-strictmember` | -- | Require exact constructor match |
+| `-strictargs` | -- | Require exact argument count match |
+| `-nocase` | -- | Case-insensitive type and member name matching |
+| `-default` | -- | Use default value when constructor argument is missing |
+| `-verbose` | -- | Enable verbose diagnostics |
+| `-nobyref` | -- | Don't use by-reference parameter handling |
+| `-flags` | BindingFlags | .NET reflection binding flags |
+| `-bindingflags` | BindingFlags | Alias for `-flags` |
+| `-objectflags` | ObjectFlags | Object handle behavior flags |
+| `-byrefobjectflags` | ObjectFlags | Object flags for by-reference parameters |
+
+</details>
+
+<details>
+<summary><code>[object dispose]</code></summary>
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-synchronous` | -- | Perform disposal synchronously |
+| `-nodispose` | -- | Remove the handle without calling `Dispose()` |
+| `-nocomplain` | -- | Suppress errors if the object is not found or disposal fails |
+
+</details>
+
+<details>
+<summary><code>[object foreach]</code></summary>
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-synchronous` | -- | Perform disposal synchronously after iteration |
+| `-objectname` | string | Name for the per-iteration opaque object handle |
+| `-type` | Type | Expected .NET type of elements |
+| `-collect` | boolean | Force garbage collection after iteration |
+| `-nocreate` | -- | Don't create opaque object handles for elements |
+| `-nodispose` | -- | Don't dispose element handles after each iteration |
+| `-alias` | -- | Create a command alias for each element |
+| `-aliasraw` | -- | Use raw dispatch for element aliases |
+| `-aliasall` | -- | Use invokeall dispatch for element aliases |
+| `-aliasreference` | -- | Use reference-counted handles for element aliases |
+| `-tcl` | TclInterpreter | Bridge elements to a Tcl interpreter (requires `NATIVE && TCL`) |
+| `-noforcedelete` | -- | Don't force-delete aliases on cleanup |
+| `-tostring` | -- | Use `ToString()` representation for elements |
+| `-nocase` | -- | Case-insensitive type name matching |
+| `-objectflags` | ObjectFlags | Object handle behavior flags for elements |
+
+</details>
+
+<details>
+<summary><code>[object invoke]</code></summary>
+
+This command's options are composed from three groups: InvokeOnly (unique to
+`[object invoke]`), InvokeShared (shared with `[object invokeraw]`), and
+FixupReturnValue (shared with all handle-producing commands).
+
+**InvokeOnly options (unique to `[object invoke]`):**
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-reorderflags` | ReorderFlags | Method overload reordering flags |
+| `-limit` | int | Maximum number of method overloads to consider |
+| `-index` | int | Select a specific method overload by index |
+| `-invoke` | -- | *(Ignored)* Marker for invoke mode (active in `[object invokeall]`) |
+| `-invokeraw` | -- | Switch to raw invoke mode |
+| `-membervalueflags` | ValueFlags | Value conversion flags for member resolution |
+| `-nonestedmember` | -- | Don't resolve nested member paths (e.g., `Prop.SubProp`) |
+| `-strictmember` | -- | Require exact member match |
+| `-strictargs` | -- | Require exact argument count match |
+| `-membertypes` | MemberTypes | Filter by member type (Method, Property, Field, etc.) |
+| `-identity` | -- | Return the object identity rather than invoking |
+| `-typeidentity` | -- | Return the type identity rather than invoking |
+
+**InvokeShared options (shared with `[object invokeraw]`):**
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-datetimekind` | DateTimeKind | DateTime interpretation for arguments |
+| `-datetimestyles` | DateTimeStyles | DateTime parsing styles for arguments |
+| `-datetimeformat` | string | DateTime format string for arguments |
+| `-type` | Type | Target .NET type for static member invocation |
+| `-objecttype` | Type | Override the object's resolved type |
+| `-proxytype` | Type | Proxy type for member dispatch |
+| `-objecttypes` | Type list | Additional types for resolution |
+| `-methodtypes` | Type list | Method type constraints |
+| `-parametertypes` | Type list | Parameter type constraints |
+| `-parametermarshalflags` | MarshalFlags list | Per-parameter marshaling flags |
+| `-debug` | -- | Enable debug diagnostics |
+| `-trace` | -- | Enable trace output |
+| `-argumentflags` | ByRefArgumentFlags | By-reference argument handling flags |
+| `-marshalflags` | MarshalFlags | Marshaling behavior flags |
+| `-noinvoke` | -- | Don't invoke the member (resolution only) |
+| `-noargs` | -- | Don't pass arguments to the member |
+| `-arrayasvalue` | -- | Treat array results as values |
+| `-arrayaslink` | -- | Link array results to Eagle variables |
+| `-verbose` | -- | Enable verbose diagnostics |
+| `-nocase` | -- | Case-insensitive member name matching |
+| `-default` | -- | Use default value when argument is missing |
+| `-objectvalueflags` | ValueFlags | Value conversion flags for object resolution |
+| `-nonestedobject` | -- | Don't resolve nested object paths |
+| `-stricttype` | -- | Require exact type match |
+| `-nobyref` | -- | Don't use by-reference parameter handling |
+| `-flags` | BindingFlags | .NET reflection binding flags |
+| `-bindingflags` | BindingFlags | Alias for `-flags` |
+| `-byrefobjectflags` | ObjectFlags | Object flags for by-reference parameters |
+
+Plus [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
+`-returntype`, `-objecttype`, `-create`, `-nodispose`, `-alias`, `-aliasraw`,
+`-aliasall`, `-aliasreference`, `-tcl`, `-noforcedelete`, `-tostring`,
+`-objectflags`.
+
+</details>
+
+<details>
+<summary><code>[object isoftype]</code></summary>
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-objecttypes` | Type list | Additional types for resolution |
+| `-objectvalueflags` | ValueFlags | Value conversion flags for object resolution |
+| `-marshalflags` | MarshalFlags | Marshaling behavior flags |
+| `-nocase` | -- | Case-insensitive type name matching |
+| `-stricttype` | -- | Require exact type match |
+| `-verbose` | -- | Enable verbose type resolution diagnostics |
+| `-nocomplain` | -- | Suppress errors if the object handle is invalid |
+| `-assignable` | -- | Check assignability (base class/interface) instead of exact type match |
+
+</details>
+
+<details>
+<summary><code>[object load]</code></summary>
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-namespace` | string | Target namespace for imported types |
+| `-objectname` | string | Name for the loaded assembly's opaque object handle |
+| `-type` | Type | Expected .NET type within the assembly |
+| `-create` | -- | Create an opaque object handle for the loaded assembly |
+| `-nodispose` | -- | Don't mark the assembly handle for automatic disposal |
+| `-alias` | -- | Create a command alias for the assembly |
+| `-aliasraw` | -- | Use raw dispatch for the alias |
+| `-aliasall` | -- | Use invokeall dispatch for the alias |
+| `-aliasreference` | -- | Use reference-counted handle for the alias |
+| `-tcl` | TclInterpreter | Bridge the assembly to a Tcl interpreter (requires `NATIVE && TCL`) |
+| `-reflectiononly` | -- | Load assembly in reflection-only context |
+| `-fromobject` | -- | Load assembly from an existing opaque object handle |
+| `-noforcedelete` | -- | Don't force-delete the alias on cleanup |
+| `-tostring` | -- | Return the `ToString()` representation |
+| `-import` | -- | Import public types from the assembly into the current namespace |
+| `-importnonpublic` | -- | Also import non-public types |
+| `-importmode` | MatchMode | Matching mode for import type filtering |
+| `-importpattern` | string | Pattern for filtering imported type names |
+| `-importnocase` | -- | Case-insensitive import pattern matching |
+| `-declare` | -- | Declare types from the assembly for simplified access |
+| `-declarenonpublic` | -- | Also declare non-public types |
+| `-declaremode` | MatchMode | Matching mode for declare type filtering |
+| `-declarepattern` | string | Pattern for filtering declared type names |
+| `-declarenocase` | -- | Case-insensitive declare pattern matching |
+| `-loadtype` | LoadType | Assembly loading strategy (e.g., File, Name) |
+| `-objectflags` | ObjectFlags | Object handle behavior flags |
+| `-trustedonly` | -- | Only load trusted assemblies |
+| `-maybetrustedonly` | -- | Trusted-only (lenient) |
+| `-verifiedonly` | -- | Only load assemblies with verified digital signatures |
+| `-maybeverifiedonly` | -- | Verified-only (lenient) |
+
+</details>
+
+<details>
+<summary><code>[object members]</code></summary>
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-mode` | MatchMode | Pattern matching mode (Glob, Exact, Regexp, SubString) |
+| `-type` | Type | .NET type to enumerate members from |
+| `-objecttypes` | Type list | Additional types for resolution |
+| `-pattern` | string | Filter member names by pattern |
+| `-attributes` | -- | Include custom attribute information in output |
+| `-nocase` | -- | Case-insensitive pattern matching |
+| `-stricttype` | -- | Require exact type match during resolution |
+| `-verbose` | -- | Enable verbose diagnostics |
+| `-signatures` | -- | Include full method signatures in output |
+| `-qualified` | -- | Use fully qualified type names in output |
+| `-matchnameonly` | -- | Match the pattern against member names only (not signatures) |
+| `-nameonly` | -- | Return member names only (not full details) |
+| `-membertypes` | MemberTypes | Filter by member type (Method, Property, Field, Event, etc.) |
+| `-flags` | BindingFlags | .NET reflection binding flags |
+| `-bindingflags` | BindingFlags | Alias for `-flags` |
+| `-objectvalueflags` | ValueFlags | Value conversion flags for object resolution |
+| `-marshalflags` | MarshalFlags | Marshaling behavior flags |
+
+</details>
+
+<details>
+<summary><code>[object search]</code></summary>
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-objecttypes` | Type list | Filter results by these .NET types |
+| `-objectvalueflags` | ValueFlags | Value conversion flags for object resolution |
+| `-marshalflags` | MarshalFlags | Marshaling behavior flags |
+| `-noshowname` | -- | Don't include object names in output |
+| `-nonamespace` | -- | Don't include namespace information |
+| `-noassembly` | -- | Don't include assembly information |
+| `-noexception` | -- | Suppress exceptions during search |
+| `-fullname` | -- | Use fully qualified names in output |
+| `-nocase` | -- | Case-insensitive matching |
+| `-stricttype` | -- | Require exact type match |
+| `-verbose` | -- | Enable verbose diagnostics |
+
+</details>
+
+<details>
 <summary><code>[open]</code></summary>
 
 | Option | Value | Description |
@@ -2211,6 +2485,110 @@ compatibility.
 </details>
 
 <details>
+<summary><code>[sql execute]</code></summary>
+
+> Requires `DATA`.
+
+**SQL execution options:**
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-execute` | DbExecuteType | Execution mode (None, NonQuery, Scalar, Reader, ReaderAndCount) |
+| `-format` | DbResultFormat | Result format (None, List, Dictionary, DataReader, DataTable, etc.) |
+| `-transaction` | string | Variable name containing the transaction object to use |
+| `-commandtype` | CommandType | ADO.NET command type (Text, StoredProcedure, TableDirect) |
+| `-behavior` | CommandBehavior | ADO.NET command behavior flags |
+| `-time` | -- | Measure and report execution time |
+| `-timevar` | string | Store timing information in this variable |
+| `-timeout` | int | Command timeout in milliseconds |
+| `-limit` | int | Maximum number of result rows to return |
+| `-rowsvar` | string | Store the affected row count in this variable |
+| `-rowvar` | string | Store per-row data in this variable |
+| `-nested` | boolean | Enable nested result set handling |
+| `-allownull` | boolean | Allow null values in results |
+| `-nullvalue` | string | String representation for null values |
+| `-dbnullvalue` | string | String representation for `DBNull` values |
+| `-errorvalue` | string | String representation for error values |
+| `-pairs` | boolean | Return results as key-value pairs |
+| `-names` | boolean | Include column names in results |
+| `-nofixup` | boolean | Skip result fixup processing |
+| `-nocreate` | -- | Don't create opaque object handles for results |
+| `-verbatim` | -- | Return values without formatting conversion |
+| `-changed` | callback | Callback for row change notifications |
+| `-culture` | CultureInfo | Culture for value formatting |
+
+**Value formatting options:**
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-datetimekind` | DateTimeKind | DateTime interpretation for result values |
+| `-datetimestyles` | DateTimeStyles | DateTime parsing styles |
+| `-datetimeformat` | string | DateTime format string |
+| `-datetimebehavior` | DateTimeBehavior | DateTime handling behavior |
+| `-numberformat` | string | Number format string |
+| `-valueformat` | string | General value format string |
+| `-blobbehavior` | BlobBehavior | BLOB column handling behavior |
+| `-valueflags` | ValueFlags | Value conversion flags |
+
+Plus [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
+`-returntype`, `-objecttype`, `-create`, `-nodispose`, `-alias`, `-aliasraw`,
+`-aliasall`, `-aliasreference`, `-tcl`, `-noforcedelete`, `-tostring`,
+`-objectflags`.
+
+</details>
+
+<details>
+<summary><code>[sql open]</code> (pre-options)</summary>
+
+> Requires `DATA`. Uses two-pass option processing (see
+> [Section 7.1](#71-two-pass-option-processing)).
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-stricttype` | -- | Require exact type match during type resolution |
+| `-verbose` | -- | Enable verbose type resolution diagnostics |
+| `-nocase` | -- | Case-insensitive type name matching |
+
+</details>
+
+<details>
+<summary><code>[sql open]</code> (main options)</summary>
+
+> Requires `DATA`.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-type` | DbConnectionType | Database connection type (e.g., SQLite, SqlServer) |
+| `-type1` | DbConnectionType | Primary connection type for fallback resolution |
+| `-type2` | DbConnectionType | Secondary connection type for fallback resolution |
+| `-variable` | string | Store the connection object in this variable |
+| `-assemblyfilename` | string | Assembly file containing the ADO.NET provider |
+| `-typename` | string | Short type name of the connection class |
+| `-typefullname` | string | Fully qualified type name of the connection class |
+| `-valueflags` | ValueFlags | Value conversion flags for type resolution |
+| `-trustedonly` | -- | Only load trusted provider assemblies |
+| `-maybetrustedonly` | -- | Trusted-only (lenient) |
+| `-publickeytoken1` | string | Primary public key token for assembly verification |
+| `-publickeytoken2` | string | Secondary public key token for assembly verification |
+| `-stricttype` | -- | *(Ignored)* Carried over from pre-options pass |
+| `-verbose` | -- | *(Ignored)* Carried over from pre-options pass |
+| `-nocase` | -- | *(Ignored)* Carried over from pre-options pass |
+
+</details>
+
+<details>
+<summary><code>[sql transaction]</code></summary>
+
+> Requires `DATA`.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-isolation` | IsolationLevel | Transaction isolation level (e.g., ReadCommitted, Serializable) |
+| `-variable` | string | Store the transaction object in this variable |
+
+</details>
+
+<details>
 <summary><code>[string equal]</code> / <code>[string compare]</code></summary>
 
 | Option | Value | Description |
@@ -2339,6 +2717,241 @@ compatibility.
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-nocase` | -- | Case-insensitive matching for all modes |
+
+</details>
+
+<details>
+<summary><code>[tcl cancel]</code></summary>
+
+> Requires `NATIVE && TCL`.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-unwind` | -- | Unwind the call stack during cancellation |
+
+</details>
+
+<details>
+<summary><code>[tcl create]</code></summary>
+
+> Requires `NATIVE && TCL`.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-alias` | -- | Create a command alias for the new Tcl interpreter |
+| `-noinitialize` | -- | Skip Tcl interpreter initialization |
+| `-memory` | -- | Enable memory debugging in the Tcl interpreter |
+| `-safe` | -- | Create a safe (sandboxed) Tcl interpreter |
+| `-nobridge` | -- | Don't create the Eagle-to-Tcl bridge |
+| `-noforcedelete` | -- | Don't force-delete the interpreter on cleanup |
+| `-nocomplain` | -- | Suppress errors during creation |
+
+</details>
+
+<details>
+<summary><code>[tcl eval]</code></summary>
+
+> Requires `NATIVE && TCL`.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-time` | -- | Measure and report evaluation time |
+| `-exceptions` | boolean | Control exception propagation behavior |
+
+</details>
+
+<details>
+<summary><code>[tcl expr]</code></summary>
+
+> Requires `NATIVE && TCL`.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-time` | -- | Measure and report expression evaluation time |
+| `-exceptions` | boolean | Control exception propagation behavior |
+
+</details>
+
+<details>
+<summary><code>[tcl find]</code> and <code>[tcl available]</code></summary>
+
+> Requires `NATIVE && TCL`. The `-flags` default is interpreter-dependent
+> (`interpreter.TclFindFlags`).
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-flags` | FindFlags | Tcl library search flags; defaults to `interpreter.TclFindFlags` |
+| `-robustify` | -- | Apply robustness heuristics to the search |
+| `-architecture` | -- | Filter by processor architecture |
+| `-trustedonly` | -- | Only find trusted Tcl libraries |
+| `-maybetrustedonly` | -- | Trusted-only (lenient) |
+| `-verbose` | -- | Enable verbose search diagnostics |
+| `-eval` | string | Script to evaluate for each candidate found |
+| `-full` | -- | Return full path and version information |
+| `-minimumversion` | Version | Minimum acceptable Tcl version |
+| `-maximumversion` | Version | Maximum acceptable Tcl version |
+| `-unknownversion` | Version | Version to use when the actual version cannot be determined |
+| `-errorsvar` | string | Store search errors in this variable |
+
+</details>
+
+<details>
+<summary><code>[tcl interp create]</code></summary>
+
+> Requires `NATIVE && TCL`. This is the `[tcl command create]` alias.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-noforcedelete` | -- | Don't force-delete the Tcl command on cleanup |
+| `-nocomplain` | -- | Suppress errors during creation |
+
+</details>
+
+<details>
+<summary><code>[tcl load]</code></summary>
+
+> Requires `NATIVE && TCL`. The `-findflags` and `-loadflags` defaults are
+> interpreter-dependent (`interpreter.TclFindFlags` and
+> `interpreter.TclLoadFlags`).
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-findflags` | FindFlags | Tcl library search flags; defaults to `interpreter.TclFindFlags` |
+| `-loadflags` | LoadFlags | Tcl library loading flags; defaults to `interpreter.TclLoadFlags` |
+| `-robustify` | -- | Apply robustness heuristics to the load |
+| `-trustedonly` | -- | Only load trusted Tcl libraries |
+| `-maybetrustedonly` | -- | Trusted-only (lenient) |
+| `-eval` | string | Script to evaluate after loading |
+| `-bridge` | -- | Create the Eagle-to-Tcl bridge after loading |
+| `-noforcedelete` | -- | Don't force-delete on cleanup |
+| `-nocomplain` | -- | Suppress errors during loading |
+| `-minimumversion` | Version | Minimum acceptable Tcl version |
+| `-maximumversion` | Version | Maximum acceptable Tcl version |
+| `-unknownversion` | Version | Version to use when the actual version cannot be determined |
+
+</details>
+
+<details>
+<summary><code>[tcl queue]</code></summary>
+
+> Requires `NATIVE && TCL`.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-eventtype` | EventType | Type of event to queue; defaults to `EventType.Evaluate` |
+| `-eventflags` | EventFlags | Event behavior flags; defaults to `EventFlags.None` |
+| `-exceptions` | boolean | Control exception propagation behavior |
+| `-synchronous` | boolean | Wait for the queued event to complete before returning |
+| `-data` | object | Additional data to associate with the event |
+
+</details>
+
+<details>
+<summary><code>[tcl recordandeval]</code></summary>
+
+> Requires `NATIVE && TCL`.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-time` | -- | Measure and report evaluation time |
+| `-exceptions` | boolean | Control exception propagation behavior |
+
+</details>
+
+<details>
+<summary><code>[tcl resetcancel]</code></summary>
+
+> Requires `NATIVE && TCL`.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-children` | -- | Reset cancellation for child interpreters as well |
+| `-force` | -- | Force reset even if cancellation is locked |
+
+</details>
+
+<details>
+<summary><code>[tcl select]</code></summary>
+
+> Requires `NATIVE && TCL`. The `-flags` default is interpreter-dependent
+> (`interpreter.TclFindFlags`).
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-flags` | FindFlags | Tcl library search flags; defaults to `interpreter.TclFindFlags` |
+| `-robustify` | -- | Apply robustness heuristics to the search |
+| `-architecture` | -- | Filter by processor architecture |
+| `-trustedonly` | -- | Only select trusted Tcl libraries |
+| `-maybetrustedonly` | -- | Trusted-only (lenient) |
+| `-verbose` | -- | Enable verbose diagnostics |
+| `-eval` | string | Script to evaluate for each candidate |
+| `-minimumversion` | Version | Minimum acceptable Tcl version |
+| `-maximumversion` | Version | Maximum acceptable Tcl version |
+| `-unknownversion` | Version | Version to use when the actual version cannot be determined |
+| `-errorsvar` | string | Store search errors in this variable |
+| `-allerrors` | -- | Include all errors (not just the first) in the errors variable |
+
+</details>
+
+<details>
+<summary><code>[tcl source]</code></summary>
+
+> Requires `NATIVE && TCL`.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-time` | -- | Measure and report source evaluation time |
+| `-exceptions` | boolean | Control exception propagation behavior |
+
+</details>
+
+<details>
+<summary><code>[tcl subst]</code></summary>
+
+> Requires `NATIVE && TCL`.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-nobackslashes` | -- | Don't process backslash substitutions |
+| `-nocommands` | -- | Don't process `[command]` substitutions |
+| `-novariables` | -- | Don't process `$variable` substitutions |
+| `-time` | -- | Measure and report substitution time |
+| `-exceptions` | boolean | Control exception propagation behavior |
+
+</details>
+
+<details>
+<summary><code>[tcl update]</code></summary>
+
+> Requires `NATIVE && TCL`.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-timeout` | int | Timeout in milliseconds for the update operation |
+| `-wait` | -- | Wait for idle before returning |
+| `-all` | -- | Process all pending events |
+| `-nocomplain` | -- | Suppress errors during update |
+
+</details>
+
+<details>
+<summary><code>[tcl versionrange]</code></summary>
+
+> Requires `NATIVE && TCL`. The `-flags` default is interpreter-dependent
+> (`interpreter.TclFindFlags`).
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-flags` | FindFlags | Tcl library search flags; defaults to `interpreter.TclFindFlags` |
+| `-robustify` | -- | Apply robustness heuristics |
+| `-trustedonly` | -- | Only consider trusted Tcl libraries |
+| `-maybetrustedonly` | -- | Trusted-only (lenient) |
+| `-minimumversion` | Version | Minimum version in the range |
+| `-maximumversion` | Version | Maximum version in the range |
+| `-majorincrement` | int | Major version increment step |
+| `-minorincrement` | int | Minor version increment step |
+| `-intermediateminimum` | int | Minimum intermediate version number |
+| `-intermediatemaximum` | int | Maximum intermediate version number |
 
 </details>
 
@@ -2526,6 +3139,62 @@ Same as `[uri get]` plus:
 | `-leaveresult` | -- | Don't clear the interpreter result after waiting |
 | `-resetcancel` | -- | Reset cancellation flag after wait completes (restricted) |
 | `-locked` | string | Lock name to acquire during the wait |
+
+</details>
+
+<details>
+<summary><code>[xml deserialize]</code></summary>
+
+> Requires `XML && SERIALIZATION`.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-objectname` | string | Name for the deserialized opaque object handle |
+| `-type` | Type | .NET type to deserialize into |
+| `-nocreate` | -- | Don't create an opaque object handle for the result |
+| `-nodispose` | -- | Don't mark the object for automatic disposal |
+| `-tostring` | -- | Return the `ToString()` representation instead of an opaque handle |
+| `-stricttype` | -- | Require exact type match during object resolution |
+| `-verbose` | -- | Enable verbose type resolution diagnostics |
+| `-nocase` | -- | Case-insensitive type name matching |
+| `-alias` | -- | Create a command alias for the deserialized object |
+| `-aliasraw` | -- | Use raw dispatch for the alias |
+| `-aliasall` | -- | Use invokeall dispatch for the alias |
+| `-aliasreference` | -- | Use reference-counted handle for the alias |
+| `-tcl` | TclInterpreter | Bridge the object to a Tcl interpreter (requires `NATIVE && TCL`) |
+| `-noforcedelete` | -- | Don't force-delete the alias on cleanup |
+| `-encoding` | Encoding | Character encoding for deserialization |
+| `-objectflags` | ObjectFlags | Object handle behavior flags |
+
+</details>
+
+<details>
+<summary><code>[xml foreach]</code></summary>
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-file` | -- | Treat the XML argument as a file path |
+| `-namespaces` | dictionary | XML namespace prefix-to-URI mappings for XPath evaluation |
+| `-xpaths` | list | List of XPath expressions to iterate over |
+
+Plus all [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
+`-returntype`, `-objecttype`, `-create`, `-nodispose`, `-alias`, `-aliasraw`,
+`-aliasall`, `-aliasreference`, `-tcl`, `-noforcedelete`, `-tostring`,
+`-objectflags`.
+
+</details>
+
+<details>
+<summary><code>[xml serialize]</code></summary>
+
+> Requires `XML && SERIALIZATION`.
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-stricttype` | -- | Require exact type match during object resolution |
+| `-verbose` | -- | Enable verbose type resolution diagnostics |
+| `-nocase` | -- | Case-insensitive type name matching |
+| `-encoding` | Encoding | Character encoding for serialization output |
 
 </details>
 

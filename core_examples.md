@@ -4309,7 +4309,7 @@ set count [sql execute -execute scalar $db \
 sql execute -execute reader $db "SELECT * FROM users;"
 # $rows(count) = number of rows
 # $rows(names) = {id name}
-# $rows(0)     = first row values
+# $rows(1)     = first row values
 
 # Parameterized lookup
 set name [sql execute -execute scalar $db \
