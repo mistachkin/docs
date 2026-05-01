@@ -1,4 +1,4 @@
-# Documentation Overview for the Eagle Scripting Language
+# Documentation Index for the Eagle Scripting Language
 
 Eagle (Extensible Adaptable Generalized Logic Engine) is a Tcl-compatible scripting language with deep CLR/.NET integration. This repository contains the canonical Markdown documentation.
 
@@ -17,5 +17,24 @@ Eagle (Extensible Adaptable Generalized Logic Engine) is a Tcl-compatible script
 * [Eagle Architecture Patterns](architecture_patterns.md)
 * [Eagle Safe Interpreters](safe.md)
 * [AI Agent Navigation Guide](AGENTS.md)
+* [Eagle `array` Command Analysis](array.md)
+* [Eagle `clock` Command Analysis](clock.md)
+* [Eagle `debug` Command Analysis](debug.md)
+* [Eagle `exec` Command Analysis](exec.md)
+* [Eagle `file` Command Analysis](file.md)
+* [Eagle `host` Command Analysis](host.md)
+* [Eagle `info` Command Analysis](info.md)
+* [Eagle `interp` Command Analysis](interp.md)
+* [Eagle `library` Command Analysis](library.md)
+* [Eagle `load`/`unload` Command Analysis](load.md)
+* [Eagle `namespace` Command Analysis](namespace.md)
+* [Eagle `object` Command Analysis](object.md)
+* [Eagle `package` Command Analysis](package.md)
+* [Eagle `regexp`/`regsub` Command Analysis](regexp.md)
+* [Eagle `scope` Command Analysis](scope.md)
+* [Eagle `sql` Command Analysis](sql.md)
+* [Eagle `string` Command Analysis](string.md)
+* [Eagle `tcl` Command Analysis](tcl.md)
+* [Eagle `uri` Command Analysis](uri.md)
 * [Tcl 8.6 Manual Pages (Command Reference)](https://www.tcl-lang.org/man/tcl8.6/TclCmd/contents.htm)
 * [Tcl Tutorial Index (Tcler's Wiki)](https://wiki.tcl-lang.org/page/Tcl+Tutorial+Index)
