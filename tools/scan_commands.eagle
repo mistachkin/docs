@@ -1,0 +1,473 @@
+###############################################################################
+#
+# scan_commands.eagle --
+#
+# Scans the Eagle C# source for commands, sub-commands, and options, then
+# cross-checks the Markdown documentation in this repository for coverage and
+# for stale "N sub-commands" counts.
+#
+# This tool is written in Eagle so the documentation set is verified by the
+# very language it documents.  Run it with the Eagle shell, for example:
+#
+#   eagle tools/scan_commands.eagle              # human-readable report
+#   eagle tools/scan_commands.eagle --check      # exit 1 if docs are stale
+#   eagle tools/scan_commands.eagle --write      # refresh command_inventory.md
+#   eagle tools/scan_commands.eagle --json       # machine-readable output
+#
+# Sources of truth (per the Eagle maintainers):
+#
+#   Commands     -> Library/Components/Private/BuiltIns.cs
+#                   (the "typeof(_Commands.X)" registration list)
+#   Sub-commands -> each command's own file in Library/Commands/*.cs
+#                   (the "subCommands = new EnsembleDictionary()" initializer)
+#   Options      -> Library/Components/Private/CommandOptions.cs
+#                   (the "Get<Thing>Options(...)" methods)
+#
+# The Eagle source tree defaults to a sibling checkout (../eagle/Eagle relative
+# to this repository) and may be overridden with the EAGLE_SRC environment
+# variable or "--eagle-src <path>".
+#
+###############################################################################
+
+#
+# NOTE: Documented commands -> the Markdown file analyzing each one.  The doc
+#       file name is also the conventional command label.
+#
+set docFiles(array)     array.md
+set docFiles(clock)     clock.md
+set docFiles(debug)     debug.md
+set docFiles(exec)      exec.md
+set docFiles(file)      file.md
+set docFiles(host)      host.md
+set docFiles(info)      info.md
+set docFiles(interp)    interp.md
+set docFiles(library)   library.md
+set docFiles(load)      load.md
+set docFiles(namespace) namespace.md
+set docFiles(object)    object.md
+set docFiles(package)   package.md
+set docFiles(regexp)    regexp.md
+set docFiles(scope)     scope.md
+set docFiles(sql)       sql.md
+set docFiles(string)    string.md
+set docFiles(tcl)       tcl.md
+set docFiles(uri)       uri.md
+
+#
+# NOTE: Command classes whose registered name is not simply the lower-cased
+#       class name (multi-class commands that share one ensemble label).
+#
+set classToCommand(Namespace1) namespace
+set classToCommand(Namespace2) namespace
+set classToCommand(Test1)      test
+set classToCommand(Test2)      test
+
+###############################################################################
+
+proc readAll { path } {
+  set fp [open $path RDONLY]
+  try {
+    fconfigure $fp -encoding utf-8
+    return -- [read $fp]
+  } finally {
+    close $fp
+  }
+}
+
+proc writeAll { path data } {
+  set fp [open $path { WRONLY CREAT TRUNC }]
+  try {
+    fconfigure $fp -encoding utf-8 -translation lf
+    puts -nonewline $fp $data
+  } finally {
+    close $fp
+  }
+}
+
+proc stripComments { text } {
+  return -- [regsub -all -line -- {//.*$} $text ""]
+}
+
+proc uniqueOrdered { lst } {
+  set seen [dict create]
+  set out [list]
+  foreach x $lst {
+    if {![dict exists $seen $x]} {
+      dict set seen $x 1
+      lappend out $x
+    }
+  }
+  return $out
+}
+
+proc classLabel { name } {
+  global classToCommand
+  # NOTE: BuiltIns.cs registers some commands under underscore-prefixed class
+  #       names (e.g. "_File", "_String") to avoid clashing with .NET types;
+  #       strip the leading underscore so they match their command files.
+  set name [string trimleft $name _]
+  if {[info exists classToCommand($name)]} {
+    return $classToCommand($name)
+  }
+  return [string tolower $name]
+}
+
+proc camelWords { s } {
+  set out [list]
+  foreach w [regexp -all -inline -- {[A-Z][a-z0-9]*} $s] {
+    lappend out [string tolower $w]
+  }
+  return $out
+}
+
+###############################################################################
+
+#
+# NOTE: Returns the set of registered command labels from BuiltIns.cs.
+#
+proc scanBuiltins { eagleSrc } {
+  set path [file join $eagleSrc Library Components Private BuiltIns.cs]
+  set result [list]
+  if {[file exists $path]} {
+    set text [stripComments [readAll $path]]
+    foreach {full grp} [regexp -all -inline -- \
+        {typeof\s*\(\s*_Commands\.(\w+)\s*\)} $text] {
+      lappend result [classLabel $grp]
+    }
+  }
+  return [uniqueOrdered $result]
+}
+
+#
+# NOTE: Populates cmdSubs/cmdFiles/cmdRegistered arrays keyed by command label.
+#
+proc scanCommands { eagleSrc registered } {
+  global cmdSubs cmdFiles cmdRegistered
+  set commandsDir [file join $eagleSrc Library Commands]
+  if {![file isdirectory $commandsDir]} {
+    error "Eagle Commands directory not found: $commandsDir"
+  }
+  foreach path [lsort [glob -directory $commandsDir -- *.cs]] {
+    set stem [file rootname [file tail $path]]
+    set label [classLabel $stem]
+    set text [stripComments [readAll $path]]
+
+    lappend cmdFiles($label) [file tail $path]
+    if {[lsearch -exact $registered $label] >= 0} {
+      set cmdRegistered($label) 1
+    } elseif {![info exists cmdRegistered($label)]} {
+      set cmdRegistered($label) 0
+    }
+    if {![info exists cmdSubs($label)]} { set cmdSubs($label) [list] }
+
+    foreach {full name body} [regexp -all -inline -- \
+        {(\w+)\s*=\s*new\s+EnsembleDictionary\s*\(\s*new\s+string\[\]\s*\{([\s\S]*?)\}\s*\)} \
+        $text] {
+      if {$name ne "subCommands"} continue
+      foreach {f s} [regexp -all -inline -- {"([^"]*)"} $body] {
+        lappend cmdSubs($label) $s
+      }
+    }
+    set cmdSubs($label) [uniqueOrdered $cmdSubs($label)]
+  }
+}
+
+#
+# NOTE: Returns a dict of "derived command path" -> list of option names from
+#       CommandOptions.cs (e.g. "clock now" -> {-gmt -base ...}).
+#
+proc scanOptions { eagleSrc } {
+  set path [file join $eagleSrc Library Components Private CommandOptions.cs]
+  set result [dict create]
+  if {![file exists $path]} { return $result }
+  set text [stripComments [readAll $path]]
+
+  # Collect each Get<Name>Options method name and its start offset.
+  set methods [list]
+  set idx 0
+  while {[regexp -start $idx -indices -- \
+      {Get([A-Za-z0-9]+?)Options\s*\(} $text full name]} {
+    set nm [string range $text [lindex $name 0] [lindex $name 1]]
+    lappend methods [list $nm [lindex $full 0]]
+    set idx [expr {[lindex $full 1] + 1}]
+  }
+
+  set count [llength $methods]
+  for {set i 0} {$i < $count} {incr i} {
+    lassign [lindex $methods $i] nm start
+    if {$i + 1 < $count} {
+      set end [expr {[lindex [lindex $methods [expr {$i + 1}]] 1] - 1}]
+    } else {
+      set end [expr {[string length $text] - 1}]
+    }
+    set body [string range $text $start $end]
+    set opts [list]
+    foreach {f s} [regexp -all -inline -- {"(-[^"]*)"} $body] {
+      if {$s ne "--" && [string length $s] > 1} { lappend opts $s }
+    }
+    set opts [uniqueOrdered $opts]
+    if {[llength $opts] > 0} {
+      dict set result [join [camelWords $nm]] $opts
+    }
+  }
+  return $result
+}
+
+###############################################################################
+
+#
+# NOTE: Finds the first "<n> sub-commands" count in a doc, tolerating bold, an
+#       optional leading word, and compound/approximate forms ("65+", "14+2").
+#       Sets countVar to the base integer (or -1) and approxVar to true/false.
+#
+proc findDocCount { docText countVar approxVar } {
+  upvar 1 $countVar count $approxVar approx
+  set count -1
+  set approx false
+  set m [regexp -nocase -inline -- \
+      {(\d+)(\+\d+|\+)?\s+(?:`?[\w/]+`?\s+)?sub-?commands?} $docText]
+  if {[llength $m] >= 2} {
+    set count [lindex $m 1]
+    set approx [expr {[string length [lindex $m 2]] > 0}]
+  }
+  return [expr {$count >= 0}]
+}
+
+#
+# NOTE: Builds the per-command coverage check list.  Each element is a dict.
+#
+proc checkDocs { repoRoot } {
+  global docFiles cmdSubs
+  set checks [list]
+  foreach label [lsort [array names docFiles]] {
+    set subs [expr {[info exists cmdSubs($label)] ? $cmdSubs($label) : [list]}]
+    set srcCount [llength $subs]
+    set docPath [file join $repoRoot $docFiles($label)]
+    set docCount -1
+    set approx false
+    set missing [list]
+
+    if {[file exists $docPath]} {
+      set docText [readAll $docPath]
+      findDocCount $docText docCount approx
+      set lowered [string tolower $docText]
+      foreach s $subs {
+        if {[string first [string tolower $s] $lowered] < 0} {
+          lappend missing $s
+        }
+      }
+    }
+
+    if {$docCount < 0} {
+      set status [expr {$srcCount > 0 ? "no count" : "n/a (option-based)"}]
+    } elseif {$approx && $docCount <= $srcCount} {
+      set status "ok (~$docCount+, exact $srcCount)"
+    } elseif {$docCount == $srcCount} {
+      set status [expr {[llength $missing] == 0 ? \
+          "ok" : "missing: [join $missing {, }]"}]
+    } else {
+      set status "COUNT MISMATCH: doc $docCount vs source $srcCount"
+    }
+
+    lappend checks [dict create label $label doc $docFiles($label) \
+        source $srcCount docCount $docCount approx $approx \
+        missing $missing status $status]
+  }
+  return $checks
+}
+
+#
+# NOTE: Ensemble commands lacking a dedicated per-command doc.  Commands that
+#       are covered in core_language.md (via a "cmd-<label>" anchor) are not
+#       reported, since a dedicated deep-dive file is not expected for them.
+#
+proc undocumentedEnsembles { repoRoot } {
+  global docFiles cmdSubs
+  set clPath [file join $repoRoot core_language.md]
+  set clText ""
+  if {[file exists $clPath]} { set clText [readAll $clPath] }
+  set result [list]
+  foreach label [lsort [array names cmdSubs]] {
+    if {[llength $cmdSubs($label)] == 0} continue
+    if {[info exists docFiles($label)]} continue
+    if {[string first "cmd-$label" $clText] >= 0} continue
+    lappend result $label
+  }
+  return $result
+}
+
+proc isStale { checks } {
+  foreach c $checks {
+    set s [dict get $c status]
+    if {[string match "COUNT MISMATCH*" $s] || [string match "missing:*" $s]} {
+      return true
+    }
+  }
+  return false
+}
+
+###############################################################################
+
+proc renderText { repoRoot checks options } {
+  global cmdSubs
+  set out [list "Documented command coverage:"]
+  foreach c $checks {
+    set dc [dict get $c docCount]
+    if {$dc < 0} { set dc None }
+    lappend out [format "  \[%-10s\] source=%-3s doc=%-4s %s" \
+        [dict get $c label] [dict get $c source] $dc [dict get $c status]]
+  }
+  set undoc [undocumentedEnsembles $repoRoot]
+  lappend out "" "Ensemble commands with NO dedicated doc (not in core_language.md) ([llength $undoc]):"
+  if {[llength $undoc] > 0} {
+    foreach l $undoc {
+      lappend out "  \[$l\] ([llength $cmdSubs($l)] sub-commands)"
+    }
+  } else {
+    lappend out "  none"
+  }
+  lappend out "" "Option tables scanned from CommandOptions.cs: [dict size $options] methods"
+  return [join $out \n]
+}
+
+proc renderMarkdown { repoRoot checks options } {
+  global cmdSubs
+  set L [list]
+  lappend L "# Eagle Command Inventory (generated)" ""
+  lappend L "Generated by `tools/scan_commands.eagle` from the Eagle C# source."
+  lappend L "Do not edit by hand; re-run the scanner to refresh." ""
+  lappend L "## Documented commands" ""
+  lappend L "| Command | Doc | Source sub-commands | Doc count | Status |"
+  lappend L "|---------|-----|--------------------:|----------:|--------|"
+  foreach c $checks {
+    set dc [dict get $c docCount]
+    if {$dc < 0} { set dc "-" }
+    lappend L "| `\[[dict get $c label]\]` | `[dict get $c doc]` | [dict get $c source] | $dc | [dict get $c status] |"
+  }
+
+  set undoc [undocumentedEnsembles $repoRoot]
+  lappend L "" "## Ensemble commands without a dedicated doc" ""
+  lappend L "These are covered in `core_language.md` unless listed here." ""
+  if {[llength $undoc] > 0} {
+    lappend L "| Command | Sub-commands |" "|---------|-------------:|"
+    foreach l $undoc { lappend L "| `\[$l\]` | [llength $cmdSubs($l)] |" }
+  } else {
+    lappend L "_None._"
+  }
+
+  lappend L "" "## Full sub-command listing" ""
+  foreach label [lsort [array names cmdSubs]] {
+    if {[llength $cmdSubs($label)] == 0} continue
+    set subs [list]
+    foreach s $cmdSubs($label) { lappend subs "`$s`" }
+    lappend L "- `\[$label\]` ([llength $cmdSubs($label)]): [join $subs {, }]"
+  }
+
+  lappend L "" "## Option tables (from `CommandOptions.cs`)" ""
+  foreach key [lsort [dict keys $options]] {
+    set opts [list]
+    foreach o [dict get $options $key] { lappend opts "`$o`" }
+    lappend L "- **$key** ([llength [dict get $options $key]]): [join $opts {, }]"
+  }
+  lappend L ""
+  return [join $L \n]
+}
+
+proc jsonString { s } {
+  set s [string map [list \\ \\\\ \" \\\" \n \\n \t \\t \r \\r] $s]
+  return "\"$s\""
+}
+
+proc jsonArray { lst } {
+  set parts [list]
+  foreach x $lst { lappend parts [jsonString $x] }
+  return "\[[join $parts {, }]\]"
+}
+
+proc renderJson { repoRoot checks options } {
+  global cmdSubs cmdFiles cmdRegistered
+  set L [list]
+  lappend L "  \"commands\": {"
+  set cmdLabels [lsort [array names cmdSubs]]
+  set cn [llength $cmdLabels]
+  for {set i 0} {$i < $cn} {incr i} {
+    set label [lindex $cmdLabels $i]
+    set comma [expr {$i + 1 < $cn ? "," : ""}]
+    lappend L "    [jsonString $label]: {\"registered\": $cmdRegistered($label), \"files\": [jsonArray $cmdFiles($label)], \"subcommands\": [jsonArray $cmdSubs($label)]}$comma"
+  }
+  lappend L "  },"
+  lappend L "  \"doc_checks\": \["
+  set dn [llength $checks]
+  for {set i 0} {$i < $dn} {incr i} {
+    set c [lindex $checks $i]
+    set comma [expr {$i + 1 < $dn ? "," : ""}]
+    lappend L "    {\"command\": [jsonString [dict get $c label]], \"source_count\": [dict get $c source], \"doc_count\": [dict get $c docCount], \"status\": [jsonString [dict get $c status]]}$comma"
+  }
+  lappend L "  \],"
+  lappend L "  \"undocumented_ensembles\": [jsonArray [undocumentedEnsembles $repoRoot]]"
+  return "{\n[join $L \n]\n}"
+}
+
+###############################################################################
+
+proc main { argv } {
+  global env
+
+  set scriptDir [file dirname [file normalize [info script]]]
+  set repoRoot [file dirname $scriptDir]
+
+  set eagleSrc ""
+  set doJson false
+  set doWrite false
+  set doCheck false
+
+  set n [llength $argv]
+  for {set i 0} {$i < $n} {incr i} {
+    set arg [lindex $argv $i]
+    switch -exact -- $arg {
+      --json    { set doJson true }
+      --write   { set doWrite true }
+      --check   { set doCheck true }
+      --eagle-src { incr i; set eagleSrc [lindex $argv $i] }
+      default {
+        if {[string match --eagle-src=* $arg]} {
+          set eagleSrc [string range $arg 12 end]
+        } else {
+          error "unknown argument: $arg"
+        }
+      }
+    }
+  }
+
+  if {$eagleSrc eq ""} {
+    if {[info exists env(EAGLE_SRC)] && [string length $env(EAGLE_SRC)] > 0} {
+      set eagleSrc $env(EAGLE_SRC)
+    } else {
+      set eagleSrc [file join [file dirname $repoRoot] eagle Eagle]
+    }
+  }
+
+  set registered [scanBuiltins $eagleSrc]
+  scanCommands $eagleSrc $registered
+  set options [scanOptions $eagleSrc]
+  set checks [checkDocs $repoRoot]
+
+  if {$doWrite} {
+    set outPath [file join $repoRoot tools command_inventory.md]
+    writeAll $outPath [renderMarkdown $repoRoot $checks $options]
+    puts "Wrote tools/command_inventory.md"
+  }
+
+  if {$doJson} {
+    puts [renderJson $repoRoot $checks $options]
+  } else {
+    puts [renderText $repoRoot $checks $options]
+  }
+
+  if {$doCheck && [isStale $checks]} {
+    puts stderr "\nFAIL: documentation is out of sync with the source."
+    exit 1
+  }
+}
+
+main $argv

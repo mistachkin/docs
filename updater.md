@@ -255,7 +255,7 @@ The default project targets .NET Framework 2.0 (`v2.0`) when
 
 Hippogriff follows a layered architecture with clear separation of concerns:
 
-```
+```tcl
 +-----------------------------------------------------------+
 |                    Program (Entry Point)                  |
 +-----------------------------------------------------------+
@@ -991,7 +991,7 @@ updater handles this with a two-step mechanism:
 
 2. **On exit**: The `ApplicationExit` handler creates a temporary batch
    script:
-   ```
+   ```tcl
    ping.exe -n {N} 127.0.0.1 >NUL
    IF EXIST "{in-use-path}" DEL /F "{in-use-path}"
    IF EXIST "%~f0" DEL "%~f0"

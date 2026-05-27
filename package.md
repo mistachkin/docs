@@ -1,6 +1,6 @@
 # Eagle `[package]` Command: Deep-Dive Analysis of Package Management, Indexing, and Security
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `package` command internals, including the 23 sub-commands, the multi-source package index discovery pipeline (host, filesystem, plugin, bundle), tagged package indexes, the auto-path system and its integration with interpreter initialization, package aliases with circular-reference detection, the security verification chain (Authenticode, StrongName, locked/rejected packages), the package require fallback chain, and the `.noPkgIndex` disable mechanism. For basic command syntax, see [`core_language.md`](core_language.md#cmd-package). For usage examples, see [`core_examples.md`](core_examples.md#ex-package). For package toolset procedures, see [`core_script_library.md`](core_script_library.md).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `[package]` command internals, including the 23 sub-commands, the multi-source package index discovery pipeline (host, filesystem, plugin, bundle), tagged package indexes, the auto-path system and its integration with interpreter initialization, package aliases with circular-reference detection, the security verification chain (Authenticode, StrongName, locked/rejected packages), the package require fallback chain, and the `.noPkgIndex` disable mechanism. For basic command syntax, see [`core_language.md`](core_language.md#cmd-package). For usage examples, see [`core_examples.md`](core_examples.md#ex-package). For package toolset procedures, see [`core_script_library.md`](core_script_library.md).
 
 ## 1. Executive Summary
 
@@ -78,7 +78,7 @@ Eagle adds 14 sub-commands beyond Tcl's standard set:
 | `absent` | Pre-condition: verify package is NOT loaded |
 | `alias` / `aliases` | Package name aliasing with version and flag overrides |
 | `indexes` | List discovered package index files |
-| `info` | Detailed package metadata (flags, paths, loaded status) |
+| `[info]` | Detailed package metadata (flags, paths, loaded status) |
 | `loaded` / `vloaded` | Query loaded packages (with/without version info) |
 | `pending` | Check if packages are currently being loaded |
 | `present` | Post-condition: verify package IS loaded |
@@ -99,9 +99,9 @@ full feature set including .NET interop.
 
 ### Package loading and requiring
 
-#### `package require`
+#### `[package require]`
 
-```
+```tcl
 package require ?options? package ?version?
 ```
 
@@ -113,7 +113,7 @@ package require ?options? package ?version?
 The `require` sub-command implements a **multi-stage fallback chain**
 when a package is not immediately available:
 
-```
+```tcl
 1. interpreter.RequirePackage(name, version, exact)
    └─ If fails:
 2. PkgAutoScan() — rescan package indexes (if -autoscan enabled)
@@ -133,9 +133,9 @@ Each stage is gated by interpreter flags:
 
 Returns the version of the loaded package on success.
 
-#### `package present`
+#### `[package present]`
 
-```
+```tcl
 package present ?-exact? package ?version?
 ```
 
@@ -143,9 +143,9 @@ Checks if a package is already loaded without attempting to load it.
 Returns the version if present; raises an error otherwise. Useful as a
 post-condition check.
 
-#### `package absent`
+#### `[package absent]`
 
-```
+```tcl
 package absent ?-exact? package ?version?
 ```
 
@@ -155,9 +155,9 @@ specific version.
 
 ### Package providing and registration
 
-#### `package provide`
+#### `[package provide]`
 
-```
+```tcl
 package provide package ?version?
 ```
 
@@ -165,16 +165,16 @@ Declares that the current script provides a package at a version. Without
 a version argument, returns the currently provided version.
 
 **Special behavior**: If the `PackageFlags.NoProvide` flag is set on the
-interpreter, `package provide` silently does nothing and returns an
+interpreter, `[package provide]` silently does nothing and returns an
 empty string. This is used during security package initialization.
 
-#### `package ifneeded`
+#### `[package ifneeded]`
 
-```
+```tcl
 package ifneeded package version ?script? ?flags?
 ```
 
-Registers a script to execute when `package require` needs a specific
+Registers a script to execute when `[package require]` needs a specific
 version. Without a script argument, returns the currently registered
 script.
 
@@ -196,9 +196,9 @@ package ifneeded mypackage 1.0 \
 
 ### Package discovery and scanning
 
-#### `package scan`
+#### `[package scan]`
 
-```
+```tcl
 package scan ?options? ?dir dir ...?
 ```
 
@@ -225,29 +225,29 @@ description.
 modifying interpreter state, returning a preview of what would be
 found. Cannot be combined with `-host`, `-bundle`, or `-plugin`.
 
-#### `package indexes`
+#### `[package indexes]`
 
-```
+```tcl
 package indexes ?pattern?
 ```
 
 Returns the list of discovered package index files, optionally filtered
 by a glob pattern.
 
-#### `package reset`
+#### `[package reset]`
 
-```
+```tcl
 package reset
 ```
 
 Clears all package index information, forcing a full rediscovery on the
-next `package require` or `package scan`.
+next `[package require]` or `[package scan]`.
 
 ### Package aliases
 
-#### `package alias`
+#### `[package alias]`
 
-```
+```tcl
 package alias ?options? name ?package? ?version?
 ```
 
@@ -257,7 +257,7 @@ package alias ?options? name ?package? ?version?
 | `-disabled` | flag | Create a disabled alias |
 | `-exact` | flag | Require exact version match |
 
-Creates an alias `name` that redirects to `package` at `version`. When
+Creates an alias `name` that redirects to `[package]` at `[version]`. When
 `package require name` is called, the alias is transparently resolved
 to the target package.
 
@@ -270,9 +270,9 @@ recursion.
 exists but is skipped during resolution. This can be used to temporarily
 disable an alias without removing it.
 
-#### `package aliases`
+#### `[package aliases]`
 
-```
+```tcl
 package aliases ?pattern?
 ```
 
@@ -280,9 +280,9 @@ Returns all package aliases matching the optional glob pattern.
 
 ### Package information
 
-#### `package info`
+#### `[package info]`
 
-```
+```tcl
 package info name
 ```
 
@@ -301,9 +301,9 @@ Returns detailed metadata about a package as a key-value list:
 | `ifNeeded` | dict | Version → script mapping (hidden in safe mode) |
 | `wasNeeded` | string | Version that was last requested |
 
-#### `package names`, `package loaded`, `package vloaded`, `package versions`
+#### `[package names]`, `[package loaded]`, `[package vloaded]`, `[package versions]`
 
-```
+```tcl
 package names ?pattern?
 package loaded ?pattern?
 package vloaded ?pattern?
@@ -313,9 +313,9 @@ package versions package
 Query commands for listing known packages, loaded packages (with or
 without version info), and available versions of a specific package.
 
-#### `package pending`
+#### `[package pending]`
 
-```
+```tcl
 package pending ?name?
 ```
 
@@ -326,9 +326,9 @@ detection.
 
 ### Package removal
 
-#### `package forget`
+#### `[package forget]`
 
-```
+```tcl
 package forget ?package package ...?
 ```
 
@@ -336,23 +336,23 @@ Completely removes packages from the interpreter. The package entry is
 deleted, and all associated metadata is discarded. This is a permanent
 removal.
 
-#### `package withdraw`
+#### `[package withdraw]`
 
-```
+```tcl
 package withdraw package ?version?
 ```
 
 Marks a package as unloaded by setting `package.Loaded = null`, but
 preserves the package's registration and `ifNeeded` scripts. The
-package can be loaded again via `package require`. This is a
+package can be loaded again via `[package require]`. This is a
 temporary unload — the distinction from `forget` is that withdraw
 preserves the package entry while forget deletes it.
 
 ### Version utilities
 
-#### `package vcompare`, `package vsatisfies`, `package vsort`
+#### `[package vcompare]`, `[package vsatisfies]`, `[package vsort]`
 
-```
+```tcl
 package vcompare version1 version2
 package vsatisfies version1 version2
 package vsort version1 version2
@@ -371,18 +371,18 @@ security package initialization to prevent version conflicts.
 
 ### Utility
 
-#### `package unknown`
+#### `[package unknown]`
 
-```
+```tcl
 package unknown ?command?
 ```
 
 Gets or sets the unknown package handler script, evaluated as the last
-resort in the `package require` fallback chain.
+resort in the `[package require]` fallback chain.
 
-#### `package relativefilename`
+#### `[package relativefilename]`
 
-```
+```tcl
 package relativefilename fileName ?type?
 ```
 
@@ -442,7 +442,7 @@ The shared auto-path list is cached in `GlobalState` for efficiency.
 It is only rebuilt when:
 - First accessed (lazy initialization).
 - Explicitly refreshed via `GlobalState.RefreshAutoPathList()`.
-- The `-autopath` flag is used with `package scan`.
+- The `-autopath` flag is used with `[package scan]`.
 
 ### Auto-path initialization during interpreter creation
 
@@ -486,14 +486,14 @@ is modified:
 
 This means that simply appending a directory to `auto_path` triggers
 automatic discovery of any packages in that directory — no explicit
-`package scan` is needed.
+`[package scan]` is needed.
 
 ### The `PackageIndexFlags.AutoPath` composite flag
 
 The `AutoPath` flag is a composite that configures the rescan triggered
 by auto-path changes:
 
-```
+```tcl
 AutoPath = Host | Bundle | Normal | Primary | Tagged
          | NoNormal | Recursive | NoSort | Dump
 ```
@@ -503,7 +503,7 @@ to relax security checks during development.
 
 ### Auto-path and `package scan -autopath`
 
-The `-autopath` flag on `package scan` triggers a special mode:
+The `-autopath` flag on `[package scan]` triggers a special mode:
 1. Calls `GlobalState.GetAutoPathList(interpreter, true)` with `refresh=true` to
    re-read environment variables and rebuild the path list.
 2. Updates the `auto_path` variable with the refreshed paths via
@@ -521,7 +521,7 @@ The `PackageOps.FindAll()` method orchestrates multi-source package
 index discovery. It searches four sources and can be configured to
 search them in different orders:
 
-```
+```tcl
 FindAll(interpreter, paths, flags, ...)
 ├─ ShouldPreferFileSystem() → determines order
 │
@@ -634,7 +634,7 @@ by a unique tag.
 
 The tag is extracted from the filename using a compiled regex:
 
-```
+```tcl
 ^pkgIndex_([0-9a-f]{16})\.eagle$
 ```
 
@@ -698,7 +698,7 @@ Both checks can be skipped individually:
 The `Locked` and `Rejected` flags in `PackageFlags` protect packages
 from modification:
 
-| Flags | `package ifneeded` behavior |
+| Flags | `[package ifneeded]` behavior |
 |-------|-----------------------------|
 | (none) | Normal: registers or updates the package script |
 | `Locked` | Silent no-op: returns success without modifying the registration |
@@ -721,7 +721,7 @@ package ifneeded MyPlugin 1.0 \
 ### Safe mode restrictions
 
 In safe interpreters:
-- `package info` scrubs file paths via `PathOps.ScrubPath()` for
+- `[package info]` scrubs file paths via `PathOps.ScrubPath()` for
   `indexFileName` and `provideFileName`.
 - The `ifNeeded` dictionary is hidden entirely.
 - Certain sub-commands may be disallowed via
@@ -747,14 +747,14 @@ a `.noPkgIndex` in a parent directory disables all descendants.
 | Flag | Value | Description |
 |------|-------|-------------|
 | `System` | 0x2 | System package (do not modify) |
-| `Loading` | 0x4 | Currently being loaded via `package require` |
+| `Loading` | 0x4 | Currently being loaded via `[package require]` |
 | `Static` | 0x8 | Provided statically |
 | `Core` | 0x10 | Included with the Eagle runtime |
 | `Plugin` | 0x20 | Provided by a loaded plugin |
 | `Library` | 0x40 | Part of the script library |
 | `Interactive` | 0x80 | From the interactive shell |
 | `Automatic` | 0x100 | Added automatically |
-| `Locked` | 0x200 | Cannot be replaced via `package ifneeded` |
+| `Locked` | 0x200 | Cannot be replaced via `[package ifneeded]` |
 | `Rejected` | 0x400 | With `Locked`, generates error on replacement |
 | `Temporary` | 0x800 | Added via core script file evaluation |
 
@@ -763,12 +763,12 @@ a `.noPkgIndex` in a parent directory disables all descendants.
 | Flag | Value | Description |
 |------|-------|-------------|
 | `NoUpdate` | 0x1000 | Skip updating flags on provide |
-| `NoProvide` | 0x2000 | `package provide` does nothing |
-| `AlwaysSatisfy` | 0x4000 | `package vsatisfies` always returns true |
-| `KeepExisting` | 0x8000 | `package ifneeded` preserves existing info |
-| `FailExisting` | 0x10000 | `package ifneeded` fails if info exists |
+| `NoProvide` | 0x2000 | `[package provide]` does nothing |
+| `AlwaysSatisfy` | 0x4000 | `[package vsatisfies]` always returns true |
+| `KeepExisting` | 0x8000 | `[package ifneeded]` preserves existing info |
+| `FailExisting` | 0x10000 | `[package ifneeded]` fails if info exists |
 | `NoAttributes` | 0x20000 | Skip querying managed type flags |
-| `AutoScan` | 0x1000000 | Enable auto-scan on `package require` failure |
+| `AutoScan` | 0x1000000 | Enable auto-scan on `[package require]` failure |
 
 ### Alias flags
 
@@ -838,7 +838,7 @@ a `.noPkgIndex` in a parent directory disables all descendants.
 
 ## 10. The Package Require Fallback Chain
 
-The `package require` fallback chain is Eagle's most important
+The `[package require]` fallback chain is Eagle's most important
 extension to Tcl's package loading:
 
 ### Stage 1: Direct require
@@ -896,7 +896,7 @@ If stage 3 fails and `InterpreterFlags.NoPackageUnknown` is not set:
 3. Evaluates the script.
 4. Retries `RequirePackage()`.
 
-This is equivalent to Tcl's `package unknown` handler.
+This is equivalent to Tcl's `[package unknown]` handler.
 
 ### Error aggregation
 
@@ -1071,7 +1071,7 @@ package require newly-discovered-package
 
 ### Pattern 8: Disabling package indexing
 
-```
+```tcl
 # Disable indexing for a specific directory
 # Create: /packages/untested/.noPkgIndex
 
@@ -1131,20 +1131,20 @@ interpreter.PackageFallback = delegate(
 | Index sources | Filesystem only | Host, filesystem, plugin assemblies, bundle databases |
 | Discovery order | Fixed | Configurable (`PreferFileSystem`/`PreferHost`) |
 | Auto-path rescan | Manual | Automatic via variable trace callback |
-| Package aliases | Not available | `package alias` with circular reference detection |
+| Package aliases | Not available | `[package alias]` with circular reference detection |
 | Locked packages | Not available | `Locked` / `Locked+Rejected` flags |
 | Signature verification | Not available | Authenticode + StrongName on plugin assemblies |
 | `.noPkgIndex` disable | Not available | Recursive disable markers |
-| `package absent` | Not available | Pre-condition: verify not loaded |
-| `package present` | Not available | Post-condition: verify loaded |
-| `package withdraw` | Not available | Unload without removing registration |
-| `package info` | Not available | Detailed metadata query |
-| `package scan` options | Basic | 30+ options with what-if mode |
-| `package ifneeded` flags | Not available | `PackageFlags` parameter |
+| `[package absent]` | Not available | Pre-condition: verify not loaded |
+| `[package present]` | Not available | Post-condition: verify loaded |
+| `[package withdraw]` | Not available | Unload without removing registration |
+| `[package info]` | Not available | Detailed metadata query |
+| `[package scan]` options | Basic | 30+ options with what-if mode |
+| `[package ifneeded]` flags | Not available | `PackageFlags` parameter |
 | Package fallback delegate | Not available | Programmatic `PackageCallback` hook |
-| `package indexes` | Not available | List discovered index files |
-| `package pending` | Not available | Loading cycle detection |
-| `package reset` | Not available | Clear all index information |
+| `[package indexes]` | Not available | List discovered index files |
+| `[package pending]` | Not available | Loading cycle detection |
+| `[package reset]` | Not available | Clear all index information |
 | What-if scanning | Not available | Preview discovery without state changes |
 
 ## 15. Security Considerations
@@ -1153,12 +1153,12 @@ interpreter.PackageFallback = delegate(
   interpreters. The `DisallowedSubCommands` policy controls which
   sub-commands are available.
 
-- **Safe mode scrubbing** — In safe interpreters, `package info`
+- **Safe mode scrubbing** — In safe interpreters, `[package info]`
   scrubs file paths and hides the `ifNeeded` script dictionary to
   prevent information disclosure.
 
 - **Authenticode and StrongName** — Plugin assemblies can be verified
-  during `package scan`. Use `-notrusted` and `-noverified` to skip
+  during `[package scan]`. Use `-notrusted` and `-noverified` to skip
   these checks during development, but keep them enabled in production.
 
 - **Locked packages** — Use `Locked | Rejected` to protect critical
@@ -1180,28 +1180,28 @@ interpreter.PackageFallback = delegate(
 
 | Related command | Relationship |
 |----------------|-------------|
-| `source` | Evaluates package scripts discovered via `package ifneeded` |
-| `load` | Loads .NET plugin assemblies registered by package indexes; see [`load.md`](load.md) |
-| `interp` | Safe interpreter policies control package sub-command access; see [`interp.md`](interp.md) |
-| `library` | Native library loading; separate from package system; see [`library.md`](library.md) |
-| `sql` | Script bundle databases can contain package indexes; see [`sql.md`](sql.md) |
-| `info` | `info loaded` shows loaded packages from a different angle |
-| `uri` | Package toolset uses `uri` for downloading packages; see [`uri.md`](uri.md) |
-| `tcl` | Tcl packages can be used via `tcl eval`; see [`tcl.md`](tcl.md) |
+| `[source]` | Evaluates package scripts discovered via `[package ifneeded]` |
+| `[load]` | Loads .NET plugin assemblies registered by package indexes; see [`load.md`](load.md) |
+| `[interp]` | Safe interpreter policies control package sub-command access; see [`interp.md`](interp.md) |
+| `[library]` | Native library loading; separate from package system; see [`library.md`](library.md) |
+| `[sql]` | Script bundle databases can contain package indexes; see [`sql.md`](sql.md) |
+| `[info]` | `[info loaded]` shows loaded packages from a different angle |
+| `[uri]` | Package toolset uses `[uri]` for downloading packages; see [`uri.md`](uri.md) |
+| `[tcl]` | Tcl packages can be used via `[tcl eval]`; see [`tcl.md`](tcl.md) |
 
 ## 17. References
 
 - **Source code**: `Eagle/Library/Commands/Package.cs` — `[package]` command (23 sub-commands)
-- **Source code**: `Eagle/Library/Components/Private/PackageOps.cs` — package operations (37,276 lines)
+- **Source code**: `Eagle/Library/Components/Private/PackageOps.cs` — package operations (4,767 lines)
 - **Source code**: `Eagle/Library/Components/Public/Interpreter.cs` — package storage, alias resolution, auto-path
 - **Source code**: `Eagle/Library/Components/Public/PackageData.cs` — package metadata
 - **Source code**: `Eagle/Library/Components/Private/PackageContextClientData.cs` — index evaluation state
 - **Source code**: `Eagle/Library/Components/Private/GlobalState.cs` — auto-path construction and caching
 - **Source code**: `Eagle/Library/Components/Public/Enumerations.cs` — PackageFlags, PackageIndexFlags, PackageType
 - **Source code**: `Eagle/Library/Containers/Private/PackageAliasDictionary.cs` — alias storage
-- **Command reference**: [`core_language.md`](core_language.md#cmd-package) — `package` syntax and options
-- **Examples**: [`core_examples.md`](core_examples.md#ex-package) — `package` examples
+- **Command reference**: [`core_language.md`](core_language.md#cmd-package) — `[package]` syntax and options
+- **Examples**: [`core_examples.md`](core_examples.md#ex-package) — `[package]` examples
 - **Script library**: [`core_script_library.md`](core_script_library.md) — Package Toolset (pkgt.eagle) procedures
 - **Related**: [`load.md`](load.md) — plugin loading (often triggered by package indexes)
 - **Related**: [`sql.md`](sql.md) — script bundle databases (package index source)
-- **Tcl reference**: [Tcl `package` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/package.htm)
+- **Tcl reference**: [Tcl `[package]` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/package.htm)

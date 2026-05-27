@@ -1,15 +1,15 @@
-# Eagle `namespace` Command — Deep-Dive Analysis
+# Eagle `[namespace]` Command — Deep-Dive Analysis
 
 ## 1. Executive Summary
 
-The Eagle `namespace` command provides **22 sub-commands** for hierarchical
+The Eagle `[namespace]` command provides **22 sub-commands** for hierarchical
 namespace management with a unique dual-implementation architecture. Eagle
 ships two parallel implementations: **Namespace1** (a compatibility stub
 that simulates namespace support using only the global namespace) and
 **Namespace2** (a full implementation with real `INamespace` objects,
 parent-child hierarchy, reference counting, and per-namespace variable
 frames). This dual approach allows scripts that simply wrap code in
-`namespace eval` to work immediately, while providing full namespace
+`[namespace eval]` to work immediately, while providing full namespace
 functionality when explicitly enabled.
 
 Key differentiators from Tcl:
@@ -17,19 +17,19 @@ Key differentiators from Tcl:
 | Area | Tcl | Eagle |
 |------|-----|-------|
 | Implementation | Single, always-on | Dual: stub (Namespace1) + full (Namespace2) |
-| Enable/disable | Always enabled | `namespace enable` toggles support |
-| Namespace rename | Not supported | `namespace rename` with safety flags |
-| Descendants | Manual recursion | `namespace descendants` (recursive) |
-| Namespace info | `info` command only | `namespace info` sub-command |
-| Namespace mappings | None | `namespace mappings` for name remapping |
+| Enable/disable | Always enabled | `[namespace enable]` toggles support |
+| Namespace rename | Not supported | `[namespace rename]` with safety flags |
+| Descendants | Manual recursion | `[namespace descendants]` (recursive) |
+| Namespace info | `[info]` command only | `[namespace info]` sub-command |
+| Namespace mappings | None | `[namespace mappings]` for name remapping |
 | Unknown handler | Global only | Per-namespace unknown handler |
 | Variable storage | Namespace-scoped | Per-namespace `ICallFrame` (VariableFrame) |
 | Reference counting | None | Tracked for lifecycle management |
-| Scope integration | None | `scope attach`/`detach`/`export`/`import` |
+| Scope integration | None | `[scope attach]`/`detach`/`export`/`import` |
 
 ---
 
-## 2. Why the Eagle `namespace` Command Differs from Tcl
+## 2. Why the Eagle `[namespace]` Command Differs from Tcl
 
 Eagle's namespace system was designed with several constraints that Tcl
 does not face:
@@ -38,7 +38,7 @@ does not face:
   namespace support existed. The dual-implementation approach ensures
   these scripts continue to work with the Namespace1 stub.
 - **Optional activation** — Namespace support can be toggled on/off via
-  `namespace enable`, allowing embedders to control whether the overhead
+  `[namespace enable]`, allowing embedders to control whether the overhead
   of full namespace management is incurred.
 - **Call frame integration** — Eagle namespaces are deeply integrated
   with the call frame stack. Each namespace owns an `ICallFrame`
@@ -47,7 +47,7 @@ does not face:
 - **Resolver architecture** — Eagle uses an `IResolve` interface per
   namespace, enabling pluggable name resolution strategies beyond Tcl's
   fixed lookup rules.
-- **.NET embedding** — Namespace mappings (`namespace mappings`) allow
+- **.NET embedding** — Namespace mappings (`[namespace mappings]`) allow
   remapping namespace names for interoperability. By default, `::Eagle`
   redirects to the global namespace for backward compatibility.
 
@@ -75,17 +75,17 @@ implementations. Understanding when and why each is active is essential.
 **Flags**: `CommandFlags.Safe | CommandFlags.Standard | CommandFlags.Initialize`
 
 Namespace1 exists for source code compatibility with scripts that use
-`namespace eval` as a simple organizational wrapper. Its behavior:
+`[namespace eval]` as a simple organizational wrapper. Its behavior:
 
-- `namespace current` always returns `::` (global)
-- `namespace children` and `namespace descendants` return empty lists
-- `namespace export`, `namespace import`, and `namespace forget` are
+- `[namespace current]` always returns `::` (global)
+- `[namespace children]` and `[namespace descendants]` return empty lists
+- `[namespace export]`, `[namespace import]`, and `[namespace forget]` are
   no-ops (silently succeed without effect)
-- `namespace eval` creates a tracking call frame with
+- `[namespace eval]` creates a tracking call frame with
   `CallFrameFlags.Namespace | CallFrameFlags.Evaluate` but does not
   bind a real namespace object
-- `namespace rename` returns "not implemented" error
-- `namespace exists` returns true only for the global namespace
+- `[namespace rename]` returns "not implemented" error
+- `[namespace exists]` returns true only for the global namespace
 
 This allows scripts like:
 
@@ -106,16 +106,16 @@ it must be explicitly activated via `namespace enable true`.
 
 When active:
 
-- `namespace current` queries the actual current namespace via
+- `[namespace current]` queries the actual current namespace via
   `GetCurrentNamespaceViaResolvers()`
-- `namespace children` and `namespace descendants` enumerate the real
+- `[namespace children]` and `[namespace descendants]` enumerate the real
   hierarchy via `INamespace.GetChildren()` / `GetDescendants()`
-- `namespace export` and `namespace import` create real command aliases
+- `[namespace export]` and `[namespace import]` create real command aliases
   with `NamespaceImport` flags
-- `namespace eval` creates a namespace call frame with
+- `[namespace eval]` creates a namespace call frame with
   `CallFrameFlags.Evaluate | CallFrameFlags.UseNamespace` and binds
   the real namespace object
-- `namespace rename` calls `interpreter.RenameNamespace()` with
+- `[namespace rename]` calls `interpreter.RenameNamespace()` with
   configurable safety flags
 
 ### Switching between implementations
@@ -135,7 +135,7 @@ implementation.
 
 ## 4. Sub-Command Reference
 
-Eagle's 22 `namespace` sub-commands are organized below by functional
+Eagle's 22 `[namespace]` sub-commands are organized below by functional
 category. Sub-commands marked **(Eagle)** have no Tcl equivalent.
 
 ### 4.1 Creating and Managing Namespaces
@@ -236,7 +236,7 @@ newns::test   ;# "hello"
 
 ### 4.2 Namespace Information
 
-#### `namespace current`
+#### `[namespace current]`
 
 Returns the fully-qualified name of the current namespace.
 
@@ -313,7 +313,7 @@ Delegates to `NamespaceOps.InfoSubCommand()`.
 namespace info ::mylib   ;# Detailed namespace metadata
 ```
 
-#### `namespace mappings` **(Eagle)**
+#### `[namespace mappings]` **(Eagle)**
 
 Returns the namespace mapping table as key-value pairs. Mappings allow
 remapping namespace names to other names (e.g., `::Eagle` -> `::` for
@@ -329,7 +329,7 @@ namespace mappings   ;# {::Eagle :: ...}
 
 #### `namespace qualifiers string`
 
-Returns the namespace qualifiers portion of `string` — everything
+Returns the namespace qualifiers portion of `[string]` — everything
 before the last `::` separator.
 
 Uses `NamespaceOps.SplitName()` internally.
@@ -342,7 +342,7 @@ namespace qualifiers baz               ;# (empty — no qualifiers)
 
 #### `namespace tail string`
 
-Returns the tail portion of `string` — everything after the last `::`
+Returns the tail portion of `[string]` — everything after the last `::`
 separator.
 
 ```tcl
@@ -505,7 +505,7 @@ eval $myns::callback   ;# "secret" (executes in ::myns context)
 #### `namespace inscope name arg ?arg...?`
 
 Evaluates a script in namespace `name` with additional arguments
-appended. Similar to `namespace eval` but handles argument concatenation
+appended. Similar to `[namespace eval]` but handles argument concatenation
 differently.
 
 **Call frame behavior:**
@@ -566,8 +566,8 @@ the namespace object contract:
 | `Parent` | `INamespace` | Parent namespace (null for global) |
 | `Resolve` | `IResolve` | Pluggable name resolver |
 | `VariableFrame` | `ICallFrame` | Call frame holding namespace variables |
-| `Unknown` | `string` | Per-namespace unknown command handler |
-| `QualifiedName` | `string` | Cached fully-qualified name (`::parent::child`) |
+| `Unknown` | `[string]` | Per-namespace unknown command handler |
+| `QualifiedName` | `[string]` | Cached fully-qualified name (`::parent::child`) |
 | `ReferenceCount` | `int` | Reference count for lifecycle management |
 | `Deleted` | `bool` | Deletion flag |
 | `ExportNames` | `StringDictionary` | Exported command names |
@@ -576,7 +576,7 @@ the namespace object contract:
 
 Namespaces form a tree via parent-child relationships:
 
-```
+```tcl
 :: (global)
 +-- ::mylib
 |   +-- ::mylib::utils
@@ -689,18 +689,18 @@ This is a significant architectural difference from Tcl.
 Each call frame has a `ResolveData` property that stores the current
 namespace context via a `ResolverClientData` wrapper:
 
-```
+```tcl
 CallFrame.ResolveData -> ResolverClientData -> INamespace
 ```
 
 **Getting the current namespace from a frame:**
-```
+```tcl
 NamespaceOps.GetCurrent(interpreter, frame)
   -> frame.ResolveData -> ResolverClientData.Data -> INamespace
 ```
 
 **Setting the current namespace on a frame:**
-```
+```tcl
 NamespaceOps.SetCurrent(interpreter, frame, namespace)
   -> frame.ResolveData = new ResolverClientData(namespace)
 ```
@@ -709,10 +709,10 @@ NamespaceOps.SetCurrent(interpreter, frame, namespace)
 
 | Frame flags | Usage |
 |-------------|-------|
-| `Namespace \| Evaluate` | Namespace1: `namespace eval` (no real binding) |
-| `Evaluate \| UseNamespace` | Namespace2: `namespace eval` (real binding) |
-| `Namespace \| InScope` | Namespace1: `namespace inscope` |
-| `InScope \| UseNamespace` | Namespace2: `namespace inscope` |
+| `Namespace \| Evaluate` | Namespace1: `[namespace eval]` (no real binding) |
+| `Evaluate \| UseNamespace` | Namespace2: `[namespace eval]` (real binding) |
+| `Namespace \| InScope` | Namespace1: `[namespace inscope]` |
+| `InScope \| UseNamespace` | Namespace2: `[namespace inscope]` |
 
 ### Frame lifecycle
 
@@ -774,7 +774,7 @@ With `-clear`, the existing export list is replaced entirely.
 
 ### Origin tracing
 
-`namespace origin` traces through the import chain to find the
+`[namespace origin]` traces through the import chain to find the
 original command. For deeply chained imports (A imports from B which
 imports from C), it resolves all the way to the original source.
 
@@ -782,7 +782,7 @@ imports from C), it resolves all the way to the original source.
 
 ## 9. Namespace Mappings
 
-Namespace mappings (`namespace mappings`) are an Eagle-specific feature
+Namespace mappings (`[namespace mappings]`) are an Eagle-specific feature
 that provides a name remapping layer. The mapping table is stored in
 `interpreter.NamespaceMappings` (a `StringDictionary`).
 
@@ -836,15 +836,15 @@ with standard namespace organization.
 
 ## 12. Safe Interpreter Behavior
 
-The `namespace` command is marked `CommandFlags.Safe`, meaning it is
+The `[namespace]` command is marked `CommandFlags.Safe`, meaning it is
 available in safe interpreters. However, certain sub-commands have
 restricted behavior:
 
 - Option parsing error messages are sanitized in safe interpreters
   (`!interpreter.InternalIsSafe()` check)
-- `namespace enable` requires explicit parameters — a safe interpreter
+- `[namespace enable]` requires explicit parameters — a safe interpreter
   cannot accidentally enable full namespaces
-- `namespace rename` safety flags (`RenameGlobalOk`, `RenameInUseOk`)
+- `[namespace rename]` safety flags (`RenameGlobalOk`, `RenameInUseOk`)
   both default to `false`, preventing dangerous renames
 
 The namespace command does not expose filesystem or network resources,
@@ -980,10 +980,10 @@ if {!$nsEnabled} {
 
 ## 14. Comparison with Tcl
 
-| Feature | Tcl `namespace` | Eagle `namespace` |
+| Feature | Tcl `[namespace]` | Eagle `[namespace]` |
 |---------|----------------|-------------------|
 | Sub-commands | 19 | 22 |
-| Enable/disable | Always enabled | `namespace enable` toggles |
+| Enable/disable | Always enabled | `[namespace enable]` toggles |
 | Implementation | Single | Dual: stub + full |
 | eval / inscope | Create namespace + execute | Same + call frame binding |
 | delete / exists | Standard | Same |
@@ -993,8 +993,8 @@ if {!$nsEnabled} {
 | qualifiers / tail | Standard | Same |
 | origin / which | Standard | Same |
 | unknown | Global handler only | Per-namespace handler |
-| rename | Not supported | `namespace rename` with safety flags |
-| info | Not a sub-command | `namespace info` for metadata |
+| rename | Not supported | `[namespace rename]` with safety flags |
+| info | Not a sub-command | `[namespace info]` for metadata |
 | mappings | None | Namespace name remapping table |
 | ensemble | `namespace ensemble` | Not script-accessible |
 | path | `namespace path` | Not supported |
@@ -1007,7 +1007,7 @@ if {!$nsEnabled} {
 **Notable Tcl features not in Eagle:**
 - `namespace ensemble create` — Eagle has ensembles internally but
   does not expose script-level ensemble creation
-- `namespace path` — not supported; use `namespace import` instead
+- `namespace path` — not supported; use `[namespace import]` instead
 
 ---
 
@@ -1021,7 +1021,7 @@ embedders should be aware of this vector.
 
 ### Rename safety
 
-The `namespace rename` command defaults to blocking global namespace
+The `[namespace rename]` command defaults to blocking global namespace
 renames and in-use namespace renames. The `RenameGlobalOk` and
 `RenameInUseOk` flags must be explicitly set (via reflection) to
 permit these dangerous operations.
@@ -1050,7 +1050,7 @@ The mappings table is accessed under a lock for thread safety.
 - **Namespace data**: `eagle/Eagle/Library/Components/Public/NamespaceData.cs`
 - **INamespace interface**: `eagle/Eagle/Library/Interfaces/Public/Namespace.cs`
 - **Core language reference**: `core_language.md` § Namespaces ->
-  `namespace` command
+  `[namespace]` command
 - **Examples**: `core_examples.md` § namespace
 - **Scope integration**: `scope.md` § Namespace Integration
-- **Tcl reference**: [Tcl `namespace` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/namespace.htm)
+- **Tcl reference**: [Tcl `[namespace]` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/namespace.htm)

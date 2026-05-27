@@ -1,6 +1,6 @@
 # Eagle `[uri]` Command: Deep-Dive Analysis of URI Operations, HTTP Client, and Async Transfers
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `uri` command internals, including the 18 sub-commands, the four per-interpreter web callbacks (`PreWebClientCallback`, `NewWebClientCallback`, `WebTransferCallback`, `WebErrorCallback`), custom `WebClient`-derived classes, async download/upload with `CommandCallback` script evaluation, retry infrastructure, and offline mode. For basic command syntax, see [`core_language.md`](core_language.md#cmd-uri). For usage examples, see [`core_examples.md`](core_examples.md#ex-uri). For tips on URI parsing and HTTP operations, see [`tips_and_tricks.md`](tips_and_tricks.md).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `[uri]` command internals, including the 18 sub-commands, the four per-interpreter web callbacks (`PreWebClientCallback`, `NewWebClientCallback`, `WebTransferCallback`, `WebErrorCallback`), custom `WebClient`-derived classes, async download/upload with `CommandCallback` script evaluation, retry infrastructure, and offline mode. For basic command syntax, see [`core_language.md`](core_language.md#cmd-uri). For usage examples, see [`core_examples.md`](core_examples.md#ex-uri). For tips on URI parsing and HTTP operations, see [`tips_and_tricks.md`](tips_and_tricks.md).
 
 ## 1. Executive Summary
 
@@ -39,17 +39,17 @@ requests:
 
 The command carries `CommandFlags.Unsafe | CommandFlags.NonStandard` and
 is **not** part of standard Tcl. The network sub-commands (`download`,
-`upload`, `get`, `post`, `ping`, `time`, `offline`, `security`,
+`upload`, `get`, `post`, `ping`, `[time]`, `offline`, `security`,
 `softwareupdates`) require the `NETWORK` compilation flag.
 
 **Key source files:**
 
 | File | Lines | Role |
 |------|-------|------|
-| `Eagle/Library/Commands/Uri.cs` | ~1,200 | Main command implementation (18 sub-commands) |
+| `Eagle/Library/Commands/Uri.cs` | ~1,475 | Main command implementation (18 sub-commands) |
 | `Eagle/Library/Components/Private/WebOps.cs` | 4,680 | Web operations: client creation, download/upload, retries, callbacks, async handlers |
 | `Eagle/Library/Components/Public/WebClientData.cs` | ~200 | Transfer state container passed through callbacks |
-| `Eagle/Library/Components/Private/CommandCallback.cs` | ~2,700 | Async callback bridge: .NET events → Eagle script evaluation |
+| `Eagle/Library/Components/Private/CommandCallback.cs` | ~3,470 | Async callback bridge: .NET events → Eagle script evaluation |
 | `Eagle/Library/Components/Public/Delegates.cs` | ~50 | Callback delegate declarations |
 | `Eagle/Library/Interfaces/Public/WebTransferCallback.cs` | ~20 | `IWebTransferCallback` interface |
 | `Eagle/Library/Interfaces/Public/WebErrorCallback.cs` | ~20 | `IWebErrorCallback` interface |
@@ -61,7 +61,7 @@ is **not** part of standard Tcl. The network sub-commands (`download`,
 
 ### No Tcl equivalent
 
-Standard Tcl has no `uri` command. Tcl applications typically use the
+Standard Tcl has no `[uri]` command. Tcl applications typically use the
 `http` package (`package require http`) for HTTP operations, which
 provides a different API based on tokens, callbacks, and the event loop.
 Eagle's `[uri]` command takes a more direct approach, wrapping .NET's
@@ -87,7 +87,7 @@ This gives access to the full .NET HTTP stack including:
 Beyond HTTP transfers, the command wraps .NET's `System.Uri` and
 `System.UriBuilder` classes for URI construction, parsing, validation,
 comparison, and encoding/decoding — operations that Tcl handles through
-separate packages or `string map` workarounds.
+separate packages or `[string map]` workarounds.
 
 ## 3. Sub-Command Overview
 
@@ -98,9 +98,9 @@ The command has 18 sub-commands organized into four categories:
 | Sub-command | Syntax | Description |
 |-------------|--------|-------------|
 | `create` | `uri create scheme host ?options?` | Build a URI from components using `UriBuilder` |
-| `parse` | `uri parse uri` | Decompose a URI into `-scheme`, `-host`, `-port`, `-username`, `-password`, `-path`, `-query`, `-fragment` |
-| `join` | `uri join name ?name ...?` | Combine path segments into a URI path |
-| `host` | `uri host uri` | Validate a hostname via `Uri.CheckHostName()` |
+| `[parse]` | `uri parse uri` | Decompose a URI into `-scheme`, `-host`, `-port`, `-username`, `-password`, `-path`, `-query`, `-fragment` |
+| `[join]` | `uri join name ?name ...?` | Combine path segments into a URI path |
+| `[host]` | `uri host uri` | Validate a hostname via `Uri.CheckHostName()` |
 | `scheme` | `uri scheme name` | Validate a scheme name via `Uri.CheckSchemeName()` |
 
 ### Validation and comparison
@@ -126,9 +126,9 @@ The command has 18 sub-commands organized into four categories:
 | `upload` | `uri upload ?options? uri ?argument?` | Upload data (default: file mode) |
 | `post` | `uri post ?options? uri ?argument?` | Upload data (default: inline mode) |
 | `ping` | `uri ping hostOrUri timeout` | Ping a host via HTTP request or socket |
-| `time` | `uri time` | Query remote time server |
+| `[time]` | `[uri time]` | Query remote time server |
 | `offline` | `uri offline ?enabled?` | Get/set offline mode (reference-counted) |
-| `security` | `uri security` | Report security protocol and network status |
+| `security` | `[uri security]` | Report security protocol and network status |
 | `softwareupdates` | `uri softwareupdates ?trusted? ?exclusive?` | Get/set trusted update status |
 
 ## 4. The Download/Upload Sub-Commands in Detail
@@ -193,7 +193,7 @@ uri upload -inline -raw -method PATCH \
 
 ## 5. Complete Download/Upload Options Reference
 
-### Download options (`uri download`, `uri get`)
+### Download options (`[uri download]`, `[uri get]`)
 
 | Option | Type | Description |
 |--------|------|-------------|
@@ -212,7 +212,7 @@ uri upload -inline -raw -method PATCH \
 | `-noprotocol` | flag | (TEST only) Skip security protocol setup |
 | `-obsolete` | flag | (TEST only) Allow obsolete protocol versions |
 
-### Upload options (`uri upload`, `uri post`)
+### Upload options (`[uri upload]`, `[uri post]`)
 
 All download options above, plus:
 
@@ -228,7 +228,7 @@ Each Eagle interpreter has four callback properties for customizing web
 operations. All are thread-safe (guarded by `syncRoot`) and nullable.
 They are called in a specific order during the web operation lifecycle:
 
-```
+```tcl
 PreWebClientCallback          (1. modify creation parameters)
        ↓
 NewWebClientCallback          (2. create custom WebClient)
@@ -368,7 +368,7 @@ integrates deeply with the retry loop and can:
 All synchronous download and upload operations in `WebOps` use a retry
 loop:
 
-```
+```tcl
 while (true) {
     attempt operation once
     if success → return Ok
@@ -432,14 +432,14 @@ callback script:
 
 | Argument | Description |
 |----------|-------------|
-| `uri` | The URI that was accessed |
+| `[uri]` | The URI that was accessed |
 | `method` | The HTTP method used (for uploads) |
 | `rawData` | Hexadecimal representation of uploaded byte data |
 | `data` | The `NameValueCollection` as a list (for form uploads) |
 | `fileName` | The local file path (for file transfers) |
 | `canceled` | Boolean indicating if the operation was cancelled |
 | `exception` | .NET exception type name if an error occurred |
-| `error` | Full exception details if an error occurred |
+| `[error]` | Full exception details if an error occurred |
 
 ### `CallbackFlags` enum
 
@@ -506,7 +506,7 @@ is supplied via callbacks. It overrides `GetWebRequest()` to inject:
 - **Per-request timeout** — Sets `WebRequest.Timeout` if a timeout value
   is provided.
 
-```
+```tcl
 Headers injected by TagAndTimeoutWebClient:
   X-Eagle-Tag: <tag value>
   X-Eagle-Version: <runtime version>
@@ -555,7 +555,7 @@ set response [uri upload -timeouttype network -inline \
 The `WebOps.CreateClient()` method orchestrates client creation through
 the callback chain:
 
-```
+```tcl
 CreateClient(interpreter, argument, clientData, tag, timeout)
 │
 ├─ If interpreter has PreWebClientCallback:
@@ -594,7 +594,7 @@ uri offline false    ;# Decrement to zero (back online)
 When offline, `CreateClient()` returns `null` with the error
 `"cannot create web client while offline"`.
 
-## 12. The `uri compare` Sub-Command
+## 12. The `[uri compare]` Sub-Command
 
 The `compare` sub-command provides fine-grained URI comparison using
 .NET's `Uri.Compare()` method:
@@ -614,7 +614,7 @@ uri compare ?options? uri1 uri2
 The `UriComponents` enum allows comparing specific parts: `Scheme`,
 `Host`, `Port`, `Path`, `Query`, `Fragment`, or combinations.
 
-## 13. The `uri create` Sub-Command
+## 13. The `[uri create]` Sub-Command
 
 Builds a URI from components using .NET's `UriBuilder`:
 
@@ -640,7 +640,7 @@ uri create https api.example.com \
 # Result: https://api.example.com:8443/v2/users?role=admin#top
 ```
 
-## 14. The `uri ping` Sub-Command
+## 14. The `[uri ping]` Sub-Command
 
 Pings a host using two strategies:
 
@@ -657,7 +657,7 @@ Return value is a `StringList` with:
 - Round-trip time in milliseconds
 - Units label (`"milliseconds"`)
 
-## 15. The `uri time` Sub-Command
+## 15. The `[uri time]` Sub-Command
 
 Queries a remote time server and compares with local time:
 
@@ -675,7 +675,7 @@ Return value is a `StringList` with:
 - `remoteUnits` — Units string
 - `remoteDifference` — `TimeSpan` difference between remote and local
 
-## 16. The `uri security` Sub-Command
+## 16. The `[uri security]` Sub-Command
 
 Reports the current security and network status:
 
@@ -868,15 +868,15 @@ uri offline false
 | Proxy support | `::http::config -proxyhost` | .NET system proxy or `NewWebClientCallback` |
 | TLS/SSL | Requires `tls` package | Built into .NET runtime |
 | Retry mechanism | Manual implementation | Built-in with `WebErrorCallback` integration |
-| URI parsing | Separate `uri` package | Built into `uri parse` / `uri create` |
-| URL encoding | `::http::formatQuery` | `uri escape` / `uri unescape` |
+| URI parsing | Separate `[uri]` package | Built into `[uri parse]` / `[uri create]` |
+| URL encoding | `::http::formatQuery` | `[uri escape]` / `[uri unescape]` |
 | File downloads | Manual stream handling | `uri download fileName` (one command) |
 | File uploads | Manual with `::http::geturl -querychannel` | `uri upload fileName` (one command) |
 | Form POST | `::http::formatQuery` + `-query` | `-data {key value ...}` (auto form-encoded) |
 | Raw byte upload | Manual | `-raw -data {byte byte ...}` |
-| Offline mode | Not available | `uri offline` (reference-counted) |
+| Offline mode | Not available | `[uri offline]` (reference-counted) |
 | Network ping | Not available | `uri ping host timeout` |
-| Time sync | Not available | `uri time` |
+| Time sync | Not available | `[uri time]` |
 | Transfer interception | Not available | `WebTransferCallback` |
 | Error callback | Not available | `WebErrorCallback` with retry control |
 | Custom client factory | Not available | `NewWebClientCallback` / `PreWebClientCallback` |
@@ -899,7 +899,7 @@ uri offline false
   configured via `-yesprotocol`/`-noprotocol`/`-obsolete` flags and
   `WebOps.SetSecurityProtocol()`.
 
-- **Credential exposure** — The `uri create` sub-command supports
+- **Credential exposure** — The `[uri create]` sub-command supports
   `-username` and `-password` options. URIs with embedded credentials
   should be handled carefully to avoid logging or leaking them.
 
@@ -914,12 +914,12 @@ uri offline false
 
 | Related command | Relationship |
 |----------------|-------------|
-| `socket` | Low-level TCP socket operations; `uri` is higher-level HTTP |
-| `exec` | Can invoke `curl`, `wget` externally; `uri` uses .NET HTTP natively |
-| `object` | Can create and invoke .NET `HttpClient`, `WebRequest` directly; `uri` provides a simpler command interface |
-| `sql` | Database access; script bundle loading may use HTTP internally |
-| `interp` | Safe interpreter policies control which URIs are trusted |
-| `load` | Plugin loading can trigger web operations (update checking) |
+| `[socket]` | Low-level TCP socket operations; `[uri]` is higher-level HTTP |
+| `[exec]` | Can invoke `curl`, `wget` externally; `[uri]` uses .NET HTTP natively |
+| `[object]` | Can create and invoke .NET `HttpClient`, `WebRequest` directly; `[uri]` provides a simpler command interface |
+| `[sql]` | Database access; script bundle loading may use HTTP internally |
+| `[interp]` | Safe interpreter policies control which URIs are trusted |
+| `[load]` | Plugin loading can trigger web operations (update checking) |
 
 ## 22. References
 
@@ -931,8 +931,8 @@ uri offline false
 - **Source code**: `Eagle/Library/Interfaces/Public/WebTransferCallback.cs` — transfer callback interface
 - **Source code**: `Eagle/Library/Interfaces/Public/WebErrorCallback.cs` — error callback interface
 - **Source code**: `Eagle/Library/Interfaces/Public/NewWebClientCallback.cs` — client factory interface
-- **Command reference**: [`core_language.md`](core_language.md#cmd-uri) — `uri` syntax and options
-- **Examples**: [`core_examples.md`](core_examples.md#ex-uri) — `uri` examples
+- **Command reference**: [`core_language.md`](core_language.md#cmd-uri) — `[uri]` syntax and options
+- **Examples**: [`core_examples.md`](core_examples.md#ex-uri) — `[uri]` examples
 - **Tips**: [`tips_and_tricks.md`](tips_and_tricks.md) — URI Parsing and Construction section
 - **Script library**: [`core_script_library.md`](core_script_library.md) — download helpers, URI resolution procedures
 - **.NET reference**: [System.Net.WebClient](https://docs.microsoft.com/en-us/dotnet/api/system.net.webclient)

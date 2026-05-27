@@ -1,6 +1,6 @@
 # Eagle `[library]` Command: Deep-Dive Analysis of Native Library FFI
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `library` command internals. For basic command syntax and options, see [`core_language.md`](core_language.md#cmd-library). For usage examples, see [`core_examples.md`](core_examples.md#ex-library).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `[library]` command internals. For basic command syntax and options, see [`core_language.md`](core_language.md#cmd-library). For usage examples, see [`core_examples.md`](core_examples.md#ex-library).
 
 ## 1. Executive Summary
 
@@ -68,7 +68,7 @@ The `[library]` command eliminates both obstacles by:
 The command follows a **lifecycle-oriented design** with explicit resource
 management:
 
-```
+```tcl
 load module → declare delegate → resolve function → call → undeclare → unload
 ```
 
@@ -80,7 +80,7 @@ unloaded while delegates still reference them.
 
 ### The integration stack
 
-```
+```tcl
 ┌──────────────────────────────────────────────────────────┐
 │                     Eagle Script                         │
 │   library load → library declare → library call → ...    │
@@ -125,7 +125,7 @@ unloaded while delegates still reference them.
 
 ## 4. The P/Invoke Workflow
 
-### 4.1. Loading a module (`library load`)
+### 4.1. Loading a module (`[library load]`)
 
 The first step is loading a native shared library into the process address
 space.
@@ -154,16 +154,16 @@ set kernel32 [library load kernel32.dll]
 | Option | Effect |
 |--------|--------|
 | `-modulename name` | Custom handle name instead of auto-generated |
-| `-locked` | Sets `ModuleFlags.NoUnload`; prevents `library unload` |
+| `-locked` | Sets `ModuleFlags.NoUnload`; prevents `[library unload]` |
 | `-flags flags` | Explicit `ModuleFlags` enum value |
 | `-trustedonly` | Require valid Authenticode signature |
 | `-maybetrustedonly` | Like `-trustedonly` but only in release builds |
 
-**`library checkload`** shares the same code path but first checks if the
+**`[library checkload]`** shares the same code path but first checks if the
 module is already loaded via `interpreter.GetModuleByFileName`. If found,
 it returns the existing handle without re-loading.
 
-### 4.2. Declaring a delegate (`library declare`)
+### 4.2. Declaring a delegate (`[library declare]`)
 
 A delegate declaration describes a native function's signature: return type,
 parameter types, calling convention, and string marshalling characteristics.
@@ -221,7 +221,7 @@ set getStdHandle [library declare \
 | `-delegatename name` | auto | Custom delegate handle name |
 | `-alias` | off | Create a command alias for the delegate |
 
-### 4.3. Resolving a function (`library resolve`)
+### 4.3. Resolving a function (`[library resolve]`)
 
 If the delegate was not auto-resolved during declaration (i.e., `-module`
 was not provided), it must be explicitly resolved before calling.
@@ -242,10 +242,10 @@ library resolve -module $kernel32 $getStdHandle
    d. Increments the module's reference count (the delegate now holds a
       reference to the module).
 
-Resolution can also be changed after the fact: calling `library resolve`
+Resolution can also be changed after the fact: calling `[library resolve]`
 again with a different module or function name re-binds the delegate.
 
-### 4.4. Calling a native function (`library call`)
+### 4.4. Calling a native function (`[library call]`)
 
 Once declared and resolved, a native function can be called:
 
@@ -285,7 +285,7 @@ set handle [library call $getStdHandle -11]
 | `-debug` | Enable debug output for argument resolution |
 | `-trace` | Enable tracing of method calls |
 
-### 4.5. Cleanup (`library undeclare` / `library unload`)
+### 4.5. Cleanup (`[library undeclare]` / `[library unload]`)
 
 Resources must be explicitly released in reverse order: undeclare delegates
 first, then unload modules.
@@ -312,7 +312,7 @@ library unload $kernel32
 3. Removes the module from the interpreter via
    `interpreter.InternalRemoveModule`.
 
-**`library unresolve`** is a partial cleanup: it releases the function pointer
+**`[library unresolve]`** is a partial cleanup: it releases the function pointer
 binding without removing the delegate declaration. The delegate can be
 re-resolved later to a different function or module.
 
@@ -340,7 +340,7 @@ script code.
 `DelegateOps.CreateNativeDelegateType` builds delegate types at runtime
 using the `System.Reflection.Emit` API:
 
-```
+```tcl
 AssemblyBuilder (in-memory dynamic assembly)
   └─ ModuleBuilder (dynamic module)
        └─ TypeBuilder (extends MulticastDelegate)
@@ -383,7 +383,7 @@ If any feature is missing, the `[library]` command is not available.
 
 A native module progresses through a simple lifecycle:
 
-```
+```tcl
           load                      unload
   ─────────────►  LOADED  ─────────────────►  UNLOADED
                     │                            ▲
@@ -397,7 +397,7 @@ A native module progresses through a simple lifecycle:
 
 | Operation | Effect on reference count |
 |-----------|--------------------------|
-| `library load` | Sets reference count to 1 |
+| `[library load]` | Sets reference count to 1 |
 | `library declare -module $m` (auto-resolve) | Increments reference count |
 | `library resolve -module $m $d` | Increments reference count |
 | `library undeclare $d` | Decrements reference count |
@@ -432,7 +432,7 @@ machinery that Eagle provides for .NET interop.
 
 ### Argument marshalling flow
 
-```
+```tcl
 Script arguments (strings)
          │
          ▼
@@ -491,7 +491,7 @@ pattern) are supported via by-reference argument handling:
 Two sub-commands verify that a native library's architecture matches the
 current process:
 
-### `library matcharchitecture`
+### `[library matcharchitecture]`
 
 ```tcl
 if {[library matcharchitecture mylib.dll]} {
@@ -502,7 +502,7 @@ if {[library matcharchitecture mylib.dll]} {
 Returns `true` if the library's PE architecture matches the current process
 (x86, x64, or ARM), `false` otherwise.
 
-### `library verifyarchitecture`
+### `[library verifyarchitecture]`
 
 ```tcl
 library verifyarchitecture mylib.dll   ;# Error if mismatch
@@ -531,7 +531,7 @@ unpredictably.
 
 ## 9. Certificate and Digital Signature Verification
 
-The `library certificate` sub-command validates the digital signature of a
+The `[library certificate]` sub-command validates the digital signature of a
 native library file:
 
 ```tcl
@@ -561,9 +561,9 @@ set cert [library certificate -chain kernel32.dll]
 | `-revocationmode mode` | Revocation check mode |
 | `-revocationflag flag` | Revocation flag |
 
-### Integration with `library load`
+### Integration with `[library load]`
 
-The `-trustedonly` option on `library load` uses the same certificate
+The `-trustedonly` option on `[library load]` uses the same certificate
 infrastructure to verify that a library is signed before loading it:
 
 ```tcl
@@ -577,9 +577,9 @@ set module [library load -trustedonly important.dll]
 
 | Sub-command | Syntax | Purpose |
 |------------|--------|---------|
-| `load` | `library load ?options? fileName` | Load a native library |
+| `[load]` | `library load ?options? fileName` | Load a native library |
 | `checkload` | `library checkload ?options? fileName` | Load if not already loaded |
-| `unload` | `library unload module` | Unload a native library |
+| `[unload]` | `library unload module` | Unload a native library |
 | `handle` | `library handle fileName` | Get module handle by file name |
 
 ### Delegate operations
@@ -606,7 +606,7 @@ set module [library load -trustedonly important.dll]
 | `certificate` | `library certificate ?options? fileName` | Check digital signature |
 | `matcharchitecture` | `library matcharchitecture fileName` | Check arch compatibility (bool) |
 | `verifyarchitecture` | `library verifyarchitecture fileName` | Verify arch compatibility (error) |
-| `test` | `library test ?fileName?` | Test library loading subsystem |
+| `[test]` | `library test ?fileName?` | Test library loading subsystem |
 
 ### Info sub-command output fields
 
@@ -922,7 +922,7 @@ can be restricted via interpreter policies.
 
 ### Certificate verification
 
-The `-trustedonly` option on `library load` verifies Authenticode signatures
+The `-trustedonly` option on `[library load]` verifies Authenticode signatures
 before loading, ensuring only signed libraries from trusted publishers can
 be loaded.
 
@@ -940,7 +940,7 @@ into it.
 
 ### Interpreter modifiability check
 
-The `library unresolve` sub-command checks `interpreter.IsModifiable`
+The `[library unresolve]` sub-command checks `interpreter.IsModifiable`
 before allowing changes, respecting interpreter lock-down policies.
 
 ## 14. Error Handling
@@ -987,7 +987,7 @@ Native function errors are handled differently depending on the function:
 |-----------|-----|
 | Calling arbitrary C functions | `[library]` |
 | Running Tcl scripts from Eagle | `[tcl eval]` |
-| Using Tcl packages | `[tcl eval]` with `package require` |
+| Using Tcl packages | `[tcl eval]` with `[package require]` |
 | Calling Tcl C API directly | Either — `[library]` is lower-level |
 | Bidirectional command bridging | `[tcl]` (built-in bridge support) |
 | One-off native function call | `[library]` (simpler setup) |

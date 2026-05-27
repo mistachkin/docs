@@ -1,13 +1,13 @@
-# Eagle `host` Command — Deep-Dive Analysis
+# Eagle `[host]` Command — Deep-Dive Analysis
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `host` command internals, including the 33 primary sub-commands plus 8 nested `host screen` sub-commands, the 15-interface host hierarchy (`IHost` → `IInteractiveHost`, `IStreamHost`, `IColorHost`, `IBoxHost`, `IPositionHost`, `ISizeHost`, `IReadHost`, `IWriteHost`, `IDebugHost`, `IThreadHost`, `IFileSystemHost`, `IProcessHost`, `IInformationHost`, `IDisplayHost`), the console lifecycle state machine (`closeCount`, `referenceCount`, `mustBeOpenCount`), safety interlocks (`SystemConsoleMustBeOpen`, `CheckActiveReadsAndWrites`, read/write level tracking, kiosk mode lock), the Windows-native screen buffer management system (push/pop stack, `CreateConsoleScreenBuffer`/`SetConsoleActiveScreenBuffer` P/Invoke, standard handle redirection), `HostFlags` (60+ capability flags), `HostCreateFlags` (30+ creation flags), box drawing, color theming, font control, and the `Default` → `Engine` → `File` → `Profile` → `Shell` → `Core` → `Console` class hierarchy. For basic command syntax, see [`core_language.md`](core_language.md#cmd-host). For usage examples, see [`core_examples.md`](core_examples.md#ex-host).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `[host]` command internals, including the 33 primary sub-commands plus 8 nested `[host screen]` sub-commands, the 15-interface host hierarchy (`IHost` → `IInteractiveHost`, `IStreamHost`, `IColorHost`, `IBoxHost`, `IPositionHost`, `ISizeHost`, `IReadHost`, `IWriteHost`, `IDebugHost`, `IThreadHost`, `IFileSystemHost`, `IProcessHost`, `IInformationHost`, `IDisplayHost`), the console lifecycle state machine (`closeCount`, `referenceCount`, `mustBeOpenCount`), safety interlocks (`SystemConsoleMustBeOpen`, `CheckActiveReadsAndWrites`, read/write level tracking, kiosk mode lock), the Windows-native screen buffer management system (push/pop stack, `CreateConsoleScreenBuffer`/`SetConsoleActiveScreenBuffer` P/Invoke, standard handle redirection), `HostFlags` (60+ capability flags), `HostCreateFlags` (30+ creation flags), box drawing, color theming, font control, and the `Default` → `Engine` → `File` → `Profile` → `Shell` → `Core` → `Console` class hierarchy. For basic command syntax, see [`core_language.md`](core_language.md#cmd-host). For usage examples, see [`core_examples.md`](core_examples.md#ex-host).
 
 ## 1. Executive Summary
 
-The Eagle `host` command is an ensemble providing **33 primary sub-commands**
-plus **8 nested `host screen` sub-commands** for programmatic control of the
+The Eagle `[host]` command is an ensemble providing **33 primary sub-commands**
+plus **8 nested `[host screen]` sub-commands** for programmatic control of the
 interactive console/terminal host. While Tcl provides limited console
-interaction through `puts`, `gets`, and the `chan configure` mechanism, Eagle
+interaction through `[puts]`, `[gets]`, and the `chan configure` mechanism, Eagle
 exposes the full host lifecycle, Windows console API, color theming, box
 drawing, cursor positioning, window sizing, font control, screen buffer
 management, and stream redirection from script level.
@@ -18,15 +18,15 @@ in safe interpreters.
 
 Two aspects of this command deserve special attention:
 
-1. **Host lifecycle safety interlocks** — The `host open` / `host close`
+1. **Host lifecycle safety interlocks** — The `[host open]` / `[host close]`
    sub-commands interact with a multi-layered state machine involving atomic
    counters (`closeCount`, `referenceCount`, `mustBeOpenCount`), read/write
    level tracking, shared-console detection, and kiosk mode locking. Every
    I/O operation checks host readiness through `SystemConsoleMustBeOpen()`
-   before touching `System.Console`, and `host close` cannot proceed while
+   before touching `System.Console`, and `[host close]` cannot proceed while
    any read or write operation is in progress.
 
-2. **Screen buffer management** — The `host screen` sub-commands provide
+2. **Screen buffer management** — The `[host screen]` sub-commands provide
    push/pop access to multiple Windows console screen buffers via direct
    P/Invoke to `CreateConsoleScreenBuffer` and `SetConsoleActiveScreenBuffer`.
    This enables applications to switch between independent screen contents
@@ -41,23 +41,23 @@ Key differentiators from Tcl:
 | Area | Tcl | Eagle |
 |------|-----|-------|
 | Built-in host command | None | 33 + 8 sub-commands |
-| Console lifecycle | Implicit (always available) | Explicit `open`/`close` with safety interlocks |
+| Console lifecycle | Implicit (always available) | Explicit `[open]`/`[close]` with safety interlocks |
 | Screen buffers | None | Push/pop stack of native Win32 screen buffers |
-| Color control | ANSI escape codes (manual) | `host color` / `host namedcolor` with theme support |
-| Cursor positioning | ANSI escape codes (manual) | `host position` with absolute and relative coords |
-| Window sizing | None | `host size` with auto-rollback on failure |
-| Box drawing | None | `host writebox` with named themes and box/text colors |
-| Font control | None | `host font` (Windows console font face/size) |
-| Input reading | `gets stdin` | `host readchar` / `host readkey` / `host readline` |
-| Stream redirection | `chan configure` | `host inchan` / `host outchan` / `host errchan` + `host redirected` |
-| Capability flags | None | `host flags` returns 60+ `HostFlags` |
-| Host state query | None | `host query` / `host isopen` / `host flags` |
-| Beep | None | `host beep` with frequency/duration |
-| Sleep | `after N` (event-loop) | `host sleep` (thread-level, capability-gated) |
+| Color control | ANSI escape codes (manual) | `[host color]` / `[host namedcolor]` with theme support |
+| Cursor positioning | ANSI escape codes (manual) | `[host position]` with absolute and relative coords |
+| Window sizing | None | `[host size]` with auto-rollback on failure |
+| Box drawing | None | `[host writebox]` with named themes and box/text colors |
+| Font control | None | `[host font]` (Windows console font face/size) |
+| Input reading | `gets stdin` | `[host readchar]` / `[host readkey]` / `[host readline]` |
+| Stream redirection | `chan configure` | `[host inchan]` / `[host outchan]` / `[host errchan]` + `[host redirected]` |
+| Capability flags | None | `[host flags]` returns 60+ `HostFlags` |
+| Host state query | None | `[host query]` / `[host isopen]` / `[host flags]` |
+| Beep | None | `[host beep]` with frequency/duration |
+| Sleep | `after N` (event-loop) | `[host sleep]` (thread-level, capability-gated) |
 
 ---
 
-## 2. Why the Eagle `host` Command Has No Tcl Equivalent
+## 2. Why the Eagle `[host]` Command Has No Tcl Equivalent
 
 Tcl assumes the terminal is always available and relies on the operating
 system for console management. Eagle treats the host as a first-class,
@@ -121,7 +121,7 @@ everything.
 
 ### 3.1 Interface Inheritance Tree
 
-```
+```tcl
 IInteractiveHost (base — minimum for interactive loop)
 ├── IStreamHost        (In/Out/Error streams, encodings, redirection)
 ├── IColorHost         (foreground/background, themes, named colors)
@@ -180,7 +180,7 @@ IInteractiveHost (base — minimum for interactive loop)
 
 ### 3.3 Implementation Class Hierarchy
 
-```
+```tcl
 Default (abstract)
   └── Engine (adds engine integration support)
        └── File (adds file system support)
@@ -224,15 +224,15 @@ The Console host uses three global atomic counters (accessed via
 
 **`closeCount` state machine:**
 
-```
+```tcl
 Normal state:  closeCount == 0  →  WasConsoleClosed() == false
 After close:   closeCount > 0   →  WasConsoleClosed() == true
 After reopen:  closeCount == 0  →  WasConsoleClosed() == false
 ```
 
-### 4.2 `host open` — Opening the Console
+### 4.2 `[host open]` — Opening the Console
 
-```
+```tcl
 host open
 ```
 
@@ -252,9 +252,9 @@ host open
 The guard against negative `closeCount` handles the case where `Open()`
 is called without a prior `Close()`.
 
-### 4.3 `host close` — Closing the Console
+### 4.3 `[host close]` — Closing the Console
 
-```
+```tcl
 host close
 ```
 
@@ -279,7 +279,7 @@ host close
    restore mode, remove icon, restore title
 5. `UnhookSystemConsoleControlHandler()` — disable Ctrl-C handling
 6. **Nested bump pattern:**
-   ```
+   ```tcl
    BumpConsoleClosed()           ← outer lock (closeCount → 1)
    try:
      PrivateClose()              ← NativeConsole.Close() / FreeConsole()
@@ -307,7 +307,7 @@ The nested bump pattern ensures:
 Every read and write operation is bracketed by level tracking to prevent
 close-during-I/O:
 
-```
+```tcl
 EnterReadLevel():
   Interlocked.Increment(ref sharedReadLevels)   ← static/shared
   base.EnterReadLevel()                          ← per-instance
@@ -392,7 +392,7 @@ Each specialized variant checks:
 The `mustBeOpenCount` counter gates whether `SystemConsoleMustBeOpen()`
 throws or silently returns:
 
-```
+```tcl
 ThrowOnMustBeOpen = (mustBeOpenCount > 0)
 ```
 
@@ -423,7 +423,7 @@ The `referenceCount` counter ensures console initialization happens
 exactly once (on the first Console instance) and teardown happens on the
 last:
 
-```
+```tcl
 Setup(host, setup=true, force):
   newCount = Interlocked.Increment(ref referenceCount)
   if ShouldSetup(newCount, true, force):     // true if count==1 or force
@@ -442,14 +442,14 @@ Setup(host, setup=false, force):
 ```
 
 `ConsoleOps.IsShared()` checks `referenceCount > 1` to detect
-multi-instance scenarios, blocking `host close` when the console is
+multi-instance scenarios, blocking `[host close]` when the console is
 shared.
 
 ---
 
 ## 5. Screen Buffer Management (Windows-Only)
 
-This section covers the `host screen` sub-commands, which provide direct
+This section covers the `[host screen]` sub-commands, which provide direct
 access to Windows console screen buffers. This capability is, to the best
 of our knowledge, **unique among scripting languages with interactive
 REPLs**.
@@ -466,9 +466,9 @@ abstraction layers:
 | Node.js | `blessed` / `ink` | No — virtual screens only |
 | Perl | `Term::ReadLine` / `Curses` | No |
 | Tcl | `Expect` / ANSI escapes | No |
-| **Eagle** | **`host screen`** | **Yes — native Win32 screen buffer stack** |
+| **Eagle** | **`[host screen]`** | **Yes — native Win32 screen buffer stack** |
 
-Eagle's `host screen` sub-commands call the Win32 API directly:
+Eagle's `[host screen]` sub-commands call the Win32 API directly:
 - `CreateConsoleScreenBuffer()` creates a new independent screen buffer
   with its own character grid, attributes, and cursor position
 - `SetConsoleActiveScreenBuffer()` makes a buffer visible
@@ -495,7 +495,7 @@ synchronized data structures:
 |----------|------|---------|
 | `screenBuffers` | `IntPtrDictionary` (name → handle) | All created screen buffers |
 | `activeScreenNames` | `Stack<string>` | Push/pop history for buffer switching |
-| `savedActiveScreenName` | `string` | Currently active buffer name |
+| `savedActiveScreenName` | `[string]` | Currently active buffer name |
 | `outputHandle` | `IntPtr` | Primary (original) console output handle |
 
 All access is synchronized via `lock (syncRoot)`.
@@ -608,10 +608,10 @@ host screen peek               ;# Returns top-of-stack name
 
 Screen buffers are integrated with the console lifecycle:
 
-- **On `host open`** — `MaybeChangeToNewActiveScreenBuffer()` is called
+- **On `[host open]`** — `MaybeChangeToNewActiveScreenBuffer()` is called
   if `HostCreateFlags` includes `PushConsole`, creating and activating a
   fresh screen buffer
-- **On `host close`** — `NativeConsole.Close()` calls `FreeConsole()`,
+- **On `[host close]`** — `NativeConsole.Close()` calls `FreeConsole()`,
   then `ResetScreenBuffers()` and `ResetActiveScreenNames()` to clean up
   all state
 - **On process exit** — `CleanupScreenBuffers()` iterates all entries in
@@ -641,14 +641,14 @@ These sub-commands control the host's operational state.
 
 | Sub-command | Purpose | Interface | Key safety checks |
 |-------------|---------|-----------|-------------------|
-| `host open` | Open host for interaction | `IHost` | `CheckDisposed()` |
-| `host close` | Close host and release resources | `IHost` | `CheckDisposed()`, kiosk lock, `CheckActiveReadsAndWrites()` |
-| `host isopen` | Query if host is open/ready | `IInteractiveHost` | None beyond host null check |
+| `[host open]` | Open host for interaction | `IHost` | `CheckDisposed()` |
+| `[host close]` | Close host and release resources | `IHost` | `CheckDisposed()`, kiosk lock, `CheckActiveReadsAndWrites()` |
+| `[host isopen]` | Query if host is open/ready | `IInteractiveHost` | None beyond host null check |
 | `host reset ?options?` | Reset host components to default | `IHost` | Deep nesting prevents partial resets |
-| `host flags` | Return host capability flags | `IInteractiveHost` | None |
-| `host query` | Query host internal state | `IHost` | Requires `HostFlags.QueryState` capability |
+| `[host flags]` | Return host capability flags | `IInteractiveHost` | None |
+| `[host query]` | Query host internal state | `IHost` | Requires `HostFlags.QueryState` capability |
 
-**`host reset` options:**
+**`[host reset]` options:**
 
 | Option | Component reset |
 |--------|----------------|
@@ -677,12 +677,12 @@ host reset -colors -position       ;# Reset specific components
 
 | Sub-command | Purpose | Interface |
 |-------------|---------|-----------|
-| `host clear` | Clear the display | `IHost` |
+| `[host clear]` | Clear the display | `IHost` |
 | `host position ?options?` | Get/set cursor position | `IPositionHost` |
 | `host size ?options?` | Get/set window/buffer size | `ISizeHost` |
 | `host title ?title?` | Get/set window title | `IInteractiveHost` |
 
-**`host position` options:**
+**`[host position]` options:**
 
 | Option | Type | Purpose |
 |--------|------|---------|
@@ -691,7 +691,7 @@ host reset -colors -position       ;# Reset specific components
 | `-y` | integer | Absolute Y (row) position |
 | `-rely` | integer | Relative Y offset from current |
 
-**`host size` options:**
+**`[host size]` options:**
 
 | Option | Type | Purpose |
 |--------|------|---------|
@@ -702,7 +702,7 @@ host reset -colors -position       ;# Reset specific components
 | `-relheight` | integer | Relative height offset |
 | `-norestore` | switch | Don't auto-restore on failure |
 
-**Safety feature:** `host size` automatically calls `ResetSize()` to
+**Safety feature:** `[host size]` automatically calls `ResetSize()` to
 roll back if `SetSize()` fails, unless `-norestore` is specified.
 
 The `HostSizeType` enum supports:
@@ -731,7 +731,7 @@ host size -sizetype BufferCurrent  ;# Query buffer size
 | `host boxstyle ?style?` | Get/set box drawing character set | `Default` host |
 | `host outputstyle ?style?` | Get/set output formatting style | `Default` host |
 
-**`host color` options:**
+**`[host color]` options:**
 
 | Option | Type | Purpose |
 |--------|------|---------|
@@ -740,7 +740,7 @@ host size -sizetype BufferCurrent  ;# Query buffer size
 
 Returns the previous color values when setting.
 
-**`host namedcolor` options:**
+**`[host namedcolor]` options:**
 
 | Option | Type | Purpose |
 |--------|------|---------|
@@ -772,10 +772,10 @@ host outputstyle {Boxed, Normal}
 
 | Sub-command | Purpose | Interface |
 |-------------|---------|-----------|
-| `host readchar` | Read single character (integer code) | `IReadHost` |
+| `[host readchar]` | Read single character (integer code) | `IReadHost` |
 | `host readkey ?intercept?` | Read key press (optionally without echo) | `IReadHost` |
 | `host readline ?nullOk?` | Read a line of text | `IInteractiveHost` |
-| `host pause` | Wait for user input | `IInteractiveHost` |
+| `[host pause]` | Wait for user input | `IInteractiveHost` |
 | `host echo ?enabled?` | Get/set input echo mode | `IHost` |
 
 All read operations:
@@ -801,7 +801,7 @@ host echo false                   ;# Disable echo (for passwords)
 | `host beep ?options?` | Produce audible alert | `IHost` |
 | `host result code result ?errorLine?` | Display script result | `IDebugHost` |
 
-**`host writebox` options (extensive):**
+**`[host writebox]` options (extensive):**
 
 | Option | Type | Purpose |
 |--------|------|---------|
@@ -824,7 +824,7 @@ host echo false                   ;# Disable echo (for passwords)
 
 Returns the new cursor position after writing.
 
-**`host beep` options:**
+**`[host beep]` options:**
 
 | Option | Type | Purpose |
 |--------|------|---------|
@@ -850,7 +850,7 @@ host result 0 "Operation complete"
 | `host redirected channel` | Check if channel is redirected | `IStreamHost` |
 | `host mode channel ?mode?` | Get/set channel mode flags | `IHost` |
 
-**`host redirected` behavior:**
+**`[host redirected]` behavior:**
 - Single channel type (Input, Output, Error): returns boolean
 - Multiple channel types (via flags): returns paired key-value list
 
@@ -872,11 +872,11 @@ host mode Output 7                ;# Set mode flags
 | `host sleep milliseconds` | Thread-level sleep | `IThreadHost` | Requires `HostFlags.Sleep` |
 | `host font ?options?` | Get/set console font | N/A (native) | Windows only (`CONSOLE && NATIVE && WINDOWS`) |
 
-**`host sleep` safety check:** Before sleeping, verifies
+**`[host sleep]` safety check:** Before sleeping, verifies
 `HostFlags.Sleep` is set in the host's capability flags. This prevents
 sleep on hosts that don't support it (e.g., non-interactive hosts).
 
-**`host font` options:**
+**`[host font]` options:**
 
 | Option | Type | Purpose |
 |--------|------|---------|
@@ -901,7 +901,7 @@ host font -restore true            ;# Restore saved font
 ## 7. The `HostFlags` Enum
 
 `HostFlags` is a `[Flags]` `ulong` with 60+ values advertising the
-host's capabilities. Scripts can query these via `host flags` to adapt
+host's capabilities. Scripts can query these via `[host flags]` to adapt
 behavior.
 
 ### 7.1 Operational Capabilities
@@ -961,7 +961,7 @@ behavior.
 | `MultipleLineInput` | Supports multi-line input |
 | `AutoFlushHost` | Auto-flush from `WriteCore` |
 | `AutoFlushWriter` | Auto-flush writers |
-| `AutoFlushOutput` | Auto-flush after `puts` |
+| `AutoFlushOutput` | Auto-flush after `[puts]` |
 | `AutoFlushError` | Auto-flush error output |
 | `AdjustColor` | Fine-tune color values |
 | `ReadException` | Exception occurred during read |
@@ -1133,7 +1133,7 @@ host font -restore true
 
 ## 10. Safe Interpreter Restrictions
 
-The `host` command carries `CommandFlags.Unsafe` and is **completely
+The `[host]` command carries `CommandFlags.Unsafe` and is **completely
 unavailable** in safe interpreters. This is appropriate given that the
 command provides:
 
@@ -1150,24 +1150,24 @@ None of these operations are appropriate for sandboxed code.
 
 ## 11. Tcl Comparison
 
-| Feature | Tcl approach | Eagle `host` approach |
+| Feature | Tcl approach | Eagle `[host]` approach |
 |---------|-------------|----------------------|
-| Console output | `puts` | `host write` with color/position control |
-| Console input | `gets stdin` | `host readchar` / `host readkey` / `host readline` |
-| Console clear | ANSI `\033[2J` (manual) | `host clear` |
-| Colors | ANSI escape codes (manual) | `host color` / `host namedcolor` with themes |
-| Cursor position | ANSI escape codes (manual) | `host position` with absolute/relative |
-| Window size | None | `host size` with auto-rollback |
-| Console title | None | `host title` |
-| Box drawing | None | `host writebox` with themes and colors |
-| Screen buffers | None | `host screen` push/pop stack (Win32 native) |
-| Font control | None | `host font` (Windows) |
-| Host lifecycle | Implicit | `host open`/`close`/`isopen` with safety interlocks |
-| Capability query | None | `host flags` returns 60+ flags |
-| Sleep | `after N` (event-loop) | `host sleep` (thread-level, capability-gated) |
-| Channel redirect | `chan configure` | `host inchan`/`outchan`/`errchan` + `host redirected` |
-| Beep | None | `host beep` with frequency/duration |
-| Host state reset | None | `host reset` with per-component granularity |
+| Console output | `[puts]` | `[host write]` with color/position control |
+| Console input | `gets stdin` | `[host readchar]` / `[host readkey]` / `[host readline]` |
+| Console clear | ANSI `\033[2J` (manual) | `[host clear]` |
+| Colors | ANSI escape codes (manual) | `[host color]` / `[host namedcolor]` with themes |
+| Cursor position | ANSI escape codes (manual) | `[host position]` with absolute/relative |
+| Window size | None | `[host size]` with auto-rollback |
+| Console title | None | `[host title]` |
+| Box drawing | None | `[host writebox]` with themes and colors |
+| Screen buffers | None | `[host screen]` push/pop stack (Win32 native) |
+| Font control | None | `[host font]` (Windows) |
+| Host lifecycle | Implicit | `[host open]`/`[close]`/`isopen` with safety interlocks |
+| Capability query | None | `[host flags]` returns 60+ flags |
+| Sleep | `after N` (event-loop) | `[host sleep]` (thread-level, capability-gated) |
+| Channel redirect | `chan configure` | `[host inchan]`/`outchan`/`errchan` + `[host redirected]` |
+| Beep | None | `[host beep]` with frequency/duration |
+| Host state reset | None | `[host reset]` with per-component granularity |
 
 ---
 
@@ -1175,14 +1175,14 @@ None of these operations are appropriate for sandboxed code.
 
 - The command is marked `Unsafe | Critical` — never exposed in safe
   interpreters
-- `host close` has five layers of safety checks to prevent closing during
+- `[host close]` has five layers of safety checks to prevent closing during
   active I/O, in kiosk mode, or when shared across application domains
 - Screen buffer operations manipulate Win32 handles directly — invalid
   handle use could destabilize the process
-- `host font` modifies the console font for the entire console window,
+- `[host font]` modifies the console font for the entire console window,
   affecting all threads
-- `host sleep` is capability-gated via `HostFlags.Sleep` to prevent
+- `[host sleep]` is capability-gated via `HostFlags.Sleep` to prevent
   misuse on non-interactive hosts
-- Stream redirection (`host inchan`/`outchan`/`errchan`) can disconnect
+- Stream redirection (`[host inchan]`/`outchan`/`errchan`) can disconnect
   the interpreter from its expected I/O channels
-- `host exit` can terminate the host application
+- `[host exit]` can terminate the host application

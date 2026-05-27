@@ -76,7 +76,7 @@ This guide covers Eagle's unique capabilities and highest-value patterns. Each s
 <details>
 <summary><strong>appendArgs: The Right Way to Concatenate Strings</strong></summary>
 
-The `appendArgs` library procedure concatenates all its arguments into a single string verbatim. Unlike `concat`, which joins arguments with spaces and treats them as list elements, `appendArgs` performs simple string concatenation without introducing whitespace or altering the structure of values.
+The `appendArgs` library procedure concatenates all its arguments into a single string verbatim. Unlike `[concat]`, which joins arguments with spaces and treats them as list elements, `appendArgs` performs simple string concatenation without introducing whitespace or altering the structure of values.
 
 ```tcl
 # concat can introduce unwanted spaces and treats values as list elements
@@ -120,7 +120,7 @@ Use `appendArgs` whenever you need to join string fragments. It is the idiomatic
 <details>
 <summary><strong>The object Command: Full .NET Access</strong></summary>
 
-The `object` command is Eagle's gateway to the .NET ecosystem. It lets you load assemblies, create objects, call methods, access properties, iterate collections, and manage object lifecycles.
+The `[object]` command is Eagle's gateway to the .NET ecosystem. It lets you load assemblies, create objects, call methods, access properties, iterate collections, and manage object lifecycles.
 
 #### Core Workflow
 
@@ -204,7 +204,7 @@ object search System.Text.StringBuilder
 object types *DataTable*
 ```
 
-- **See also**: [core_language.md](core_language.md#cmd-object) — `object` command reference; [core_examples.md](core_examples.md#ex-object) — object examples
+- **See also**: [core_language.md](core_language.md#cmd-object) — `[object]` command reference; [core_examples.md](core_examples.md#ex-object) — object examples
 
 ---
 
@@ -213,7 +213,7 @@ object types *DataTable*
 <details>
 <summary><strong>Object Lifecycle: try/finally + dispose</strong></summary>
 
-.NET objects that implement `IDisposable` must be cleaned up. The canonical pattern acquires resources inside `try` and uses `[info exists]` in the `finally` block to guard cleanup:
+.NET objects that implement `IDisposable` must be cleaned up. The canonical pattern acquires resources inside `[try]` and uses `[info exists]` in the `finally` block to guard cleanup:
 
 ```tcl
 # Single resource
@@ -249,9 +249,9 @@ try {
 }
 ```
 
-Using `catch` inside `finally` prevents a disposal error from masking the original error.
+Using `[catch]` inside `finally` prevents a disposal error from masking the original error.
 
-- **See also**: [core_language.md](core_language.md#cmd-try) — `try` command; [core_language.md](core_language.md#cmd-object) — `object dispose`
+- **See also**: [core_language.md](core_language.md#cmd-try) — `[try]` command; [core_language.md](core_language.md#cmd-object) — `[object dispose]`
 
 ---
 
@@ -408,7 +408,7 @@ proc secureHelper {x} {; # <<private>> <<fast>>
 <details>
 <summary><strong>Named Arguments with nproc and napply</strong></summary>
 
-Eagle extends Tcl's procedure system with named (keyword) arguments via `nproc` and `napply`.
+Eagle extends Tcl's procedure system with named (keyword) arguments via `[nproc]` and `[napply]`.
 
 #### nproc: Procedures with Named Arguments
 
@@ -435,7 +435,7 @@ napply {{x y} {expr {$x + $y}}} -x 3 -y 4
 
 Named arguments are valuable for procedures with many parameters where positional ordering is hard to remember.
 
-- **See also**: [core_language.md](core_language.md#cmd-nproc) — `nproc`; [core_language.md](core_language.md#cmd-napply) — `napply`
+- **See also**: [core_language.md](core_language.md#cmd-nproc) — `[nproc]`; [core_language.md](core_language.md#cmd-napply) — `[napply]`
 
 ---
 
@@ -444,7 +444,7 @@ Named arguments are valuable for procedures with many parameters where positiona
 <details>
 <summary><strong>Persistent State with scope</strong></summary>
 
-The `scope` command creates persistent variable environments that survive across procedure calls. This enables stateful procedures without using global variables.
+The `[scope]` command creates persistent variable environments that survive across procedure calls. This enables stateful procedures without using global variables.
 
 #### Counter Example
 
@@ -464,7 +464,7 @@ scope destroy myCounter
 ```
 
 How it works:
-- `scope create` creates a named scope (or reuses it if it already exists).
+- `[scope create]` creates a named scope (or reuses it if it already exists).
 - `-open` pushes the scope onto the call stack so its variables are accessible.
 - `-clone` copies the current frame's variables into the scope on first creation.
 - `-args` copies the procedure's arguments into the scope.
@@ -505,7 +505,7 @@ accumulate 5    ;# Returns: 35
 
 The `-procedure` option auto-generates the scope name from the enclosing procedure, so each procedure gets its own persistent state.
 
-- **See also**: [core_language.md](core_language.md#cmd-scope) — `scope` command; [core_examples.md](core_examples.md#ex-scope) — scope examples; [scope.md](scope.md) — deep-dive analysis
+- **See also**: [core_language.md](core_language.md#cmd-scope) — `[scope]` command; [core_examples.md](core_examples.md#ex-scope) — scope examples; [scope.md](scope.md) — deep-dive analysis
 
 ---
 
@@ -516,7 +516,7 @@ The `-procedure` option auto-generates the scope name from the enclosing procedu
 <details>
 <summary><strong>do: Do-While and Do-Until Loops</strong></summary>
 
-Eagle adds the `do` loop, which executes the body at least once before testing the condition. This is not available in standard Tcl.
+Eagle adds the `[do]` loop, which executes the body at least once before testing the condition. This is not available in standard Tcl.
 
 #### do ... while
 
@@ -542,9 +542,9 @@ do {
 ;# j is 5
 ```
 
-`break` and `continue` work as expected inside `do` loops.
+`[break]` and `[continue]` work as expected inside `[do]` loops.
 
-- **See also**: [core_language.md](core_language.md#cmd-do) — `do` command; [core_examples.md](core_examples.md#ex-do) — do examples
+- **See also**: [core_language.md](core_language.md#cmd-do) — `[do]` command; [core_examples.md](core_examples.md#ex-do) — do examples
 
 ---
 
@@ -553,7 +553,7 @@ do {
 <details>
 <summary><strong>try/finally: Guaranteed Cleanup</strong></summary>
 
-Eagle's `try`/`finally` guarantees the finally block runs even if the try block executes `return`, `break`, `continue`, or raises an error:
+Eagle's `[try]`/`finally` guarantees the finally block runs even if the try block executes `[return]`, `[break]`, `[continue]`, or raises an error:
 
 ```tcl
 proc readFirstLine {filename} {
@@ -569,7 +569,7 @@ proc readFirstLine {filename} {
 }
 ```
 
-The finally block executes after the `return` but before the value is returned to the caller, ensuring `close` always runs. This is the standard pattern for resource cleanup in Eagle.
+The finally block executes after the `[return]` but before the value is returned to the caller, ensuring `[close]` always runs. This is the standard pattern for resource cleanup in Eagle.
 
 ```tcl
 # Error handling with guaranteed cleanup
@@ -590,7 +590,7 @@ try {
 # fh is closed and tempFile deleted even though error occurred
 ```
 
-- **See also**: [core_language.md](core_language.md#cmd-try) — `try` command; [core_examples.md](core_examples.md#ex-try) — try examples
+- **See also**: [core_language.md](core_language.md#cmd-try) — `[try]` command; [core_examples.md](core_examples.md#ex-try) — try examples
 
 ---
 
@@ -601,7 +601,7 @@ try {
 <details>
 <summary><strong>lget: Deep Nested List Access</strong></summary>
 
-`lget` combines variable lookup with list indexing in a single operation. Multiple indices navigate nested lists:
+`[lget]` combines variable lookup with list indexing in a single operation. Multiple indices navigate nested lists:
 
 ```tcl
 set data {{a b} {c d} {e f}}
@@ -616,7 +616,7 @@ lget matrix end end     ;# Returns: {g h i}
 
 This is more concise than `lindex [set data] 1 0` and operates directly on the variable.
 
-- **See also**: [core_language.md](core_language.md#cmd-lget) — `lget` command
+- **See also**: [core_language.md](core_language.md#cmd-lget) — `[lget]` command
 
 ---
 
@@ -625,7 +625,7 @@ This is more concise than `lindex [set data] 1 0` and operates directly on the v
 <details>
 <summary><strong>lmap: Functional List Transformation</strong></summary>
 
-`lmap` works like `foreach` but collects the result of each iteration into a new list. Use `continue` to skip (filter out) elements:
+`[lmap]` works like `[foreach]` but collects the result of each iteration into a new list. Use `[continue]` to skip (filter out) elements:
 
 ```tcl
 # Transform: double each element
@@ -646,7 +646,7 @@ set formatted [lmap {k v} $pairs {
 ;# Returns: {a=1 b=2 c=3}
 ```
 
-- **See also**: [core_language.md](core_language.md#cmd-lmap) — `lmap` command; [core_examples.md](core_examples.md#ex-lmap) — lmap examples
+- **See also**: [core_language.md](core_language.md#cmd-lmap) — `[lmap]` command; [core_examples.md](core_examples.md#ex-lmap) — lmap examples
 
 ---
 
@@ -655,7 +655,7 @@ set formatted [lmap {k v} $pairs {
 <details>
 <summary><strong>lremove: Remove Elements by Index</strong></summary>
 
-`lremove` removes an element at a given index. Multiple indices perform
+`[lremove]` removes an element at a given index. Multiple indices perform
 nested-path removal, where each successive index drills into the sublist
 selected by the previous index:
 
@@ -668,7 +668,7 @@ lremove {{a b c} {d e f}} 1 0
 ;# Returns: {{a b c} {e f}}
 ```
 
-- **See also**: [core_language.md](core_language.md#cmd-lremove) — `lremove` command
+- **See also**: [core_language.md](core_language.md#cmd-lremove) — `[lremove]` command
 
 ---
 
@@ -790,7 +790,7 @@ expr {epsilon()}            ;# Machine epsilon
 <details>
 <summary><strong>base64: Built-in Base64 Encoding</strong></summary>
 
-Eagle includes a native `base64` command for encoding and decoding:
+Eagle includes a native `[base64]` command for encoding and decoding:
 
 ```tcl
 base64 encode "Hello, World!"
@@ -810,7 +810,7 @@ expr {$original eq $decoded}
 base64 encode -encoding utf-8 Hello
 ```
 
-- **See also**: [core_language.md](core_language.md#cmd-base64) — `base64` command
+- **See also**: [core_language.md](core_language.md#cmd-base64) — `[base64]` command
 
 ---
 
@@ -819,7 +819,7 @@ base64 encode -encoding utf-8 Hello
 <details>
 <summary><strong>hash: Cryptographic Hashing</strong></summary>
 
-The `hash` command provides access to .NET's cryptographic hash algorithms:
+The `[hash]` command provides access to .NET's cryptographic hash algorithms:
 
 ```tcl
 # SHA-256
@@ -840,7 +840,7 @@ hash list normal
 ;# Only non-keyed algorithms
 ```
 
-- **See also**: [core_language.md](core_language.md#cmd-hash) — `hash` command
+- **See also**: [core_language.md](core_language.md#cmd-hash) — `[hash]` command
 
 ---
 
@@ -867,7 +867,7 @@ guid compare $a $a            ;# Returns: 0
 guid compare $a $b            ;# Returns: -1 or 1
 ```
 
-- **See also**: [core_language.md](core_language.md#cmd-guid) — `guid` command
+- **See also**: [core_language.md](core_language.md#cmd-guid) — `[guid]` command
 
 ---
 
@@ -878,7 +878,7 @@ guid compare $a $b            ;# Returns: -1 or 1
 <details>
 <summary><strong>uri: URI Parsing and Construction</strong></summary>
 
-The `uri` command provides URI handling and HTTP client functionality:
+The `[uri]` command provides URI handling and HTTP client functionality:
 
 ```tcl
 # Parse a URI into components
@@ -909,7 +909,7 @@ uri ping example.com 5000
 ;# Returns: 1 if reachable
 ```
 
-- **See also**: [`uri.md`](uri.md) — Deep-dive analysis; [core_language.md](core_language.md#cmd-uri) — `uri` command; [core_examples.md](core_examples.md#ex-uri) — uri examples
+- **See also**: [`uri.md`](uri.md) — Deep-dive analysis; [core_language.md](core_language.md#cmd-uri) — `[uri]` command; [core_examples.md](core_examples.md#ex-uri) — uri examples
 
 ---
 
@@ -918,7 +918,7 @@ uri ping example.com 5000
 <details>
 <summary><strong>sql: ADO.NET Database Access</strong></summary>
 
-The `sql` command provides database access through ADO.NET:
+The `[sql]` command provides database access through ADO.NET:
 
 #### Connection and Queries
 
@@ -966,7 +966,7 @@ try {
 
 Always use parameterized queries with `{name type value}` argument lists to prevent SQL injection.
 
-- **See also**: [core_language.md](core_language.md#cmd-sql) — `sql` command; [core_examples.md](core_examples.md#ex-sql) — sql examples
+- **See also**: [core_language.md](core_language.md#cmd-sql) — `[sql]` command; [core_examples.md](core_examples.md#ex-sql) — sql examples
 
 ---
 
@@ -975,7 +975,7 @@ Always use parameterized queries with `{name type value}` argument lists to prev
 <details>
 <summary><strong>xml: XML Serialization</strong></summary>
 
-The `xml` command handles XML serialization, deserialization, and validation:
+The `[xml]` command handles XML serialization, deserialization, and validation:
 
 ```tcl
 # Serialize a .NET object to XML
@@ -995,7 +995,7 @@ xml validate $schemaXml $documentXml
 ;# Returns: 1 if valid
 ```
 
-- **See also**: [core_language.md](core_language.md#cmd-xml) — `xml` command; [core_examples.md](core_examples.md#ex-xml) — xml examples
+- **See also**: [core_language.md](core_language.md#cmd-xml) — `[xml]` command; [core_examples.md](core_examples.md#ex-xml) — xml examples
 
 ---
 
@@ -1003,7 +1003,7 @@ xml validate $schemaXml $documentXml
 
 ## Regular Expression Enhancements
 
-Eagle extends Tcl's `regexp` and `regsub` commands with several .NET-powered options.
+Eagle extends Tcl's `[regexp]` and `[regsub]` commands with several .NET-powered options.
 
 <details>
 <summary><strong>-compiled: Precompiled Regexes</strong></summary>
@@ -1021,7 +1021,7 @@ Use this when matching the same pattern against many strings in a loop.
 <details>
 <summary><strong>-command and -eval: Programmatic Replacement</strong></summary>
 
-`regsub` supports `-command` and `-eval` modes for dynamic replacement logic:
+`[regsub]` supports `-command` and `-eval` modes for dynamic replacement logic:
 
 ```tcl
 # -eval: evaluate the replacement as a script
@@ -1055,7 +1055,7 @@ Additional Eagle-specific switches:
 | `-limit n` | Limit number of matches |
 | `-skip n` | Skip first n capture groups |
 
-- **See also**: [`regexp.md`](regexp.md) — Deep-dive analysis; [core_language.md](core_language.md#cmd-regexp) — `regexp` command; [core_examples.md](core_examples.md#ex-regexp) — regexp examples
+- **See also**: [`regexp.md`](regexp.md) — Deep-dive analysis; [core_language.md](core_language.md#cmd-regexp) — `[regexp]` command; [core_examples.md](core_examples.md#ex-regexp) — regexp examples
 
 ---
 
@@ -1115,7 +1115,7 @@ interp hidden $safe              ;# List hidden commands
 interp invokehidden $safe source trusted_script.tcl
 ```
 
-- **See also**: [core_language.md](core_language.md#cmd-interp) — `interp` command; [core_examples.md](core_examples.md#ex-interp) — interp examples
+- **See also**: [core_language.md](core_language.md#cmd-interp) — `[interp]` command; [core_examples.md](core_examples.md#ex-interp) — interp examples
 
 ---
 
@@ -1284,7 +1284,7 @@ debug run {
 }
 ```
 
-- **See also**: [core_language.md](core_language.md#cmd-debug) — `debug` command; [core_examples.md](core_examples.md#ex-debug) — debug examples
+- **See also**: [core_language.md](core_language.md#cmd-debug) — `[debug]` command; [core_examples.md](core_examples.md#ex-debug) — debug examples
 
 ---
 
@@ -1326,7 +1326,7 @@ These procedures return non-zero if the condition is true, zero otherwise.
 <details>
 <summary><strong>Dictionary Operations: dict and getDictionaryValue</strong></summary>
 
-Eagle provides the `dict` command for full dictionary support, compatible with Tcl 8.6:
+Eagle provides the `[dict]` command for full dictionary support, compatible with Tcl 8.6:
 
 ```tcl
 set d [dict create name Alice age 30 city Boston]
@@ -1347,7 +1347,7 @@ getDictionaryValue $data country unknown
 ;# Returns: unknown (default when key not found)
 ```
 
-- **See also**: [core_language.md](core_language.md#cmd-dict) — `dict` command reference; [core_script_library.md](core_script_library.md) — `getDictionaryValue` in Auxiliary Utilities
+- **See also**: [core_language.md](core_language.md#cmd-dict) — `[dict]` command reference; [core_script_library.md](core_script_library.md) — `getDictionaryValue` in Auxiliary Utilities
 
 ---
 
@@ -1545,7 +1545,7 @@ apply {{path expected} {
 <details>
 <summary><strong>Regex-Powered Text Transforms</strong></summary>
 
-Eagle's `regsub` has three replacement modes — the `-command` and `-eval`
+Eagle's `[regsub]` has three replacement modes — the `-command` and `-eval`
 modes are unique and eliminate the need for multi-step pipelines.
 
 ```tcl

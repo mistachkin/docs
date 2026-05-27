@@ -76,12 +76,12 @@ network socket.
 ### Source Locations
 
 All public interfaces reside in:
-```
+```tcl
 Library/Interfaces/Public/
 ```
 
 The reference implementation class hierarchy resides in:
-```
+```tcl
 Library/Hosts/
 ```
 
@@ -89,7 +89,7 @@ Library/Hosts/
 
 ## 2. Interface Hierarchy
 
-```
+```tcl
 IIdentifier
   |
   +-- IInteractiveHost                    [foundational]
@@ -151,7 +151,7 @@ interactive loop:
 - `levels` — the current count of active (nested) interactive loops.
 - `text` — the script text about to be (or just) evaluated; passed by ref
   so the host can modify it.
-- `error` — set to a descriptive error message if returning non-Ok.
+- `[error]` — set to a descriptive error message if returning non-Ok.
 
 **Semantics for a minimal host:** Return `ReturnCode.Ok` and leave `text`
 unchanged.  The reference implementation (`Default`) does exactly this.
@@ -663,7 +663,7 @@ bool WriteBox(string name, StringPairList list, IClientData clientData,
 
 **Parameters:**
 - `name` — logical name of the box (e.g., "DebuggerInfo", "HostInfo").
-- `value` or `list` — content to display inside the box.
+- `value` or `[list]` — content to display inside the box.
 - `restore` — if true, restore the cursor position after drawing.
 - `left`, `top` — (in/out) cursor position tracking for layout.
 - `minimumLength` — minimum width of the box content area.
@@ -993,7 +993,7 @@ Manages the interactive loop callback registration on the interpreter.
 The reference implementation in `Library/Hosts/` uses a layered abstract base
 class design.  Each layer adds specific capabilities:
 
-```
+```tcl
 Default (abstract, ~11,500 lines)
   |  Base implementation of all IHost interface members.
   |  Box drawing, color theme, section management, output formatting.
@@ -1082,7 +1082,7 @@ and `PrivateInteractiveLoop`, approximately lines 95875-97488)
 
 ### 20.1 Entry Point
 
-```
+```tcl
 Interpreter.InteractiveLoop(IInteractiveLoopData loopData)
   -> Pushes interpreter onto global active stack
   -> Manages global interactive loop levels
@@ -1117,7 +1117,7 @@ If in debug mode:
 
 ### 20.5 Main REPL Loop
 
-```
+```tcl
 while (!IsInteractiveLoopDone(interpreter, done)):
 
     1. TRACK iteration count.
@@ -1255,7 +1255,7 @@ files and their base names:
 
 | Base Name | Resource File | Contains |
 |-----------|--------------|----------|
-| `library` | `library.resources` | Core library scripts (`init.eagle`, etc.) |
+| `[library]` | `library.resources` | Core library scripts (`init.eagle`, etc.) |
 | `packages` | `packages.resources` | Core script packages (`pkgIndex.eagle`, etc.) |
 | `kit` | `kit.resources` | Kit packages |
 | `application` | `application.resources` | Vendor/application packages |
@@ -1367,7 +1367,7 @@ for ListOps, HashOps, ProcessOps, ThreadOps, etc.
 
 Controls behavior of `IThreadHost.QueueWorkItem()`:
 
-```
+```tcl
 None           = 0x0     // No special behavior
 Invalid        = 0x1     // Do not use
 Asynchronous   = 0x10    // For test use only
@@ -1399,7 +1399,7 @@ indicates the source of a successfully resolved resource.
 
 ### 22.7 PromptType
 
-```
+```tcl
 Invalid = -1    // Do not use
 None    =  0    // No prompt
 Start   =  1    // Initial input prompt (e.g., "% ")
@@ -1408,7 +1408,7 @@ Continue =  2   // Continuation prompt (e.g., "> ")
 
 ### 22.8 PromptFlags
 
-```
+```tcl
 Debug        // Prompt is for the interactive debugger
 Queue        // Prompt is for queued (async) input mode
 CommandCount // Show total interactive command count in prompt
@@ -1668,7 +1668,7 @@ The `Cancel()` method should trigger this mechanism.
 **4. Box Drawing Character Selection:**
 On Linux terminals with UTF-8 support, use the Unicode box-drawing characters:
 
-```
+```tcl
 ┌ (U+250C)  ─ (U+2500)  ┐ (U+2510)
 │ (U+2502)               │ (U+2502)
 └ (U+2514)  ─ (U+2500)  ┘ (U+2518)
@@ -1720,7 +1720,7 @@ interpreter will fail to initialize.  The critical scripts are:
 - Return `true` from I/O methods to indicate success.
 - Return `false` to indicate failure or "not supported" — never throw.
 - Return `ReturnCode.Ok` from lifecycle methods for success.
-- Return `ReturnCode.Error` with a descriptive `error` message for failures.
+- Return `ReturnCode.Error` with a descriptive `[error]` message for failures.
 
 **9. Disposal:**
 Implement `IDisposable` and clean up TUI resources.  The reference
@@ -1738,7 +1738,7 @@ initialized by `Default.InitializeBoxCharacterSets()`.  The character set is
 selected based on the output encoding's ability to encode the characters.
 
 **Unicode character set (preferred on Linux/UTF-8):**
-```
+```tcl
 Index 0: TopLeft      '┌' (U+250C)
 Index 1: Horizontal   '─' (U+2500)
 Index 2: TopRight     '┐' (U+2510)
@@ -1748,7 +1748,7 @@ Index 5: BottomRight  '┘' (U+2518)
 ```
 
 **Fallback (ASCII):**
-```
+```tcl
 +---+
 |   |
 +---+
@@ -1958,7 +1958,7 @@ The Window host bridges the WPF window system with Eagle's stream-based I/O
 model using `HostStream` adapter objects.  Each stream wraps a window
 reference and presents it as a standard `System.IO.Stream`:
 
-```
+```tcl
 Input stream  = new HostStream(inputWindow,  readable: true,  writable: false)
 Output stream = new HostStream(outputWindow, readable: false, writable: true)
 Error stream  = new HostStream(errorWindow,  readable: false, writable: true)
@@ -1995,7 +1995,7 @@ continues cleanup even if individual disposals throw exceptions.
 The Window host advertises its capabilities via `GetHostFlags()`, which
 returns a lazily-initialized bitmask combining:
 
-```
+```tcl
 HostFlags.ForcePrompt         // Always display prompt (no terminal detection)
 HostFlags.Graphical           // Identifies as a WPF-based graphical host
 HostFlags.UnlimitedSize       // No inherent size constraints on windows
@@ -2245,7 +2245,7 @@ throughout.
 **Fields protected by the lock:**
 - Window registry (`windows` dictionary)
 - All window references (`interactiveWindow`, `boxWindow`)
-- All stream references (`input`, `output`, `error`)
+- All stream references (`input`, `output`, `[error]`)
 - Configuration state (`windowId`, `inputWindowType`, `outputWindowType`,
   `createOutput`, `traceToHost`, `newLine`)
 - Event handlers (`openedHandler`, `closedHandler`)
@@ -2312,7 +2312,7 @@ the shutdown sequence.
   Returns false if the dictionary was null.
 
 **Lifecycle diagram:**
-```
+```tcl
 CreateWindow() → AddOrUpdateWindow() → window.ShowDialog()
                                                  |
                                          [window closes]
@@ -2430,7 +2430,7 @@ The Featherlight window system is built on a layered interface hierarchy
 that separates concerns between identification, events, stream I/O,
 management, registration, and factory creation:
 
-```
+```tcl
 IHostWindowIdentifier          [WindowId, WindowName, WindowType]
 IHostEventManager              [OpenedHandler, ClosedHandler]
 
@@ -2496,7 +2496,7 @@ The core I/O mechanism uses three `ManualResetEvent` objects to coordinate
 between the interpreter thread (which calls `ReadLine()` / `ReadKey()`) and
 the WPF UI thread (which handles keyboard events):
 
-```
+```tcl
 keyEvent    — signaled when a key press is available
 lineEvent   — signaled when a complete input line is ready
 cancelEvent — signaled when the user requests cancellation
@@ -2504,7 +2504,7 @@ cancelEvent — signaled when the user requests cancellation
 
 **Blocking read pattern:**
 
-```
+```tcl
 ReadLine():
   1. Activate the window (bring to foreground)
   2. Call WaitReadLine():
@@ -2534,7 +2534,7 @@ method provides the core text-append logic:
 - **Line ending normalization:** All text passes through `MaybeMutateValue()`,
   which detects CR/LF characters and normalizes them via
   `Utility.NormalizeLineEndings()`.
-- **Auto-scroll:** When `flush` is true (or `autoFlush` is enabled), the
+- **Auto-scroll:** When `[flush]` is true (or `autoFlush` is enabled), the
   method selects the end of the text and calls `ScrollToEnd()`, ensuring
   new output is always visible.
 
@@ -2573,7 +2573,7 @@ private static WindowPosition nextWindowPosition = WindowPosition.First;
 The `GetNextWindowPosition()` method cycles through the nine named positions
 defined in the `WindowPosition` enum:
 
-```
+```tcl
 TopLeft → TopCenter → TopRight → MiddleLeft → MiddleRight →
 BottomLeft → BottomCenter → BottomRight → (wrap to TopLeft)
 ```
@@ -2622,7 +2622,7 @@ providing a full interactive REPL with IDE-like usability features.
 
 #### E.3.1 XAML Layout
 
-```
+```tcl
 Window (500x400 minimum, centered)
 └── Grid (2 columns, 4 rows, background: #485D7C)
     ├── Row 0: TextBox "txtOutput" (read-only, Courier New 14px, #485D7C)
@@ -2647,14 +2647,14 @@ in the `txtInput_KeyDown` handler (~600 lines).  It supports five distinct
 completion contexts:
 
 **1. Interactive commands** (when input starts with `#`):
-```
+```tcl
 #<pattern>  →  matches Eagle interactive commands (e.g., #show, #check)
 ```
 Uses `CommonOps.GetMatchingInteractiveCommands()` with glob pattern matching.
 Only available when compiled with `SHELL` and `INTERACTIVE_COMMANDS`.
 
 **2. Commands, procedures, and IExecute objects** (single argument):
-```
+```tcl
 <pattern>  →  matches commands, procedures, and IExecute implementations
 ```
 Searches three namespaces in order:
@@ -2663,7 +2663,7 @@ Searches three namespaces in order:
 - `interpreter.ListIExecutes()` — IExecute implementations
 
 **3. Sub-commands and expression functions** (two arguments):
-```
+```tcl
 <command> <pattern>  →  matches sub-commands of the given command
 expr <pattern>       →  matches expression functions (sin, cos, etc.)
 ```
@@ -2671,7 +2671,7 @@ Uses `CommonOps.IsSubCommand()` for sub-command matching, which searches
 the command's `EnsembleDictionary` with glob pattern support.
 
 **4. Type names** (three arguments with object commands):
-```
+```tcl
 object <subcommand> <type-pattern>  →  matches .NET type names
 ```
 Uses `CommonOps.GetMatchingTypes()`, which searches all loaded assemblies
@@ -2680,7 +2680,7 @@ via `staticSyncRoot`).  Matches against both short names and fully-qualified
 names.
 
 **5. Type members** (four arguments with object commands):
-```
+```tcl
 object <subcommand> <type> <member-pattern>  →  matches type members
 ```
 Uses `CommonOps.GetMatchingMembers()`, which reflects on the resolved type
@@ -2887,8 +2887,8 @@ These methods power the tab-completion engine:
 | `IsSubCommand(interpreter, name, subName, ...)` | Search a command's `EnsembleDictionary` for matching sub-commands |
 | `IsProcedure(interpreter, name, ...)` | Check if a name matches a defined procedure |
 | `IsInteractiveCommand(interpreter, name, ...)` | Match interactive commands (when `INTERACTIVE_COMMANDS` defined) |
-| `IsExpressionCommand(interpreter, name)` | Check if a command is `expr` |
-| `IsObjectCommand(interpreter, name)` | Check if a command is `object` |
+| `IsExpressionCommand(interpreter, name)` | Check if a command is `[expr]` |
+| `IsObjectCommand(interpreter, name)` | Check if a command is `[object]` |
 | `ExpandArgument(interpreter, name, ...)` | Expand variables, wildcards, and `#` prefixes |
 | `GetMatchingTypes(interpreter, pattern, ...)` | Find .NET types matching a glob pattern (cached) |
 | `GetMatchingMembers(interpreter, type, pattern, ...)` | Find type members matching a pattern |
@@ -2962,7 +2962,7 @@ rather than locks, for higher performance and simpler semantics:
 The `BaseWindow` I/O model uses `ManualResetEvent` objects for cross-thread
 coordination:
 
-```
+```tcl
 Interpreter Thread                UI Thread
       |                               |
       |  ReadLine()                   |
@@ -3031,7 +3031,7 @@ registrar lock (e.g., during a coordinated multi-window shutdown).
 
 #### E.7.1 WindowPosition Enum
 
-```
+```tcl
 None = 0x0         (no positioning)
 Automatic = 0x2    (next in cascade sequence)
 TopLeft = 0x4      TopCenter = 0x8      TopRight = 0x10
@@ -3201,7 +3201,7 @@ pre-recorded scripts.
 
 The Demo plugin consists of three main components working together:
 
-```
+```tcl
  Demo  (Plugin)               Demo (Host)                Demo (Command)
   |                            |                          |
   | Initialize():              | ReadLine():              | startup:
@@ -3296,7 +3296,7 @@ These are combined with all base `Console` host flags.
 
 The `ReadLine()` override is the heart of the playback system:
 
-```
+```tcl
 ReadLine():
   1. Check PlayInput (TextReader)
      |

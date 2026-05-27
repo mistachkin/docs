@@ -1,6 +1,6 @@
 # Eagle `[scope]` Command: Deep-Dive Analysis of Persistent Variable Environments
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `scope` command internals. For basic command syntax and options, see [`core_language.md`](core_language.md#cmd-scope). For usage examples, see [`core_examples.md`](core_examples.md#ex-scope). For tips and patterns, see [`tips_and_tricks.md`](tips_and_tricks.md#persistent-state-with-scope).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `[scope]` command internals. For basic command syntax and options, see [`core_language.md`](core_language.md#cmd-scope). For usage examples, see [`core_examples.md`](core_examples.md#ex-scope). For tips and patterns, see [`tips_and_tricks.md`](tips_and_tricks.md#persistent-state-with-scope).
 
 ## 1. Executive Summary
 
@@ -12,8 +12,8 @@ destroyed — all under explicit script control.
 
 This is a concept **unique to Eagle**. Native Tcl has no equivalent command.
 Tcl procedures get a fresh local frame on every call; when the procedure
-returns, that frame is destroyed. Tcl provides `global`, `upvar`, and
-`variable` to reach variables in other frames, but it has no mechanism to
+returns, that frame is destroyed. Tcl provides `[global]`, `[upvar]`, and
+`[variable]` to reach variables in other frames, but it has no mechanism to
 name a frame, preserve it across calls, and push it back later. Eagle's
 `[scope]` fills that gap.
 
@@ -37,7 +37,7 @@ times, and its variables accumulate state across those uses.
 **Command flags:** `Safe | NonStandard` — the command is available in safe
 interpreters and is explicitly marked as a non-standard Eagle extension.
 
-**Object group:** `variable` — classified alongside other variable-management
+**Object group:** `[variable]` — classified alongside other variable-management
 commands.
 
 ## 2. Why Scopes Exist: The Problem They Solve
@@ -49,9 +49,9 @@ creates a fresh variable frame; when the procedure returns, that frame is
 destroyed. If you want state to persist across calls, your options are:
 
 1. **Global variables** — work but pollute the global namespace.
-2. **Namespace variables** — better isolation but still require `variable`
+2. **Namespace variables** — better isolation but still require `[variable]`
    declarations and are visible to any code in the namespace.
-3. **`upvar` to a caller's frame** — ties the callee to the caller's variable
+3. **`[upvar]` to a caller's frame** — ties the callee to the caller's variable
    naming, creating fragile coupling.
 4. **Object-oriented extensions** (TclOO, Itcl) — heavyweight for simple state.
 
@@ -64,7 +64,7 @@ A scope is a **named, private variable environment** that:
 
 - Persists independently of the call stack.
 - Can be opened (pushed) by any procedure that knows its name.
-- Provides local-variable semantics while open (no `variable` or `global`
+- Provides local-variable semantics while open (no `[variable]` or `[global]`
   declarations needed).
 - Can be cloned from existing state, locked for thread safety, or attached to
   namespaces.
@@ -76,14 +76,14 @@ This makes scopes ideal for:
 - **Coroutine-like patterns** where a procedure resumes from where it left off.
 - **Per-procedure private state** via the `-procedure` auto-naming option.
 - **Thread-safe shared state** via locking.
-- **Sandboxed global environments** via `scope global`.
+- **Sandboxed global environments** via `[scope global]`.
 - **Variable exchange with namespaces** via attach/detach/export/import.
 
 ## 3. The Scope Lifecycle
 
 A scope progresses through four phases:
 
-```
+```tcl
   create --> open (push) --> use (read/write variables) --> close (pop) --> destroy
     |             |                                              |              |
     |             +---- can be repeated any number of times -----+              |
@@ -91,7 +91,7 @@ A scope progresses through four phases:
     +-------------- scope persists across open/close cycles --------------------+
 ```
 
-### Phase 1: Create (`scope create`)
+### Phase 1: Create (`[scope create]`)
 
 Creates a named call frame with `CallFrameFlags.Scope` (0x2000) and registers
 it in the interpreter's scope dictionary. The frame gets its own empty (or
@@ -106,7 +106,7 @@ cloned) `VariableDictionary`. Key behaviors:
 - The interpreter enforces a **scope limit** (`ScopeLimit` property): 50 in
   safe interpreters, unlimited in unsafe interpreters.
 
-### Phase 2: Open (`scope open` or `scope create -open`)
+### Phase 2: Open (`[scope open]` or `scope create -open`)
 
 Pushes the scope's call frame onto the interpreter's call stack via
 `PushCallFrame()`. This makes the scope's variables accessible as local
@@ -120,14 +120,14 @@ variables. Each open:
 ### Phase 3: Use
 
 While a scope is open, its variables behave like ordinary local variables.
-`set`, `unset`, `info exists`, `incr`, `append`, `lappend`, `array`, and all
+`[set]`, `[unset]`, `[info exists]`, `[incr]`, `[append]`, `[lappend]`, `[array]`, and all
 other variable commands work directly on the scope's variable dictionary.
 
-Variables can also be accessed **without opening** the scope, via `scope set`,
-`scope unset`, and `scope vars`. This is useful for inspection or
+Variables can also be accessed **without opening** the scope, via `[scope set]`,
+`[scope unset]`, and `[scope vars]`. This is useful for inspection or
 configuration outside the scope's execution context.
 
-### Phase 4: Close (`scope close` or implicit on procedure return)
+### Phase 4: Close (`[scope close]` or implicit on procedure return)
 
 Pops the scope's call frame from the call stack. The scope and its variables
 continue to exist — only the stack position is removed. Key behaviors:
@@ -139,7 +139,7 @@ continue to exist — only the stack position is removed. Key behaviors:
   frames that were opened within that procedure. This is the safety net that
   prevents scope leaks on error paths.
 
-### Phase 5: Destroy (`scope destroy`)
+### Phase 5: Destroy (`[scope destroy]`)
 
 Removes the scope from the interpreter's scope dictionary and releases its
 variable dictionary. If the scope is currently open, it is closed first. Any
@@ -257,7 +257,7 @@ Evaluates a script in the context of a named scope.
    during evaluation, then unlocks if locked.
 
 The finally-block cleanup ensures scopes are properly unwound even when
-errors, `return`, `break`, or `continue` interrupt the script.
+errors, `[return]`, `[break]`, or `[continue]` interrupt the script.
 
 ### 4.3 Variable Access Without Opening
 
@@ -287,7 +287,7 @@ Iterates the scope's `VariableDictionary` directly.
 Returns boolean `True` if the named scope exists, `False` otherwise. Calls
 `interpreter.InternalGetScope()` with `LookupFlags.NoVerbose` to avoid side effects.
 
-#### `scope current`
+#### `[scope current]`
 
 Returns the name of the currently open (topmost) scope on the call stack, or
 empty string if no scope is open. Walks the call stack looking for frames
@@ -322,7 +322,7 @@ Releases a previously acquired lock.
 **Implementation:** Calls `frame.Unlock(ref result)` directly on the scope's
 call frame.
 
-The lock/unlock mechanism is distinct from the `-lock` option on `scope eval`.
+The lock/unlock mechanism is distinct from the `-lock` option on `[scope eval]`.
 Manual lock/unlock gives the script fine-grained control over when the lock is
 held, while `scope eval -lock` provides automatic lock management scoped to
 the evaluation.
@@ -403,7 +403,7 @@ its frame reference to the namespace frame.
 #### `scope detach name namespace`
 
 Disassociates a scope's variables from a namespace. Reverses the effect of
-`scope attach`.
+`[scope attach]`.
 
 **Returns:** List of detached variable names.
 
@@ -482,13 +482,13 @@ variables.
 
 ### 5.3 How Scope Open/Close Interacts with the Stack
 
-When `scope open` pushes a scope frame:
+When `[scope open]` pushes a scope frame:
 1. The scope frame becomes the current frame.
 2. `[info level]` increments by 1.
 3. Variable lookups resolve against the scope's variable dictionary.
 4. `[upvar]` and `[uplevel]` can reach frames beneath the scope.
 
-When `scope close` pops a scope frame:
+When `[scope close]` pops a scope frame:
 1. The frame below becomes current again.
 2. `[info level]` decrements by 1.
 3. The scope's variables remain in the scope — they are not destroyed.
@@ -512,11 +512,11 @@ is visible at level +1 when the top frame is closed.
 Eagle's procedure-return code path calls `PopScopeCallFramesAndOneMore()`,
 which pops all frames with `CallFrameFlags.Scope` from the top of the stack,
 plus the procedure's own frame. This guarantees that scopes opened inside a
-procedure are properly closed even on error, `return`, `break`, or `continue`.
+procedure are properly closed even on error, `[return]`, `[break]`, or `[continue]`.
 
 The key code path:
 1. Procedure call pushes a `Procedure` frame.
-2. Script inside the procedure calls `scope open`, pushing a `Scope` frame.
+2. Script inside the procedure calls `[scope open]`, pushing a `Scope` frame.
 3. Procedure returns (normally or via error).
 4. `PopScopeCallFramesAndOneMore()` pops the `Scope` frame(s), then pops the
    `Procedure` frame.
@@ -525,7 +525,7 @@ The key code path:
 
 ## 6. Clone Modes
 
-The `-clone` option on `scope create` (and the `scope update` sub-command)
+The `-clone` option on `[scope create]` (and the `[scope update]` sub-command)
 copies variables from a source frame into the scope. Three clone modes are
 available:
 
@@ -646,9 +646,9 @@ scope lock myScope
 scope unlock myScope
 ```
 
-`scope lock` calls `frame.Lock(ref result)` directly on the scope's call
+`[scope lock]` calls `frame.Lock(ref result)` directly on the scope's call
 frame, which acquires a .NET `Monitor`-style lock on the call frame object.
-`scope unlock` calls `frame.Unlock(ref result)` to release it. The
+`[scope unlock]` calls `frame.Unlock(ref result)` to release it. The
 `-nocomplain` option on both suppresses errors if the scope doesn't exist.
 
 **Caution:** Manual lock/unlock requires careful coding to ensure the lock is
@@ -663,7 +663,7 @@ scope eval -lock true myScope {
 }
 ```
 
-The `-lock` option on `scope eval` requires a boolean value argument (e.g.,
+The `-lock` option on `[scope eval]` requires a boolean value argument (e.g.,
 `-lock true`). It acquires the lock before pushing the scope, evaluates the
 script, and releases the lock in the `finally` block. This is the recommended
 approach for thread-safe scope access because it guarantees lock release.
@@ -675,13 +675,13 @@ during the wait.
 ### 8.3 Lock Scope vs. Frame Isolation
 
 Locking a scope prevents **other lock-respecting code** from modifying it.
-It does not prevent non-locking access — `scope set`, `scope unset`, or
+It does not prevent non-locking access — `[scope set]`, `[scope unset]`, or
 direct variable access from a frame where the scope is open will still work
 without holding the lock. Locking is cooperative, not enforced.
 
 ## 9. Global Scope Redirection
 
-The `scope global` sub-command provides a powerful mechanism for redirecting
+The `[scope global]` sub-command provides a powerful mechanism for redirecting
 the interpreter's global variable frame:
 
 ```tcl
@@ -745,8 +745,8 @@ variable frame. The closest Tcl idioms:
 | Tcl Approach | Limitation | Eagle Scope Advantage |
 |-------------|-----------|----------------------|
 | Global variables | Namespace pollution | Scopes are named and private |
-| Namespace variables | Require `variable` decl, visible to all ns code | Scopes need no declarations |
-| `upvar` to caller | Tight coupling to caller's naming | Scopes are independent |
+| Namespace variables | Require `[variable]` decl, visible to all ns code | Scopes need no declarations |
+| `[upvar]` to caller | Tight coupling to caller's naming | Scopes are independent |
 | TclOO instance variables | Requires object system overhead | Scopes are lightweight |
 | Coroutines (8.6+) | Single entry/exit point | Scopes can be opened from any procedure |
 
@@ -899,8 +899,8 @@ scope destroy myCounter
 ```
 
 **Why it works:** The first call creates the scope and clones the current
-frame (which has no `count`). The `if` initializes `count` to 0, then `incr`
-makes it 1. On subsequent calls, `scope create` is idempotent (returns the
+frame (which has no `count`). The `[if]` initializes `count` to 0, then `[incr]`
+makes it 1. On subsequent calls, `[scope create]` is idempotent (returns the
 existing scope), `-open` pushes it, and `count` is already there from last
 time.
 
@@ -925,7 +925,7 @@ Each procedure gets its own scope without needing to manage names manually.
 
 ### 12.3 Scoped Configuration
 
-Using `scope eval` to configure and query a scope without leaving it open:
+Using `[scope eval]` to configure and query a scope without leaving it open:
 
 ```tcl
 scope create config
@@ -985,7 +985,7 @@ proc recordError {} {
 
 ### 12.6 Scope with upvar for Persistent References
 
-Combining scopes with `upvar` for persistent variable linkage:
+Combining scopes with `[upvar]` for persistent variable linkage:
 
 ```tcl
 proc accumulator {scopeName varName} {
@@ -1049,12 +1049,12 @@ The interpreter enforces a maximum number of scopes:
 - **Safe interpreters**: 50 scopes maximum.
 - **Unsafe interpreters**: Unlimited (configurable via `ScopeLimit` property).
 
-Exceeding the limit causes `scope create` to return an error.
+Exceeding the limit causes `[scope create]` to return an error.
 
 ### 14.3 Impact on `[info level]`
 
-Each `scope open` increases `[info level]` by 1. Code that uses `[info level]`
-to compute `upvar`/`uplevel` depths must account for scope frames:
+Each `[scope open]` increases `[info level]` by 1. Code that uses `[info level]`
+to compute `[upvar]`/`[uplevel]` depths must account for scope frames:
 
 ```tcl
 info level                ;# 0
@@ -1079,6 +1079,6 @@ scope destroy foo
 - `Library/Components/Public/Enumerations.cs` — `CallFrameFlags` enum
 
 ### Eagle Documentation
-- [`core_language.md`](core_language.md#cmd-scope) — `scope` command syntax and options reference
-- [`core_examples.md`](core_examples.md#ex-scope) — `scope` usage examples
+- [`core_language.md`](core_language.md#cmd-scope) — `[scope]` command syntax and options reference
+- [`core_examples.md`](core_examples.md#ex-scope) — `[scope]` usage examples
 - [`tips_and_tricks.md`](tips_and_tricks.md#persistent-state-with-scope) — Scope tips and patterns

@@ -121,7 +121,7 @@ Garuda enables bidirectional communication between Tcl and Eagle:
 
 - **Tcl to Eagle**: The `eagle` Tcl command (registered by Garuda) evaluates
   Eagle scripts within a managed Eagle interpreter.
-- **Eagle to Tcl**: Eagle's `tcl` command family allows Eagle scripts to call
+- **Eagle to Tcl**: Eagle's `[tcl]` command family allows Eagle scripts to call
   back into native Tcl interpreters.
 
 Garuda supports both the .NET Framework (v2.0 and v4.0) and .NET Core/.NET 5+
@@ -133,7 +133,7 @@ Garuda supports both the .NET Framework (v2.0 and v4.0) and .NET Core/.NET 5+
 
 ### 2.1 High-Level Data Flow
 
-```
+```tcl
 +---------------------+       +------------------------+       +---------------------+
 |     Tcl Script      |       |   Garuda Native DLL    |       |   Eagle Managed     |
 |                     |       |   (Garuda.c + CLR)     |       |   (NativePackage.cs)|
@@ -152,7 +152,7 @@ Garuda supports both the .NET Framework (v2.0 and v4.0) and .NET Core/.NET 5+
 
 ### 2.2 Component Diagram
 
-```
+```tcl
 Native Layer (C)                    Managed Layer (C#)
 ================                    ==================
 
@@ -278,7 +278,7 @@ Additional cleanup entry points:
 
 The package registers a single Tcl command named `garuda` with 14
 sub-commands. The dispatch is implemented in the `GarudaObjCmd` function
-in Garuda.c using `Tcl_GetIndexFromObj` and a `switch` statement. The
+in Garuda.c using `Tcl_GetIndexFromObj` and a `[switch]` statement. The
 entire command handler holds the `packageMutex` lock.
 
 ### Sub-command Summary
@@ -310,7 +310,7 @@ entire command handler holds the `packageMutex` lock.
 package name, version, source control identifier, and source timestamp.
 
 **Return Value**: String in the format:
-```
+```tcl
 Garuda 1.0 <sourceId> {<timestamp>}
 ```
 Example: `Garuda 1.0 932a6f56ba76f8fd66376e6b7fad45541c19eaa1 {2026-01-17 03:33:52 UTC}`
@@ -550,7 +550,7 @@ mechanism for evaluating Eagle scripts from Tcl.
 **Syntax**: `eagle arg ?arg ...?`
 
 **Description**: Evaluates the concatenated arguments in the Eagle interpreter
-associated with the current Tcl interpreter (following standard Tcl `eval`
+associated with the current Tcl interpreter (following standard Tcl `[eval]`
 concatenation rules). The result of the Eagle evaluation is returned as the
 Tcl result.
 
@@ -567,7 +567,7 @@ four levels of nesting work correctly.
 
 **Safe interpreter behavior**: In a safe Tcl interpreter, the `eagle`
 command is available but enforces safety. Eagle scripts that attempt
-unsafe operations (like `pwd`) are denied by the safe Eagle interpreter.
+unsafe operations (like `[pwd]`) are denied by the safe Eagle interpreter.
 
 ---
 
@@ -615,12 +615,12 @@ encoded as a Tcl-formatted list. The `ParseArgument` method splits this
 list and extracts:
 
 **Protocol V1R0/V1R1** (minimum 4 arguments):
-```
+```tcl
 protocolId module interp safe [additional...]
 ```
 
 **Protocol V1R2** (minimum 6 arguments):
-```
+```tcl
 protocolId module stubs interp isolated safe [additional...]
 ```
 
@@ -628,7 +628,7 @@ Where:
 - `protocolId`: `"Garuda_v1.0"`, `"Garuda_v1.0_r1.0"`, or `"Garuda_v1.0_r2.0"`
 - `module`: `IntPtr` -- native Tcl library DLL/shared-object handle
 - `stubs`: `IntPtr` (V1R2 only) -- pointer to `ClrTclStubs` structure
-- `interp`: `IntPtr` -- native `Tcl_Interp*` pointer
+- `[interp]`: `IntPtr` -- native `Tcl_Interp*` pointer
 - `isolated`: `bool` (V1R2 only) -- whether Tcl interp gets own Eagle interp
 - `safe`: `bool` -- whether the Tcl interpreter is "safe"
 
@@ -665,7 +665,7 @@ console/trace output.
    with a generated name (e.g., `nativeParentInterp0`,
    `nativeSafeInterp1`).
 6. A `TclBridge` is created linking the Tcl `eagle` command to the
-   Eagle `eval` command.
+   Eagle `[eval]` command.
 7. The interpreter is stored in the static `interpreters` dictionary.
 
 #### Detach (DetachClr)
@@ -878,17 +878,17 @@ When Garuda invokes a CLR method, it constructs a single wide-string
 argument. The format depends on the protocol version and `MethodFlags`:
 
 **Protocol V1R0 (legacy)**:
-```
+```tcl
 Garuda_v1.0 <hTclModule> <interp> <safe> <configArgs> <extraArgs>
 ```
 
 **Protocol V1R1**:
-```
+```tcl
 Garuda_v1.0_r1.0 <hTclModule> <interp> <safe> <configArgs> <extraArgs>
 ```
 
 **Protocol V1R2** (superset of V1R1):
-```
+```tcl
 Garuda_v1.0_r2.0 <hTclModule> <pTclStubs> <interp> <isolation> <safe> <configArgs> <extraArgs>
 ```
 
@@ -931,7 +931,7 @@ The build system produces two distinct DLLs for the two .NET runtimes:
 | Compile Defines | `CLR_40` | `CORE_CLR; HAVE_DOTNET_ENVIRONMENT_INFO` |
 
 Both variants export the same four functions:
-```
+```tcl
 Garuda_Init
 Garuda_SafeInit
 Garuda_Unload
@@ -981,7 +981,7 @@ The compile-time selection is handled by `GarudaPre.h`:
 ### 11.4 Preprocessor Configuration
 
 Common defines (from `Garuda.props`):
-```
+```tcl
 COMMON_DEFINES = _CRT_SECURE_NO_WARNINGS;WIN32_LEAN_AND_MEAN;COBJMACROS;
                  CINTERFACE;CLR_40
 CORECLR_DEFINES = CORE_CLR;HAVE_DOTNET_ENVIRONMENT_INFO
@@ -989,7 +989,7 @@ TCL_DEFINES = TCL_THREADS;USE_TCL_STUBS
 ```
 
 Unix GCC flags:
-```
+```tcl
 -fPIC -shared -Wl,-rpath,$dncdir
 -DUSE_TCL_STUBS=1 -DTCL_THREADS=1 -DCORE_CLR=1 -DUSE_GARUDA_STR=1
 ```
@@ -1371,7 +1371,7 @@ Windows resource metadata:
 
 ## 20. Directory Structure
 
-```
+```tcl
 Eagle/Native/Package/
   +-- Garuda2022.vcxproj              (.NET Framework VS 2022 project)
   +-- GarudaNetStandard21.vcxproj     (.NET Core VS 2022 project)

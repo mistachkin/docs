@@ -30,8 +30,8 @@ values** for any command or sub-command.
 
 The LSP completion flow works as follows: the LSP receives the current
 command invocation arguments from the line being completed -- either **1
-argument** for a top-level command (e.g., `exit`) or **2 arguments** for an
-ensemble sub-command (e.g., `interp create`). It maps these argument strings
+argument** for a top-level command (e.g., `[exit]`) or **2 arguments** for an
+ensemble sub-command (e.g., `[interp create]`). It maps these argument strings
 to a `CommandOptionType` enum value, then calls
 `CommandOptions.GetCommandOptions()` to obtain the full `OptionDictionary`.
 From there it can enumerate available option names and inspect each option's
@@ -74,7 +74,7 @@ Every option-bearing command follows the same three-step pattern:
 3. **Query**: Use `options.IsPresent("-name")` or
    `options.IsPresent("-name", ref value)` to test and retrieve results.
 
-```
+```tcl
 [Define]                   [Parse]                      [Query]
 OptionDictionary    --->   interpreter.GetOptions   --->   options.IsPresent
   new Option(...)             matches names                  returns bool/value
@@ -221,7 +221,7 @@ share the same positive `groupIndex`, only the last one specified takes effect.
 The earlier one's "present" flag is cleared.
 
 **Example from `[lsort]`:**
-```
+```tcl
 Group 1 (sort type):    -ascii, -dictionary, -integer, -random, -real
 Group 2 (sort order):   -increasing, -decreasing
 ```
@@ -318,7 +318,7 @@ The `CommandOptionType` enum has ~200 sequential values organized alphabetically
 by command. Values use `Command_SubCommand` naming for ensemble commands and
 plain `Command` names for top-level commands. Examples:
 
-```
+```tcl
 After_Idle, After_Info
 Debug_Break, Debug_Emergency, Debug_Trace
 Exit, Gets, Glob, Kill
@@ -335,7 +335,7 @@ The original `ObjectOps` class contains ~40 factory methods for options related
 to `[object]` sub-commands and shared object-interop patterns. These are
 accessible through the `CommandOptions` dispatch via delegation:
 
-```
+```tcl
 CommandOptions.GetCommandOptions(CommandOptionType.Object_Create)
   --> delegates to ObjectOps.GetCreateOptions()
 ```
@@ -355,7 +355,7 @@ Some commands process options in two passes: a pre-scan with a small
 The pre-scan determines which code path to take.
 
 **Pattern:**
-```
+```tcl
 1. Create preOptions dictionary (few options)
 2. CheckOptions(preOptions, ...) to detect path-deciding options
 3. Compute values based on pre-scan results
@@ -3207,8 +3207,8 @@ compatibility.
 |--------|-------|-------------|
 | `-timeout` | int | Timeout in milliseconds<br>for the timed command |
 | `-statistics` | boolean | Return detailed execution statistics<br>instead of simple timing |
-| `-breakOk` | boolean | Allow `break` return code without<br>error (case-insensitive) |
-| `-errorOk` | boolean | Allow `error` return code without<br>error (case-insensitive) |
+| `-breakOk` | boolean | Allow `[break]` return code without<br>error (case-insensitive) |
+| `-errorOk` | boolean | Allow `[error]` return code without<br>error (case-insensitive) |
 | `-noCancel` | boolean | Don't honor cancellation during<br>timing (case-insensitive) |
 | `-globalCancel` | boolean | Use global cancellation<br>(case-insensitive) |
 | `-noHalt` | boolean | Don't halt on timeout<br>(case-insensitive) |
@@ -3383,4 +3383,233 @@ Plus all [FixupReturnValue](#fixupreturnvalue-options) options: `-objectname`,
 | `-encoding` | Encoding | Character encoding<br>for serialization output |
 
 </details>
+
+---
+
+## 14. Shell Command-Line Options
+
+The options documented above are *command* options: named switches parsed by
+the `OptionDictionary` infrastructure when a script invokes a command. This
+section documents a separate option surface entirely -- the **shell startup
+command-line options** processed by the `EagleShell` host *before* (and around)
+the interactive loop, as it walks the process argument vector.
+
+These are not parsed through `OptionDictionary`. They are matched directly in
+the argument-processing loop of `Interpreter.ShellMainCore()` in
+`Interpreter.cs` (the long `else if` chain beginning around line 87662), each
+arm calling `StringOps.MatchSwitch()` against a name constant from the
+`CommandLineOption` class in `Constants.cs` (around line 883). The built-in
+usage text that these descriptions are derived from lives in `HelpOps.cs`
+(the "Command Line Options" section, around line 4056) and is displayed by the
+`-help` option.
+
+> [!NOTE]
+> A handful of these options are also referenced in `Interpreter.cs` source
+> comments (e.g. `-child` near line 86886, `-safe`/`-standard` near 87122,
+> `-recreate` near 87147, `-encoding` near 87198).
+
+### 14.1 Switch Syntax and Processing Order
+
+Option names are matched by `StringOps.MatchSwitch()` (`StringOps.cs`, around
+line 1736), which performs a **case-insensitive** comparison after
+`StringOps.TrimSwitchChars()` (around line 1711) strips any leading run of
+*switch characters*. The switch character set is `-` and `/` (`StringOps.cs`,
+around line 211: `Characters.MinusSign` and `Characters.Slash`). Because the
+entire leading run is trimmed, all of the following are equivalent:
+
+```text
+-safe
+--safe
+/safe
+-SAFE
+```
+
+Key processing rules (from the "Command Line Notes" usage section in
+`HelpOps.cs`, around line 4028):
+
+- Option names are **case-insensitive**.
+- Most options are processed **precisely in the order they are encountered**,
+  left to right. Order matters: e.g. `-preFile` must appear before the script
+  library is initialized, while `-postFile` must appear after.
+- Options whose names begin with `-startup` (e.g. `-startupLibrary`,
+  `-startupPreInitialize`, `-startupLogFile`) may be processed **prior to
+  interpreter creation**.
+- If a file named `argv.txt` (or supported per-user, per-machine, or per-domain
+  variations) exists in the executable directory, its entire contents are read
+  and processed as if passed via `-arguments`, inserted *before* any preexisting
+  arguments. Use `-noArgumentsFileNames` to skip this.
+- Any **unrecognized** argument is passed to the shell argument callback if one
+  is registered; otherwise an error is generated.
+- If no arguments are supplied, or once no arguments remain, the **interactive
+  loop is entered** (unless it has been disabled).
+
+> [!TIP]
+> Most value-bearing options report `wrong # args: should be "-<name> <value>"`
+> when their required value argument is missing. Boolean options taking
+> `<enable>` accept the usual Eagle boolean spellings (e.g. `true`/`false`,
+> `1`/`0`, `yes`/`no`).
+
+### 14.2 The Init Pipeline (file and script options)
+
+The most commonly used shell options drive the **initialization pipeline**:
+running files or inline scripts relative to whether the script library has been
+initialized. The file-based and script-based options are parallel families.
+
+File options (each takes a `<fileName>`):
+
+| Option | When it runs | On wrong phase |
+|--------|--------------|----------------|
+| `-anyFile` | Whether or not the library is initialized | -- |
+| `-preFile` | Before the library is initialized | Error if library already initialized |
+| `-file` | Evaluates the file and then **exits** (terminal) | -- |
+| `-postFile` | After the library is initialized | Error if library not yet initialized |
+
+Script options (each takes a `<script>` string; `#if !ENTERPRISE_LOCKDOWN`):
+
+| Option | When it runs | On wrong phase |
+|--------|--------------|----------------|
+| `-anyInitialize` | Whether or not the library is initialized | -- |
+| `-preInitialize` | Before the library is initialized | Error if library already initialized |
+| `-postInitialize` | After the library is initialized | Error if library not yet initialized |
+| `-startupPreInitialize` | Before the library is initialized, processed **prior to interpreter creation** | Error if library already initialized |
+
+The `-anyFile`/`-anyInitialize`/`-preFile`/`-preInitialize`/`-postFile`/`-postInitialize`
+options **continue processing** the remaining arguments after running. The
+`-file` option is **terminal**: after evaluating the named file (consuming any
+trailing `[argument ...]` as the script's arguments) the shell exits.
+
+> [!NOTE]
+> The `-anyInitialize`, `-evaluate`, `-evaluateEncoded`, `-preInitialize`,
+> `-postInitialize`, and `-startupPreInitialize` options are compiled only when
+> `ENTERPRISE_LOCKDOWN` is **not** defined (see `Constants.cs`). Under
+> enterprise lockdown builds these inline-script options are unavailable.
+
+Related initialization control:
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-initialize` | -- | Immediately attempt to initialize the script library, then continue processing arguments |
+| `-setInitialize` | `<enable>` | Enable or disable script-library initialization, then continue |
+| `-forceInitialize` | -- | Enable forced initialization of the script library, then continue |
+| `-startupLibrary` | `<directory>` | Set the script-library location (processed prior to interpreter creation), then continue |
+| `-runtimeOption` | `<optionName>` | Add, remove, or reset runtime option(s), then continue (errors if library not initialized) |
+
+### 14.3 Inline Evaluation and Exit
+
+| Option | Value | Description | Build guard |
+|--------|-------|-------------|-------------|
+| `-evaluate` | `[string ...]` | Evaluate the specified string(s), then **exit** | `!ENTERPRISE_LOCKDOWN` |
+| `-evaluateEncoded` | `[string ...]` | Evaluate base64-encoded string(s), then **exit** (useful when OS command-line quoting conflicts with script quoting) | `!ENTERPRISE_LOCKDOWN` |
+| `-file` | `<fileName> [argument ...]` | Evaluate the file, then **exit** | -- |
+
+> [!WARNING]
+> `-evaluate`, `-evaluateEncoded`, and `-file` are **terminal**: the shell exits
+> after they run rather than continuing to process arguments or entering the
+> interactive loop.
+
+### 14.4 Interpreter Mode and Security
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-safe` | -- | Enable "safe" mode; all "unsafe" commands are hidden |
+| `-standard` | -- | Enable "standard" mode; all "non-standard" commands are hidden |
+| `-namespaces` | `<enable>` | Enable/disable Tcl 8.4 compatible namespace support (note: the native "dangers of creative writing" caveat does *not* apply) |
+| `-security` | `<enable>` | Enable/disable script-signing policies and core script certificates (requires the Harpy/Badge security plugins; errors if unavailable) |
+| `-isolated` | `<enable>` | Enable/disable plugin isolation (`#if ISOLATED_PLUGINS`) |
+| `-recreate` | -- | Copy interpreter settings, recreate the interpreter from (mostly) the old settings, then continue |
+| `-reconfigure` | `<settings>` | Load the specified interpreter settings, recreate the interpreter from them, then continue |
+| `-setCreate` | `<enable>` | Arrange for the interpreter to be recreated the next time its available commands would be modified |
+| `-child` | -- | Switch to the child interpreter, if available, then continue |
+| `-parent` | -- | Switch to the parent interpreter, if available, then continue |
+
+### 14.5 Interactive Loop Control
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-interactive` | -- | Enable interactive mode for the interpreter, then continue |
+| `-noExit` | -- | Arrange for the interactive loop to be entered instead of the process exiting, then continue |
+| `-kiosk` | -- | Arrange for the interactive loop to be *reentered* instead of the process exiting, then continue |
+| `-setLoop` | `<enable>` | Enable/disable entering the interactive loop, then continue |
+| `-stopOnUnknown` | `<enable>` | Enable/disable relaxed unknown-argument handling for the interactive loop, then continue |
+| `-quiet` | `<enable>` | Enable/disable quiet mode for the shell itself, then continue |
+| `-profile` | `<profile>` | Load the specified interpreter host profile, then continue |
+| `-lockHostArguments` | -- | Replace all arguments with those returned from the interpreter host and ignore `argv.txt` (processed prior to standard argument processing; no effect if the host returns none) |
+
+### 14.6 Diagnostics, Tracing, and Debugging
+
+| Option | Value | Description | Build guard |
+|--------|-------|-------------|-------------|
+| `-debug` | -- | Enable debug mode (emits strategically placed startup diagnostics), then continue | -- |
+| `-step` | -- | Enable single-step mode for the script debugger, then continue | -- |
+| `-break` | -- | Wait for a key press, then trigger a managed debugger break (useful for attaching a debugger), then continue | -- |
+| `-pause` | -- | Wait for a key press, then continue (attach a managed debugger before any scripts run) | -- |
+| `-setupTrace` | -- | Set up trace listeners appropriate to the current debug mode, then continue | -- |
+| `-clearTrace` | -- | Clear all trace listeners, then continue | -- |
+| `-traceToHost` | -- | Allow trace-listener output to be written to the interpreter host, then continue (intended for custom shells; the default shell ignores it) | -- |
+| `-scriptTrace` | `<value>` | Use the value to create and add a trace listener, then continue | `TEST` |
+| `-startupLogFile` | `<fileName>` | Set up tracing to the file (processed prior to interpreter creation), then continue | `TEST` |
+
+> [!NOTE]
+> There is no `-verbose` or `-trace` shell option (the `Prompt.Verbose` string
+> is commented out in `Constants.cs`). `-verbose` exists only as a *command*
+> option on certain commands (e.g. `[object]` and `[xml serialize]`); for shell
+> startup diagnostics use `-debug` and the trace options above.
+
+### 14.7 Argument Source and Plugin Options
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-arguments` | `<fileName>` | Read the file, interpret each line as a list of arguments, splice them in place of `-arguments <fileName>`, then continue. The literals for standard input may be used as the file name |
+| `-noArgumentsFileNames` | -- | Skip processing arguments from files such as `argv.txt` (processed prior to standard argument processing) |
+| `-noAppSettings` | -- | Skip processing arguments from application settings (processed prior to standard argument processing) |
+| `-noTrim` | -- | Disable automatic trimming of surrounding whitespace for all subsequent arguments |
+| `-encoding` | `<encodingName>` | Set the encoding used for script files, then continue |
+| `-vendorPath` | `<path>` | Set the vendor path (extra sub-directory searched for user/application-specific files), then continue |
+| `-pluginArguments` | `<pluginName> <arguments>` | Store arguments to pass into the named plugin if/when it is later loaded, then continue |
+
+### 14.8 Test Harness Options
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-test` | `[pattern] [all] [argument ...]` | Run the matching test(s), or the full suite if no pattern is given, then **exit** |
+| `-pluginTest` | `[pattern] [all] [argument ...]` | Run the matching plugin test(s), or the full plugin suite, then **exit** |
+| `-testDirectory` | `<directory>` | Set the base directory used when searching for test files matching a pattern |
+
+These tie into the test-suite entry point; see [`build_system.md`](build_system.md)
+for how `make test` invokes them.
+
+### 14.9 Help and Version
+
+| Option | Equivalent | Description |
+|--------|-----------|-------------|
+| `-help` | `-?` | Display version and syntax (usage) information, then **exit** |
+| `-?` | -- | About (`CommandLineOption.About`) |
+| `-??` | -- | Command help (`CommandLineOption.CommandHelp`) |
+| `-???` | -- | Environment help (`CommandLineOption.EnvironmentHelp`) |
+| `-????` | -- | Full help (`CommandLineOption.FullHelp`) |
+| `-version` | -- | Display detailed version information, then **exit** |
+
+### 14.10 Usage in the POSIX Build System
+
+The official POSIX `Makefile` (`Eagle/Makefile`) exercises two of these options
+directly. Its `run` and `[test]` targets invoke the shell as:
+
+```sh
+# make run
+dotnet exec --roll-forward Major EagleShell.dll -anyFile Makefile.eagle
+
+# make test  (SHELL_DLL_ARGS plus the suite entry point and TEST_ARGS)
+dotnet exec ... EagleShell.dll -anyFile Makefile.eagle \
+    -file Library/Tests/all.eagle $(TEST_ARGS)
+```
+
+- `-anyFile Makefile.eagle` loads the build-time init helper regardless of
+  library-initialization state (see section 14.2), then **continues** so the
+  next arguments can be processed.
+- `-file Library/Tests/all.eagle` then evaluates the suite entry point and
+  **exits** (the terminal `-file` behavior from section 14.3), with any
+  `TEST_ARGS` consumed as that script's arguments.
+
+For the full build/test target reference and how `SHELL_DLL_ARGS`/`TEST_ARGS`
+are assembled, see [`build_system.md`](build_system.md).
 

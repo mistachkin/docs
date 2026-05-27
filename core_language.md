@@ -70,37 +70,37 @@ The following commands are Eagle-specific extensions not found in standard Tcl 8
 
 | Command | Category | Brief Description |
 |---------|----------|-------------------|
-| `base64` | Strings | Base64 encoding/decoding |
-| `callback` | Event | Callback queue for async operations |
-| `debug` | Debugging | 70+ sub-commands for interpreter debugging |
-| `do` | Loop | Do-while / do-until loop |
-| `downlevel` | Control Flow | Execute script in the pre-uplevel call frame |
-| `getf` | Variables | Get variable with internal flags **(obsolete)** |
-| `guid` | Strings | GUID/UUID generation, validation, comparison |
-| `hash` | Strings | Cryptographic hashing (MD5, SHA-1, SHA-256, SHA-512, ...) |
-| `host` | Managed Env | Interactive console host control (colors, input, screens) |
-| `invoke` | Engine | Invoke command at a specific call stack level |
-| `lget` | Lists | Get element from list variable (combines set + lindex) |
-| `lremove` | Lists | Remove list elements by index |
-| `library` | Native Env | Native library P/Invoke (.dll/.so loading and calls) |
-| `napply` | Procedures | Apply lambda with named arguments |
-| `nop` | Misc | No operation (returns empty string) |
-| `nproc` | Procedures | Create procedure with named arguments |
-| `object` | .NET Interop | Full .NET object system (create, invoke, dispose, ...) |
-| `parse` | Strings | Parse scripts, expressions, and options |
-| `scope` | Variables | Persistent variable scopes across procedure calls |
-| `setf` | Variables | Set variable with internal flags **(obsolete)** |
-| `sql` | Database | SQLite/ADO.NET database operations |
-| `tcl` | Tcl Integration | Bridge to native Tcl interpreter |
+| `[base64]` | Strings | Base64 encoding/decoding |
+| `[callback]` | Event | Callback queue for async operations |
+| `[debug]` | Debugging | 70+ sub-commands for interpreter debugging |
+| `[do]` | Loop | Do-while / do-until loop |
+| `[downlevel]` | Control Flow | Execute script in the pre-uplevel call frame |
+| `[getf]` | Variables | Get variable with internal flags **(obsolete)** |
+| `[guid]` | Strings | GUID/UUID generation, validation, comparison |
+| `[hash]` | Strings | Cryptographic hashing (MD5, SHA-1, SHA-256, SHA-512, ...) |
+| `[host]` | Managed Env | Interactive console host control (colors, input, screens) |
+| `[invoke]` | Engine | Invoke command at a specific call stack level |
+| `[lget]` | Lists | Get element from list variable (combines set + lindex) |
+| `[lremove]` | Lists | Remove list elements by index |
+| `[library]` | Native Env | Native library P/Invoke (.dll/.so loading and calls) |
+| `[napply]` | Procedures | Apply lambda with named arguments |
+| `[nop]` | Misc | No operation (returns empty string) |
+| `[nproc]` | Procedures | Create procedure with named arguments |
+| `[object]` | .NET Interop | Full .NET object system (create, invoke, dispose, ...) |
+| `[parse]` | Strings | Parse scripts, expressions, and options |
+| `[scope]` | Variables | Persistent variable scopes across procedure calls |
+| `[setf]` | Variables | Set variable with internal flags **(obsolete)** |
+| `[sql]` | Database | SQLite/ADO.NET database operations |
+| `[tcl]` | Tcl Integration | Bridge to native Tcl interpreter |
 | `test1` | Testing | Basic test command |
 | `test2` | Testing | Advanced test command |
-| `unsetf` | Variables | Unset variable with internal flags **(obsolete)** |
-| `uri` | Network | URI operations and HTTP client |
-| `version` | Introspection | Eagle version information |
-| `xml` | XML | XML serialization, deserialization, validation |
+| `[unsetf]` | Variables | Unset variable with internal flags **(obsolete)** |
+| `[uri]` | Network | URI operations and HTTP client |
+| `[version]` | Introspection | Eagle version information |
+| `[xml]` | XML | XML serialization, deserialization, validation |
 
 **Eagle-enhanced Tcl commands** (present in Tcl but with significant Eagle additions):
-`exec` (30+ Eagle options), `for` (optional *end* script), `regexp`/`regsub` (Eagle-specific switches), `vwait` (timeout option), `load`/`unload` (.NET assembly support).
+`[exec]` (30+ Eagle options), `[for]` (optional *end* script), `[regexp]`/`[regsub]` (Eagle-specific switches), `[vwait]` (timeout option), `[load]`/`[unload]` (.NET assembly support).
 
 **Standard Tcl 8.6 commands not implemented in Eagle:**
 `fileevent`, `scan`.
@@ -142,128 +142,128 @@ Quick reference to all Eagle commands with links to their detailed documentation
 
 | Command | Description | Section |
 |---------|-------------|---------|
-| [`after`](#cmd-after) | Execute script after delay | [Event Management](#event-management) |
-| [`alias`](#cmd-alias) | Alias command wrapper (internal, see `interp alias`) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
-| [`append`](#cmd-append) | Append values to variable | [Variables](#variables) |
-| [`apply`](#cmd-apply) | Apply lambda expression | [Procedures](#procedures) |
-| [`array`](#cmd-array) | Array operations | [Arrays](#arrays) |
+| [`[after]`](#cmd-after) | Execute script after delay | [Event Management](#event-management) |
+| [`alias`](#cmd-alias) | Alias command wrapper (internal, see `[interp alias]`) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
+| [`[append]`](#cmd-append) | Append values to variable | [Variables](#variables) |
+| [`[apply]`](#cmd-apply) | Apply lambda expression | [Procedures](#procedures) |
+| [`[array]`](#cmd-array) | Array operations | [Arrays](#arrays) |
 | [`automatic`](#cmd-automatic) | Automatic command mapping wrapper (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
-| [`base64`](#cmd-base64) | Base64 encoding/decoding | [Strings](#strings) |
-| [`bgerror`](#cmd-bgerror) | Background error handler | [Core and Miscellaneous](#core-and-miscellaneous) |
-| [`break`](#cmd-break) | Break out of loop | [Control Flow](#control-flow) |
-| [`callback`](#cmd-callback) | Callback queue (enqueue/dequeue/execute) | [Event Management](#event-management) |
-| [`catch`](#cmd-catch) | Catch exceptions and errors | [Control Flow](#control-flow) |
-| [`cd`](#cmd-cd) | Change directory | [File System](#file-system) |
-| [`clock`](#cmd-clock) | Clock and time operations | [Time and Clock](#time-and-clock) |
-| [`close`](#cmd-close) | Close channel | [I/O and Channels](#io-and-channels) |
-| [`concat`](#cmd-concat) | Concatenate arguments | [Strings](#strings) |
-| [`continue`](#cmd-continue) | Continue to next loop iteration | [Control Flow](#control-flow) |
+| [`[base64]`](#cmd-base64) | Base64 encoding/decoding | [Strings](#strings) |
+| [`[bgerror]`](#cmd-bgerror) | Background error handler | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`[break]`](#cmd-break) | Break out of loop | [Control Flow](#control-flow) |
+| [`[callback]`](#cmd-callback) | Callback queue (enqueue/dequeue/execute) | [Event Management](#event-management) |
+| [`[catch]`](#cmd-catch) | Catch exceptions and errors | [Control Flow](#control-flow) |
+| [`[cd]`](#cmd-cd) | Change directory | [File System](#file-system) |
+| [`[clock]`](#cmd-clock) | Clock and time operations | [Time and Clock](#time-and-clock) |
+| [`[close]`](#cmd-close) | Close channel | [I/O and Channels](#io-and-channels) |
+| [`[concat]`](#cmd-concat) | Concatenate arguments | [Strings](#strings) |
+| [`[continue]`](#cmd-continue) | Continue to next loop iteration | [Control Flow](#control-flow) |
 | [`core`](#cmd-core) | Core command base class (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
-| [`debug`](#cmd-debug) | Debugging operations | [Debugging](#debugging) |
+| [`[debug]`](#cmd-debug) | Debugging operations | [Debugging](#debugging) |
 | [`default`](#cmd-default) | Command base class (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
 | [`delegate`](#cmd-delegate) | Delegate command wrapper (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
-| [`dict`](#cmd-dict) | Dictionary operations | [Dictionaries](#dictionaries) |
-| [`do`](#cmd-do) | Do-while loop | [Control Flow](#control-flow) |
-| [`downlevel`](#cmd-downlevel) | Execute script at lower call stack level | [Control Flow](#control-flow) |
-| [`encoding`](#cmd-encoding) | Character encoding operations | [Strings](#strings) |
+| [`[dict]`](#cmd-dict) | Dictionary operations | [Dictionaries](#dictionaries) |
+| [`[do]`](#cmd-do) | Do-while loop | [Control Flow](#control-flow) |
+| [`[downlevel]`](#cmd-downlevel) | Execute script at lower call stack level | [Control Flow](#control-flow) |
+| [`[encoding]`](#cmd-encoding) | Character encoding operations | [Strings](#strings) |
 | [`ensemble`](#cmd-ensemble) | Ensemble command class (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
-| [`eof`](#cmd-eof) | Check for end-of-file | [I/O and Channels](#io-and-channels) |
-| [`error`](#cmd-error) | Generate an error | [Control Flow](#control-flow) |
-| [`eval`](#cmd-eval) | Evaluate script | [Engine Operations](#engine-operations) |
-| [`exec`](#cmd-exec) | Execute external program | [Native Environment](#native-environment) |
-| [`exit`](#cmd-exit) | Exit interpreter | [Native Environment](#native-environment) |
-| [`expr`](#cmd-expr) | Evaluate expression | [Expression Evaluation](#expression-evaluation) |
-| [`fblocked`](#cmd-fblocked) | Check if channel is blocked | [I/O and Channels](#io-and-channels) |
-| [`fconfigure`](#cmd-fconfigure) | Configure channel options | [I/O and Channels](#io-and-channels) |
-| [`fcopy`](#cmd-fcopy) | Copy data between channels | [I/O and Channels](#io-and-channels) |
-| [`file`](#cmd-file) | File operations | [File System](#file-system) |
-| [`flush`](#cmd-flush) | Flush channel buffer | [I/O and Channels](#io-and-channels) |
-| [`for`](#cmd-for) | C-style for loop | [Control Flow](#control-flow) |
-| [`foreach`](#cmd-foreach) | Iterate over lists | [Control Flow](#control-flow) |
-| [`format`](#cmd-format) | Format string (like sprintf) | [Strings](#strings) |
-| [`fpclassify`](#cmd-fpclassify) | Classify floating-point value (normal/zero/infinite/nan) | [Expression Evaluation](#expression-evaluation) |
-| [`getf`](#cmd-getf) | Get variable with flags **(obsolete)** | [Variables](#variables) |
-| [`gets`](#cmd-gets) | Read line from channel | [I/O and Channels](#io-and-channels) |
-| [`glob`](#cmd-glob) | Glob for files | [File System](#file-system) |
-| [`global`](#cmd-global) | Declare global variables | [Variables](#variables) |
-| [`guid`](#cmd-guid) | GUID/UUID operations | [Strings](#strings) |
-| [`hash`](#cmd-hash) | Hashing operations | [Strings](#strings) |
-| [`host`](#cmd-host) | Host operations | [Managed Environment](#managed-environment) |
-| [`if`](#cmd-if) | Conditional execution | [Control Flow](#control-flow) |
-| [`incr`](#cmd-incr) | Increment variable value | [Variables](#variables) |
-| [`info`](#cmd-info) | Introspection operations | [Introspection](#introspection) |
-| [`interp`](#cmd-interp) | Interpreter management | [Interpreter Management](#interpreter-management) |
-| [`invoke`](#cmd-invoke) | Invoke command at specific stack level | [Engine Operations](#engine-operations) |
-| [`join`](#cmd-join) | Join list elements with separator | [Strings](#strings) |
-| [`kill`](#cmd-kill) | Kill process | [Native Environment](#native-environment) |
-| [`lappend`](#cmd-lappend) | Append elements to list variable | [Lists](#lists) |
-| [`lassign`](#cmd-lassign) | Assign list elements to variables | [Lists](#lists) |
-| [`lget`](#cmd-lget) | Get element from list variable | [Lists](#lists) |
-| [`library`](#cmd-library) | Native library operations | [Native Environment](#native-environment) |
-| [`lindex`](#cmd-lindex) | Get list element by index | [Lists](#lists) |
-| [`linsert`](#cmd-linsert) | Insert elements into list | [Lists](#lists) |
-| [`list`](#cmd-list) | Create a list | [Lists](#lists) |
-| [`llength`](#cmd-llength) | Get list length | [Lists](#lists) |
-| [`lmap`](#cmd-lmap) | List mapping (transform list) | [Lists](#lists) |
-| [`load`](#cmd-load) | Load binary plugin/extension | [Managed Environment](#managed-environment) |
-| [`lrange`](#cmd-lrange) | Get range of list elements | [Lists](#lists) |
-| [`lremove`](#cmd-lremove) | Remove list elements by index | [Lists](#lists) |
-| [`lrepeat`](#cmd-lrepeat) | Create list by repeating values | [Lists](#lists) |
-| [`lreplace`](#cmd-lreplace) | Replace list elements | [Lists](#lists) |
-| [`lreverse`](#cmd-lreverse) | Reverse a list | [Lists](#lists) |
-| [`lsearch`](#cmd-lsearch) | Search for element in list | [Lists](#lists) |
-| [`lset`](#cmd-lset) | Set list element | [Lists](#lists) |
-| [`lsort`](#cmd-lsort) | Sort a list | [Lists](#lists) |
-| [`namespace`](#cmd-namespace) | Namespace operations | [Namespaces](#namespaces) |
-| [`napply`](#cmd-napply) | Apply lambda with named arguments | [Procedures](#procedures) |
-| [`nop`](#cmd-nop) | No operation | [Core and Miscellaneous](#core-and-miscellaneous) |
-| [`nproc`](#cmd-nproc) | Create procedure with named arguments | [Procedures](#procedures) |
-| [`object`](#cmd-object) | .NET object operations | [Objects (.NET Interop)](#objects-net-interop) |
-| [`open`](#cmd-open) | Open file or channel | [I/O and Channels](#io-and-channels) |
-| [`package`](#cmd-package) | Package management | [Packages](#packages) |
-| [`parse`](#cmd-parse) | Parse scripts, expressions, and options | [Strings](#strings) |
-| [`pid`](#cmd-pid) | Get process ID | [Native Environment](#native-environment) |
-| [`proc`](#cmd-proc) | Create procedure | [Procedures](#procedures) |
-| [`puts`](#cmd-puts) | Write to channel | [I/O and Channels](#io-and-channels) |
-| [`pwd`](#cmd-pwd) | Print working directory | [File System](#file-system) |
-| [`read`](#cmd-read) | Read from channel | [I/O and Channels](#io-and-channels) |
-| [`regexp`](#cmd-regexp) | Regular expression matching | [Strings](#strings) |
-| [`regsub`](#cmd-regsub) | Regular expression substitution | [Strings](#strings) |
-| [`rename`](#cmd-rename) | Rename or delete identifiers | [Core and Miscellaneous](#core-and-miscellaneous) |
-| [`return`](#cmd-return) | Return from procedure or script | [Control Flow](#control-flow) |
-| [`scope`](#cmd-scope) | Variable scope operations | [Variables](#variables) |
-| [`seek`](#cmd-seek) | Set channel position | [I/O and Channels](#io-and-channels) |
-| [`set`](#cmd-set) | Set variable value | [Variables](#variables) |
-| [`setf`](#cmd-setf) | Set variable with flags **(obsolete)** | [Variables](#variables) |
-| [`socket`](#cmd-socket) | Socket operations | [Network and URI](#network-and-uri) |
-| [`source`](#cmd-source) | Source script file | [Engine Operations](#engine-operations) |
-| [`split`](#cmd-split) | Split string into list | [Strings](#strings) |
-| [`sql`](#cmd-sql) | Database operations | [Database (SQL)](#database-sql) |
-| [`string`](#cmd-string) | String operations | [Strings](#strings) |
-| [`stub`](#cmd-stub) | Stub ensemble placeholder (internal, see `interp stub`) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
+| [`[eof]`](#cmd-eof) | Check for end-of-file | [I/O and Channels](#io-and-channels) |
+| [`[error]`](#cmd-error) | Generate an error | [Control Flow](#control-flow) |
+| [`[eval]`](#cmd-eval) | Evaluate script | [Engine Operations](#engine-operations) |
+| [`[exec]`](#cmd-exec) | Execute external program | [Native Environment](#native-environment) |
+| [`[exit]`](#cmd-exit) | Exit interpreter | [Native Environment](#native-environment) |
+| [`[expr]`](#cmd-expr) | Evaluate expression | [Expression Evaluation](#expression-evaluation) |
+| [`[fblocked]`](#cmd-fblocked) | Check if channel is blocked | [I/O and Channels](#io-and-channels) |
+| [`[fconfigure]`](#cmd-fconfigure) | Configure channel options | [I/O and Channels](#io-and-channels) |
+| [`[fcopy]`](#cmd-fcopy) | Copy data between channels | [I/O and Channels](#io-and-channels) |
+| [`[file]`](#cmd-file) | File operations | [File System](#file-system) |
+| [`[flush]`](#cmd-flush) | Flush channel buffer | [I/O and Channels](#io-and-channels) |
+| [`[for]`](#cmd-for) | C-style for loop | [Control Flow](#control-flow) |
+| [`[foreach]`](#cmd-foreach) | Iterate over lists | [Control Flow](#control-flow) |
+| [`[format]`](#cmd-format) | Format string (like sprintf) | [Strings](#strings) |
+| [`[fpclassify]`](#cmd-fpclassify) | Classify floating-point value (normal/zero/infinite/nan) | [Expression Evaluation](#expression-evaluation) |
+| [`[getf]`](#cmd-getf) | Get variable with flags **(obsolete)** | [Variables](#variables) |
+| [`[gets]`](#cmd-gets) | Read line from channel | [I/O and Channels](#io-and-channels) |
+| [`[glob]`](#cmd-glob) | Glob for files | [File System](#file-system) |
+| [`[global]`](#cmd-global) | Declare global variables | [Variables](#variables) |
+| [`[guid]`](#cmd-guid) | GUID/UUID operations | [Strings](#strings) |
+| [`[hash]`](#cmd-hash) | Hashing operations | [Strings](#strings) |
+| [`[host]`](#cmd-host) | Host operations | [Managed Environment](#managed-environment) |
+| [`[if]`](#cmd-if) | Conditional execution | [Control Flow](#control-flow) |
+| [`[incr]`](#cmd-incr) | Increment variable value | [Variables](#variables) |
+| [`[info]`](#cmd-info) | Introspection operations | [Introspection](#introspection) |
+| [`[interp]`](#cmd-interp) | Interpreter management | [Interpreter Management](#interpreter-management) |
+| [`[invoke]`](#cmd-invoke) | Invoke command at specific stack level | [Engine Operations](#engine-operations) |
+| [`[join]`](#cmd-join) | Join list elements with separator | [Strings](#strings) |
+| [`[kill]`](#cmd-kill) | Kill process | [Native Environment](#native-environment) |
+| [`[lappend]`](#cmd-lappend) | Append elements to list variable | [Lists](#lists) |
+| [`[lassign]`](#cmd-lassign) | Assign list elements to variables | [Lists](#lists) |
+| [`[lget]`](#cmd-lget) | Get element from list variable | [Lists](#lists) |
+| [`[library]`](#cmd-library) | Native library operations | [Native Environment](#native-environment) |
+| [`[lindex]`](#cmd-lindex) | Get list element by index | [Lists](#lists) |
+| [`[linsert]`](#cmd-linsert) | Insert elements into list | [Lists](#lists) |
+| [`[list]`](#cmd-list) | Create a list | [Lists](#lists) |
+| [`[llength]`](#cmd-llength) | Get list length | [Lists](#lists) |
+| [`[lmap]`](#cmd-lmap) | List mapping (transform list) | [Lists](#lists) |
+| [`[load]`](#cmd-load) | Load binary plugin/extension | [Managed Environment](#managed-environment) |
+| [`[lrange]`](#cmd-lrange) | Get range of list elements | [Lists](#lists) |
+| [`[lremove]`](#cmd-lremove) | Remove list elements by index | [Lists](#lists) |
+| [`[lrepeat]`](#cmd-lrepeat) | Create list by repeating values | [Lists](#lists) |
+| [`[lreplace]`](#cmd-lreplace) | Replace list elements | [Lists](#lists) |
+| [`[lreverse]`](#cmd-lreverse) | Reverse a list | [Lists](#lists) |
+| [`[lsearch]`](#cmd-lsearch) | Search for element in list | [Lists](#lists) |
+| [`[lset]`](#cmd-lset) | Set list element | [Lists](#lists) |
+| [`[lsort]`](#cmd-lsort) | Sort a list | [Lists](#lists) |
+| [`[namespace]`](#cmd-namespace) | Namespace operations | [Namespaces](#namespaces) |
+| [`[napply]`](#cmd-napply) | Apply lambda with named arguments | [Procedures](#procedures) |
+| [`[nop]`](#cmd-nop) | No operation | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`[nproc]`](#cmd-nproc) | Create procedure with named arguments | [Procedures](#procedures) |
+| [`[object]`](#cmd-object) | .NET object operations | [Objects (.NET Interop)](#objects-net-interop) |
+| [`[open]`](#cmd-open) | Open file or channel | [I/O and Channels](#io-and-channels) |
+| [`[package]`](#cmd-package) | Package management | [Packages](#packages) |
+| [`[parse]`](#cmd-parse) | Parse scripts, expressions, and options | [Strings](#strings) |
+| [`[pid]`](#cmd-pid) | Get process ID | [Native Environment](#native-environment) |
+| [`[proc]`](#cmd-proc) | Create procedure | [Procedures](#procedures) |
+| [`[puts]`](#cmd-puts) | Write to channel | [I/O and Channels](#io-and-channels) |
+| [`[pwd]`](#cmd-pwd) | Print working directory | [File System](#file-system) |
+| [`[read]`](#cmd-read) | Read from channel | [I/O and Channels](#io-and-channels) |
+| [`[regexp]`](#cmd-regexp) | Regular expression matching | [Strings](#strings) |
+| [`[regsub]`](#cmd-regsub) | Regular expression substitution | [Strings](#strings) |
+| [`[rename]`](#cmd-rename) | Rename or delete identifiers | [Core and Miscellaneous](#core-and-miscellaneous) |
+| [`[return]`](#cmd-return) | Return from procedure or script | [Control Flow](#control-flow) |
+| [`[scope]`](#cmd-scope) | Variable scope operations | [Variables](#variables) |
+| [`[seek]`](#cmd-seek) | Set channel position | [I/O and Channels](#io-and-channels) |
+| [`[set]`](#cmd-set) | Set variable value | [Variables](#variables) |
+| [`[setf]`](#cmd-setf) | Set variable with flags **(obsolete)** | [Variables](#variables) |
+| [`[socket]`](#cmd-socket) | Socket operations | [Network and URI](#network-and-uri) |
+| [`[source]`](#cmd-source) | Source script file | [Engine Operations](#engine-operations) |
+| [`[split]`](#cmd-split) | Split string into list | [Strings](#strings) |
+| [`[sql]`](#cmd-sql) | Database operations | [Database (SQL)](#database-sql) |
+| [`[string]`](#cmd-string) | String operations | [Strings](#strings) |
+| [`stub`](#cmd-stub) | Stub ensemble placeholder (internal, see `[interp stub]`) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
 | [`subdelegate`](#cmd-subdelegate) | Sub-delegate ensemble wrapper (internal) | [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) |
-| [`subst`](#cmd-subst) | Perform substitutions | [Engine Operations](#engine-operations) |
-| [`switch`](#cmd-switch) | Pattern matching and branching | [Control Flow](#control-flow) |
-| [`tcl`](#cmd-tcl) | Tcl integration | [Tcl Integration](#tcl-integration) |
-| [`tell`](#cmd-tell) | Get channel position | [I/O and Channels](#io-and-channels) |
+| [`[subst]`](#cmd-subst) | Perform substitutions | [Engine Operations](#engine-operations) |
+| [`[switch]`](#cmd-switch) | Pattern matching and branching | [Control Flow](#control-flow) |
+| [`[tcl]`](#cmd-tcl) | Tcl integration | [Tcl Integration](#tcl-integration) |
+| [`[tell]`](#cmd-tell) | Get channel position | [I/O and Channels](#io-and-channels) |
 | [`test1`](#cmd-test1) | Basic test command | [Testing](#testing) |
 | [`test2`](#cmd-test2) | Advanced test command | [Testing](#testing) |
-| [`throw`](#cmd-throw) | Throw an exception | [Control Flow](#control-flow) |
-| [`time`](#cmd-time) | Time script execution | [Time and Clock](#time-and-clock) |
-| [`truncate`](#cmd-truncate) | Truncate channel | [I/O and Channels](#io-and-channels) |
-| [`try`](#cmd-try) | Try/finally exception handling | [Control Flow](#control-flow) |
-| [`unload`](#cmd-unload) | Unload binary plugin/extension | [Managed Environment](#managed-environment) |
-| [`unset`](#cmd-unset) | Unset variables | [Variables](#variables) |
-| [`unsetf`](#cmd-unsetf) | Unset variable with flags **(obsolete)** | [Variables](#variables) |
-| [`update`](#cmd-update) | Process events | [Event Management](#event-management) |
-| [`uplevel`](#cmd-uplevel) | Execute script at higher call stack level | [Control Flow](#control-flow) |
-| [`upvar`](#cmd-upvar) | Link variable to upper scope | [Variables](#variables) |
-| [`uri`](#cmd-uri) | URI operations | [Network and URI](#network-and-uri) |
-| [`variable`](#cmd-variable) | Declare namespace variables | [Variables](#variables) |
-| [`version`](#cmd-version) | Get Eagle version | [Introspection](#introspection) |
-| [`vwait`](#cmd-vwait) | Wait for variable change | [Event Management](#event-management) |
-| [`while`](#cmd-while) | While loop | [Control Flow](#control-flow) |
-| [`xml`](#cmd-xml) | XML operations | [XML](#xml) |
+| [`[throw]`](#cmd-throw) | Throw an exception | [Control Flow](#control-flow) |
+| [`[time]`](#cmd-time) | Time script execution | [Time and Clock](#time-and-clock) |
+| [`[truncate]`](#cmd-truncate) | Truncate channel | [I/O and Channels](#io-and-channels) |
+| [`[try]`](#cmd-try) | Try/finally exception handling | [Control Flow](#control-flow) |
+| [`[unload]`](#cmd-unload) | Unload binary plugin/extension | [Managed Environment](#managed-environment) |
+| [`[unset]`](#cmd-unset) | Unset variables | [Variables](#variables) |
+| [`[unsetf]`](#cmd-unsetf) | Unset variable with flags **(obsolete)** | [Variables](#variables) |
+| [`[update]`](#cmd-update) | Process events | [Event Management](#event-management) |
+| [`[uplevel]`](#cmd-uplevel) | Execute script at higher call stack level | [Control Flow](#control-flow) |
+| [`[upvar]`](#cmd-upvar) | Link variable to upper scope | [Variables](#variables) |
+| [`[uri]`](#cmd-uri) | URI operations | [Network and URI](#network-and-uri) |
+| [`[variable]`](#cmd-variable) | Declare namespace variables | [Variables](#variables) |
+| [`[version]`](#cmd-version) | Get Eagle version | [Introspection](#introspection) |
+| [`[vwait]`](#cmd-vwait) | Wait for variable change | [Event Management](#event-management) |
+| [`[while]`](#cmd-while) | While loop | [Control Flow](#control-flow) |
+| [`[xml]`](#cmd-xml) | XML operations | [XML](#xml) |
 
 ---
 
@@ -323,7 +323,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 <a id="cmd-break"></a>
 - **break** - Break out of loop
   - `break ?string?`
-  - Terminates the innermost enclosing loop (`for`, `foreach`, `while`, `do`). Control continues with the statement following the loop. If *string* is provided, it becomes the result of the loop command.
+  - Terminates the innermost enclosing loop (`[for]`, `[foreach]`, `[while]`, `[do]`). Control continues with the statement following the loop. If *string* is provided, it becomes the result of the loop command.
   - **Returns**: The optional *string* value, or an empty string.
 
 ---
@@ -339,9 +339,9 @@ Quick reference to all Eagle commands with links to their detailed documentation
   - **Returns**: An integer return code:
     - `0` (TCL_OK) - Script completed successfully
     - `1` (TCL_ERROR) - Script raised an error
-    - `2` (TCL_RETURN) - Script executed a `return`
-    - `3` (TCL_BREAK) - Script executed a `break`
-    - `4` (TCL_CONTINUE) - Script executed a `continue`
+    - `2` (TCL_RETURN) - Script executed a `[return]`
+    - `3` (TCL_BREAK) - Script executed a `[break]`
+    - `4` (TCL_CONTINUE) - Script executed a `[continue]`
   - **Example**:
     ```tcl
     if {[catch {open $filename r} fh]} then {
@@ -357,7 +357,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 <a id="cmd-continue"></a>
 - **continue** - Continue to next loop iteration
   - `continue ?string?`
-  - Skips the remainder of the current loop iteration and continues with the next iteration of the innermost enclosing loop. In a `for` loop, the *next* script is still executed.
+  - Skips the remainder of the current loop iteration and continues with the next iteration of the innermost enclosing loop. In a `[for]` loop, the *next* script is still executed.
   - **Returns**: The optional *string* value (rarely used).
 
 ---
@@ -365,8 +365,8 @@ Quick reference to all Eagle commands with links to their detailed documentation
 <a id="cmd-downlevel"></a>
 - **downlevel** - Execute script in the pre-uplevel call frame (Eagle extension)
   - `downlevel arg ?arg ...?`
-  - Executes the concatenated arguments as a script in the context of the call frame that was active *prior to* the most recent `uplevel`. This is an Eagle extension that solves a problem that is otherwise quite difficult in Tcl: when you're inside an upleveled script and need to temporarily execute code back in the original (lower) context.
-  - **Use case**: When a procedure uses `uplevel` to execute a script in the caller's context, code within that script may need to access variables or execute commands in the *original* procedure's context. `downlevel` provides this capability.
+  - Executes the concatenated arguments as a script in the context of the call frame that was active *prior to* the most recent `[uplevel]`. This is an Eagle extension that solves a problem that is otherwise quite difficult in Tcl: when you're inside an upleveled script and need to temporarily execute code back in the original (lower) context.
+  - **Use case**: When a procedure uses `[uplevel]` to execute a script in the caller's context, code within that script may need to access variables or execute commands in the *original* procedure's context. `[downlevel]` provides this capability.
   - **Returns**: The result of the executed script.
   - **Example**:
     ```tcl
@@ -392,14 +392,14 @@ Quick reference to all Eagle commands with links to their detailed documentation
     # {1 3 5} = deepdown's local 'a' (level 1 appends)
     # {0 2 4} = global 'a' (level 0 appends)
     ```
-  - **See also**: [`uplevel`](#cmd-uplevel), [`invoke`](#cmd-invoke)
+  - **See also**: [`[uplevel]`](#cmd-uplevel), [`[invoke]`](#cmd-invoke)
 
 ---
 
 <a id="cmd-error"></a>
 - **error** - Generate an error
   - `error ?message? ?errorInfo? ?errorCode? ?returnCode?`
-  - Raises an error with the specified *message*. The error propagates up the call stack until caught by `catch` or `try`.
+  - Raises an error with the specified *message*. The error propagates up the call stack until caught by `[catch]` or `[try]`.
   - **Arguments**:
     - *message* - The error message text
     - *errorInfo* - Initial stack trace information (appended to as error propagates)
@@ -422,7 +422,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
   - `return ?options? ?string?`
   - Returns from the current procedure or sourced script with the specified value.
   - **Options**:
-    - `-code code` - Return code: `ok` (0), `error` (1), `return` (2), `break` (3), `continue` (4), or an integer
+    - `-code code` - Return code: `ok` (0), `[error]` (1), `[return]` (2), `[break]` (3), `[continue]` (4), or an integer
     - `-errorcode code` - Set the error code (used with `-code error`)
     - `-errorinfo info` - Set the error info/stack trace
     - `-level n` - Number of levels to return through (default 1)
@@ -456,7 +456,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 <a id="cmd-try"></a>
 - **try** - Try/finally exception handling
   - `try script ?finally script?`
-  - Executes the try *script*. If a `finally` clause is provided, its script is always executed, whether or not an error occurred in the try script. The finally script runs even if the try script executes `return`, `break`, or `continue`.
+  - Executes the try *script*. If a `finally` clause is provided, its script is always executed, whether or not an error occurred in the try script. The finally script runs even if the try script executes `[return]`, `[break]`, or `[continue]`.
   - **Returns**: The result of the try script (errors are re-raised after finally executes).
   - **Example**:
     ```tcl
@@ -494,11 +494,11 @@ Quick reference to all Eagle commands with links to their detailed documentation
 <a id="cmd-do"></a>
 - **do** - Do-while loop
   - `do script ?clause? test`
-  - Executes *script* at least once, then repeatedly while *test* evaluates to true. The *clause* is optional and defaults to `while`; it must be the literal word `while` or `until`.
+  - Executes *script* at least once, then repeatedly while *test* evaluates to true. The *clause* is optional and defaults to `[while]`; it must be the literal word `[while]` or `until`.
   - **Clauses**:
-    - `while` - Continue looping while *test* is true
+    - `[while]` - Continue looping while *test* is true
     - `until` - Continue looping until *test* is true (i.e., while *test* is false)
-  - **Returns**: An empty string (or the value from `break`).
+  - **Returns**: An empty string (or the value from `[break]`).
   - **Example**:
     ```tcl
     set i 0
@@ -522,7 +522,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
       if {$k == 7} then break
     } while {$k < 10}
     ```
-  - **See also**: [`while`](#cmd-while), [`for`](#cmd-for), [`foreach`](#cmd-foreach)
+  - **See also**: [`[while]`](#cmd-while), [`[for]`](#cmd-for), [`[foreach]`](#cmd-foreach)
 
 ---
 
@@ -533,10 +533,10 @@ Quick reference to all Eagle commands with links to their detailed documentation
   - **Arguments**:
     - *start* - Initialization script (executed once before the loop)
     - *test* - Boolean expression evaluated before each iteration
-    - *next* - Script executed after each iteration (even after `continue`)
+    - *next* - Script executed after each iteration (even after `[continue]`)
     - *script* - The loop body
     - *end* - Optional cleanup script (Eagle extension)
-  - **Returns**: An empty string (or the value from `break`).
+  - **Returns**: An empty string (or the value from `[break]`).
   - **Example**:
     ```tcl
     for {set i 0} {$i < 10} {incr i} {
@@ -555,7 +555,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
     - *list* - The list to iterate over
     - Multiple varList/list pairs can be specified for parallel iteration
   - **Behavior**: When *varList* contains multiple variables, that many elements are consumed from *list* per iteration. If lists have different lengths, shorter lists pad with empty strings.
-  - **Returns**: An empty string (or the value from `break`).
+  - **Returns**: An empty string (or the value from `[break]`).
   - **Example**:
     ```tcl
     foreach {key value} $pairs {
@@ -572,8 +572,8 @@ Quick reference to all Eagle commands with links to their detailed documentation
 <a id="cmd-lmap"></a>
 - **lmap** - List mapping (transform list with script)
   - `lmap varList list ?varList list ...? script`
-  - Like `foreach`, but collects the results of each *script* evaluation into a new list.
-  - **Behavior**: Each non-empty result from *script* is appended to the result list. Use `continue` to skip adding a result for the current iteration.
+  - Like `[foreach]`, but collects the results of each *script* evaluation into a new list.
+  - **Behavior**: Each non-empty result from *script* is appended to the result list. Use `[continue]` to skip adding a result for the current iteration.
   - **Returns**: A list containing the results of each script evaluation.
   - **Example**:
     ```tcl
@@ -587,7 +587,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
     }]
     # Result: {2 4}
     ```
-  - **See also**: [`foreach`](#cmd-foreach), [`lsearch`](#cmd-lsearch)
+  - **See also**: [`[foreach]`](#cmd-foreach), [`[lsearch]`](#cmd-lsearch)
 
 ---
 
@@ -595,7 +595,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 - **while** - While loop
   - `while test script`
   - Repeatedly executes *script* while *test* evaluates to true. The *test* is evaluated before each iteration, so if it is initially false, *script* is never executed.
-  - **Returns**: An empty string (or the value from `break`).
+  - **Returns**: An empty string (or the value from `[break]`).
   - **Example**:
     ```tcl
     set i 0
@@ -630,7 +630,7 @@ All variable commands belong to ObjectGroup: "variable"
 
 ---
 
-> **See also:** [`array.md`](array.md) — deep-dive analysis of the `array` command, including all 17 sub-commands, 8 polymorphic storage backends (ElementDictionary, environment, System.Array, thread, database, network, registry, tests), `array copy` with deep copy, `array default` (TIP #508), `array random` with 5 options, `array for`/`foreach`/`lmap` iteration, per-element flags, `VariableFlags`, and trace integration. | [`options.md`](options.md#array-copy) — per-option semantics
+> **See also:** [`array.md`](array.md) — deep-dive analysis of the `[array]` command, including all 17 sub-commands, 8 polymorphic storage backends (ElementDictionary, environment, System.Array, thread, database, network, registry, tests), `[array copy]` with deep copy, `[array default]` (TIP #508), `[array random]` with 5 options, `[array for]`/`[foreach]`/`[lmap]` iteration, per-element flags, `VariableFlags`, and trace integration. | [`options.md`](options.md#array-copy) — per-option semantics
 
 <a id="cmd-array"></a>
 - **array** - Array operations (see Arrays section for sub-commands)
@@ -642,8 +642,8 @@ All variable commands belong to ObjectGroup: "variable"
   - `getf varName`
   - Retrieves a variable's value along with internal flag information. This is an obsolete diagnostic command primarily used for interpreter debugging.
   - **Returns**: The variable value with associated flags.
-  - **Deprecation note**: This command is retained for backward compatibility and internal diagnostics. Use `set` for normal variable access.
-  - **See also**: [`setf`](#cmd-setf), [`unsetf`](#cmd-unsetf), [`set`](#cmd-set)
+  - **Deprecation note**: This command is retained for backward compatibility and internal diagnostics. Use `[set]` for normal variable access.
+  - **See also**: [`[setf]`](#cmd-setf), [`[unsetf]`](#cmd-unsetf), [`[set]`](#cmd-set)
 
 ---
 
@@ -739,7 +739,7 @@ All variable commands belong to ObjectGroup: "variable"
       ```
 
     **scope current** - Get current open scope name
-    - `scope current`
+    - `[scope current]`
     - Returns the name of the currently open scope, or an empty string if no scope is open.
     - **Returns**: Current scope name or empty string.
 
@@ -893,7 +893,7 @@ All variable commands belong to ObjectGroup: "variable"
     ```
 
   - **Scope with upvar Pattern**:
-    Scopes can be combined with `upvar` to implement persistent references:
+    Scopes can be combined with `[upvar]` to implement persistent references:
     ```tcl
     proc accumulator {scopeName varName} {
       set c 9
@@ -941,7 +941,7 @@ All variable commands belong to ObjectGroup: "variable"
     scope destroy testScope
     ```
 
-  - **See also**: [`uplevel`](#cmd-uplevel), [`upvar`](#cmd-upvar), [`variable`](#cmd-variable), [`scope.md`](scope.md) (deep-dive analysis) | [`options.md`](options.md#scope-close) — per-option semantics
+  - **See also**: [`[uplevel]`](#cmd-uplevel), [`[upvar]`](#cmd-upvar), [`[variable]`](#cmd-variable), [`scope.md`](scope.md) (deep-dive analysis) | [`options.md`](options.md#scope-close) — per-option semantics
 
 ---
 
@@ -968,8 +968,8 @@ All variable commands belong to ObjectGroup: "variable"
   - `setf varFlags varName ?newValue?`
   - Sets a variable with specific internal flags. This is an obsolete diagnostic command used for interpreter debugging.
   - **Returns**: The value of the variable.
-  - **Deprecation note**: This command is retained for backward compatibility and internal diagnostics. Use `set` for normal variable operations.
-  - **See also**: [`getf`](#cmd-getf), [`unsetf`](#cmd-unsetf), [`set`](#cmd-set)
+  - **Deprecation note**: This command is retained for backward compatibility and internal diagnostics. Use `[set]` for normal variable operations.
+  - **See also**: [`[getf]`](#cmd-getf), [`[unsetf]`](#cmd-unsetf), [`[set]`](#cmd-set)
 
 ---
 
@@ -998,8 +998,8 @@ All variable commands belong to ObjectGroup: "variable"
   - `unsetf varFlags ?varName varName ...?`
   - Unsets variables with specific internal flags. This is a diagnostic command for advanced interpreter manipulation.
   - **Returns**: An empty string.
-  - **Deprecation note**: This command is retained for backward compatibility and internal diagnostics. Use `unset` for normal variable removal.
-  - **See also**: [`getf`](#cmd-getf), [`setf`](#cmd-setf), [`unset`](#cmd-unset)
+  - **Deprecation note**: This command is retained for backward compatibility and internal diagnostics. Use `[unset]` for normal variable removal.
+  - **See also**: [`[getf]`](#cmd-getf), [`[setf]`](#cmd-setf), [`[unset]`](#cmd-unset)
 
 ---
 
@@ -1031,7 +1031,7 @@ All variable commands belong to ObjectGroup: "variable"
 <a id="cmd-variable"></a>
 - **variable** - Declare namespace variables
   - `variable ?name value...? name ?value?`
-  - Declares variables within the current namespace. If called inside a procedure within a namespace, creates a link to the namespace variable (similar to `global` but for namespace variables).
+  - Declares variables within the current namespace. If called inside a procedure within a namespace, creates a link to the namespace variable (similar to `[global]` but for namespace variables).
   - **Arguments**:
     - *name* - Variable name to declare
     - *value* - Optional initial value
@@ -1119,7 +1119,7 @@ Many list commands accept index arguments. Valid index formats include:
     lget data end       ;# Returns: {d e f {g h i}}
     lget data end end   ;# Returns: {g h i}
     ```
-  - **See also**: [`lindex`](#cmd-lindex), [`lset`](#cmd-lset)
+  - **See also**: [`[lindex]`](#cmd-lindex), [`[lset]`](#cmd-lset)
 
 ---
 
@@ -1220,7 +1220,7 @@ Many list commands accept index arguments. Valid index formats include:
     ```tcl
     lremove {a b c d e} 1 3    ;# Returns: {a c e}
     ```
-  - **See also**: [`lreplace`](#cmd-lreplace), [`lrange`](#cmd-lrange)
+  - **See also**: [`[lreplace]`](#cmd-lreplace), [`[lrange]`](#cmd-lrange)
 
 ---
 
@@ -1386,7 +1386,7 @@ String commands belong to ObjectGroup: "string"
 - **concat** - Concatenate arguments
   - `concat ?arg arg ...?`
   - Concatenates the arguments with spaces, treating each as a list and merging them into a single list. Leading/trailing whitespace is trimmed from each argument.
-  - **Note**: For simple string concatenation, use `append` or double-quotes. `concat` is primarily for merging lists.
+  - **Note**: For simple string concatenation, use `[append]` or double-quotes. `[concat]` is primarily for merging lists.
   - **Returns**: A list formed by concatenating all arguments.
   - **Example**:
     ```tcl
@@ -1449,8 +1449,8 @@ String commands belong to ObjectGroup: "string"
   - `guid compare guid1 guid2` - Compare two GUIDs (-1, 0, or 1)
   - `guid isnull guid` - Check if GUID is the null/empty GUID
   - `guid isvalid guid` - Check if string is a valid GUID format
-  - `guid new` - Generate a new random GUID
-  - `guid null` - Return the null GUID (all zeros)
+  - `[guid new]` - Generate a new random GUID
+  - `[guid null]` - Return the null GUID (all zeros)
   - **Returns**: GUID string or boolean result.
   - **Example**:
     ```tcl
@@ -1527,7 +1527,7 @@ String commands belong to ObjectGroup: "string"
     - `-characters count` - Limit parsing to *count* characters
   - **Returns**: Parsed structure (list of tokens with type, text, and position info).
   - **Use cases**: Syntax analysis, script validation, building development tools, IDE integration.
-  - **See also**: `info complete` (check if script is complete)
+  - **See also**: `[info complete]` (check if script is complete)
   - **Example**:
     ```tcl
     # Parse a simple command
@@ -1667,12 +1667,12 @@ String commands belong to ObjectGroup: "string"
 
 ---
 
-> **See also:** [`string.md`](string.md) — deep-dive analysis of the `string` command, including all 29 sub-commands, the 64-class `string is` type-checking system, culture-aware comparison, extended `string map`, `string format` .NET integration, MatchMode enumeration, and character classification callbacks. | [`options.md`](options.md#string-equal--string-compare) — per-option semantics
+> **See also:** [`string.md`](string.md) — deep-dive analysis of the `[string]` command, including all 29 sub-commands, the 64-class `[string is]` type-checking system, culture-aware comparison, extended `[string map]`, `[string format]` .NET integration, MatchMode enumeration, and character classification callbacks. | [`options.md`](options.md#string-equal--string-compare) — per-option semantics
 
 <a id="cmd-string"></a>
 - **string** - String operations (extensive sub-commands)
 
-  The `string` command provides comprehensive string manipulation capabilities through numerous sub-commands.
+  The `[string]` command provides comprehensive string manipulation capabilities through numerous sub-commands.
 
   ---
 
@@ -1781,7 +1781,7 @@ String commands belong to ObjectGroup: "string"
 
   ---
 
-  - `string format format ?arg ...?` - Same as the `format` command.
+  - `string format format ?arg ...?` - Same as the `[format]` command.
 
   **Example**:
   ```tcl
@@ -1848,13 +1848,13 @@ String commands belong to ObjectGroup: "string"
 
   #### Utility
 
-  - `string classes` - Returns a list of all available string classification classes (for `string is`).
+  - `[string classes]` - Returns a list of all available string classification classes (for `[string is]`).
 
   ---
 
-  #### String Classification (`string is`)
+  #### String Classification (`[string is]`)
 
-  The `string is` sub-command tests whether a string belongs to a particular class. All forms take the syntax:
+  The `[string is]` sub-command tests whether a string belongs to a particular class. All forms take the syntax:
   `string is class ?-strict? ?-failindex varName? string`
 
   - `-strict` - Empty string returns false (default: empty string passes most tests)
@@ -2174,11 +2174,11 @@ Arrays in Eagle are associative arrays (hash tables) that map string keys to str
 
   ---
 
-  - `array foreach varList arrayName ?varList arrayName ...? script` - More flexible iteration, similar to `foreach` but for arrays (Eagle extension).
+  - `array foreach varList arrayName ?varList arrayName ...? script` - More flexible iteration, similar to `[foreach]` but for arrays (Eagle extension).
 
   ---
 
-  - `array lmap varList arrayName ?varList arrayName ...? script` - Like `array foreach` but collects results into a list (Eagle extension).
+  - `array lmap varList arrayName ?varList arrayName ...? script` - Like `[array foreach]` but collects results into a list (Eagle extension).
 
   **Example**:
   ```tcl
@@ -2235,7 +2235,7 @@ Arrays in Eagle are associative arrays (hash tables) that map string keys to str
 
 Dictionary commands belong to ObjectGroup: "list"
 
-Dictionaries in Eagle are value types represented as lists with an even number of elements (alternating keys and values). The `dict` command provides a comprehensive set of operations for creating, querying, and modifying dictionaries. Dictionaries support nested key traversal, where intermediate keys map to sub-dictionaries.
+Dictionaries in Eagle are value types represented as lists with an even number of elements (alternating keys and values). The `[dict]` command provides a comprehensive set of operations for creating, querying, and modifying dictionaries. Dictionaries support nested key traversal, where intermediate keys map to sub-dictionaries.
 
 <a id="cmd-dict"></a>
 - **dict** - Dictionary operations
@@ -2360,7 +2360,7 @@ Dictionaries in Eagle are value types represented as lists with an even number o
 
   ---
 
-  - `dict map {keyVar valueVar} dictionaryValue body` - Creates a new dictionary by evaluating *body* for each key-value pair. The key variable and value variable are set before each iteration. If *body* returns a non-empty result, the key is mapped to that result in the output dictionary. Supports `break` and `continue`.
+  - `dict map {keyVar valueVar} dictionaryValue body` - Creates a new dictionary by evaluating *body* for each key-value pair. The key variable and value variable are set before each iteration. If *body* returns a non-empty result, the key is mapped to that result in the output dictionary. Supports `[break]` and `[continue]`.
 
   **Example**:
   ```tcl
@@ -2389,7 +2389,7 @@ Dictionaries in Eagle are value types represented as lists with an even number o
 
   ---
 
-  - `dict foreach {keyVar valueVar} dictionaryValue body` - Iterates over each key-value pair in the dictionary, setting *keyVar* and *valueVar* before evaluating *body*. Supports `break` and `continue`. Returns an empty string.
+  - `dict foreach {keyVar valueVar} dictionaryValue body` - Iterates over each key-value pair in the dictionary, setting *keyVar* and *valueVar* before evaluating *body*. Supports `[break]` and `[continue]`. Returns an empty string.
 
   ---
 
@@ -2444,7 +2444,7 @@ Dictionaries in Eagle are value types represented as lists with an even number o
 
 Channel commands belong to ObjectGroup: "channel"
 
-Channels are Eagle's abstraction for I/O streams. Standard channels include `stdin`, `stdout`, and `stderr`. Additional channels are created by `open`, `socket`, and other commands.
+Channels are Eagle's abstraction for I/O streams. Standard channels include `stdin`, `stdout`, and `stderr`. Additional channels are created by `[open]`, `[socket]`, and other commands.
 
 ---
 
@@ -2479,7 +2479,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
   - `fconfigure channelId ?optionName? ?value? ?optionName value ...?`
   - Gets or sets configuration options for a channel. Without arguments after *channelId*, returns all options. With just *optionName*, returns that option's value.
   - **Options**:
-    - `-blocking boolean` - Blocking (true) or non-blocking (false) mode. Non-blocking mode allows `gets` and `read` with `-noblock` to return immediately with available data.
+    - `-blocking boolean` - Blocking (true) or non-blocking (false) mode. Non-blocking mode allows `[gets]` and `[read]` with `-noblock` to return immediately with available data.
     - `-encoding name` - Character encoding (e.g., `utf-8`, `ascii`, `unicode`). Use `binary` or set to null for raw binary I/O.
     - `-translation mode` - Line ending translation mode. Can be a single value for both input and output, or a two-element list `{inputMode outputMode}`:
       - `auto` - Accept any line ending on input; use platform-native on output
@@ -2515,7 +2515,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
 <a id="cmd-flush"></a>
 - **flush** - Flush channel buffer
   - `flush channelId`
-  - Forces any buffered output data to be written to *channelId*. Normally, data is buffered and written in larger chunks for efficiency. `flush` ensures all pending data is actually sent.
+  - Forces any buffered output data to be written to *channelId*. Normally, data is buffered and written in larger chunks for efficiency. `[flush]` ensures all pending data is actually sent.
   - **Returns**: An empty string.
 
 ---
@@ -2531,7 +2531,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
   - **Standard Options**:
     - `--` - End of options
   - **Eagle Extension Options**:
-    - `-noblock` - Non-blocking read: returns immediately with whatever data is currently available in the channel's internal buffer, rather than waiting for a complete line or EOF. **Important**: If no data is available in the buffer, the command will raise an error; wrap in `catch` to handle this case. This is useful for responsive I/O on sockets, pipes, or other streaming channels.
+    - `-noblock` - Non-blocking read: returns immediately with whatever data is currently available in the channel's internal buffer, rather than waiting for a complete line or EOF. **Important**: If no data is available in the buffer, the command will raise an error; wrap in `[catch]` to handle this case. This is useful for responsive I/O on sockets, pipes, or other streaming channels.
     - `-keepeol boolean` - When true, keep end-of-line characters in the result instead of stripping them.
     - `-count n` - Read exactly *n* bytes/characters instead of reading until end-of-line.
     - `-encoding value` - Override the channel's encoding for this read operation (unsafe).
@@ -2575,7 +2575,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
     - `a+` - Read and write; append; create if needed
   - **Access flags** (alternative POSIX-style): `RDONLY`, `WRONLY`, `RDWR`, `APPEND`, `CREAT`, `EXCL`, `TRUNC`, `SeekToEof`
   - **Permissions**: Unix-style permission bits (default: 0666, modified by umask). Parsed but not used for file creation in Eagle.
-  - **Type**: Channel type; currently only `file` (default) is supported.
+  - **Type**: Channel type; currently only `[file]` (default) is supported.
   - **Eagle Extension Options**:
     - `-channelid value` - Specify a custom channel identifier instead of auto-generated
     - `-buffersize n` - Set the buffer size in bytes
@@ -2647,7 +2647,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
     - `-nonewline` - Strip trailing newline from result
     - `--` - End of options
   - **Eagle Extension Options**:
-    - `-noblock` - Non-blocking read: returns immediately with whatever data is currently available in the channel's internal buffer, rather than waiting for *numChars* characters or EOF. **Important**: If no data is available in the buffer, the command will raise an error; wrap in `catch` to handle this case. Essential for responsive I/O on sockets, pipes, or other streaming channels.
+    - `-noblock` - Non-blocking read: returns immediately with whatever data is currently available in the channel's internal buffer, rather than waiting for *numChars* characters or EOF. **Important**: If no data is available in the buffer, the command will raise an error; wrap in `[catch]` to handle this case. Essential for responsive I/O on sockets, pipes, or other streaming channels.
     - `-encoding value` - Override the channel's encoding for this read operation (unsafe).
     - `-useobject` - Return result as an opaque object handle (byte array) instead of a string (unsafe). Useful for binary data that shouldn't be encoded/decoded.
   - **Returns**: The data read as a string (or object handle with `-useobject`).
@@ -2727,12 +2727,12 @@ File system commands belong to ObjectGroup: "fileSystem"
 
 ---
 
-> **See also:** [`file.md`](file.md) — deep-dive analysis of the `file` command, including all 54 sub-commands, Windows ACL/SDDL security, PE file inspection, access control infrastructure, advanced globbing with `MatchMode`, cryptographic temporary paths, interpreter cleanup management, and platform-specific behavior. | [`options.md`](options.md#file-cleanup) — per-option semantics
+> **See also:** [`file.md`](file.md) — deep-dive analysis of the `[file]` command, including all 54 sub-commands, Windows ACL/SDDL security, PE file inspection, access control infrastructure, advanced globbing with `MatchMode`, cryptographic temporary paths, interpreter cleanup management, and platform-specific behavior. | [`options.md`](options.md#file-cleanup) — per-option semantics
 
 <a id="cmd-file"></a>
 - **file** - File operations (extensive sub-commands)
 
-  The `file` command provides comprehensive file system operations. Sub-commands are organized by category below.
+  The `[file]` command provides comprehensive file system operations. Sub-commands are organized by category below.
 
   ---
 
@@ -2814,7 +2814,7 @@ File system commands belong to ObjectGroup: "fileSystem"
 
   ---
 
-  - `file type name` - Returns the type: `file`, `directory`, `link`, `characterSpecial`, `blockSpecial`, `fifo`, or `socket`.
+  - `file type name` - Returns the type: `[file]`, `directory`, `link`, `characterSpecial`, `blockSpecial`, `fifo`, or `[socket]`.
 
   ---
 
@@ -2908,17 +2908,17 @@ File system commands belong to ObjectGroup: "fileSystem"
 
   ---
 
-  - `file volumes` - Returns a list of mounted volumes (e.g., `{C:/ D:/}` on Windows).
+  - `[file volumes]` - Returns a list of mounted volumes (e.g., `{C:/ D:/}` on Windows).
 
   ---
 
   #### Temporary Files
 
-  - `file tempname` - Returns a unique temporary file name (Eagle extension).
+  - `[file tempname]` - Returns a unique temporary file name (Eagle extension).
 
   ---
 
-  - `file temppath` - Returns the path to the system temporary directory (Eagle extension).
+  - `[file temppath]` - Returns the path to the system temporary directory (Eagle extension).
 
   ---
 
@@ -2975,7 +2975,7 @@ File system commands belong to ObjectGroup: "fileSystem"
 
 <a id="cmd-pwd"></a>
 - **pwd** - Print working directory
-  - `pwd`
+  - `[pwd]`
   - Returns the absolute path of the current working directory.
   - **Returns**: Directory path string.
 
@@ -3041,7 +3041,7 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
     connect -host localhost -port 8080 \
         -timeout 60
     ```
-  - **See also**: [`proc`](#cmd-proc), [`napply`](#cmd-napply)
+  - **See also**: [`[proc]`](#cmd-proc), [`[napply]`](#cmd-napply)
 
 ---
 
@@ -3050,7 +3050,7 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
   - `apply lambdaExpr ?arg1 arg2 ...?`
   - Applies an anonymous procedure (lambda) to the given arguments. A lambda expression is a two or three element list: `{args body}` or `{args body namespace}`.
   - **Lambda structure**:
-    - Element 1: Argument list (same format as `proc`)
+    - Element 1: Argument list (same format as `[proc]`)
     - Element 2: Procedure body
     - Element 3: Optional namespace context
   - **Returns**: The result of executing the lambda body.
@@ -3073,12 +3073,12 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
 <a id="cmd-napply"></a>
 - **napply** - Apply lambda with named arguments (Eagle extension)
   - `napply lambdaExpr ?arg1 arg2 ...?`
-  - Like `apply`, but accepts named arguments using `-name value` syntax.
+  - Like `[apply]`, but accepts named arguments using `-name value` syntax.
   - **Example**:
     ```tcl
     napply {{x y} {expr {$x + $y}}} -x 3 -y 4    ;# Returns: 7
     ```
-  - **See also**: [`apply`](#cmd-apply), [`nproc`](#cmd-nproc)
+  - **See also**: [`[apply]`](#cmd-apply), [`[nproc]`](#cmd-nproc)
 
 ---
 
@@ -3093,7 +3093,7 @@ Namespaces provide hierarchical organization of commands and variables, preventi
 
 ---
 
-> **See also:** [`namespace.md`](namespace.md) — deep-dive analysis of the `namespace` command, including all 22 sub-commands, dual-implementation architecture (Namespace1 stub vs. Namespace2 full), `INamespace` object model with parent-child hierarchy and reference counting, name resolution algorithm, call frame integration, import/export mechanism with `IAlias`, per-namespace unknown handler, namespace mappings, pluggable `IResolve` per namespace, and scope integration. | [`options.md`](options.md#namespace-export-namespace1-and-namespace2) — per-option semantics
+> **See also:** [`namespace.md`](namespace.md) — deep-dive analysis of the `[namespace]` command, including all 22 sub-commands, dual-implementation architecture (Namespace1 stub vs. Namespace2 full), `INamespace` object model with parent-child hierarchy and reference counting, name resolution algorithm, call frame integration, import/export mechanism with `IAlias`, per-namespace unknown handler, namespace mappings, pluggable `IResolve` per namespace, and scope integration. | [`options.md`](options.md#namespace-export-namespace1-and-namespace2) — per-option semantics
 
 <a id="cmd-namespace"></a>
 - **namespace** - Namespace operations
@@ -3129,7 +3129,7 @@ Namespaces provide hierarchical organization of commands and variables, preventi
 
   #### Namespace Information
 
-  - `namespace current` - Returns the fully-qualified name of the current namespace.
+  - `[namespace current]` - Returns the fully-qualified name of the current namespace.
 
   ---
 
@@ -3210,7 +3210,7 @@ Namespaces provide hierarchical organization of commands and variables, preventi
 
   ---
 
-  - `namespace inscope name arg ?arg...?` - Evaluates script in namespace *name* with additional arguments appended. Similar to `namespace eval` but handles arguments differently.
+  - `namespace inscope name arg ?arg...?` - Evaluates script in namespace *name* with additional arguments appended. Similar to `[namespace eval]` but handles arguments differently.
 
   **Example**:
   ```tcl
@@ -3236,7 +3236,7 @@ Namespaces provide hierarchical organization of commands and variables, preventi
 
   ---
 
-  - `namespace mappings` - Returns namespace mapping information (Eagle extension).
+  - `[namespace mappings]` - Returns namespace mapping information (Eagle extension).
 
 ---
 
@@ -3254,7 +3254,7 @@ Object commands belong to ObjectGroup: "managedEnvironment"
 <a id="cmd-object"></a>
 - **object** - .NET object operations (comprehensive .NET interop)
 
-  The `object` command provides Eagle's powerful .NET interoperability, allowing scripts to create, manipulate, and invoke methods on .NET objects.
+  The `[object]` command provides Eagle's powerful .NET interoperability, allowing scripts to create, manipulate, and invoke methods on .NET objects.
 
   ---
 
@@ -3406,7 +3406,7 @@ Object commands belong to ObjectGroup: "managedEnvironment"
 
   ---
 
-  - `object lmap varName object body` - Like `foreach` but collects results into a list.
+  - `object lmap varName object body` - Like `[foreach]` but collects results into a list.
 
   **Example**:
   ```tcl
@@ -3518,7 +3518,7 @@ Object commands belong to ObjectGroup: "managedEnvironment"
 
 Debug command belongs to ObjectGroup: "debug"
 
-The `debug` command provides comprehensive debugging capabilities for Eagle scripts and the interpreter itself. It is an ensemble command with 78 sub-commands covering breakpoint management, execution control, memory analysis, script bundling, tracing, and runtime configuration. Many sub-commands require the `DEBUGGER` compile-time flag; others require `DEBUGGER_BREAKPOINTS`, `SHELL`, `DATA`, `HISTORY`, `NATIVE`, or `PREVIOUS_RESULT`.
+The `[debug]` command provides comprehensive debugging capabilities for Eagle scripts and the interpreter itself. It is an ensemble command with 78 sub-commands covering breakpoint management, execution control, memory analysis, script bundling, tracing, and runtime configuration. Many sub-commands require the `DEBUGGER` compile-time flag; others require `DEBUGGER_BREAKPOINTS`, `SHELL`, `DATA`, `HISTORY`, `NATIVE`, or `PREVIOUS_RESULT`.
 
 ---
 
@@ -3541,7 +3541,7 @@ The `debug` command provides comprehensive debugging capabilities for Eagle scri
 
   ---
 
-  - `debug status` - Returns a list describing the current debugger state: whether a debugger is available, whether it is enabled, the current header flags, and whether an isolated debugger interpreter is available. Requires `DEBUGGER`.
+  - `[debug status]` - Returns a list describing the current debugger state: whether a debugger is available, whether it is enabled, the current header flags, and whether an isolated debugger interpreter is available. Requires `DEBUGGER`.
 
   ---
 
@@ -3578,11 +3578,11 @@ The `debug` command provides comprehensive debugging capabilities for Eagle scri
 
   ---
 
-  - `debug suspend` - Suspends the debugger, saving its current context. This allows script evaluation to proceed without debugger interception. Uses a dual-context array for save/restore. Requires `DEBUGGER`.
+  - `[debug suspend]` - Suspends the debugger, saving its current context. This allows script evaluation to proceed without debugger interception. Uses a dual-context array for save/restore. Requires `DEBUGGER`.
 
   ---
 
-  - `debug resume` - Resumes a previously suspended debugger, restoring its context. Requires `DEBUGGER`.
+  - `[debug resume]` - Resumes a previously suspended debugger, restoring its context. Requires `DEBUGGER`.
 
   ---
 
@@ -3606,7 +3606,7 @@ The `debug` command provides comprehensive debugging capabilities for Eagle scri
 
   #### Call Stack and Variables
 
-  - `debug levels` - Returns a key-value list of maximum nesting depths: `maximumLevels`, `maximumScriptLevels`, `maximumScriptFileLevels`, `maximumParserLevels`, `maximumExpressionLevels`.
+  - `[debug levels]` - Returns a key-value list of maximum nesting depths: `maximumLevels`, `maximumScriptLevels`, `maximumScriptFileLevels`, `maximumParserLevels`, `maximumExpressionLevels`.
 
   ---
 
@@ -3816,11 +3816,11 @@ The `debug` command provides comprehensive debugging capabilities for Eagle scri
 
   #### Memory and Garbage Collection
 
-  - `debug memory` - Returns a detailed key-value list of managed memory statistics: `gcTotalMemory`, `gcMaxGeneration`, per-generation `gcCollectionCount`, `isServerGC`, `gcLatencyMode` (when available), and native memory status (when `NATIVE` is enabled).
+  - `[debug memory]` - Returns a detailed key-value list of managed memory statistics: `gcTotalMemory`, `gcMaxGeneration`, per-generation `gcCollectionCount`, `isServerGC`, `gcLatencyMode` (when available), and native memory status (when `NATIVE` is enabled).
 
   ---
 
-  - `debug sysmemory` - Returns system (native) memory information via `NativeOps.GetMemoryStatus()`. Requires `NATIVE`.
+  - `[debug sysmemory]` - Returns system (native) memory information via `NativeOps.GetMemoryStatus()`. Requires `NATIVE`.
 
   ---
 
@@ -3836,7 +3836,7 @@ The `debug` command provides comprehensive debugging capabilities for Eagle scri
 
   ---
 
-  - `debug purge` - Purges all call frame information via `CallFrameOps.Purge()`.
+  - `[debug purge]` - Purges all call frame information via `CallFrameOps.Purge()`.
 
   **Example**:
   ```tcl
@@ -3991,11 +3991,11 @@ The `debug` command provides comprehensive debugging capabilities for Eagle scri
 
   ---
 
-  - `debug result` - Returns the full string representation of the current or previous result, including stack traces (via `Result.FullString` and `Result.WithStackTraces()`). Falls back to the previous result if the current result is null. Requires `PREVIOUS_RESULT` for fallback.
+  - `[debug result]` - Returns the full string representation of the current or previous result, including stack traces (via `Result.FullString` and `Result.WithStackTraces()`). Falls back to the previous result if the current result is null. Requires `PREVIOUS_RESULT` for fallback.
 
   ---
 
-  - `debug complaint` - Returns the current complaint string from `DebugOps.SafeGetComplaint()`. Complaints are internal diagnostic messages recorded when non-critical errors occur.
+  - `[debug complaint]` - Returns the current complaint string from `DebugOps.SafeGetComplaint()`. Complaints are internal diagnostic messages recorded when non-critical errors occur.
 
   **Example**:
   ```tcl
@@ -4009,7 +4009,7 @@ The `debug` command provides comprehensive debugging capabilities for Eagle scri
   #### Emergency Mode
 
   - `debug emergency ?options? ?level?` - Enters emergency debugging mode for critical troubleshooting. This is the most complex sub-command, performing multiple phases controlled by the `DebugEmergencyLevel` flags enumeration.
-    - **Options**: Same as `debug break` (`-interpreter`, `-ignoreenabled`, `-nocomplain`, `-noerror`)
+    - **Options**: Same as `[debug break]` (`-interpreter`, `-ignoreenabled`, `-nocomplain`, `-noerror`)
     - *level* is a `DebugEmergencyLevel` flags value (default: `Default`). Flags include `Enabled`, `Disabled`, and various phase-control flags that determine which emergency operations are performed (e.g., enabling/disabling the debugger, entering interactive mode, setting breakpoint types).
 
   ---
@@ -4020,7 +4020,7 @@ The `debug` command provides comprehensive debugging capabilities for Eagle scri
 
   ---
 
-  - `debug null` - Forces a null result. Ignores all arguments, sets the result to empty, and applies `ResultFlags.ForceNullMask` to force the engine to treat the result as null.
+  - `[debug null]` - Forces a null result. Ignores all arguments, sets the result to empty, and applies `ResultFlags.ForceNullMask` to force the engine to treat the result as null.
 
   ---
 
@@ -4029,7 +4029,7 @@ The `debug` command provides comprehensive debugging capabilities for Eagle scri
 
   ---
 
-  - `debug keyring` - Fetches and merges the security keyring via `ScriptOps.FetchAndMergeKeyRing()`.
+  - `[debug keyring]` - Fetches and merges the security keyring via `ScriptOps.FetchAndMergeKeyRing()`.
 
   ---
 
@@ -4049,7 +4049,7 @@ The `debug` command provides comprehensive debugging capabilities for Eagle scri
 
 Interpreter commands belong to ObjectGroup: "scriptEnvironment"
 
-The `interp` command manages child interpreters, providing sandboxing, isolation, and communication between interpreters. Child interpreters can be "safe" (restricted) or full-featured.
+The `[interp]` command manages child interpreters, providing sandboxing, isolation, and communication between interpreters. Child interpreters can be "safe" (restricted) or full-featured.
 
 ---
 
@@ -4420,7 +4420,7 @@ The `interp` command manages child interpreters, providing sandboxing, isolation
 
 Package commands belong to ObjectGroup: "scriptEnvironment"
 
-The `package` command manages Eagle packages - reusable collections of procedures and commands. It handles versioning, dependencies, and lazy loading of packages.
+The `[package]` command manages Eagle packages - reusable collections of procedures and commands. It handles versioning, dependencies, and lazy loading of packages.
 
 ---
 
@@ -4470,7 +4470,7 @@ The `package` command manages Eagle packages - reusable collections of procedure
 
   - `package ifneeded package version ?script? ?flags?` - Registers a script to load *package* at *version*.
     - Without *script*, returns the current script.
-    - The script is executed when `package require` is called.
+    - The script is executed when `[package require]` is called.
     - This is typically set in `pkgIndex.tcl` files.
 
   ---
@@ -4566,7 +4566,7 @@ The `package` command manages Eagle packages - reusable collections of procedure
 
   ---
 
-  - `package reset` - Resets package management state.
+  - `[package reset]` - Resets package management state.
 
   ---
 
@@ -4600,15 +4600,16 @@ Eagle provides built-in test commands for unit testing. These commands integrate
 
 <a id="cmd-test1"></a>
 - **test1** - Basic test command (Eagle-specific)
-  - `test1 name description constraints body result`
-  - Defines and executes a simple test case.
-  - **Arguments**:
+  - `test1 name description ?constraints? body result`
+  - Defines and executes a simple test case. This is the positional-argument form; the `[test]` stub dispatches to [`test1`] when it sees exactly 5 or 6 arguments.
+  - **Arguments**: this command takes exactly 5 or 6 arguments. When 6 are supplied the third is *constraints*; when 5 are supplied the *constraints* argument is omitted (treated as `null`).
     - *name* - Unique identifier for the test (e.g., "myproc-1.1")
     - *description* - Human-readable description of what is being tested
-    - *constraints* - List of constraints that must be satisfied for the test to run (e.g., `{unix}`, `{knownBug}`)
+    - *constraints* (optional) - List of constraints that must be satisfied for the test to run (e.g., `{unix}`, `{knownBug}`)
     - *body* - Script to execute as the test
     - *result* - Expected result to compare against the body's result
-  - **Returns**: Test pass/fail status.
+  - **Matching**: the body result is compared against *result* using the interpreter's default result match mode (string equality by default). Accepted return codes default to `Ok` and `Return`; any other code from the body fails the test.
+  - **Returns**: The captured test output (pass/fail diagnostics). The raw return code is repurposed to signal status to [`runTest`]: `Break` (skipped), `Continue` (failure ignored), or `WhatIf` (disabled).
 
   **Example**:
   ```tcl
@@ -4621,6 +4622,9 @@ Eagle provides built-in test commands for unit testing. These commands integrate
   } {4}
   ```
 
+  > [!NOTE]
+  > [`test1`] is the simple form: a body and an expected result, with optional constraints. For setup/cleanup blocks, output/error-output matching, timing, isolation, or a constraint expression, use [`test2`].
+
 ---
 
 <a id="cmd-test2"></a>
@@ -4629,17 +4633,26 @@ Eagle provides built-in test commands for unit testing. These commands integrate
 - **test2** - Advanced test command (Eagle-specific)
   - `test2 name description ?options?`
   - Defines and executes an advanced test case with full options.
-  - **Options**:
-    - `-constraints list` - Constraints that must be satisfied
+  - **Common options** (these behave like the corresponding options in Tcl's `tcltest`):
+    - `-constraints list` - List of constraints that must be satisfied (logical AND); a `!`-prefixed name must be *absent* (see [Constraint expressions](core_script_library.md#constraint-system)).
     - `-setup script` - Script to run before the test body
     - `-body script` - The test script to execute
     - `-cleanup script` - Script to run after the test (always runs, even on error)
     - `-result value` - Expected result value
     - `-output pattern` - Expected stdout output pattern
     - `-errorOutput pattern` - Expected stderr output pattern
-    - `-returnCodes codes` - Expected return codes (ok, error, return, break, continue)
-    - `-match mode` - Matching mode: exact, glob, regexp
-  - **Returns**: Test pass/fail status with detailed diagnostics on failure.
+    - `-returnCodes codes` - Accepted return codes (default `Ok` and `Return`); any code outside the list fails the test
+    - `-match mode` - Result/output matching mode: `exact`, `[glob]`, or `[regexp]` (default is the interpreter's default result match mode)
+    - `-noCase boolean` - Perform case-insensitive matching
+  - **Eagle-specific options** (selected; the full set is verified in [`options.md`](options.md#test2)):
+    - `-constraintExpression expr` - An additional boolean expression that must evaluate true for the test to run (evaluated after the `-constraints` list)
+    - `-time boolean` - Time the setup, body, and cleanup phases and report the durations
+    - `-repeatCount count` - Run the body the given number of times
+    - `-once boolean` - Skip the test if it has already been run once
+    - `-noCleanup`, `-noCancel`, `-noEvent`, `-noExit`, `-noStatistics`, `-noTrack` - Disable specific behaviors during the test
+    - `-exitCode code`, `-execReturnCodes codes`, `-execExitCode code` - Process/exit-code matching for isolated and external-process tests
+    - `-ignoreMatch mode`, `-ignorePatterns list` - Ignore matching output fragments
+  - **Returns**: The captured test output, with detailed diagnostics on failure. As with [`test1`], the raw return code is repurposed to signal `Break` (skipped), `Continue` (failure ignored), or `WhatIf` (disabled) to [`runTest`].
 
   **Example**:
   ```tcl
@@ -4691,7 +4704,7 @@ Eagle provides built-in test commands for unit testing. These commands integrate
 
 SQL commands belong to ObjectGroup: "managedEnvironment"
 
-The `sql` command provides database connectivity using ADO.NET, supporting any database with a .NET provider (SQL Server, SQLite, MySQL, PostgreSQL, etc.).
+The `[sql]` command provides database connectivity using ADO.NET, supporting any database with a .NET provider (SQL Server, SQLite, MySQL, PostgreSQL, etc.).
 
 ---
 
@@ -4718,7 +4731,7 @@ The `sql` command provides database connectivity using ADO.NET, supporting any d
 
   **The `-variable` option:** When set, the connection handle is stored in the named variable. Deleting this variable automatically closes the connection -- providing RAII-style cleanup. This is the recommended pattern for connection lifecycle management.
 
-  **Return value:** A connection name string (e.g., `"SQLiteConnection#0"`) that can be used with other `sql` sub-commands (`execute`, `transaction`, `close`).
+  **Return value:** A connection name string (e.g., `"SQLiteConnection#0"`) that can be used with other `[sql]` sub-commands (`execute`, `transaction`, `[close]`).
 
   ---
 
@@ -4972,7 +4985,7 @@ Network commands belong to ObjectGroup: "network"
 
   ---
 
-  - `uri time` - Gets current time from a network time source.
+  - `[uri time]` - Gets current time from a network time source.
 
   ---
 
@@ -4980,7 +4993,7 @@ Network commands belong to ObjectGroup: "network"
 
   ---
 
-  - `uri security` - Returns information about security settings (TLS versions, etc.).
+  - `[uri security]` - Returns information about security settings (TLS versions, etc.).
 
   ---
 
@@ -4995,7 +5008,7 @@ Network commands belong to ObjectGroup: "network"
 
 XML commands belong to ObjectGroup: "managedEnvironment"
 
-The `xml` command provides XML processing capabilities using the .NET XML infrastructure.
+The `[xml]` command provides XML processing capabilities using the .NET XML infrastructure.
 
 ---
 
@@ -5060,7 +5073,7 @@ The `xml` command provides XML processing capabilities using the .NET XML infras
   }
   ```
 
-  - **See also**: [`object`](#cmd-object)
+  - **See also**: [`[object]`](#cmd-object)
 
 ---
 
@@ -5086,7 +5099,7 @@ Eagle can interoperate with native Tcl interpreters, allowing scripts to leverag
 
   ---
 
-  - `tcl unload` - Unloads the Tcl library.
+  - `[tcl unload]` - Unloads the Tcl library.
 
   ---
 
@@ -5098,7 +5111,7 @@ Eagle can interoperate with native Tcl interpreters, allowing scripts to leverag
 
   ---
 
-  - `tcl build` - Returns Tcl build information.
+  - `[tcl build]` - Returns Tcl build information.
 
   ---
 
@@ -5132,7 +5145,7 @@ Eagle can interoperate with native Tcl interpreters, allowing scripts to leverag
 
   ---
 
-  - `tcl primary` - Returns the primary Tcl interpreter handle.
+  - `[tcl primary]` - Returns the primary Tcl interpreter handle.
 
   ---
 
@@ -5323,7 +5336,7 @@ Expression commands belong to ObjectGroup: "expression"
     - `infinite` — Positive or negative infinity
     - `nan` — Not a number
   - **Returns**: One of the classification strings listed above.
-  - **See also**: `expr`
+  - **See also**: `[expr]`
   - **Example** (from test suite):
     ```tcl
     fpclassify 1.0              ;# Returns: normal
@@ -5341,7 +5354,7 @@ Expression commands belong to ObjectGroup: "expression"
 <details>
 <summary><strong>Mathematical Functions</strong></summary>
 
-Mathematical functions are used within expressions (via `expr`) to perform calculations. Functions are called using the syntax `func(arg1, arg2, ...)` within an expression.
+Mathematical functions are used within expressions (via `[expr]`) to perform calculations. Functions are called using the syntax `func(arg1, arg2, ...)` within an expression.
 
 ---
 
@@ -5695,7 +5708,7 @@ Time commands belong to ObjectGroup: "time"
 
 - **clock** - Clock and time operations
 
-  The `clock` command provides comprehensive date/time functionality including formatting, parsing, and high-resolution timing.
+  The `[clock]` command provides comprehensive date/time functionality including formatting, parsing, and high-resolution timing.
 
   ---
 
@@ -5731,7 +5744,7 @@ Time commands belong to ObjectGroup: "time"
   #### Formatting Time
 
   - `clock format clockValue ?options?` - Converts a timestamp to a human-readable string.
-    - *clockValue* - Seconds since epoch (from `clock seconds`)
+    - *clockValue* - Seconds since epoch (from `[clock seconds]`)
     - **Options**:
       - `-format string` - Format string with % specifiers (see below)
       - `-gmt boolean` - Use GMT/UTC instead of local time
@@ -5787,11 +5800,11 @@ Time commands belong to ObjectGroup: "time"
 
   #### Performance Timing (Eagle extensions)
 
-  - `clock start` - Starts a high-resolution timer. Returns a start token.
+  - `[clock start]` - Starts a high-resolution timer. Returns a start token.
 
   ---
 
-  - `clock stop startCount` - Stops the timer started by `clock start` and returns elapsed time.
+  - `clock stop startCount` - Stops the timer started by `[clock start]` and returns elapsed time.
 
   **Example**:
   ```tcl
@@ -5880,7 +5893,7 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
 
   ---
 
-  - `after clear` - Cancels all scheduled events (Eagle extension).
+  - `[after clear]` - Cancels all scheduled events (Eagle extension).
 
   **Example**:
   ```tcl
@@ -5895,15 +5908,15 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
 
   #### Status and Configuration (Eagle extensions)
 
-  - `after active` - Returns 1 if any after events are pending.
+  - `[after active]` - Returns 1 if any after events are pending.
 
   ---
 
-  - `after counts` - Returns statistics about scheduled events.
+  - `[after counts]` - Returns statistics about scheduled events.
 
   ---
 
-  - `after dump` - Dumps the event queue for debugging.
+  - `[after dump]` - Dumps the event queue for debugging.
 
   ---
 
@@ -5922,12 +5935,12 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
 
   - `callback enqueue name ?arg ...?` - Adds a callback named *name* (with optional arguments) to the queue.
   - `callback dequeue ?options?` - Removes and returns the first callback from the queue. With `-alias`, creates a command alias instead.
-  - `callback execute` - Executes all pending callbacks in order and removes them from the queue.
+  - `[callback execute]` - Executes all pending callbacks in order and removes them from the queue.
   - `callback list ?pattern?` - Lists queued callback names matching *pattern* (default: all).
-  - `callback count` - Returns the number of callbacks currently in the queue.
-  - `callback clear` - Removes all callbacks from the queue without executing them.
+  - `[callback count]` - Returns the number of callbacks currently in the queue.
+  - `[callback clear]` - Removes all callbacks from the queue without executing them.
   - **Returns**: Varies by sub-command (count returns integer; list returns list; others return empty string).
-  - **See also**: [`after`](#cmd-after) (time-based event scheduling), [`update`](#cmd-update) (event processing)
+  - **See also**: [`[after]`](#cmd-after) (time-based event scheduling), [`[update]`](#cmd-update) (event processing)
 
   **Example**:
   ```tcl
@@ -5952,7 +5965,7 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
 <a id="cmd-update"></a>
 - **update** - Process events
   - `update ?mask?`
-  - Processes pending events (after callbacks, idle handlers, etc.) and returns. Without this, scheduled events won't fire until the script completes or enters `vwait`.
+  - Processes pending events (after callbacks, idle handlers, etc.) and returns. Without this, scheduled events won't fire until the script completes or enters `[vwait]`.
   - *mask* - Optional event types to process: `idletasks` (only idle events)
 
   **Example**:
@@ -6014,11 +6027,11 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
 
 Introspection commands belong to ObjectGroup: "introspection"
 
-The `info` command is the primary means for querying the state of the interpreter, examining procedures, variables, commands, and system information. It has over 80 sub-commands organized by category.
+The `[info]` command is the primary means for querying the state of the interpreter, examining procedures, variables, commands, and system information. It has over 80 sub-commands organized by category.
 
 ---
 
-> **See also:** [`info.md`](info.md) — deep-dive analysis of the `info` command, including all 85 sub-commands, safe interpreter sub-command filtering, obfuscated procedure protection, .NET reflection integration, engine metadata (9 attributes), platform variable caching, `info commands` filtering options, `info cmdtype`/`info cmdcount` command analysis, culture/localization queries, Windows window enumeration, and database connection introspection. | [`options.md`](options.md#info-commands) — per-option semantics
+> **See also:** [`info.md`](info.md) — deep-dive analysis of the `[info]` command, including all 85 sub-commands, safe interpreter sub-command filtering, obfuscated procedure protection, .NET reflection integration, engine metadata (9 attributes), platform variable caching, `[info commands]` filtering options, `[info cmdtype]`/`[info cmdcount]` command analysis, culture/localization queries, Windows window enumeration, and database connection introspection. | [`options.md`](options.md#info-commands) — per-option semantics
 
 <a id="cmd-info"></a>
 - **info** - Introspection operations
@@ -6082,7 +6095,7 @@ The `info` command is the primary means for querying the state of the interprete
 
   ---
 
-  - `info linkedname varName` - Returns the name of the variable that *varName* is linked to (via `upvar`), or an error if not linked.
+  - `info linkedname varName` - Returns the name of the variable that *varName* is linked to (via `[upvar]`), or an error if not linked.
 
   ---
 
@@ -6177,15 +6190,15 @@ The `info` command is the primary means for querying the state of the interprete
 
   ---
 
-  - `info cmdline` - Returns the full command line used to start the interpreter.
+  - `[info cmdline]` - Returns the full command line used to start the interpreter.
 
   ---
 
-  - `info argv` - Returns a list of command-line arguments passed to the script.
+  - `[info argv]` - Returns a list of command-line arguments passed to the script.
 
   ---
 
-  - `info interactive` - Returns 1 if the interpreter is running interactively, 0 otherwise.
+  - `[info interactive]` - Returns 1 if the interpreter is running interactively, 0 otherwise.
 
   ---
 
@@ -6193,11 +6206,11 @@ The `info` command is the primary means for querying the state of the interprete
 
   ---
 
-  - `info context` - Returns information about the current execution context.
+  - `[info context]` - Returns information about the current execution context.
 
   ---
 
-  - `info lastinput` - Returns the last input read from the console.
+  - `[info lastinput]` - Returns the last input read from the console.
 
   ---
 
@@ -6211,19 +6224,19 @@ The `info` command is the primary means for querying the state of the interprete
 
   ---
 
-  - `info user` - Returns the current user name.
+  - `[info user]` - Returns the current user name.
 
   ---
 
-  - `info administrator` - Returns 1 if running with administrator/root privileges, 0 otherwise.
+  - `[info administrator]` - Returns 1 if running with administrator/root privileges, 0 otherwise.
 
   ---
 
-  - `info pid` - Returns the process ID of the interpreter.
+  - `[info pid]` - Returns the process ID of the interpreter.
 
   ---
 
-  - `info ppid` - Returns the parent process ID.
+  - `[info ppid]` - Returns the parent process ID.
 
   ---
 
@@ -6231,7 +6244,7 @@ The `info` command is the primary means for querying the state of the interprete
 
   ---
 
-  - `info processors` - Returns the number of processors/cores available.
+  - `[info processors]` - Returns the number of processors/cores available.
 
   ---
 
@@ -6243,23 +6256,23 @@ The `info` command is the primary means for querying the state of the interprete
 
   ---
 
-  - `info base` - Returns the base directory for the application.
+  - `[info base]` - Returns the base directory for the application.
 
   ---
 
-  - `info binary` - Returns the path to the Eagle binary/executable.
+  - `[info binary]` - Returns the path to the Eagle binary/executable.
 
   ---
 
-  - `info nameofexecutable` - Returns the full path to the current executable.
+  - `[info nameofexecutable]` - Returns the full path to the current executable.
 
   ---
 
-  - `info programextension` - Returns the program file extension for the current platform (`.exe` on Windows).
+  - `[info programextension]` - Returns the program file extension for the current platform (`.exe` on Windows).
 
   ---
 
-  - `info sharedlibextension` - Returns the shared library extension (`.dll`, `.so`, `.dylib`).
+  - `[info sharedlibextension]` - Returns the shared library extension (`.dll`, `.so`, `.dylib`).
 
   ---
 
@@ -6267,11 +6280,11 @@ The `info` command is the primary means for querying the state of the interprete
 
   ---
 
-  - `info newline` - Returns the newline character(s) for the current platform.
+  - `[info newline]` - Returns the newline character(s) for the current platform.
 
   ---
 
-  - `info whitespace` - Returns the whitespace characters recognized by the parser.
+  - `[info whitespace]` - Returns the whitespace characters recognized by the parser.
 
   ---
 
@@ -6311,7 +6324,7 @@ The `info` command is the primary means for querying the state of the interprete
 
   ---
 
-  - `info appdomain` - Returns the current application domain identifier.
+  - `[info appdomain]` - Returns the current application domain identifier.
 
   ---
 
@@ -6419,7 +6432,7 @@ The `info` command is the primary means for querying the state of the interprete
 
   ---
 
-  - `info externals` - Returns information about external references.
+  - `[info externals]` - Returns information about external references.
 
   ---
 
@@ -6469,7 +6482,7 @@ The `info` command is the primary means for querying the state of the interprete
   - Returns the Eagle version string. Without *flags*, returns the base version (e.g., "1.0.0.0").
   - **Flags**: Control what additional information is included. Flags are a combination of version-related enum values.
   - **Returns**: Version string with requested information.
-  - **See also**: [`info`](#cmd-info) (`info patchlevel`, `info nameofexecutable`)
+  - **See also**: [`[info]`](#cmd-info) (`[info patchlevel]`, `[info nameofexecutable]`)
 
   **Example**:
   ```tcl
@@ -6490,9 +6503,9 @@ Aliases and delegates provide mechanisms to create command shortcuts and manage 
 <a id="cmd-alias"></a>
 - **alias** - Alias command wrapper (internal, ObjectGroup: "alias")
 
-  > **Not a standalone user-callable command.** The `Alias` class (`CommandFlags: NoPopulate | NoAdd | Alias | Safe`) is a transparent conduit that delegates execution to a target command. Aliases are created, queried, and deleted using [`interp alias`](#cmd-interp).
+  > **Not a standalone user-callable command.** The `Alias` class (`CommandFlags: NoPopulate | NoAdd | Alias | Safe`) is a transparent conduit that delegates execution to a target command. Aliases are created, queried, and deleted using [`[interp alias]`](#cmd-interp).
 
-  **Creating and using aliases via `interp alias`**:
+  **Creating and using aliases via `[interp alias]`**:
   ```tcl
   # Create an alias in the current interpreter
   interp alias {} ll {} list
@@ -6531,11 +6544,11 @@ Aliases and delegates provide mechanisms to create command shortcuts and manage 
 
 Ensemble commands belong to ObjectGroup: "ensemble"
 
-Ensemble commands group related sub-commands under a single command name. In Eagle, commands like `string`, `array`, `file`, `info`, `debug`, and `object` are implemented as ensemble commands internally.
+Ensemble commands group related sub-commands under a single command name. In Eagle, commands like `[string]`, `[array]`, `[file]`, `[info]`, `[debug]`, and `[object]` are implemented as ensemble commands internally.
 
-The `Ensemble` class (`Commands/Ensemble.cs`) and `Stub` class (`Commands/Stub.cs`) provide the infrastructure for creating ensemble commands programmatically. Stubs can be created at the script level using `interp stub`. See [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) for details on these classes.
+The `Ensemble` class (`Commands/Ensemble.cs`) and `Stub` class (`Commands/Stub.cs`) provide the infrastructure for creating ensemble commands programmatically. Stubs can be created at the script level using `[interp stub]`. See [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure) for details on these classes.
 
-**Note**: Unlike Tcl 8.5+, Eagle does not provide user-facing `namespace ensemble` commands for creating custom ensembles at the script level. However, `interp stub` can create minimal ensemble placeholders, and plugins can create full `Ensemble` commands.
+**Note**: Unlike Tcl 8.5+, Eagle does not provide user-facing `namespace ensemble` commands for creating custom ensembles at the script level. However, `[interp stub]` can create minimal ensemble placeholders, and plugins can create full `Ensemble` commands.
 
 ---
 
@@ -6583,8 +6596,8 @@ These commands control script evaluation and substitution at the core level.
   - Without *level*, invokes at the current level.
   - This is an Eagle extension for controlled command invocation.
   - **Returns**: The result of the invoked command.
-  - **Level specification**: Same as `uplevel` — a positive integer *n* means *n* levels up; `#n` means absolute stack level (0 is global).
-  - **See also**: [`uplevel`](#cmd-uplevel), [`downlevel`](#cmd-downlevel)
+  - **Level specification**: Same as `[uplevel]` — a positive integer *n* means *n* levels up; `#n` means absolute stack level (0 is global).
+  - **See also**: [`[uplevel]`](#cmd-uplevel), [`[downlevel]`](#cmd-downlevel)
 
   **Example**:
   ```tcl
@@ -6610,7 +6623,7 @@ These commands control script evaluation and substitution at the core level.
   - Reads and evaluates the contents of *fileName* as a script.  When the file
     is a script bundle database (a `.db` file), the command evaluates the signed
     scripts contained within it according to the bundle evaluation pipeline
-    described below.  The `source` command pushes a tracking call frame of type
+    described below.  The `[source]` command pushes a tracking call frame of type
     `Source` for the duration of evaluation, and pops it (along with any
     intervening scope call frames) when evaluation completes.
 
@@ -6667,10 +6680,10 @@ These commands control script evaluation and substitution at the core level.
 
   #### Standard Script Evaluation
 
-  When the file is not a bundle, `source` reads the file using the specified
+  When the file is not a bundle, `[source]` reads the file using the specified
   (or default) encoding and evaluates its contents as a script in the current
   interpreter, equivalent to reading the file and passing its contents to
-  `eval`.  The `-withinfo`, `-time`, and `-library` options apply to this
+  `[eval]`.  The `-withinfo`, `-time`, and `-library` options apply to this
   path as well.
 
   ---
@@ -6686,9 +6699,9 @@ These commands control script evaluation and substitution at the core level.
 
   ##### Bundle Evaluation Pipeline
 
-  When `source` evaluates a bundle, the following pipeline executes:
+  When `[source]` evaluates a bundle, the following pipeline executes:
 
-  ```
+  ```tcl
   source myBundle.db
          |
          v
@@ -6774,7 +6787,7 @@ These commands control script evaluation and substitution at the core level.
   `[package scan]` or `[interp readorgetscriptfile]`.  Each script is
   routed by its `IsolationLevel`:
 
-  ```
+  ```tcl
   IsolationLevel routing:
 
   None ──────────────> Evaluate in current interpreter
@@ -6871,7 +6884,7 @@ These commands control script evaluation and substitution at the core level.
 
   The bundle subsystem implements defense-in-depth through multiple layers:
 
-  ```
+  ```tcl
   Security Layer Stack:
 
   +--------------------------------------------------+
@@ -6990,7 +7003,7 @@ These commands control script evaluation and substitution at the core level.
   Scripts within a mounted bundle are addressed using database-qualified
   paths of the form:
 
-  ```
+  ```tcl
   /path/to/bundle.db:/path/within/bundle/script.eagle
   ```
 
@@ -7286,7 +7299,7 @@ These commands interact with the operating system and native code.
   - Use `-shell` to open documents/URLs with associated applications
   - The `-timeout` option kills the process if it doesn't exit in time
 
-  **See also**: [`exec.md`](exec.md) — Deep-dive analysis of argument processing, the three command-line assembly paths (`-commandline`, `-escaperanges`, default concatenation), quoting/escaping algorithms, and comprehensive comparison with native Tcl `exec`.
+  **See also**: [`exec.md`](exec.md) — Deep-dive analysis of argument processing, the three command-line assembly paths (`-commandline`, `-escaperanges`, default concatenation), quoting/escaping algorithms, and comprehensive comparison with native Tcl `[exec]`.
 
 ---
 
@@ -7387,7 +7400,7 @@ These commands interact with the operating system and native code.
     **library checkload** - Check if library can be loaded
     - `library checkload ?options? fileName`
     - Checks if a native library can be loaded without actually loading it. If already loaded, returns the existing module handle.
-    - **Options**: Same as `library load`
+    - **Options**: Same as `[library load]`
     - **Returns**: Module handle name if already loaded, or loads and returns handle.
     - **Use case**: Useful for conditionally loading libraries or avoiding duplicate loads.
 
@@ -7488,7 +7501,7 @@ These commands interact with the operating system and native code.
 
     **library resolve** - Resolve delegate to function address
     - `library resolve ?options? delegate`
-    - Binds a declared delegate to an actual function address in a module. This step is required before calling the function if not done during `library declare`.
+    - Binds a declared delegate to an actual function address in a module. This step is required before calling the function if not done during `[library declare]`.
     - **Options**:
       - `-module moduleName` - Module containing the function
       - `-functionname name` - Function name to resolve (can change the binding)
@@ -7517,7 +7530,7 @@ These commands interact with the operating system and native code.
     **library unload** - Unload a native library
     - `library unload module`
     - Unloads a previously loaded native library module.
-    - **Note**: Unloading fails if any delegates still reference the module. Use `library undeclare` first.
+    - **Note**: Unloading fails if any delegates still reference the module. Use `[library undeclare]` first.
     - **Returns**: Empty string on success.
 
     **library unresolve** - Unresolve a delegate
@@ -7660,13 +7673,13 @@ These commands interact with the .NET runtime and the interactive host environme
 <a id="cmd-host"></a>
 - **host** - Host operations (interactive console host)
 
-  The `host` command provides control over the interactive console/terminal interface.
+  The `[host]` command provides control over the interactive console/terminal interface.
 
   ---
 
   #### Screen Control
 
-  - `host clear` - Clears the console screen.
+  - `[host clear]` - Clears the console screen.
 
   ---
 
@@ -7714,7 +7727,7 @@ These commands interact with the .NET runtime and the interactive host environme
 
   #### Input Operations
 
-  - `host readchar` - Reads a single character from input.
+  - `[host readchar]` - Reads a single character from input.
 
   ---
 
@@ -7726,7 +7739,7 @@ These commands interact with the .NET runtime and the interactive host environme
 
   ---
 
-  - `host pause` - Pauses and waits for user input (like "Press any key...").
+  - `[host pause]` - Pauses and waits for user input (like "Press any key...").
 
   **Example**:
   ```tcl
@@ -7822,15 +7835,15 @@ These commands interact with the .NET runtime and the interactive host environme
 
   #### Host Control
 
-  - `host open` - Opens the host for interaction.
+  - `[host open]` - Opens the host for interaction.
 
   ---
 
-  - `host close` - Closes the host.
+  - `[host close]` - Closes the host.
 
   ---
 
-  - `host isopen` - Returns 1 if the host is open, 0 otherwise.
+  - `[host isopen]` - Returns 1 if the host is open, 0 otherwise.
 
   ---
 
@@ -7846,11 +7859,11 @@ These commands interact with the .NET runtime and the interactive host environme
 
   ---
 
-  - `host flags` - Returns host capability flags.
+  - `[host flags]` - Returns host capability flags.
 
   ---
 
-  - `host query` - Queries host information.
+  - `[host query]` - Queries host information.
 
   ---
 
@@ -7864,7 +7877,7 @@ These commands interact with the .NET runtime and the interactive host environme
 
   - `host font ?options?` - Gets or sets the console font.
 
-  - **See also**: [`puts`](#cmd-puts), [`gets`](#cmd-gets)
+  - **See also**: [`[puts]`](#cmd-puts), [`[gets]`](#cmd-gets)
 
 ---
 
@@ -7938,7 +7951,7 @@ These commands provide fundamental interpreter operations and utility functions.
 - **bgerror** - Background error handler (ObjectGroup: "scriptEnvironment")
   - `bgerror message`
   - Called automatically when an error occurs in a background event handler (e.g., after callbacks).
-  - You can define your own `bgerror` procedure to customize error handling.
+  - You can define your own `[bgerror]` procedure to customize error handling.
 
   **Example**:
   ```tcl
@@ -7967,7 +7980,7 @@ These commands provide fundamental interpreter operations and utility functions.
 
 <a id="cmd-nop"></a>
 - **nop** - No operation (ObjectGroup: "nop")
-  - `nop`
+  - `[nop]`
   - Does nothing; the previous interpreter result is left untouched (purposely not modified).
   - Useful as a placeholder or for timing/profiling.
 
@@ -8339,7 +8352,7 @@ This section provides a comprehensive overview of Eagle's design philosophy, the
 
 Eagle (Extensible Adaptable Generalized Logic Engine) is an implementation of the Tcl scripting language for the Common Language Runtime (CLR), written entirely in C#. Several core design principles shape the project:
 
-**Tcl Fidelity with CLR Integration.** Eagle is based on the design and implementation of Tcl 8.4, borrowing selected features from Tcl 8.5 and 8.6. Rather than being a thin wrapper, Eagle implements the Tcl command model natively in C#, enabling deep interoperability with the .NET type system (e.g., `object create`, `object invoke`) while preserving the "everything is a string" semantics that define Tcl.
+**Tcl Fidelity with CLR Integration.** Eagle is based on the design and implementation of Tcl 8.4, borrowing selected features from Tcl 8.5 and 8.6. Rather than being a thin wrapper, Eagle implements the Tcl command model natively in C#, enabling deep interoperability with the .NET type system (e.g., `[object create]`, `[object invoke]`) while preserving the "everything is a string" semantics that define Tcl.
 
 **Extreme Backward Compatibility.** The project maintains build support across every major Visual Studio version from 2005 through 2022 and every .NET Framework version from 2.0 through 4.8.1, plus .NET Standard 2.0/2.1, .NET Core, and Mono. Separate `.csproj` and `.sln` files exist for each Visual Studio generation, ensuring the project can be opened and built natively in any of these environments without format conversion or migration. This is intentional: Eagle is designed to be deployable into environments where upgrading the toolchain is not an option.
 
@@ -8358,7 +8371,7 @@ Eagle (Extensible Adaptable Generalized Logic Engine) is an implementation of th
 
 The Eagle repository is organized into several top-level directories, each serving a distinct role:
 
-```
+```tcl
 eagle/Eagle/                  Main Eagle source tree
   ├── Library/                Core library (the Eagle interpreter engine)
   │   ├── Attributes/         Custom .NET attribute definitions
@@ -9107,7 +9120,7 @@ if {[getDictionaryValue $options -code] == 1} then {
 
 #### try/finally Patterns
 
-Eagle's `try` command supports `try {} finally {}` syntax (not the Tcl 8.6-style `try {} on {} {} catch {} {}` syntax). Use `catch` separately for error handling.
+Eagle's `[try]` command supports `try {} finally {}` syntax (not the Tcl 8.6-style `try {} on {} {} catch {} {}` syntax). Use `[catch]` separately for error handling.
 
 ```tcl
 # try/finally ensures cleanup runs regardless of errors
@@ -9192,12 +9205,12 @@ and manages procedures, enabling fine-grained control over visibility, call
 frame handling, concurrency, caching, and argument lifecycle.
 
 Annotations are recognized by the `[proc]`, `[nproc]`, `[apply]`, and
-`[napply]` commands.  They are processed at definition time (for `proc`
-and `nproc`) or at first evaluation time (for `apply` and `napply`), not
+`[napply]` commands.  They are processed at definition time (for `[proc]`
+and `[nproc]`) or at first evaluation time (for `[apply]` and `[napply]`), not
 during each call.
 
 **Important**: Annotations are only processed when the interpreter is NOT
-in safe mode (`interp issafe` returns false).  In safe interpreters, all
+in safe mode (`[interp issafe]` returns false).  In safe interpreters, all
 annotations are silently ignored.  This ensures that untrusted code cannot
 use annotations to escalate privileges or modify execution semantics.
 
@@ -9208,7 +9221,7 @@ use annotations to escalate privileges or modify execution semantics.
 Annotations are embedded in Tcl comments within the procedure body using
 double angle bracket delimiters:
 
-```
+```tcl
 # <<annotationName>>
 # <<annotationName:value>>
 ```
@@ -9280,7 +9293,7 @@ via fully-qualified name from outside the namespace are rejected with an
 error.
 
 - **ProcedureFlags set**: `Private` (0x800)
-- **Applies to**: `proc`, `nproc` only (ignored by `apply`/`napply`)
+- **Applies to**: `[proc]`, `[nproc]` only (ignored by `[apply]`/`[napply]`)
 - **Enforcement**: At call time, `ScriptOps.MaybeCheckProcedureCaller`
   verifies the caller's namespace matches the procedure's namespace.
 
@@ -9312,7 +9325,7 @@ on every variable read/write operation.
 
 - **ProcedureFlags set**: `Fast` (0x10000)
 - **CallFrameFlags set**: `Fast` (on the procedure's call frame)
-- **Applies to**: `proc`, `nproc`, `apply`, `napply`
+- **Applies to**: `[proc]`, `[nproc]`, `[apply]`, `[napply]`
 - **Incompatible with**: `<<inline>>` (mutual exclusion enforced)
 
 ```tcl
@@ -9337,7 +9350,7 @@ procedure body evaluation.  This prevents concurrent access to interpreter
 state from other threads.
 
 - **ProcedureFlags set**: `Atomic` (0x20000)
-- **Applies to**: `proc`, `nproc`, `apply`, `napply`
+- **Applies to**: `[proc]`, `[nproc]`, `[apply]`, `[napply]`
 - **Mechanism**: Uses `interpreter.InternalHardTryLock` before body
   evaluation; if the lock cannot be acquired, returns an error:
   `"could not lock interpreter"`.
@@ -9372,7 +9385,7 @@ save/restore discipline ensures the caller's pre-existing variables are
 not permanently clobbered (unless `<<overwrite>>` is used).
 
 - **ProcedureFlags set**: `NoPushFrame` (0x2000000)
-- **Applies to**: `proc`, `nproc`, `apply`, `napply`
+- **Applies to**: `[proc]`, `[nproc]`, `[apply]`, `[napply]`
 - **Incompatible with**: `<<fast>>` and `<<matchTypes>>` (mutual exclusion
   enforced)
 - **Implicit behavior**: When `inline` is active, the `Library` flag is
@@ -9412,7 +9425,7 @@ evaluation.  This forces the interpreter to re-parse the body on each
 invocation rather than reusing cached parse trees.
 
 - **ProcedureFlags set**: `NonCaching` (0x800000)
-- **Applies to**: `proc`, `nproc`, `apply`, `napply`
+- **Applies to**: `[proc]`, `[nproc]`, `[apply]`, `[napply]`
 - **Compile-time**: Requires `ARGUMENT_CACHE` or `PARSE_CACHE` feature.
 - **Implicit activation**: Automatically enabled when the interpreter's
   `Library` flag is set on the procedure (library procedures are always
@@ -9435,7 +9448,7 @@ assignments against declared type constraints.
 
 - **ProcedureFlags set**: `MatchTypes` (0x1000000)
 - **CallFrameFlags set**: `MatchTypes` (on the procedure's call frame)
-- **Applies to**: `proc`, `nproc`, `apply`, `napply`
+- **Applies to**: `[proc]`, `[nproc]`, `[apply]`, `[napply]`
 - **Incompatible with**: `<<inline>>` (mutual exclusion enforced)
 
 ```tcl
@@ -9456,8 +9469,8 @@ meaning the inline procedure's values for those arguments will persist
 in the caller's frame after the procedure returns.
 
 - **Value**: A Tcl list of argument names (parsed via `Parser.SplitList`)
-- **Applies to**: `proc`, `nproc` (stored in `IProcedureData`);
-  extracted but not used by `apply`/`napply`
+- **Applies to**: `[proc]`, `[nproc]` (stored in `IProcedureData`);
+  extracted but not used by `[apply]`/`[napply]`
 - **Most useful with**: `<<inline>>`
 
 ```tcl
@@ -9487,8 +9500,8 @@ to `<<overwrite>>`: while overwrite controls the save phase, clean
 controls the cleanup phase.
 
 - **Value**: A Tcl list of argument names (parsed via `Parser.SplitList`)
-- **Applies to**: `proc`, `nproc` (stored in `IProcedureData`);
-  extracted but not used by `apply`/`napply`
+- **Applies to**: `[proc]`, `[nproc]` (stored in `IProcedureData`);
+  extracted but not used by `[apply]`/`[napply]`
 - **Most useful with**: `<<inline>>`
 
 ```tcl
@@ -9557,8 +9570,8 @@ implicitly:
 
 | Flag | Source | Description |
 |------|--------|-------------|
-| `PositionalArguments` | `proc`, `apply` | Arguments are positional (set automatically) |
-| `NamedArguments` | `nproc`, `napply` | Arguments are named `-key value` pairs (set automatically) |
+| `PositionalArguments` | `[proc]`, `[apply]` | Arguments are positional (set automatically) |
+| `NamedArguments` | `[nproc]`, `[napply]` | Arguments are named `-key value` pairs (set automatically) |
 | `Library` | Interpreter default | Set when the interpreter's `ProcedureFlags` includes `Library`, unless `<<inline>>` is active |
 | `NonCaching` | Implicit | Automatically set when `Library` is true, even without `<<nonCaching>>` annotation |
 
@@ -9573,7 +9586,7 @@ The procedure's flags are composed by merging:
 
 The annotation processing pipeline is identical across all four commands:
 
-```
+```tcl
 proc/nproc/apply/napply
   |
   v
@@ -9607,7 +9620,7 @@ Is interpreter safe?
 
 #### Annotation Scope by Command
 
-| Feature | `proc` | `nproc` | `apply` | `napply` |
+| Feature | `[proc]` | `[nproc]` | `[apply]` | `[napply]` |
 |---------|--------|---------|---------|----------|
 | `<<private>>` | Enforced | Enforced | Ignored | Ignored |
 | `<<fast>>` | Enforced | Enforced | Enforced | Enforced |
@@ -9618,10 +9631,10 @@ Is interpreter safe?
 | `<<overwrite:...>>` | Stored | Stored | Extracted | Extracted |
 | `<<clean:...>>` | Stored | Stored | Extracted | Extracted |
 
-For `proc` and `nproc`, the `overwrite` and `clean` argument lists are
+For `[proc]` and `[nproc]`, the `overwrite` and `clean` argument lists are
 stored in the `IProcedureData` object and applied at every call via the
 procedure's execution engine (`Procedures/PositionalArguments.cs` or
-`Procedures/NamedArguments.cs`).  For `apply` and `napply`, they are
+`Procedures/NamedArguments.cs`).  For `[apply]` and `[napply]`, they are
 extracted from the body at evaluation time and used for the current
 invocation via the lambda's execution engine
 (`Lambdas/PositionalArguments.cs` or `Lambdas/NamedArguments.cs`).
@@ -9909,7 +9922,7 @@ close $fh
 
 #### Socket Communication
 
-**Note**: Eagle supports the `socket` command for network communication but does NOT support `fileevent` for asynchronous I/O. Socket operations in Eagle are typically synchronous.
+**Note**: Eagle supports the `[socket]` command for network communication but does NOT support `fileevent` for asynchronous I/O. Socket operations in Eagle are typically synchronous.
 
 ```tcl
 # Client socket (synchronous)
@@ -9938,44 +9951,44 @@ proc acceptConnection {channel clientAddr clientPort} {
 <details>
 <summary><strong>Debug Command Sub-Commands Reference</strong></summary>
 
-The `debug` command provides extensive debugging capabilities:
+The `[debug]` command provides extensive debugging capabilities:
 
 | Sub-command | Description |
 |-------------|-------------|
-| `debug break` | Set/manage breakpoints |
+| `[debug break]` | Set/manage breakpoints |
 | `debug cache` | Cache management |
-| `debug cleanup` | Resource cleanup |
-| `debug collect` | Garbage collection |
-| `debug complaint` | Complaint handling |
+| `[debug cleanup]` | Resource cleanup |
+| `[debug collect]` | Garbage collection |
+| `[debug complaint]` | Complaint handling |
 | `debug emit` | Dynamic code emission |
 | `debug enabled` | Check debug status |
-| `debug execute` | Execute with debugging |
-| `debug exception` | Exception management |
+| `[debug execute]` | Execute with debugging |
+| `[debug exception]` | Exception management |
 | `debug hash` | Hash operations |
-| `debug invoke` | Debug invocation |
-| `debug iqueue` | Input queue management |
-| `debug memory` | Memory operations |
-| `debug oncancel` | Cancellation handlers |
-| `debug onexecute` | Execution handlers |
-| `debug onreturn` | Return handlers |
+| `[debug invoke]` | Debug invocation |
+| `[debug iqueue]` | Input queue management |
+| `[debug memory]` | Memory operations |
+| `[debug oncancel]` | Cancellation handlers |
+| `[debug onexecute]` | Execution handlers |
+| `[debug onreturn]` | Return handlers |
 | `debug pending` | Pending operations |
 | `debug plugindata` | Plugin data access |
 | `debug pqueue` | Priority queue ops |
-| `debug purge` | Purge operations |
+| `[debug purge]` | Purge operations |
 | `debug queue` | Queue operations |
 | `debug refresh` | Refresh state |
 | `debug rqueue` | Result queue ops |
 | `debug securitycontext` | Security context |
-| `debug self` | Self-referential ops |
-| `debug stack` | Call stack access |
-| `debug step` | Step debugging |
-| `debug suspend` | Suspend execution |
+| `[debug self]` | Self-referential ops |
+| `[debug stack]` | Call stack access |
+| `[debug step]` | Step debugging |
+| `[debug suspend]` | Suspend execution |
 | `debug sysinvoke` | System invocation |
-| `debug test` | Debug testing |
-| `debug trace` | Trace operations |
-| `debug types` | Type information |
-| `debug variable` | Variable debugging |
-| `debug watch` | Watch expressions |
+| `[debug test]` | Debug testing |
+| `[debug trace]` | Trace operations |
+| `[debug types]` | Type information |
+| `[debug variable]` | Variable debugging |
+| `[debug watch]` | Watch expressions |
 
 ---
 
@@ -10111,14 +10124,14 @@ Several Eagle commands accept flags enumeration options:
 
 | Command | Option | Type | Description |
 |---------|--------|------|-------------|
-| `object invoke` | `-flags` | BindingFlags | .NET reflection binding flags |
-| `object invoke` | `-objectflags` | ObjectFlags | Eagle object handling flags |
-| `object invoke` | `-marshalflags` | MarshalFlags | Parameter marshaling flags |
-| `object invoke` | `-argumentflags` | ArgumentFlags | Argument processing flags |
-| `object create` | `-objectflags` | ObjectFlags | Object creation flags |
-| `object members` | `-membertypes` | MemberTypes | Member type filter |
-| `object members` | `-bindingflags` | BindingFlags | Reflection binding flags |
-| `interp policy` | `-flags` | PolicyFlags | Interpreter policy flags |
+| `[object invoke]` | `-flags` | BindingFlags | .NET reflection binding flags |
+| `[object invoke]` | `-objectflags` | ObjectFlags | Eagle object handling flags |
+| `[object invoke]` | `-marshalflags` | MarshalFlags | Parameter marshaling flags |
+| `[object invoke]` | `-argumentflags` | ArgumentFlags | Argument processing flags |
+| `[object create]` | `-objectflags` | ObjectFlags | Object creation flags |
+| `[object members]` | `-membertypes` | MemberTypes | Member type filter |
+| `[object members]` | `-bindingflags` | BindingFlags | Reflection binding flags |
+| `[interp policy]` | `-flags` | PolicyFlags | Interpreter policy flags |
 
 </details>
 
@@ -10144,7 +10157,7 @@ The most commonly used flags enumeration is `System.Reflection.BindingFlags`:
 | `GetProperty` | Get property value |
 | `SetProperty` | Set property value |
 
-**Default for `object invoke`**: Typically includes `Public`, `Instance`, and `InvokeMethod`.
+**Default for `[object invoke]`**: Typically includes `Public`, `Instance`, and `InvokeMethod`.
 
 </details>
 
@@ -10252,7 +10265,7 @@ The generated delegate acts as a "trampoline" - when .NET code invokes it, execu
 
 #### Callback Execution Flow
 
-```
+```tcl
 .NET Code → Delegate.Invoke()
          → StaticFireDynamicInvokeCallback (trampoline)
          → FireDynamicInvokeCallback
@@ -10702,9 +10715,9 @@ apply [list [list keep] {
 **Behavior**:
 1. Deletes all child namespaces
 2. Takes a list of commands to keep (passed as the `keep` argument)
-3. Temporarily adds `if` and `rename` to the keep list (needed for the cleanup logic)
+3. Temporarily adds `[if]` and `[rename]` to the keep list (needed for the cleanup logic)
 4. Removes all commands not in the keep list by renaming them to empty string
-5. Finally removes `if` and `rename` themselves unless they were in the original keep list
+5. Finally removes `[if]` and `[rename]` themselves unless they were in the original keep list
 
 **Usage Context**: Used during safe interpreter creation to strip down the interpreter to a minimal set of commands. Called via `ScriptOps.RemoveCommands()`.
 
@@ -10736,7 +10749,7 @@ apply [list [list] {
 
 **Behavior**:
 1. Deletes all child namespaces
-2. Iterates through all global variables (`info globals`)
+2. Iterates through all global variables (`[info globals]`)
 3. Unsets each variable at the global level (`uplevel #0`)
 4. Explicitly clears `::errorCode` and `::errorInfo` as a final cleanup
 
@@ -10807,7 +10820,7 @@ Note: `{0}` is a format placeholder that gets replaced with the actual key ring 
 
 3. **Embedded Resources**: The scripts are compiled into the assembly, preventing file-system-based tampering.
 
-4. **Minimal Privileges**: The cleanup scripts (`removeCommands`, `removeVariables`) are designed to work with minimal privileges, using only basic commands like `foreach`, `catch`, `rename`, `unset`, and `info`.
+4. **Minimal Privileges**: The cleanup scripts (`removeCommands`, `removeVariables`) are designed to work with minimal privileges, using only basic commands like `[foreach]`, `[catch]`, `[rename]`, `[unset]`, and `[info]`.
 
 5. **Safe Interpreter Creation**: The `removeCommands` and `removeVariables` scripts are critical for creating properly isolated safe interpreters, ensuring no commands or variables leak from the parent interpreter.
 
@@ -10950,7 +10963,7 @@ Unloads a previously loaded plugin from the interpreter. If the plugin was loade
 | `-nocase` | Performs case-insensitive name matching |
 | `-keeplibrary` | Keeps the library loaded but removes the package |
 | `-nocomplain` | Suppresses errors if package is not loaded |
-| `-match mode` | Specifies match mode: `exact`, `glob`, or `regexp` (default: `glob`) |
+| `-match mode` | Specifies match mode: `exact`, `[glob]`, or `[regexp]` (default: `[glob]`) |
 | `--` | Marks end of options |
 
 ---
@@ -11071,7 +11084,7 @@ eval [maybeCreatePackageIfNeededCommand \
 - The version checks ensure the script only runs in compatible environments
 - Multiple plugins from the same assembly can be registered with separate calls
 - The `$dir` variable is provided by the package system and points to the directory containing the `pkgIndex.eagle` file
-- The `eval` command executes the generated `[package ifneeded]` script to register the package
+- The `[eval]` command executes the generated `[package ifneeded]` script to register the package
 
 ---
 
@@ -11080,12 +11093,12 @@ eval [maybeCreatePackageIfNeededCommand \
 When a package index file is named with a tag suffix (e.g., `pkgIndex_29c6297630be05eb.eagle`), the package index subsystem automatically provides the `tag` variable set to that 16-character hexadecimal string. This tag represents the public key token of the target assembly.
 
 **File Naming Convention**:
-```
+```tcl
 pkgIndex_<16-char-hex-public-key-token>.eagle
 ```
 
 **Example**:
-```
+```tcl
 pkgIndex_29c6297630be05eb.eagle
 ```
 
@@ -11459,7 +11472,7 @@ Eagle provides extensive mechanisms for customizing interpreter behavior at runt
 <details>
 <summary><strong>Sub-Command Manipulation</strong></summary>
 
-Eagle ensemble commands (like `string`, `file`, `info`, etc.) use an `EnsembleDictionary` to map sub-command names to their implementations. These dictionaries can be accessed and modified at runtime.
+Eagle ensemble commands (like `[string]`, `[file]`, `[info]`, etc.) use an `EnsembleDictionary` to map sub-command names to their implementations. These dictionaries can be accessed and modified at runtime.
 
 ---
 
@@ -11501,11 +11514,11 @@ $subCommands Add length null
 
 ---
 
-#### The `interp subcommand` Command
+#### The `[interp subcommand]` Command
 
-The `interp subcommand` command provides a simpler interface for sub-command manipulation:
+The `[interp subcommand]` command provides a simpler interface for sub-command manipulation:
 
-```
+```tcl
 interp subcommand ?options? path cmdName subCmdName ?command?
 ```
 
@@ -11579,7 +11592,7 @@ $subCommands Add mySubCmd $subCommand
 |-----------|-------------|
 | `name` | Sub-command name |
 | `command` | Parent ICommand reference |
-| `callback` | ExecuteCallback delegate (optional) |
+| `[callback]` | ExecuteCallback delegate (optional) |
 | `clientData` | Custom client data (optional) |
 | `commandFlags` | CommandFlags for the sub-command |
 | `scriptCommand` | StringList of script to evaluate |
@@ -11747,7 +11760,7 @@ set obj [$command -create -alias Object]
    # Now only "length" and "index" sub-commands are available
    ```
 
-5. **Restore modified commands** using `debug restore` if needed:
+5. **Restore modified commands** using `[debug restore]` if needed:
    ```tcl
    debug restore  ;# Restores all core commands to original state
    ```
@@ -11759,7 +11772,7 @@ set obj [$command -create -alias Object]
 
 - `Eagle/Library/Tests/redefine.eagle` - Comprehensive test suite for customization features
 - `Eagle/Library/Tests/Default.cs` - Test support classes including SubCommand and Resolve
-- `Eagle/Library/Commands/Interp.cs` - Implementation of `interp subcommand`
+- `Eagle/Library/Commands/Interp.cs` - Implementation of `[interp subcommand]`
 
 ---
 
@@ -11847,7 +11860,7 @@ set typedInstance [object create -alias TypedInstance \
 |-----------|-------------|
 | `type` | The .NET `Type` whose methods will be mapped |
 | `objectFlags` | `ObjectFlags` controlling object handling behavior |
-| `object` | Object instance for instance method invocation (null = static only) |
+| `[object]` | Object instance for instance method invocation (null = static only) |
 | `objectName` | Short name used as the command name |
 | `fullObjectName` | Optional fallback name if `objectName` is null |
 | `extraParts` | Additional name components (rarely used) |
@@ -11859,7 +11872,7 @@ set typedInstance [object create -alias TypedInstance \
 
 Once created, automatic commands follow this syntax:
 
-```
+```tcl
 commandName ?options? methodName ?arg ...?
 ```
 
@@ -12171,7 +12184,7 @@ This section documents the eight infrastructure command classes and how they rel
 <details>
 <summary><strong>Class Hierarchy</strong></summary>
 
-```
+```tcl
 Default (public)                     ← Base class for ALL commands
 ├── Core (internal)                  ← Base class for core library commands
 │   ├── Alias (internal sealed)      ← Created by [interp alias]
@@ -12191,7 +12204,7 @@ Default (public)                     ← Base class for ALL commands
 |-------|-----------|-------------|------------|------------------|---------|
 | `Default` | `Commands/Default.cs` | `"default"` | — | No | Public base class for all commands |
 | `Core` | `Commands/Core.cs` | `"core"` | `Default` | No (flags: `Core`) | Internal base for core library commands |
-| `Alias` | `Commands/Alias.cs` | `"alias"` | `Core` | Yes | Alias wrapper, created by `interp alias` |
+| `Alias` | `Commands/Alias.cs` | `"alias"` | `Core` | Yes | Alias wrapper, created by `[interp alias]` |
 | `_Delegate` | `Commands/Delegate.cs` | `"delegate"` | `Default` | Yes | Wraps a single `System.Delegate` |
 | `SubDelegate` | `Commands/SubDelegate.cs` | `"delegate"` | `_Delegate` | Yes | Ensemble with per-sub-command delegates |
 | `Automatic` | `Commands/Automatic.cs` | `"delegate"` | `Default` | Yes | Automatic command mapping wrapper |
@@ -12217,7 +12230,7 @@ Default (public)                     ← Base class for ALL commands
 - Ensemble support infrastructure (sub-command dictionaries)
 - Object ID and group extraction from attributes
 
-All user-visible commands (like `string`, `file`, `puts`, etc.) ultimately inherit from `Default`, typically through the `Core` subclass.
+All user-visible commands (like `[string]`, `[file]`, `[puts]`, etc.) ultimately inherit from `Default`, typically through the `Core` subclass.
 
 ---
 
@@ -12230,7 +12243,7 @@ All user-visible commands (like `string`, `file`, `puts`, etc.) ultimately inher
 
 `Core` is the internal base class used by all commands in the core library (the built-in command set shipped with Eagle). Its primary role is to extract `CommandFlags` from class-level attributes and cache them correctly. Behavior specific to core commands (as opposed to plugin or user-defined commands) is implemented here rather than in `Default`.
 
-Commands like `string`, `file`, `info`, `interp`, and all other built-in commands inherit from `Core`.
+Commands like `[string]`, `[file]`, `[info]`, `[interp]`, and all other built-in commands inherit from `Core`.
 
 ---
 
@@ -12245,7 +12258,7 @@ Commands like `string`, `file`, `info`, `interp`, and all other built-in command
 
 `Alias` is a transparent conduit that delegates execution to a target command. It is marked `Safe` because it provides no functionality by itself — it merely forwards to functionality elsewhere in the interpreter. Aliases support cross-interpreter delegation (the source and target interpreters can differ).
 
-**How users create aliases**: Use [`interp alias`](#cmd-interp) to create, query, or delete aliases.
+**How users create aliases**: Use [`[interp alias]`](#cmd-interp) to create, query, or delete aliases.
 
 ```tcl
 # Create an alias in the current interpreter
@@ -12328,9 +12341,9 @@ Note: `Ensemble` does not inherit from `Core` — it manually assigns command fl
 - **CommandFlags**: `Safe | NonStandard | NoPopulate | NoAdd | Delegate`
 - **ObjectGroup**: `"ensemble"`
 
-`Stub` is a minimal ensemble placeholder created by [`interp stub`](#cmd-interp). It provides a bare command that can have sub-commands added to it, serving as a lightweight container for building ensemble command structures at runtime.
+`Stub` is a minimal ensemble placeholder created by [`[interp stub]`](#cmd-interp). It provides a bare command that can have sub-commands added to it, serving as a lightweight container for building ensemble command structures at runtime.
 
-**How users create stubs**: Use `interp stub` to create a stub ensemble command.
+**How users create stubs**: Use `[interp stub]` to create a stub ensemble command.
 
 ```tcl
 # Create a stub command
@@ -12348,12 +12361,12 @@ interp stub {} myensemble
 |-------|------------------------|-------------------|
 | `Default` | (not created directly — base class) | — |
 | `Core` | (not created directly — base class) | — |
-| `Alias` | `interp alias` | The alias name itself |
+| `Alias` | `[interp alias]` | The alias name itself |
 | `_Delegate` | Created by infrastructure | The delegate name itself |
 | `SubDelegate` | Created by infrastructure | The sub-delegate ensemble name |
 | `Automatic` | `interp addautocommand` or `AddAutomaticCommands()` | The automatic command name |
 | `Ensemble` | Created by plugins or infrastructure | The ensemble command name |
-| `Stub` | `interp stub` | The stub command name |
+| `Stub` | `[interp stub]` | The stub command name |
 
 </details>
 
@@ -12380,7 +12393,7 @@ interp stub {} myensemble
 
 - [Advanced: Interpreter Customization Hooks](#advanced-interpreter-customization-hooks) - Sub-command manipulation and name resolution
 - [Advanced: Automatic Command Mapping Subsystem](#advanced-automatic-command-mapping-subsystem) - Automatic command details
-- [`interp`](#cmd-interp) command - `interp alias`, `interp stub`, and related sub-commands
+- [`[interp]`](#cmd-interp) command - `[interp alias]`, `[interp stub]`, and related sub-commands
 - `Eagle/Library/Tests/Default.cs` - Test infrastructure with `Automatic`, `Ensemble`, and `SubCommand` test classes demonstrating command infrastructure usage
 
 ---
@@ -12424,7 +12437,7 @@ Every output channel is individually wrapped in exception handlers. If the host 
 <details>
 <summary><strong>Architecture Overview</strong></summary>
 
-```
+```tcl
                     DebugOps.Complain(interpreter, code, result)
                                       |
                          +------------+------------+
@@ -12559,7 +12572,7 @@ If the callback throws an exception, behavior depends on the `IgnoreOnCallbackTh
 
 When `InterpreterFlags.ComplainViaTrace` is set (or the `ComplainViaTrace` environment variable is set), complaints are written to the diagnostic trace system:
 
-```
+```tcl
 TraceOps.DebugTrace("COMPLAINT: {formatted}", "DebugOps", TracePriority.ComplainError)
 ```
 
@@ -12689,7 +12702,7 @@ The `IsComplainPending()` method returns `true` if complaint processing is curre
 
 The complaint subsystem must handle the case where filing a complaint itself triggers another complaint (e.g., when the trace listener or host throws, and the exception handler calls `Complain()` again). This is handled through a per-thread nesting level counter:
 
-```
+```tcl
 complainLevels (ThreadStatic):
   0 = idle
   1 = processing complaint (normal — full output)
@@ -12756,7 +12769,7 @@ All fields are marked "purposely not read-only" to allow runtime adjustment via 
 | `ComplainViaTest` | `0x40000000` | Route complaints to the test suite log |
 | `ComplainViaTrace` | `0x80000000` | Route complaints to diagnostic trace/debug listeners |
 | `TraceStack` | `0x40` | Capture full stack trace when `Complain()` is called |
-| `DebugBreakNoComplain` | `0x40000000000000` | For `debug break`, default to `-nocomplain` |
+| `DebugBreakNoComplain` | `0x40000000000000` | For `[debug break]`, default to `-nocomplain` |
 
 ---
 
@@ -12814,7 +12827,7 @@ The `NoComplain` pattern appears across many flag enumerations throughout the li
 | `TestFlags` | `StopOnComplain` | Stop test execution when per-thread complaint counter increases |
 | `TestFlags` | `StopOnGlobalComplain` | Stop test execution when global complaint counter increases |
 | `ObjectOptionType` | `NoComplain` | Do not stop when a method invocation error is hit |
-| `DebuggerFlags` | `NoComplain` | Use `-nocomplain` with `debug break` |
+| `DebuggerFlags` | `NoComplain` | Use `-nocomplain` with `[debug break]` |
 
 ---
 
@@ -12825,9 +12838,9 @@ The `NoComplain` pattern appears across many flag enumerations throughout the li
 
 ---
 
-#### `debug complaint`
+#### `[debug complaint]`
 
-The `debug complaint` sub-command retrieves the most recent complaint string stored on the active interpreter:
+The `[debug complaint]` sub-command retrieves the most recent complaint string stored on the active interpreter:
 
 ```tcl
 # Retrieve the most recent complaint (empty string if none)
@@ -12862,7 +12875,7 @@ if (code != ReturnCode.Ok)
     DebugOps.Complain(interpreter, code, error);
 ```
 
-**Command implementations** — Errors in cleanup paths within `try`/`catch`/`sql`/`xml` and other commands:
+**Command implementations** — Errors in cleanup paths within `[try]`/`[catch]`/`[sql]`/`[xml]` and other commands:
 ```csharp
 // Try.cs — error within a finally block
 DebugOps.Complain(interpreter, code, result);
@@ -12956,7 +12969,7 @@ The complaint subsystem adapts to the build configuration through conditional co
 <details>
 <summary><strong>See Also</strong></summary>
 
-- [`debug complaint`](#cmd-debug) — Script-level access to the most recent complaint
+- [`[debug complaint]`](#cmd-debug) — Script-level access to the most recent complaint
 - [`debug break -complain`](#cmd-debug) — Breakpoint with complaint error reporting
 - [Interpreter Customization Hooks](#advanced-interpreter-customization-hooks) — Related interpreter lifecycle hooks
 - `DebugOps.cs` — Full complaint subsystem implementation
@@ -12972,7 +12985,7 @@ The complaint subsystem adapts to the build configuration through conditional co
 
 <a id="security-policy-subsystem"></a>
 
-The security policy subsystem is the primary access-control facility for the Eagle interpreter. It provides a voting-based, callback-driven policy evaluation pipeline that governs which commands, sub-commands, files, streams, URIs, types, and assemblies may be accessed from script code — particularly within safe (sandboxed) interpreters. The full implementation spans `PolicyOps.cs` (core policy implementations), `PolicyContext.cs` (vote aggregation), `Interpreter.cs` (policy management and checking), `Engine.cs` (policy integration points), `Utility.cs` (public API wrappers), and `ScriptPolicy.cs` (script-based policy class). Script-level access is provided by `interp policy`, `interp nopolicy`, `interp makesafe`, and `interp marktrusted`.
+The security policy subsystem is the primary access-control facility for the Eagle interpreter. It provides a voting-based, callback-driven policy evaluation pipeline that governs which commands, sub-commands, files, streams, URIs, types, and assemblies may be accessed from script code — particularly within safe (sandboxed) interpreters. The full implementation spans `PolicyOps.cs` (core policy implementations), `PolicyContext.cs` (vote aggregation), `Interpreter.cs` (policy management and checking), `Engine.cs` (policy integration points), `Utility.cs` (public API wrappers), and `ScriptPolicy.cs` (script-based policy class). Script-level access is provided by `[interp policy]`, `[interp nopolicy]`, `[interp makesafe]`, and `[interp marktrusted]`.
 
 <details>
 <summary><strong>Design Philosophy</strong></summary>
@@ -12987,7 +13000,7 @@ Eagle's security policy subsystem is designed around several core principles:
 
 4. **Separation of mechanism and policy.** The checking infrastructure (`CheckPolicies`, `PolicyContext`) is entirely generic. Specific security rules are implemented as callbacks (`ExecuteCallback` delegates) that can be replaced, supplemented, or removed. The default core policies in `PolicyOps.cs` implement reasonable safe-interpreter restrictions, but embedders can install entirely different policies.
 
-5. **Per-interpreter configuration.** Each interpreter maintains its own policy collection. Policies are typically installed during `interp makesafe` or `interp create -safe`, but can be added or removed at any time via `interp policy` and `interp nopolicy`.
+5. **Per-interpreter configuration.** Each interpreter maintains its own policy collection. Policies are typically installed during `[interp makesafe]` or `interp create -safe`, but can be added or removed at any time via `[interp policy]` and `[interp nopolicy]`.
 
 6. **Multiple check dimensions.** The subsystem supports policy checking at six different levels: sub-command filtering, URI validation, directory validation, type validation, managed callback invocation, and script evaluation. Each dimension is implemented by a dedicated `CheckVia*` method in `PolicyOps`.
 
@@ -13000,7 +13013,7 @@ Eagle's security policy subsystem is designed around several core principles:
 <details>
 <summary><strong>Architecture Overview</strong></summary>
 
-```
+```tcl
    Script: interp eval $safe {file exists /etc/passwd}
                          |
                          v
@@ -13056,7 +13069,7 @@ The policy subsystem is invoked by the interpreter at several key points during 
 |-------------------|-------------|----------------|--------------|
 | Before command | `EngineBeforeCommand` | `CheckCommandPolicies()` | Before executing any command in a safe interpreter. |
 | Before sub-command | `EngineBeforeSubCommand` | `CheckSubCommandPolicies()` | Before executing a sub-command (for ensemble commands). |
-| Before file | `EngineBeforeFile` | `CheckBeforeFilePolicies()` | Before reading a script file via `source`. |
+| Before file | `EngineBeforeFile` | `CheckBeforeFilePolicies()` | Before reading a script file via `[source]`. |
 | After file | `EngineAfterFile` | `CheckAfterFilePolicies()` | After reading a script file (with hash verification). |
 | Before stream | `EngineBeforeStream` | `CheckBeforeStreamPolicies()` | Before reading a script stream. |
 | After stream | `EngineAfterStream` | `CheckAfterStreamPolicies()` | After reading a script stream (with hash verification). |
@@ -13085,7 +13098,7 @@ The `PolicyContext` class maintains three thread-safe counters (using `Interlock
 
 The aggregated `Decision` property applies the following rules in order:
 
-```
+```tcl
 1. if (deniedCount > 0)           → PolicyDecision.Denied
 2. else if (approvedCount > undecidedCount) → PolicyDecision.Approved
 3. else if (undecidedCount > 0)   → PolicyDecision.Undecided
@@ -13203,44 +13216,44 @@ Evaluates a script in the `policyInterpreter` to make the policy decision. The s
 <details>
 <summary><strong>Default Core Command Policies</strong></summary>
 
-When a safe interpreter is created (via `interp create -safe` or `interp makesafe`), the `SetupPolicies` method installs eight default command policy callbacks from the `PolicyOps.CommandCallbacks` array. Each callback restricts a specific command to a safe subset of its sub-commands or validated resources.
+When a safe interpreter is created (via `interp create -safe` or `[interp makesafe]`), the `SetupPolicies` method installs eight default command policy callbacks from the `PolicyOps.CommandCallbacks` array. Each callback restricts a specific command to a safe subset of its sub-commands or validated resources.
 
 #### Summary Table
 
 | Command | Callback | Check Method | Mode | Strategy |
 |---------|----------|--------------|------|----------|
-| `clock` | `ClockCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
-| `file` | `FileCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
-| `info` | `InfoCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
-| `interp` | `InterpCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
-| `object` | `ObjectCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
-| `package` | `PackageCommandCallback` | `CheckViaSubCommand` | Deny list | All except dangerous sub-commands |
-| `source` | `SourceCommandCallback` | `CheckViaUri` / `CheckViaDirectory` | Allow list | URI or directory validation |
-| `uri` | `UriCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
+| `[clock]` | `ClockCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
+| `[file]` | `FileCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
+| `[info]` | `InfoCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
+| `[interp]` | `InterpCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
+| `[object]` | `ObjectCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
+| `[package]` | `PackageCommandCallback` | `CheckViaSubCommand` | Deny list | All except dangerous sub-commands |
+| `[source]` | `SourceCommandCallback` | `CheckViaUri` / `CheckViaDirectory` | Allow list | URI or directory validation |
+| `[uri]` | `UriCommandCallback` | `CheckViaSubCommand` | Allow list | Only safe sub-commands |
 
 #### Allowed Sub-Command Lists
 
-**`clock`** — `buildnumber`, `days`, `duration`, `filetime`, `format`, `isvalid`, `monthdays`, `scan`, `seconds`
+**`[clock]`** — `buildnumber`, `days`, `duration`, `filetime`, `[format]`, `isvalid`, `monthdays`, `scan`, `seconds`
 
-**`file`** — `channels`, `dirname`, `join`, `split`, `validname`
+**`[file]`** — `channels`, `dirname`, `[join]`, `[split]`, `validname`
 
-**`info`** — `appdomain`, `args`, `body`, `commands`, `complete`, `context`, `default`, `engine`, `ensembles`, `exists`, `functions`, `globals`, `level`, `library`, `locals`, `nprocs`, `objects`, `operands`, `operators`, `patchlevel`, `procs`, `script`, `subcommands`, `tclversion`, `vars`
+**`[info]`** — `appdomain`, `args`, `body`, `commands`, `complete`, `context`, `default`, `engine`, `ensembles`, `exists`, `functions`, `globals`, `level`, `[library]`, `locals`, `nprocs`, `objects`, `operands`, `operators`, `patchlevel`, `procs`, `script`, `subcommands`, `tclversion`, `vars`
 
-**`interp`** — `alias`, `aliases`, `cancel`, `children`, `exists`, `issafe`, `issdk`, `rename`
+**`[interp]`** — `alias`, `aliases`, `cancel`, `children`, `exists`, `issafe`, `issdk`, `[rename]`
 
-**`object`** — `dispose`, `exists`, `invoke`, `invokeall`, `invokeraw`, `isnull`, `isoftype`
+**`[object]`** — `dispose`, `exists`, `[invoke]`, `invokeall`, `invokeraw`, `isnull`, `isoftype`
 
-**`uri`** — `get`, `isvalid`, `post`
+**`[uri]`** — `get`, `isvalid`, `post`
 
 #### Disallowed Sub-Command List
 
-**`package`** (deny list) — `alias`, `aliases`, `indexes`, `relativefilename`, `reset`, `scan`, `vloaded`
+**`[package]`** (deny list) — `alias`, `aliases`, `indexes`, `relativefilename`, `reset`, `scan`, `vloaded`
 
-All other `package` sub-commands are permitted.
+All other `[package]` sub-commands are permitted.
 
-#### The `source` Command Policy
+#### The `[source]` Command Policy
 
-The `source` command policy uses a hybrid approach:
+The `[source]` command policy uses a hybrid approach:
 
 1. If the file name is a **remote URI** (`PathOps.IsRemoteUri()`), the policy delegates to `CheckViaUri` with a list of trusted URIs built by `AddTrustedUris()`.
 2. If the file name is a **local path**, the policy delegates to `CheckViaDirectory` with a list of trusted directories built by `AddTrustedDirectories()`.
@@ -13452,9 +13465,9 @@ The interpreter maintains separate `InitialDecision` and `FinalDecision` propert
 <details>
 <summary><strong>Script-Level Interface</strong></summary>
 
-#### `interp policy` — Add a Policy
+#### `[interp policy]` — Add a Policy
 
-```
+```tcl
 interp policy ?options? path script
 ```
 
@@ -13468,19 +13481,19 @@ Adds a policy to the interpreter identified by `path`. The script is evaluated w
 | `-token commandToken` | The token of the command this policy applies to. |
 | `-flags policyFlags` | `PolicyFlags` value controlling when the policy is invoked. Default: `Script`. |
 
-#### `interp nopolicy` — Remove a Policy
+#### `[interp nopolicy]` — Remove a Policy
 
-```
+```tcl
 interp nopolicy path name
 ```
 
 Removes a named policy from the interpreter identified by `path`.
 
-#### `interp makesafe` — Make an Interpreter Safe
+#### `[interp makesafe]` — Make an Interpreter Safe
 
 Makes the interpreter safe by installing the default core command policies (the eight callbacks described above), hiding dangerous commands, and applying other safety restrictions. This is the primary mechanism for creating sandboxed interpreters.
 
-#### `interp marktrusted` — Mark an Interpreter as Trusted
+#### `[interp marktrusted]` — Mark an Interpreter as Trusted
 
 Marks the interpreter as trusted, effectively bypassing policy checks. This is used when a safe interpreter needs temporary elevated privileges (e.g., during initialization). The `TrustFlags` enumeration controls the behavior of trusted evaluation.
 
@@ -13540,12 +13553,12 @@ The `IPolicyContext` interface provides the complete context for a policy decisi
 | `Flags` | `PolicyFlags` | Flags indicating when and why this check is occurring. |
 | `Execute` | `IExecute` | The command being checked (for command policies). |
 | `Arguments` | `ArgumentList` | The command arguments. |
-| `FileName` | `string` | The file name (for file policies). |
-| `Text` | `string` | The script text (for script policies). |
+| `FileName` | `[string]` | The file name (for file policies). |
+| `Text` | `[string]` | The script text (for script policies). |
 | `Bytes` | `byte[]` | Raw byte content (for file/stream policies). |
 | `Encoding` | `Encoding` | Content encoding. |
 | `HashValue` | `byte[]` | Cryptographic hash of the content. |
-| `HashAlgorithmName` | `string` | Hash algorithm name (e.g., `SHA256`). |
+| `HashAlgorithmName` | `[string]` | Hash algorithm name (e.g., `SHA256`). |
 | `Result` | `Result` | Informational result (for diagnostics only — **not** for making decisions). |
 | `OriginalDecision` | `PolicyDecision` | The decision before this policy check began. |
 | `Decision` | `PolicyDecision` | The current aggregated decision (read-only, computed from vote counts). |
@@ -13582,13 +13595,13 @@ The following parameters are not exposed through script commands but can be read
 | Field | Type | Description |
 |-------|------|-------------|
 | `CommandCallbacks` | `IEnumerable<ExecuteCallback>` | Array of the eight default command policy callbacks. Modifiable at runtime to add/remove/reorder default policies. |
-| `AllowedClockSubCommandNames` | `StringDictionary` | Allowed `clock` sub-commands in safe interpreters. |
-| `AllowedFileSubCommandNames` | `StringDictionary` | Allowed `file` sub-commands in safe interpreters. |
-| `AllowedInfoSubCommandNames` | `StringDictionary` | Allowed `info` sub-commands in safe interpreters. |
-| `AllowedInterpSubCommandNames` | `StringDictionary` | Allowed `interp` sub-commands in safe interpreters. |
-| `AllowedObjectSubCommandNames` | `StringDictionary` | Allowed `object` sub-commands in safe interpreters. |
-| `AllowedUriSubCommandNames` | `StringDictionary` | Allowed `uri` sub-commands in safe interpreters. |
-| `DisallowedPackageSubCommandNames` | `StringDictionary` | Disallowed `package` sub-commands in safe interpreters. |
+| `AllowedClockSubCommandNames` | `StringDictionary` | Allowed `[clock]` sub-commands in safe interpreters. |
+| `AllowedFileSubCommandNames` | `StringDictionary` | Allowed `[file]` sub-commands in safe interpreters. |
+| `AllowedInfoSubCommandNames` | `StringDictionary` | Allowed `[info]` sub-commands in safe interpreters. |
+| `AllowedInterpSubCommandNames` | `StringDictionary` | Allowed `[interp]` sub-commands in safe interpreters. |
+| `AllowedObjectSubCommandNames` | `StringDictionary` | Allowed `[object]` sub-commands in safe interpreters. |
+| `AllowedUriSubCommandNames` | `StringDictionary` | Allowed `[uri]` sub-commands in safe interpreters. |
+| `DisallowedPackageSubCommandNames` | `StringDictionary` | Disallowed `[package]` sub-commands in safe interpreters. |
 | `DecisionTypes` | `PolicyDecisionType[]` | Array of decision types checked during `QueryDecisions()`. Default: `{ Command, Script, File, Stream }`. |
 | `HashCount` | `int` | Number of hash algorithms to try when verifying trusted files. Default: `3`. |
 
@@ -13634,10 +13647,10 @@ Commands that implement `IPolicyEnsemble` expose their allowed/disallowed sub-co
 <details>
 <summary><strong>See Also</strong></summary>
 
-- [`interp policy`](#cmd-interp) — Add a policy to an interpreter
-- [`interp nopolicy`](#cmd-interp) — Remove a policy from an interpreter
-- [`interp makesafe`](#cmd-interp) — Make an interpreter safe (installs default policies)
-- [`interp marktrusted`](#cmd-interp) — Mark an interpreter as trusted
+- [`[interp policy]`](#cmd-interp) — Add a policy to an interpreter
+- [`[interp nopolicy]`](#cmd-interp) — Remove a policy from an interpreter
+- [`[interp makesafe]`](#cmd-interp) — Make an interpreter safe (installs default policies)
+- [`[interp marktrusted]`](#cmd-interp) — Mark an interpreter as trusted
 - [Advanced: Tracing Subsystem](#tracing-subsystem) — Tracing subsystem (includes `PolicyTrace` and `PolicyError` priorities)
 - `PolicyOps.cs` — Core policy implementation (CheckVia* methods, default callbacks, trust model)
 - `PolicyContext.cs` — Vote aggregation and decision logic
@@ -13655,7 +13668,7 @@ Commands that implement `IPolicyEnsemble` expose their allowed/disallowed sub-co
 
 <a id="tracing-subsystem"></a>
 
-The tracing subsystem is the primary diagnostic output facility for the Eagle interpreter runtime. It provides structured, priority-filtered, category-aware trace message routing through configurable listeners with rate limiting, custom formatting, managed code filter callbacks, and per-interpreter or global configuration. The full implementation spans `TraceOps.cs` (core pipeline), `DebugOps.cs` (listener management), `TraceLimits.cs` (rate limiting), `Delegates.cs` (filter callback delegate), and `Default.cs` (test listener implementations). Script-level access is provided by the `debug trace` command.
+The tracing subsystem is the primary diagnostic output facility for the Eagle interpreter runtime. It provides structured, priority-filtered, category-aware trace message routing through configurable listeners with rate limiting, custom formatting, managed code filter callbacks, and per-interpreter or global configuration. The full implementation spans `TraceOps.cs` (core pipeline), `DebugOps.cs` (listener management), `TraceLimits.cs` (rate limiting), `Delegates.cs` (filter callback delegate), and `Default.cs` (test listener implementations). Script-level access is provided by the `[debug trace]` command.
 
 <details>
 <summary><strong>Design Philosophy</strong></summary>
@@ -13683,7 +13696,7 @@ Eagle's tracing subsystem is designed around several core principles:
 <details>
 <summary><strong>Architecture Overview</strong></summary>
 
-```
+```tcl
    Script: debug trace -priority Notice "message"
                          |
                          v
@@ -13747,13 +13760,13 @@ Eagle's tracing subsystem is designed around several core principles:
 </details>
 
 <details>
-<summary><strong>The `debug trace` Command</strong></summary>
+<summary><strong>The `[debug trace]` Command</strong></summary>
 
-The `debug trace` command is the script-level interface to the tracing subsystem. It serves three roles: writing trace messages, querying trace status, and configuring the trace subsystem at runtime.
+The `[debug trace]` command is the script-level interface to the tracing subsystem. It serves three roles: writing trace messages, querying trace status, and configuring the trace subsystem at runtime.
 
 **Syntax:**
 
-```
+```tcl
 debug trace ?options? ?message?
 ```
 
@@ -13853,7 +13866,7 @@ These classify the nature of the event. A message typically combines one priorit
 | `Inform` | `0x20000` | Informational message about normal operation. |
 | `Debug` | `0x40000` | Debug or diagnostic message; useful during development. |
 | `Verbose` | `0x80000` | Extra-verbose debug output; typically high-volume. |
-| `Demand` | `0x100000` | On-demand trace produced by a script command (e.g., `debug trace`). |
+| `Demand` | `0x100000` | On-demand trace produced by a script command (e.g., `[debug trace]`). |
 | `External` | `0x200000` | Message originating from outside the Eagle library (e.g., a plugin or SDK consumer). |
 
 #### Formatting and Metadata Flags
@@ -14043,7 +14056,7 @@ These named composites are used throughout the Eagle codebase. Each combines a p
 
 | Name | Composition | Description |
 |------|-------------|-------------|
-| `Command` | `Medium \| Demand` | Script-initiated trace via `debug trace`. |
+| `Command` | `Medium \| Demand` | Script-initiated trace via `[debug trace]`. |
 | `CommandDebug` | `MediumLow \| Debug \| Demand` | Script-initiated debug trace. |
 | `CommandError` | `MediumHigh \| Error \| Demand` | Script-initiated error trace. |
 | `PolicyTrace` | `High \| Inform \| Demand` | Policy evaluation trace. |
@@ -14420,7 +14433,7 @@ The tracing subsystem reads the following environment variables at initializatio
 
 <a id="trace-internal-tunables"></a>
 
-The following parameters are not exposed through `debug trace` options but can be read or modified at runtime via `[object invoke]` on the `TraceOps` class (or, in some cases, on the `Interpreter` instance). These are internal implementation details and may change between releases.
+The following parameters are not exposed through `[debug trace]` options but can be read or modified at runtime via `[object invoke]` on the `TraceOps` class (or, in some cases, on the `Interpreter` instance). These are internal implementation details and may change between releases.
 
 #### Global State Fields (TraceOps)
 
@@ -14430,7 +14443,7 @@ The following parameters are not exposed through `debug trace` options but can b
 | `isWritePossible` | `bool` | `true` | Secondary kill switch for the write path specifically. |
 | `isTraceEnabled` | `bool?` | `null` (resolves to `true`) | Runtime enable/disable. When `null`, falls back to `isTraceEnabledByDefault`. |
 | `isTraceEnabledByDefault` | `bool?` | `null` (resolves to `true`) | Default enabled state, read from `NoTrace`/`Trace` environment variables at initialization. |
-| `traceFormatString` | `string` | `null` (uses format index) | Custom format string. When non-null, overrides the format index selection. |
+| `traceFormatString` | `[string]` | `null` (uses format index) | Custom format string. When non-null, overrides the format index selection. |
 | `traceFormatIndex` | `int?` | `null` (uses default = Medium) | Index into the predefined format array (0=Default through 6=Maximum). |
 | `traceDateTime` | `bool` | `false` | Include `DateTime.Now` in all messages (equivalent to setting `EnableDateTimeFlag` globally). |
 | `tracePriority` | `bool` | `false` | Include the `TracePriority` hex value in all messages. |
@@ -14445,7 +14458,7 @@ The following parameters are not exposed through `debug trace` options but can b
 | `defaultTracePriority` | `TracePriority` | (varies) | Default priority for trace methods that do not specify one explicitly. |
 | `tracePriorities` | `TracePriority` | `DefaultMask` | Bitmask of accepted priority levels. Messages whose priority level is not in this mask are dropped. |
 | `globalPriorities` | `TracePriority` | (varies) | Global priority overrides, consulted in addition to `tracePriorities`. |
-| `FallbackTraceFormat` | `string` | `MediumTraceFormat` | Format string used when no other format is configured. |
+| `FallbackTraceFormat` | `[string]` | `MediumTraceFormat` | Format string used when no other format is configured. |
 | `UseFallbackTraceFormat` | `bool` | `true` | Whether to use the fallback format when no format is explicitly configured. |
 | `DefaultMaximumTraceLevels` | `int` | `2` | Maximum recursive nesting depth for `DebugTrace` calls. Prevents infinite recursion when a trace listener itself triggers tracing. |
 | `DefaultMaximumWriteLevels` | `int` | `2` | Maximum recursive nesting depth for `DebugWriteTo` calls. |
@@ -14482,7 +14495,7 @@ The following parameters are not exposed through `debug trace` options but can b
 <details>
 <summary><strong>TraceStateType Enumeration</strong></summary>
 
-`TraceStateType` is a `[Flags]` enumeration that controls which aspects of the tracing subsystem are modified when calling `ForceEnabledOrDisabled()` or when using the `-statetypes` option of `debug trace`. Each flag corresponds to one configurable dimension of the subsystem.
+`TraceStateType` is a `[Flags]` enumeration that controls which aspects of the tracing subsystem are modified when calling `ForceEnabledOrDisabled()` or when using the `-statetypes` option of `[debug trace]`. Each flag corresponds to one configurable dimension of the subsystem.
 
 | Name | Value | Controls |
 |------|-------|----------|
@@ -14527,12 +14540,12 @@ The following parameters are not exposed through `debug trace` options but can b
 | `Force` | `0x40000000000` | Force state changes (override safety checks). |
 | `Reset` | `0x80000000000` | Reset all state. |
 | `OverrideEnvironment` | `0x100000000000` | Override environment-derived settings. |
-| `ForCommand` | `0x200000000000` | State change initiated by `debug trace` command. |
+| `ForCommand` | `0x200000000000` | State change initiated by `[debug trace]` command. |
 | `ForSdk` | `0x400000000000` | State change initiated by SDK consumer. |
 | `ForDefault` | `0x800000000000` | Default state type (used internally). |
 
 **Useful composite masks:**
-- `TraceCommand` = `(Default | ForCommand) & ~ForDefault` — Used as the default `-statetypes` value by `debug trace`.
+- `TraceCommand` = `(Default | ForCommand) & ~ForDefault` — Used as the default `-statetypes` value by `[debug trace]`.
 - `SdkEnableMask` / `SdkDisableMask` — For SDK consumers enabling/disabling tracing.
 - `NormalMask` — All non-reset, non-special flags.
 - `ResetMask` — All reset flags.
@@ -14565,7 +14578,7 @@ Controls which category dictionary is being configured.
 <details>
 <summary><strong>Statistics and Monitoring</strong></summary>
 
-The tracing subsystem maintains the following performance counters, accessible via `debug trace` (no arguments) or via `[object invoke]` on `TraceOps`:
+The tracing subsystem maintains the following performance counters, accessible via `[debug trace]` (no arguments) or via `[object invoke]` on `TraceOps`:
 
 | Counter | Description |
 |---------|-------------|
@@ -14598,7 +14611,7 @@ The tracing subsystem's compiled behavior depends on several conditional compila
 | `POLICY_TRACE` | Enables policy evaluation tracing via `MaybeWritePolicyTrace()`. |
 | `CONSOLE` | Enables console-related trace output and the console trace listener. |
 | `NATIVE` | Enables native debugger output (`OutputDebugString`) and the `NativeTraceListener`. |
-| `TEST` | Enables test-specific listeners (log file, buffered) and test-specific `debug trace` options. |
+| `TEST` | Enables test-specific listeners (log file, buffered) and test-specific `[debug trace]` options. |
 | `WINFORMS` | Enables the `StatusFormTraceListener`. |
 | `DATA` | Enables the `DatabaseTraceListener`. |
 | `CACHE_DICTIONARY` | Enables the message deduplication cache in `TraceLimits`. |
@@ -14610,7 +14623,7 @@ The tracing subsystem's compiled behavior depends on several conditional compila
 <details>
 <summary><strong>See Also</strong></summary>
 
-- [`debug trace`](#cmd-debug) — Script-level access to the tracing subsystem
+- [`[debug trace]`](#cmd-debug) — Script-level access to the tracing subsystem
 - [Advanced: Complaint Subsystem](#complaint-subsystem) — Related error-reporting subsystem that can route through tracing
 - [Interpreter Customization Hooks](#advanced-interpreter-customization-hooks) — Related interpreter lifecycle hooks
 - `TraceOps.cs` — Core tracing pipeline implementation
@@ -15072,7 +15085,7 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 | `SetupTrace` | If set, trace listeners appropriate to the current debug mode will be set up. |
 | `ScriptTrace` | If set, its value is used to create and add a trace listener. |
 | `ComplainViaTrace` | If set, complaint output may be sent to `System.Diagnostics.Debug` and/or `System.Diagnostics.Trace`. |
-| `ComplainViaTest` | If set, complaint output may be sent to the `tputs` or `puts` commands within the interpreter. |
+| `ComplainViaTest` | If set, complaint output may be sent to the `tputs` or `[puts]` commands within the interpreter. |
 | `IncludeResultStack` | If set, created result objects will include managed call stack information in their string representations. |
 | `PopulateResultStack` | If set, created result objects will capture managed call stack information. |
 

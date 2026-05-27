@@ -53,7 +53,7 @@ Default.cs, and others. Grep for `"purposely not read-only"`.
 <details>
 <summary><strong>2. The <code>goto</code> State Machine Pattern</strong></summary>
 
-Eagle uses `goto` extensively outside of `switch` statements -- roughly
+Eagle uses `goto` extensively outside of `[switch]` statements -- roughly
 240 occurrences, primarily in `PrivateShellMainCore` (command-line
 argument processing), `ScriptOps` (script evaluation), and
 `InteractiveOps` (interactive command dispatch).
@@ -81,7 +81,7 @@ Rather than relying on C#'s compile-time `readonly` semantics, Eagle
 enforces immutability at runtime via a boolean flag checked in every
 property setter:
 
-```
+```csharp
 private bool immutable;
 public Lexeme Lexeme {
     set { if (immutable) throw new InvalidOperationException(); ... }
@@ -168,7 +168,7 @@ script-level awareness.
 <summary><strong>7. Implicit Conversion Operator Saturation</strong></summary>
 
 The `Result` class has 30+ implicit conversion operators, converting
-from/to `string`, `int`, `long`, `double`, `decimal`, `DateTime`,
+from/to `[string]`, `int`, `long`, `double`, `decimal`, `DateTime`,
 `TimeSpan`, `Guid`, `Uri`, `byte[]`, `Version`, `Exception`,
 `StringList`, `BigInteger`, and more.
 
@@ -339,7 +339,7 @@ ensure plugins don't need to reference internal types.
 
 Eagle scripts can modify their own interpreter's initialization pipeline
 before the interpreter is fully initialized. The `Makefile.eagle` helper
-demonstrates this: an `apply` lambda evaluated via `-anyFile` during
+demonstrates this: an `[apply]` lambda evaluated via `-anyFile` during
 startup reaches into the interpreter's private `ShellArguments` list to
 inject `-preInitialize`, `-initialize`, and `-postInitialize` arguments
 that control the boot sequence.
@@ -380,7 +380,7 @@ and `LockTrace` on failure -- all without deadlock risk.
 The Kapok enterprise storage system uses a command pattern with
 composable logic operators:
 
-```
+```tcl
 BaseCommand → TraceCommand → NopCommand
                             → ScriptCommand
                             → UnaryCommand → NotCommand
@@ -414,7 +414,7 @@ distinctive patterns at the scripting level.
 The entire script library is designed to run in both vanilla Tcl and
 Eagle. Bootstrap procedures like `isEagle` detect the runtime, and the
 library conditionally loads Eagle-specific modules. System aliases are
-created differently for each engine via `interp alias`. This means the
+created differently for each engine via `[interp alias]`. This means the
 same test suite can validate both Tcl compatibility and Eagle-specific
 features.
 
@@ -438,7 +438,7 @@ code from `::eagle_debugger(stubProcedureBody)` or
 `::eagle_debugger(flexibleProcedureBody)`, enabling transparent
 debugging hooks without modifying the original procedure definitions.
 
-`f_proc` also chooses between `proc` and `nproc` (native procedure)
+`f_proc` also chooses between `[proc]` and `[nproc]` (native procedure)
 based on runtime capabilities -- the caller doesn't know which
 implementation backs their procedure.
 
@@ -451,9 +451,9 @@ implementation backs their procedure.
 <details>
 <summary><strong>20. Self-Destructing Procedures</strong></summary>
 
-The `apply` compatibility shim for Tcl 8.4 creates a temporary
+The `[apply]` compatibility shim for Tcl 8.4 creates a temporary
 procedure with a unique name, executes it, then the procedure body
-includes a `rename` command that deletes itself after first invocation.
+includes a `[rename]` command that deletes itself after first invocation.
 This is self-modifying code: the procedure destroys itself as its last
 act.
 
@@ -499,7 +499,7 @@ concurrent modification. This implements thread-safe queues and state
 machines entirely at the script level, without any C# involvement.
 
 `tlog` (test log) uses this to safely queue log entries from multiple
-threads, processing the queue by iterating `array names` and deleting
+threads, processing the queue by iterating `[array names]` and deleting
 entries after processing.
 
 **Where**: `lib/Eagle1.0/test.eagle` (lines 3114-3442)
@@ -539,7 +539,7 @@ and .NET type availability.
 Eagle's `unknown` command handler can intercept unrecognized commands
 and attempt to resolve them as .NET type names. When
 `eagleUnknownObjectInvoke` is enabled, typing a .NET class name at the
-interactive prompt automatically delegates to `object invoke`. This
+interactive prompt automatically delegates to `[object invoke]`. This
 turns the Eagle shell into a dynamic .NET REPL where any .NET type is
 a first-class command.
 
@@ -559,7 +559,7 @@ are called at the appropriate points. This enables test infrastructure
 customization (custom logging, CI integration, performance measurement)
 without modifying the test framework code.
 
-`runTest` dynamically discovers hooks via `info commands` and invokes
+`runTest` dynamically discovers hooks via `[info commands]` and invokes
 them if present. The hook mechanism is entirely convention-based -- no
 registration required.
 
@@ -686,7 +686,7 @@ resolution chain:
 3. **Method invocation**: If a type is found, arguments are merged with
    `[object invoke]` options via `MergeArguments()` on the active
    interpreter, and the command is re-dispatched as a .NET static method call
-4. **Chaining**: If resolution fails, `continue` is returned to chain to
+4. **Chaining**: If resolution fails, `[continue]` is returned to chain to
    the next handler (package unknown, namespace unknown, etc.)
 5. **Package fallback**: `tclPkgUnknown` forces package index re-scanning
    with `-host`, `-bundle`, and optionally `-plugins` flags

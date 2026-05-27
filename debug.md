@@ -1,15 +1,17 @@
-# Eagle `debug` Command — Deep-Dive Analysis
+# Eagle `[debug]` Command — Deep-Dive Analysis
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `debug` command internals, including the 65+ sub-commands, the dual-context suspend/resume debugger architecture, `BreakpointType` enum (40+ flags with composite presets), `DebugEmergencyLevel` lifecycle control, `HeaderFlags` display control, the interactive breakpoint loop, variable watchpoints, script evaluation in debugger context, token-level breakpoints, trace configuration, and the command queue system. For basic command syntax, see [`core_language.md`](core_language.md#cmd-debug). For usage examples, see [`core_examples.md`](core_examples.md#ex-debug). For debugging tips, see [`tips_and_tricks.md`](tips_and_tricks.md).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `[debug]` command internals, including the 78 sub-commands, the dual-context suspend/resume debugger architecture, `BreakpointType` enum (40+ flags with composite presets), `DebugEmergencyLevel` lifecycle control, `HeaderFlags` display control, the interactive breakpoint loop, variable watchpoints, script evaluation in debugger context, token-level breakpoints, trace configuration, and the command queue system. For basic command syntax, see [`core_language.md`](core_language.md#cmd-debug). For usage examples, see [`core_examples.md`](core_examples.md#ex-debug). For debugging tips, see [`tips_and_tricks.md`](tips_and_tricks.md).
 
 ## 1. Executive Summary
 
-The Eagle `debug` command is a large ensemble providing **65+ sub-commands**
-for programmatic interaction with the debugger, breakpoints, variable watches,
+The Eagle `[debug]` command is a large ensemble providing **78 sub-commands**
+(many gated behind specific compile-time flags, so the count visible in any
+given build will be lower) for programmatic interaction with the debugger,
+breakpoints, variable watches,
 script evaluation in debug context, memory diagnostics, trace configuration,
-script bundling, and emergency recovery. Tcl has no built-in `debug` command;
-debugging in Tcl relies on external tools or simple `puts`-based tracing.
-Eagle's `debug` is a first-class command ensemble that exposes the full
+script bundling, and emergency recovery. Tcl has no built-in `[debug]` command;
+debugging in Tcl relies on external tools or simple `[puts]`-based tracing.
+Eagle's `[debug]` is a first-class command ensemble that exposes the full
 debugger lifecycle from script level.
 
 The command carries `CommandFlags.Unsafe | Critical | NonStandard | Diagnostic`
@@ -20,26 +22,26 @@ Key differentiators from Tcl:
 
 | Area | Tcl | Eagle |
 |------|-----|-------|
-| Built-in debugger | None (external tools only) | Full debugger with 65+ sub-commands |
+| Built-in debugger | None (external tools only) | Full debugger with 78 sub-commands |
 | Breakpoint types | N/A | 40+ `BreakpointType` flags (command, token, variable, cancel, error, exit, etc.) |
-| Variable watchpoints | `trace add variable` (callback-based) | `debug watch` with `BreakOnGet`/`BreakOnSet`/`BreakOnUnset` flags |
-| Single-step execution | N/A | `debug step` / `debug steps` with configurable step counts |
+| Variable watchpoints | `trace add variable` (callback-based) | `[debug watch]` with `BreakOnGet`/`BreakOnSet`/`BreakOnUnset` flags |
+| Single-step execution | N/A | `[debug step]` / `[debug steps]` with configurable step counts |
 | Debugger suspend/resume | N/A | Dual-context architecture with reference-counted suspend/resume |
-| Emergency recovery | N/A | `debug emergency` with 20+ `DebugEmergencyLevel` flags |
+| Emergency recovery | N/A | `[debug emergency]` with 20+ `DebugEmergencyLevel` flags |
 | Interactive debugger loop | N/A | Nested interactive loops with command queuing and header display |
-| Token-level breakpoints | N/A | `debug token` with file/line-based `BreakpointDictionary` |
-| Debug evaluation | N/A | `debug eval` / `debug run` / `debug subst` in isolated debugger interpreter |
-| Trace system | Limited | `debug trace` with 20+ options for listeners, priorities, categories |
-| Memory diagnostics | N/A | `debug memory` / `debug gcmemory` / `debug sysmemory` / `debug collect` |
-| Script bundling | N/A | `debug bundle` / `debug mount` / `debug unmount` for signed bundle files |
-| Secure evaluation | N/A | `debug secureeval` with timeout, trust, event control in child interpreter |
+| Token-level breakpoints | N/A | `[debug token]` with file/line-based `BreakpointDictionary` |
+| Debug evaluation | N/A | `[debug eval]` / `[debug run]` / `[debug subst]` in isolated debugger interpreter |
+| Trace system | Limited | `[debug trace]` with 20+ options for listeners, priorities, categories |
+| Memory diagnostics | N/A | `[debug memory]` / `[debug gcmemory]` / `[debug sysmemory]` / `[debug collect]` |
+| Script bundling | N/A | `[debug bundle]` / `[debug mount]` / `[debug unmount]` for signed bundle files |
+| Secure evaluation | N/A | `[debug secureeval]` with timeout, trust, event control in child interpreter |
 
 ---
 
-## 2. Why the Eagle `debug` Command Has No Tcl Equivalent
+## 2. Why the Eagle `[debug]` Command Has No Tcl Equivalent
 
 Tcl's debugging story is entirely external — tools like TclPro Debugger,
-`Tcl_SetCommandInfoProc`, or manual `puts` tracing. Eagle integrates the
+`Tcl_SetCommandInfoProc`, or manual `[puts]` tracing. Eagle integrates the
 debugger into the interpreter itself:
 
 - **IDebugger interface** — a formal interface with suspend/resume, breakpoint
@@ -59,7 +61,7 @@ debugger into the interpreter itself:
 
 | File | Role |
 |------|------|
-| `Commands/Debug.cs` (~6,272 lines) | Command implementation: 65+ sub-commands |
+| `Commands/Debug.cs` (~6,272 lines) | Command implementation: 78 sub-commands |
 | `Components/Private/Debugger.cs` (~1,429 lines) | `IDebugger` implementation: dual-context state, suspend/resume, breakpoint management |
 | `Components/Private/DebuggerOps.cs` (~582 lines) | Static helpers: breakpoint firing, watchpoint entry, command queue, type matching |
 | `Interfaces/Private/Debugger.cs` (~98 lines) | `IDebugger` interface definition |
@@ -74,12 +76,12 @@ Many sub-commands require specific compile-time flags:
 
 | Flag | Sub-commands |
 |------|-------------|
-| `DEBUGGER` | `break`, `emergency`, `eval`, `run`, `subst`, `invoke`, `setup`, `status`, `step`, `steps`, `test`, `types`, and most others |
-| `DEBUGGER_BREAKPOINTS` | `breakpoints`, `ontoken`, `token` |
+| `DEBUGGER` | `[break]`, `emergency`, `[eval]`, `run`, `[subst]`, `[invoke]`, `setup`, `status`, `step`, `steps`, `[test]`, `types`, and most others |
+| `DEBUGGER && DEBUGGER_BREAKPOINTS` | `breakpoints`, `ontoken`, `token` (each guarded by `#if DEBUGGER && DEBUGGER_BREAKPOINTS`) |
 | `SCRIPT_ARGUMENTS` | Execute argument tracking |
 | `SHELL` | `lockloop`, `shell` |
 | `DATA` | `bundle`, `mount`, `unmount`, `mounts` |
-| `NATIVE` | `output`, `stack`, `sysmemory` |
+| `NATIVE` | `output`, `sysmemory` (whole sub-command guarded by `#if NATIVE`); `stack` is always compiled, but its `-force` native stack check and `memory`'s native-memory section are `#if NATIVE` only |
 | `HISTORY` | `history` |
 | `PREVIOUS_RESULT` | `exception`, `result` |
 | `TEST` | Some `trace` sub-options |
@@ -94,7 +96,7 @@ The central design pattern of Eagle's debugger is the **dual-context
 suspend/resume model**. Every debugger property is stored as a two-element
 array indexed by a private `Context` enum:
 
-```
+```tcl
 Context.Current = 0   — active state
 Context.Saved   = 1   — preserved state during suspension
 ```
@@ -126,7 +128,7 @@ Properties stored with dual context:
 
 Suspend/resume uses reference counting to support nested calls safely:
 
-```
+```tcl
 Suspend():
   suspendCount++
   if suspendCount == 1:     ← first suspend only
@@ -141,9 +143,9 @@ Resume():
 ```
 
 This pattern means:
-- Multiple nested `debug suspend` / `debug resume` pairs are safe
+- Multiple nested `[debug suspend]` / `[debug resume]` pairs are safe
 - Only the outermost pair actually transfers state
-- `debug run` uses this internally to execute scripts without debugger
+- `[debug run]` uses this internally to execute scripts without debugger
   instrumentation
 
 ### 3.3 Re-Entry Prevention
@@ -176,7 +178,7 @@ When the engine encounters a breakpoint trigger:
 
 ## 4. Sub-Command Reference — Common Patterns
 
-Many of the 65+ sub-commands follow one of a few recurring implementation
+Many of the 78 sub-commands follow one of a few recurring implementation
 patterns. This section documents each pattern once, then lists the
 sub-commands that follow it. Sub-commands with unique or complex behavior
 receive their own detailed sections (§5).
@@ -200,15 +202,15 @@ All flag-toggle sub-commands require `DEBUGGER`.
 
 | Sub-command | Property | Purpose |
 |-------------|----------|---------|
-| `debug enable` | `debugger.Enabled` | Master debugger on/off switch |
-| `debug oncancel` | `debugger.BreakOnCancel` | Break when script is cancelled |
-| `debug onerror` | `debugger.BreakOnError` | Break when an error occurs |
-| `debug onexecute` | `debugger.BreakOnExecute` | Break on every command execution |
-| `debug onexit` | `debugger.BreakOnExit` | Break on exit command |
-| `debug onreturn` | `debugger.BreakOnReturn` | Break on value return |
-| `debug ontest` | `debugger.BreakOnTest` | Break on test command |
-| `debug ontoken` | `debugger.BreakOnToken` | Break on token parsing (requires `DEBUGGER_BREAKPOINTS`) |
-| `debug step` | `debugger.SingleStep` | Single-step mode (requires interactive mode) |
+| `[debug enable]` | `debugger.Enabled` | Master debugger on/off switch |
+| `[debug oncancel]` | `debugger.BreakOnCancel` | Break when script is cancelled |
+| `[debug onerror]` | `debugger.BreakOnError` | Break when an error occurs |
+| `[debug onexecute]` | `debugger.BreakOnExecute` | Break on every command execution |
+| `[debug onexit]` | `debugger.BreakOnExit` | Break on exit command |
+| `[debug onreturn]` | `debugger.BreakOnReturn` | Break on value return |
+| `[debug ontest]` | `debugger.BreakOnTest` | Break on test command |
+| `[debug ontoken]` | `debugger.BreakOnToken` | Break on token parsing (requires `DEBUGGER_BREAKPOINTS`) |
+| `[debug step]` | `debugger.SingleStep` | Single-step mode (requires interactive mode) |
 
 ```tcl
 # Enable debugger and set up break-on-error
@@ -256,15 +258,15 @@ state. Most take an optional pattern for filtering.
 | Sub-command | Returns | Details |
 |-------------|---------|---------|
 | `debug breakpoints ?pattern?` | Active breakpoint list | Calls `debugger.GetBreakpointList()` (requires `DEBUGGER_BREAKPOINTS`) |
-| `debug complaint` | Last error complaint message | Calls `DebugOps.SafeGetComplaint()` |
-| `debug levels` | Maximum recursion level limits | Returns `StringList` of limit values |
-| `debug memory` | GC and native memory statistics | GC generation counts, heap size, native memory status |
+| `[debug complaint]` | Last error complaint message | Calls `DebugOps.SafeGetComplaint()` |
+| `[debug levels]` | Maximum recursion level limits | Returns a name/value list: `maximumLevels`, `maximumScriptLevels`, `maximumScriptFileLevels`, `maximumParserLevels`, `maximumExpressionLevels` |
+| `[debug memory]` | GC and native memory statistics | `gcTotalMemory`, `gcMaxGeneration`, per-generation `gcCollectionCount(N)`, `isServerGC`, `gcLatencyMode`; appends a native-memory section under `NATIVE` |
 | `debug mounts ?pattern?` | Mounted bundle list | Calls `bundleManager.ListMounts()` (requires `DATA`) |
 | `debug paths ?flags?` | Global path list | Supports `GetAll`, `UseFilter`, `ExistingOnly`, `UniqueOnly` flags |
-| `debug stack ?force?` | Thread stack information | Returns: threadId, used, allocated, extra, margin, maximum, reserve, commit (requires `NATIVE`) |
-| `debug status` | Debugging status across all layers | Managed debugger attached, native debugger (Windows), script debugger available/enabled, header flags, debugger interpreter available (requires `DEBUGGER`) |
+| `debug stack ?force?` | Thread stack information | Returns: `threadId`, `used`, `allocated`, `extra`, `margin`, `maximum`, `reserve`, `commit` via `RuntimeOps.GetStackSize()`. The optional `force` boolean first refreshes native stack pointers and runs a stack-space check (`#if NATIVE`); the sub-command itself is always compiled |
+| `[debug status]` | Debugging status across all layers | Managed debugger attached, native debugger (Windows), script debugger available/enabled, header flags, debugger interpreter available (requires `DEBUGGER`) |
 | `debug steps ?integer?` | Step count | Get or set `debugger.Steps` (long integer); requires interactive mode for setting |
-| `debug sysmemory` | System memory status | Calls `NativeOps.GetMemoryStatus()` (requires `NATIVE`) |
+| `[debug sysmemory]` | System memory status | Calls `NativeOps.GetMemoryStatus()` (requires `NATIVE`) |
 
 ```tcl
 # List all breakpoints matching a pattern
@@ -286,16 +288,16 @@ These perform a single operation and return a result.
 | `debug cleanup ?flags?` | Cleanup call frames, clear caches, force GC | Calls `CallFrameOps.Cleanup()` |
 | `debug collect ?flags?` | Trigger garbage collection | Parses `GarbageFlags`, calls `ObjectOps.CollectGarbage()` |
 | `debug halt ?result?` | Halt script evaluation | Calls `Engine.HaltEvaluate()` with optional result |
-| `debug keyring` | Fetch and merge key ring | Calls `ScriptOps.FetchAndMergeKeyRing()` |
-| `debug null` | Return null to script engine | Sets `ResultFlags.ForceNullMask`; ignores all arguments |
-| `debug purge` | Purge call frames | Calls `CallFrameOps.Purge()` |
+| `[debug keyring]` | Fetch and merge key ring | Calls `ScriptOps.FetchAndMergeKeyRing()` |
+| `[debug null]` | Return null to script engine | Sets `ResultFlags.ForceNullMask`; ignores all arguments |
+| `[debug purge]` | Purge call frames | Calls `CallFrameOps.Purge()` |
 | `debug ready ?isolated?` | Check if debugger is ready | Calls `Engine.CheckDebugger()` |
 | `debug refreshautopath ?verbose?` | Refresh auto-path list | Calls `GlobalState.RefreshAutoPathList()` |
 | `debug restore ?strict? ?verbose?` | Restore core plugin | Calls `interpreter.RestoreCorePlugin()` |
-| `debug resume` | Resume debugger after suspension | Calls `debugger.Resume()` |
+| `[debug resume]` | Resume debugger after suspension | Calls `debugger.Resume()` |
 | `debug runtimeoverride name` | Override runtime name | Parses `RuntimeName` enum, calls `CommonOps.Runtime.SetManualOverride()` |
 | `debug self ?debug? ?force?` | Break into managed debugger | Calls `DebugOps.Break()`; defaults to checking `DebugOps.IsAttached()` |
-| `debug suspend` | Suspend debugger | Calls `debugger.Suspend()` |
+| `[debug suspend]` | Suspend debugger | Calls `debugger.Suspend()` |
 | `debug unmount fileName` | Unmount bundle file | Calls `bundleManager.Unmount()` (requires `DATA`) |
 
 ```tcl
@@ -341,9 +343,9 @@ debug operator + true
 These sub-commands have unique control flow, multi-option parsing, or
 complex state manipulation that warrants individual detailed treatment.
 
-### 5.1 `debug break` — Enter the Debugger
+### 5.1 `[debug break]` — Enter the Debugger
 
-```
+```tcl
 debug break ?options?
 ```
 
@@ -371,9 +373,9 @@ interactive loop. This is the script-level equivalent of a breakpoint hit.
 5. The interactive loop presents a prompt and accepts debugger commands
 6. On return, optionally complains or suppresses errors based on options
 
-**Connection to `debug emergency`:** The emergency sub-command can trigger
+**Connection to `[debug emergency]`:** The emergency sub-command can trigger
 a break internally by setting the `Break` flag in `DebugEmergencyLevel`,
-which generates a `debug break` command and re-invokes the ensemble via
+which generates a `[debug break]` command and re-invokes the ensemble via
 an internal `goto redo` mechanism.
 
 ```tcl
@@ -387,9 +389,9 @@ debug break -interpreter child1 -ignoreenabled
 debug break -nocomplain -noerror
 ```
 
-### 5.2 `debug emergency` — Emergency Recovery System
+### 5.2 `[debug emergency]` — Emergency Recovery System
 
-```
+```tcl
 debug emergency ?options? ?level?
 ```
 
@@ -447,8 +449,8 @@ order regardless of flag position:
 | `IgnoreEnabled` | Ignore debugger enabled status |
 | `PopulateResultStack` | Force result stack population |
 | `IncludeResultStack` | Include result stack traces in output |
-| `NoComplain` | Suppress complaints (passed to `break`) |
-| `NoError` | Suppress errors (passed to `break`) |
+| `NoComplain` | Suppress complaints (passed to `[break]`) |
+| `NoError` | Suppress errors (passed to `[break]`) |
 
 **Predefined presets:**
 
@@ -465,7 +467,7 @@ order regardless of flag position:
 
 **Implementation (lines 634–1376):**
 
-The implementation is the most complex in the entire `debug` command — over
+The implementation is the most complex in the entire `[debug]` command — over
 740 lines of carefully ordered operations:
 
 1. **Lock acquisition** — acquires a hard lock on the interpreter
@@ -485,14 +487,14 @@ The implementation is the most complex in the entire `debug` command — over
    tracking
 9. **Result stack** — if `PopulateResultStack`/`IncludeResultStack`:
    manages result stack traces
-10. **Break** — if `Break` flag: generates a `debug break` command
+10. **Break** — if `Break` flag: generates a `[debug break]` command
     (with `-ignoreenabled`, `-nocomplain`, `-noerror` based on
     corresponding flags) and re-invokes the ensemble via `goto redo`
 
-The `goto redo` mechanism at line 1319 is notable: rather than calling
-`debug break` as a nested command, the emergency sub-command rewrites
+The `goto redo` mechanism at line 1297 is notable: rather than calling
+`[debug break]` as a nested command, the emergency sub-command rewrites
 the command arguments and jumps back to the start of the ensemble
-dispatch, causing `debug break` to execute in the same call frame.
+dispatch, causing `[debug break]` to execute in the same call frame.
 
 ```tcl
 # Emergency: create debugger, enable, reset cancellation, and break
@@ -511,9 +513,9 @@ debug emergency {Disposed, Created, Enabled, Reset}
 debug emergency Status
 ```
 
-### 5.3 `debug secureeval` — Secure Evaluation in Child Interpreter
+### 5.3 `[debug secureeval]` — Secure Evaluation in Child Interpreter
 
-```
+```tcl
 debug secureeval ?options? path arg ?arg ...?
 ```
 
@@ -537,7 +539,7 @@ execution where the parent needs control over the child's capabilities.
 **Implementation (lines 3933–4283):**
 
 This is the second-most complex sub-command, with 7+ levels of nested
-`try`/`finally` blocks ensuring correct state restoration:
+`[try]`/`finally` blocks ensuring correct state restoration:
 
 1. **Resolve child interpreter** — looks up interpreter at `path`
 2. **Save event state** — saves and optionally disables child's event
@@ -572,9 +574,9 @@ debug secureeval -trusted true child1 {
 debug secureeval -events false -file true child1 /path/to/script.eagle
 ```
 
-### 5.4 `debug invoke` — Execute at Specific Call Frame Level
+### 5.4 `[debug invoke]` — Execute at Specific Call Frame Level
 
-```
+```tcl
 debug invoke ?level? cmd ?arg ...?
 ```
 
@@ -603,7 +605,7 @@ debug invoke 1 info vars
 debug invoke info locals
 ```
 
-### 5.5 `debug eval` / `debug run` / `debug subst` — Debugger Interpreter Evaluation
+### 5.5 `[debug eval]` / `[debug run]` / `[debug subst]` — Debugger Interpreter Evaluation
 
 These three sub-commands evaluate scripts or perform substitution using
 the **debugger's own interpreter**, which is a separate interpreter
@@ -623,7 +625,7 @@ executes without any debugger breakpoint checking.
 
 **Implementation pattern:**
 
-```
+```tcl
 1. debugger.Suspend()
 2. try:
      evaluate script normally
@@ -652,9 +654,9 @@ debug run {
 debug subst {The value is $myVar}
 ```
 
-### 5.6 `debug setup` — Debugger Initialization
+### 5.6 `[debug setup]` — Debugger Initialization
 
-```
+```tcl
 debug setup ?create? ?isolated? ?createFlags? ?initializeFlags? ?scriptFlags? ?interpreterFlags?
 ```
 
@@ -688,9 +690,9 @@ debug setup true true
 debug setup false
 ```
 
-### 5.7 `debug shell` — Launch Interactive Shell
+### 5.7 `[debug shell]` — Launch Interactive Shell
 
-```
+```tcl
 debug shell ?options? ?arg ...?
 ```
 
@@ -728,9 +730,9 @@ debug shell -asynchronous true
 debug shell -interpreter child1 -loop true
 ```
 
-### 5.8 `debug hook` — Test Hook Management
+### 5.8 `[debug hook]` — Test Hook Management
 
-```
+```tcl
 debug hook ?options? ?pattern? ?script?
 ```
 
@@ -767,9 +769,9 @@ debug hook -type Before "test-1.*" {
 debug hook -unset true "test-1.*"
 ```
 
-### 5.9 `debug token` — Token-Level Breakpoints
+### 5.9 `[debug token]` — Token-Level Breakpoints
 
-```
+```tcl
 debug token fileName startLine endLine ?enabled?
 ```
 
@@ -804,9 +806,9 @@ debug token test.eagle 42 42    ;# Returns match status
 debug token test.eagle 42 42 false
 ```
 
-### 5.10 `debug watch` — Variable Watchpoints
+### 5.10 `[debug watch]` — Variable Watchpoints
 
-```
+```tcl
 debug watch ?varName? ?types?
 ```
 
@@ -855,45 +857,76 @@ debug watch
 debug watch counter {BreakOnGet, BreakOnSet, BreakOnUnset}
 ```
 
-### 5.11 `debug trace` — Trace System Configuration
+### 5.11 `[debug trace]` — Trace System Configuration
 
-```
+```tcl
 debug trace ?options? ?message?
 ```
 
 **Purpose:** Configure the trace/diagnostic system and optionally write
-a trace message. This is the most option-rich sub-command, with 20+
-configuration options controlling trace listeners, priorities, categories,
+a trace message. This is the most option-rich sub-command, with 24
+configuration options (defined by `CommandOptions.GetDebugTraceOptions()`
+in `CommandOptions.cs`) controlling trace listeners, priorities, categories,
 and state.
 
-**Key options:**
+**The complete option set** (verified against `GetDebugTraceOptions()` and the
+`options.IsPresent(...)` handling in the `"trace"` case of `Debug.cs`):
 
-| Option | Purpose |
-|--------|---------|
-| `-resetsystem` | Reset the entire trace system |
-| `-resetlisteners` | Reset trace listeners only |
-| `-forceenabled` | Force-enable tracing |
-| `-overrideenvironment` | Override environment-based settings |
-| `-default` | Add/remove default trace listener |
-| `-console` | Add/remove console trace listener |
-| `-native` | Add/remove native (OutputDebugString) listener |
-| `-debug` | Use debug output |
-| `-raw` | Use raw output (no formatting) |
-| `-log` | Use log output |
-| `-enabledcategories` | Set enabled trace categories |
-| `-disabledcategories` | Set disabled trace categories |
-| `-penaltycategories` | Set penalty categories (reduced priority) |
-| `-bonuscategories` | Set bonus categories (increased priority) |
-| `-statetypes` | Set trace state types |
-| `-priority` | Set trace priority level |
-| `-priorities` | Set trace priorities (dictionary) |
-| `-category` | Set category for this message |
+| Option | Value type | Purpose |
+|--------|-----------|---------|
+| `-noresult` | boolean | Suppress the normal result (return empty string instead of the state type) |
+| `-default` | boolean | Add (`true`) or, with `-resetlisteners`, remove the `Default` listener (`Trace.Listeners`) |
+| `-console` | boolean | Add/remove the `Console` listener |
+| `-native` | boolean | Add/remove the `Native` (`OutputDebugString`) listener |
+| `-statusform` | boolean | Add/remove the `StatusForm` listener (requires `TEST && WINFORMS`) |
+| `-debug` | boolean | Route to the `Debug.Listeners` collection (via `DebugOps.GetDebugListeners()`) instead of `Trace.Listeners` (`!NET_STANDARD_20`) |
+| `-raw` | boolean | Write the message raw (`DebugOps.TraceWrite()` / `DebugOps.DebugWrite()`), bypassing `TraceOps` formatting |
+| `-log` | boolean | Set up/tear down a trace log file listener (requires `TEST && SHELL`) |
+| `-resetsystem` | boolean | Reset the entire trace system via `TraceOps.ResetStatus()` |
+| `-resetlisteners` | boolean | Clear existing listeners (`DebugOps.ClearTraceListeners()`) before adding |
+| `-forceenabled` | boolean | Force-enable/disable tracing via `TraceOps.ForceEnabledOrDisabled()` |
+| `-overrideenvironment` | boolean | OR `TraceStateType.OverrideEnvironment` into the state, ignoring environment-based settings |
+| `-enabledcategories` | list | `TraceOps.SetTraceCategories(TraceCategoryType.Enabled, ...)` |
+| `-disabledcategories` | list | `TraceOps.SetTraceCategories(TraceCategoryType.Disabled, ...)` |
+| `-penaltycategories` | list | Penalty categories (reduced priority) |
+| `-bonuscategories` | list | Bonus categories (increased priority) |
+| `-statetypes` | `TraceStateType` | Base state type (default `TraceCommand`) |
+| `-priority` | `TracePriority` | Priority used for the message being written |
+| `-priorities` | `TracePriority` | Global enabled-priority set, via `TraceOps.SetTracePriorities()` |
+| `-category` | string | Category for this message (default `DebugOps.DefaultCategory`) |
+| `-logname` | string | Trace log file listener name (requires `TEST`; otherwise `Unsupported`) |
+| `-logfilename` | string | Trace log file path (requires `TEST`; otherwise `Unsupported`) |
+| `-logflags` | `LogFlags` | Trace log file flags (requires `TEST`; otherwise `Unsupported`) |
 
-**Implementation (lines 5217–5751):**
+> [!NOTE]
+> The listeners added by `-default`, `-console`, and `-native` are
+> `System.Diagnostics` trace listeners. `DebugOps.GetTraceListeners()` returns
+> `Trace.Listeners`; `-debug` switches the target to `Debug.Listeners` via
+> `DebugOps.GetDebugListeners()`. These are distinct from the `ITrace`
+> objects in `Library/Traces/` (`Core`, `Default`), which implement
+> per-entity command/variable trace callbacks, not diagnostic output sinks.
 
-Over 500 lines covering 40+ configuration paths. Has two primary modes:
-- **With message**: writes the message via the configured trace system
-- **Without message**: queries trace configuration, returns state type
+**Implementation (lines 5150–5617):**
+
+Over 450 lines covering 40+ configuration paths, all backed by `TraceOps`:
+- **Reset** — `-resetsystem` calls `TraceOps.ResetStatus()`, which resets the
+  trace possible/enabled flags, priority and priorities, all four category
+  sets (`Enabled`, `Disabled`, `Penalty`, `Bonus`), the format string/flags,
+  and the filter callback.
+- **Force enable** — `-forceenabled` calls `TraceOps.ForceEnabledOrDisabled()`
+  and returns the resulting `TraceStateType`; when present it also re-parses
+  `-priorities` because the baseline changed.
+- **Listeners** — `-resetlisteners` then `-default`/`-console`/`-native`/
+  `-statusform` add/remove listeners on the selected collection via
+  `DebugOps.ClearTraceListeners()` / `DebugOps.AddTraceListener()`.
+- **With message** (final argument present): writes via
+  `TraceOps.DebugTraceAlways()` (normal), `DebugOps.TraceWrite()` (`-raw`),
+  `TraceOps.DebugWriteToAlways()` (`-debug`), or `DebugOps.DebugWrite()`
+  (`-debug -raw`).
+- **Without message**: calls `TraceOps.QueryStatus()` and returns a
+  name/value list including `hasDefaultListener`, `hasConsoleListener`
+  (`CONSOLE`), and, under `TEST`, `hasTestListener` / `hasBufferedListener` /
+  `hasNativeListener`.
 
 ```tcl
 # Reset trace system and add console listener
@@ -907,11 +940,14 @@ debug trace -enabledcategories "Engine,Variable,Command"
 
 # Force tracing on, overriding environment
 debug trace -forceenabled true -overrideenvironment true
+
+# Query current trace status (no message)
+debug trace
 ```
 
-### 5.12 `debug lockloop` — Interactive Loop Semaphore
+### 5.12 `[debug lockloop]` — Interactive Loop Semaphore
 
-```
+```tcl
 debug lockloop enabled
 ```
 
@@ -935,9 +971,9 @@ debug lockloop true
 debug lockloop false
 ```
 
-### 5.13 `debug lockvar` — Variable Lock Control
+### 5.13 `[debug lockvar]` — Variable Lock Control
 
-```
+```tcl
 debug lockvar enabled name
 ```
 
@@ -959,9 +995,9 @@ debug lockvar {} importantData
 debug lockvar false importantData
 ```
 
-### 5.14 `debug test` — Test Breakpoint Management
+### 5.14 `[debug test]` — Test Breakpoint Management
 
-```
+```tcl
 debug test ?name? ?enabled?
 ```
 
@@ -985,9 +1021,9 @@ debug test "myTest-1.0" true
 debug test "myTest-1.0"
 ```
 
-### 5.15 `debug iqueue` — Command Queue Management
+### 5.15 `[debug iqueue]` — Command Queue Management
 
-```
+```tcl
 debug iqueue ?options? ?command?
 ```
 
@@ -1014,9 +1050,9 @@ debug iqueue -dump
 debug iqueue -clear
 ```
 
-### 5.16 `debug variable` — Variable Introspection
+### 5.16 `[debug variable]` — Variable Introspection
 
-```
+```tcl
 debug variable ?options? varName
 ```
 
@@ -1044,9 +1080,9 @@ debug variable myVar
 debug variable -searches -elements -links myVar
 ```
 
-### 5.17 `debug runtimeoption` — Runtime Option Management
+### 5.17 `[debug runtimeoption]` — Runtime Option Management
 
-```
+```tcl
 debug runtimeoption operation ?arg?
 ```
 
@@ -1062,7 +1098,7 @@ that control interpreter behavior).
 | `clear` | Clear all options |
 | `add` | Add a single option |
 | `remove` | Remove a single option |
-| `set` | Set the complete option list |
+| `[set]` | Set the complete option list |
 
 ```tcl
 # Add a runtime option
@@ -1078,9 +1114,9 @@ debug runtimeoption get
 debug runtimeoption clear
 ```
 
-### 5.18 `debug readonly` — Read-Only State Control
+### 5.18 `[debug readonly]` — Read-Only State Control
 
-```
+```tcl
 debug readonly path kind enabled ?pattern?
 ```
 
@@ -1110,9 +1146,9 @@ debug readonly child1 Procedure true "safe_*"
 debug readonly child1 Variable {} "*"
 ```
 
-### 5.19 `debug set` — Object-to-Variable Assignment
+### 5.19 `[debug set]` — Object-to-Variable Assignment
 
-```
+```tcl
 debug set ?options? varName object
 ```
 
@@ -1126,9 +1162,9 @@ management.
 | `-reference` | integer | 0 | Adjust reference count (positive = add, negative = remove) |
 | `-convert` | boolean | false | Convert object value to string |
 
-### 5.20 `debug exception` — Exception Object Access
+### 5.20 `[debug exception]` — Exception Object Access
 
-```
+```tcl
 debug exception ?options?
 ```
 
@@ -1136,9 +1172,9 @@ debug exception ?options?
 exception. Uses `MarshalOps.FixupReturnValue()` to handle the exception
 object. Requires `PREVIOUS_RESULT`.
 
-### 5.21 `debug result` — Full Result with Stack Traces
+### 5.21 `[debug result]` — Full Result with Stack Traces
 
-```
+```tcl
 debug result
 ```
 
@@ -1146,9 +1182,9 @@ debug result
 Deep-copies the current or previous result and returns full string
 with stack trace information if available. Requires `PREVIOUS_RESULT`.
 
-### 5.22 `debug procedureflags` — Procedure Flag Control
+### 5.22 `[debug procedureflags]` — Procedure Flag Control
 
-```
+```tcl
 debug procedureflags procName ?flags?
 ```
 
@@ -1156,9 +1192,9 @@ debug procedureflags procName ?flags?
 can be used to mark procedures as obfuscated, hidden, or with other
 internal flags.
 
-### 5.23 `debug bundle` / `debug mount` / `debug unmount` — Script Bundling
+### 5.23 `[debug bundle]` / `[debug mount]` / `[debug unmount]` — Script Bundling
 
-```
+```tcl
 debug bundle fileName ?password? ?pattern?
 debug mount fileName ?password?
 debug unmount fileName
@@ -1189,9 +1225,9 @@ debug mount myScripts.bundle
 debug unmount myScripts.bundle
 ```
 
-### 5.24 `debug cacheconfiguration` — Cache Configuration
+### 5.24 `[debug cacheconfiguration]` — Cache Configuration
 
-```
+```tcl
 debug cacheconfiguration ?settings? ?level?
 ```
 
@@ -1240,9 +1276,9 @@ debug output "Debug message" High
 debug write "Message" {High, NoViaHost}
 ```
 
-### 5.26 `debug undelete` — Variable Recovery
+### 5.26 `[debug undelete]` — Variable Recovery
 
-```
+```tcl
 debug undelete ?pattern?
 ```
 
@@ -1250,15 +1286,122 @@ debug undelete ?pattern?
 marked as undefined (deleted but still in the frame's dictionary)
 are restored. Returns the count of recovered variables.
 
-### 5.27 `debug pluginexecute` — Plugin Request Execution
+### 5.27 `[debug pluginexecute]` — Plugin Request Execution
 
-```
+```tcl
 debug pluginexecute name request
 ```
 
 **Purpose:** Execute a plugin-specific request by looking up a loaded
 plugin by name and calling its `Execute()` method with the request
 as a string list. Returns the plugin's response.
+
+### 5.28 Memory and Runtime-State Diagnostics
+
+Several sub-commands form a focused diagnostics group for inspecting and
+manipulating runtime memory, garbage collection, and recursion limits. They
+are simple query/action sub-commands (no option parsing) but are grouped here
+because together they constitute the bulk of Eagle's introspective
+diagnostics surface.
+
+#### `[debug memory]` — GC and Native Memory Statistics
+
+Returns a name/value list built directly from `System.GC` (lines 2511–2555):
+
+| Key | Source |
+|-----|--------|
+| `gcTotalMemory` | `GC.GetTotalMemory(false)` (does **not** force a collection) |
+| `gcMaxGeneration` | `GC.MaxGeneration` |
+| `gcCollectionCount(N)` | `GC.CollectionCount(N)` for each generation `0..MaxGeneration` |
+| `isServerGC` | `GCSettings.IsServerGC` |
+| `gcLatencyMode` | `GCSettings.LatencyMode` (`NET_35`/`NET_40`/`NET_STANDARD_20`) |
+| `nativeMemory` + error | appended only if `NativeOps.GetMemoryStatus()` fails (`#if NATIVE`) |
+
+Under `NATIVE`, the native memory status keys (from `NativeOps.GetMemoryStatus()`)
+are merged into the same list.
+
+#### `debug gcmemory ?collect?` — GC Heap Size
+
+Returns `GC.GetTotalMemory(collect)` (lines 1678–1697). The optional boolean
+`collect` is passed straight through: when `true`, the CLR performs a full
+blocking collection **before** measuring, so the returned figure reflects
+post-collection live memory rather than the current allocation.
+
+#### `[debug sysmemory]` — System Memory Status
+
+Returns the system memory status list from `NativeOps.GetMemoryStatus()`
+(lines 4954–4980). Requires `NATIVE`; otherwise returns `"not implemented"`.
+
+#### `debug collect ?flags?` — Force Garbage Collection
+
+Parses an optional `GarbageFlags` value (default `GarbageFlags.ForCommand`)
+and calls `ObjectOps.CollectGarbage(flags)` (lines 574–607). Returns an empty
+result. Unlike `debug gcmemory true`, this does not report a memory figure —
+it only triggers collection.
+
+#### `debug stack ?force?` — Native Thread Stack Information
+
+Returns a name/value list — `threadId`, `used`, `allocated`, `extra`,
+`margin`, `maximum`, `reserve`, `commit` — via `RuntimeOps.GetStackSize()`
+(lines 4581–4638). When `force` is `true`, the sub-command first calls
+`RuntimeOps.RefreshNativeStackPointers(true)` and `RuntimeOps.CheckForStackSpace()`
+(both `#if NATIVE`) so the figures reflect a freshly refreshed, validated
+stack. The sub-command body itself compiles without `NATIVE`.
+
+#### `[debug levels]` — Recursion Limit Inspection
+
+Returns the five interpreter recursion ceilings (lines 2211–2230):
+`maximumLevels`, `maximumScriptLevels`, `maximumScriptFileLevels`,
+`maximumParserLevels`, `maximumExpressionLevels`. This is read-only — it
+reports the limits but does not change them.
+
+#### `debug history ?enabled?` — Command History Toggle
+
+Gets or sets `interpreter.History` (lines 1719–1748). With no argument it
+returns the current state; with a boolean it sets and returns it. Requires
+the `HISTORY` compile flag; otherwise returns `"not implemented"`.
+
+```tcl
+# Snapshot GC state, force a collection, then re-measure
+set before [dict get [debug memory] gcTotalMemory]
+debug collect Default
+set after [debug gcmemory true]
+
+# Inspect native stack headroom for the current thread
+debug stack true
+
+# See the interpreter's recursion ceilings
+debug levels
+
+# Enable command history (if compiled with HISTORY)
+debug history true
+```
+
+### 5.29 Token-Level Breakpoints and Emergency Recovery (Cross-Reference)
+
+These two facilities round out the diagnostics surface and are documented in
+detail in their own sections:
+
+- **Token-level breakpoints** — `[debug token]` (§5.9) sets/clears/queries
+  breakpoints at a `fileName`/`startLine`/`endLine` location, stored in the
+  `BreakpointDictionary` (`PathDictionary<ScriptLocationIntDictionary>`).
+  These fire only when the active `BreakpointType` (`[debug types]`) includes
+  `Token` and the debugger is enabled. `[debug ontoken]` (§4.1) is the
+  per-call toggle for token-break checking, and `[debug breakpoints]` (§4.3)
+  lists the current set. All three require `DEBUGGER && DEBUGGER_BREAKPOINTS`.
+- **Emergency recovery** — `[debug emergency]` (§5.2) is the recovery path
+  when the debugger is missing or the interpreter is wedged. Its `Break` flag
+  generates a `[debug break]` command and re-enters the ensemble via the
+  `goto redo` mechanism (`redo:` label at line 93, jump at line 1297), so a
+  single call can create,
+  enable, reset cancel/halt state, and break — even from a degraded state.
+
+> [!TIP]
+> When a script is stuck (cancelled or halted) and the debugger may not even
+> exist, `debug emergency {Created, Enabled, Reset, ForceResetCancel, ForceResetHalt, Break, IgnoreEnabled}`
+> is the most robust single-shot recovery invocation: it builds a debugger if
+> needed, clears the blocking state forcibly, and drops into an interactive
+> break.
 
 ---
 
@@ -1274,7 +1417,7 @@ values. It controls which events trigger debugger breaks.
 | `None` | `0x0` | No breakpoints |
 | `SingleStep` | `0x20` | Single-step breakpoint |
 | `MultipleStep` | `0x40` | Multiple-step breakpoint |
-| `Demand` | `0x80` | Demand-based (`debug break`) |
+| `Demand` | `0x80` | Demand-based (`[debug break]`) |
 | `Intercept` | `0x100` | Intercept breakpoint |
 | `Token` | `0x200` | Token-based (file/line) |
 | `Identifier` | `0x400` | Identifier-based |
@@ -1427,7 +1570,7 @@ an interactive breakpoint loop.
 | `Args` | `IEnumerable<string>` | Shell arguments |
 | `Code` | `ReturnCode` | Return code that triggered break |
 | `BreakpointType` | `BreakpointType` | Type of breakpoint hit |
-| `BreakpointName` | `string` | Name of breakpoint |
+| `BreakpointName` | `[string]` | Name of breakpoint |
 | `Token` | `IToken` | Current script token |
 | `TraceInfo` | `ITraceInfo` | Variable trace information |
 | `EngineFlags` | `EngineFlags` | Engine configuration |
@@ -1450,7 +1593,7 @@ scenarios:
 | Copy | Clone from existing `IInteractiveLoopData` |
 | Debug copy | For debugger (sets `Debug = true`) |
 | Token/Trace | For token breakpoints and variable traces |
-| Command break | For `debug break` command |
+| Command break | For `[debug break]` command |
 | Watchpoint | For `Engine.CheckWatchpoints()` |
 | Breakpoint | For `Engine.CheckBreakpoints()` |
 
@@ -1540,7 +1683,7 @@ debug trace -category "MyApp" "Checkpoint reached"
 
 ## 10. Safe Interpreter Restrictions
 
-The `debug` command carries `CommandFlags.Unsafe` and is **completely
+The `[debug]` command carries `CommandFlags.Unsafe` and is **completely
 unavailable** in safe interpreters. This is appropriate given that
 the command provides:
 
@@ -1559,20 +1702,20 @@ None of these operations are appropriate for sandboxed code.
 
 ## 11. Tcl Comparison
 
-| Feature | Tcl approach | Eagle `debug` approach |
+| Feature | Tcl approach | Eagle `[debug]` approach |
 |---------|-------------|----------------------|
 | Line breakpoints | External debugger (e.g., TclPro) | `debug token file start end true` |
 | Variable watch | `trace add variable name ops cmd` | `debug watch name {BreakOnGet, BreakOnSet}` |
 | Single-step | External debugger | `debug step true` |
-| Break into debugger | N/A | `debug break` |
-| Emergency recovery | N/A | `debug emergency` with lifecycle flags |
+| Break into debugger | N/A | `[debug break]` |
+| Emergency recovery | N/A | `[debug emergency]` with lifecycle flags |
 | Run without debug | N/A (no built-in debugger) | `debug run { script }` |
-| Memory diagnostics | N/A | `debug memory` / `debug gcmemory` / `debug sysmemory` |
-| Script bundles | N/A | `debug bundle` / `debug mount` / `debug unmount` |
-| Trace configuration | `trace add execution` (limited) | `debug trace` with 20+ options |
-| Secure sandbox eval | `interp eval` (limited security) | `debug secureeval` with timeout, trust, events |
-| Plugin interaction | N/A | `debug pluginexecute` |
-| Command queue | N/A | `debug iqueue` |
+| Memory diagnostics | N/A | `[debug memory]` / `[debug gcmemory]` / `[debug sysmemory]` |
+| Script bundles | N/A | `[debug bundle]` / `[debug mount]` / `[debug unmount]` |
+| Trace configuration | `trace add execution` (limited) | `[debug trace]` with 20+ options |
+| Secure sandbox eval | `[interp eval]` (limited security) | `[debug secureeval]` with timeout, trust, events |
+| Plugin interaction | N/A | `[debug pluginexecute]` |
+| Command queue | N/A | `[debug iqueue]` |
 
 ---
 
@@ -1580,14 +1723,14 @@ None of these operations are appropriate for sandboxed code.
 
 - The command is marked `Unsafe | Critical` — never exposed in safe
   interpreters
-- `debug emergency` acquires a hard lock on the interpreter and can
+- `[debug emergency]` acquires a hard lock on the interpreter and can
   reset cancellation/halt states, making it a powerful recovery tool
   but also a potential stability concern if misused
-- `debug secureeval` provides sandboxed execution but with explicit
+- `[debug secureeval]` provides sandboxed execution but with explicit
   trust and timeout controls that must be configured correctly
-- `debug lockvar` and `debug readonly` can prevent modification of
+- `[debug lockvar]` and `[debug readonly]` can prevent modification of
   critical variables and commands
-- `debug pluginexecute` allows arbitrary plugin request execution —
+- `[debug pluginexecute]` allows arbitrary plugin request execution —
   trust the plugin before calling
 - `debug shell -asynchronous` creates background threads that share
   the interpreter — concurrent access risks apply

@@ -6,7 +6,7 @@ This companion file to [`core_language.md`](core_language.md) provides at least 
 
 ## Conventions
 
-- All code blocks use ` ```tcl ` fencing.
+- All code blocks use ` ```[tcl]` fencing.
 - Return values are shown as: `;# Returns: value`
 - Side effects: `# varName is now "value"`
 - Output to stdout: `# Prints: text`
@@ -1743,7 +1743,7 @@ split /usr/local/bin /
 
 </details>
 
-> **See also:** [`string.md`](string.md) — deep-dive analysis of the `string` command with additional examples covering 29 sub-commands, 64-class type checking, culture-aware operations, extended `string map`, and `string format` .NET integration.
+> **See also:** [`string.md`](string.md) — deep-dive analysis of the `[string]` command with additional examples covering 29 sub-commands, 64-class type checking, culture-aware operations, extended `[string map]`, and `[string format]` .NET integration.
 
 <a id="ex-string"></a>
 <details>
@@ -1988,7 +1988,7 @@ string classes
 
 ## Array Examples
 
-> **See also:** [`array.md`](array.md) — deep-dive analysis of the `array` command with additional examples covering 17 sub-commands, 8 storage backends, deep copy, default values, random access, and iteration patterns.
+> **See also:** [`array.md`](array.md) — deep-dive analysis of the `[array]` command with additional examples covering 17 sub-commands, 8 storage backends, deep copy, default values, random access, and iteration patterns.
 
 <a id="ex-array"></a>
 <details>
@@ -2601,7 +2601,7 @@ close $fh
 
 </details>
 
-> **See also:** [`file.md`](file.md) — deep-dive analysis of the `file` command with additional examples covering 54 sub-commands, security descriptors, access control, advanced globbing, and temporary file management.
+> **See also:** [`file.md`](file.md) — deep-dive analysis of the `[file]` command with additional examples covering 54 sub-commands, security descriptors, access control, advanced globbing, and temporary file management.
 
 <a id="ex-file"></a>
 <details>
@@ -2955,7 +2955,7 @@ napply {{x y} {expr {$x + $y}}} -x 3 -y 4
 
 ## Namespace Examples
 
-> **See also:** [`namespace.md`](namespace.md) — deep-dive analysis of the `namespace` command with additional examples covering the dual-implementation architecture, import/export mechanism, per-namespace unknown handlers, and scope integration.
+> **See also:** [`namespace.md`](namespace.md) — deep-dive analysis of the `[namespace]` command with additional examples covering the dual-implementation architecture, import/export mechanism, per-namespace unknown handlers, and scope integration.
 
 <a id="ex-namespace"></a>
 <details>
@@ -4493,8 +4493,8 @@ set decoded [uri unescape hello%20world]
 
 #### HTTP Operations
 
-> **Note**: `uri get` is an alias for `uri download -inline` and
-> `uri post` is an alias for `uri upload -inline`. All four sub-commands
+> **Note**: `[uri get]` is an alias for `uri download -inline` and
+> `[uri post]` is an alias for `uri upload -inline`. All four sub-commands
 > share the same implementation; the difference is that `get`/`post`
 > default to inline mode (return data) while `download`/`upload` default
 > to file mode (read/write disk). All require the `NETWORK` compile flag.
@@ -5542,7 +5542,7 @@ vwait -locked {
 
 ## Introspection Examples
 
-> **See also:** [`info.md`](info.md) — deep-dive analysis of the `info` command with additional examples covering 85 sub-commands, safe interpreter filtering, obfuscated procedure protection, .NET reflection, and engine metadata introspection.
+> **See also:** [`info.md`](info.md) — deep-dive analysis of the `[info]` command with additional examples covering 85 sub-commands, safe interpreter filtering, obfuscated procedure protection, .NET reflection, and engine metadata introspection.
 
 <a id="ex-info"></a>
 <details>

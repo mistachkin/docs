@@ -1,6 +1,6 @@
 # Eagle `[sql]` Command: Deep-Dive Analysis of Database Operations and Script Bundles
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `sql` command internals, including ADO.NET integration, the `-variable` options for automatic resource cleanup via DbTraceCallback, the script bundle database system, and the query execution pipeline. For basic command syntax, see [`core_language.md`](core_language.md#cmd-sql). For usage examples, see [`core_examples.md`](core_examples.md#ex-sql). For database utility procedures, see [`core_script_library.md`](core_script_library.md).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `[sql]` command internals, including ADO.NET integration, the `-variable` options for automatic resource cleanup via DbTraceCallback, the script bundle database system, and the query execution pipeline. For basic command syntax, see [`core_language.md`](core_language.md#cmd-sql). For usage examples, see [`core_examples.md`](core_examples.md#ex-sql). For database utility procedures, see [`core_script_library.md`](core_script_library.md).
 
 ## 1. Executive Summary
 
@@ -65,7 +65,7 @@ for external database extensions.
 
 The command follows ADO.NET's layered architecture:
 
-```
+```tcl
 Script Layer:           [sql] command → sub-commands
                               ↓
 Provider Abstraction:   IDbConnection → IDbCommand → IDataReader
@@ -77,12 +77,12 @@ Each database operation maps directly to ADO.NET concepts:
 
 | Script operation | ADO.NET equivalent |
 |-----------------|-------------------|
-| `sql open` | `new XxxConnection(connStr); connection.Open()` |
-| `sql execute` | `connection.CreateCommand(); command.ExecuteReader()` |
-| `sql foreach` | `while (reader.Read()) { ... }` |
+| `[sql open]` | `new XxxConnection(connStr); connection.Open()` |
+| `[sql execute]` | `connection.CreateCommand(); command.ExecuteReader()` |
+| `[sql foreach]` | `while (reader.Read()) { ... }` |
 | `sql transaction begin` | `connection.BeginTransaction(isolation)` |
 | `sql transaction commit` | `transaction.Commit()` |
-| `sql close` | `connection.Close()` |
+| `[sql close]` | `connection.Close()` |
 
 ### No Tcl equivalent
 
@@ -97,19 +97,19 @@ The `[sql]` command supports **9 sub-commands**:
 
 | Sub-command | Purpose |
 |-------------|---------|
-| `open` | Create and open a database connection |
-| `close` | Close and release a database connection |
+| `[open]` | Create and open a database connection |
+| `[close]` | Close and release a database connection |
 | `isopen` | Check if a connection exists and is open |
 | `connection` | Query connection metadata |
 | `execute` | Execute SQL and return results |
-| `foreach` | Execute SQL and iterate over each row |
+| `[foreach]` | Execute SQL and iterate over each row |
 | `transaction` | Manage transactions (begin/commit/rollback) |
 | `hasbegun` | Check if a transaction is active |
 | `types` | List available database provider types |
 
-### 3.1 `sql open` — Create a Database Connection
+### 3.1 `[sql open]` — Create a Database Connection
 
-```
+```tcl
 sql open ?options? connectionString
 ```
 
@@ -151,9 +151,9 @@ public key tokens for SQLite Enterprise and standard SQLite are used
 when `-publickeytoken1` and `-publickeytoken2` are not explicitly
 specified but verification is required.
 
-### 3.2 `sql close` — Close a Connection
+### 3.2 `[sql close]` — Close a Connection
 
-```
+```tcl
 sql close connection
 ```
 
@@ -161,18 +161,18 @@ Closes the database connection and removes it from the interpreter's
 connection registry. Fires `NotifyType.Connection` /
 `NotifyFlags.Removed` notification.
 
-### 3.3 `sql isopen` — Check Connection Status
+### 3.3 `[sql isopen]` — Check Connection Status
 
-```
+```tcl
 sql isopen connection
 ```
 
 Returns `1` if the named connection exists in the interpreter's
 registry, `0` otherwise.
 
-### 3.4 `sql connection` — Query Connection Metadata
+### 3.4 `[sql connection]` — Query Connection Metadata
 
-```
+```tcl
 sql connection connection
 ```
 
@@ -184,11 +184,11 @@ type SQLiteConnection state Open database main timeout 15 string "Data Source=te
 
 Fields: `type` (provider class name), `state` (ConnectionState),
 `database` (current database), `timeout` (connection timeout),
-`string` (connection string).
+`[string]` (connection string).
 
-### 3.5 `sql execute` — Execute SQL
+### 3.5 `[sql execute]` — Execute SQL
 
-```
+```tcl
 sql execute ?options? connection string ?{paramName ?paramType? ?paramValue? ?paramSize? ?paramValueFlags?} ...?
 ```
 
@@ -207,24 +207,24 @@ result format are controlled by options.
 8. Store timing data (if `-time` is enabled)
 9. Dispose command
 
-### 3.6 `sql foreach` — Iterate Over Results
+### 3.6 `[sql foreach]` — Iterate Over Results
 
-```
+```tcl
 sql foreach ?options? connection string ?{params} ...? body
 ```
 
 Like `execute`, but evaluates `body` for each result row. The current
 row data is available in the row variable (default:
-`sql(ResultSet.Row)`). Supports `break`, `continue`, and `return` from
+`sql(ResultSet.Row)`). Supports `[break]`, `[continue]`, and `[return]` from
 the body script.
 
 The key difference from `execute`: the default rows variable name is
 `Vars.ResultSet.Row` (singular) instead of `Vars.ResultSet.Rows`
 (plural), reflecting the one-row-at-a-time processing model.
 
-### 3.7 `sql transaction` — Transaction Management
+### 3.7 `[sql transaction]` — Transaction Management
 
-```
+```tcl
 sql transaction ?options? action connection/transaction
 ```
 
@@ -243,9 +243,9 @@ sql transaction ?options? action connection/transaction
 | `-isolation <IsolationLevel>` | enum | Isolation level: `Unspecified` (default), `ReadUncommitted`, `ReadCommitted`, `RepeatableRead`, `Serializable` |
 | `-variable <varName>` | string | Store transaction name in variable with DbTraceCallback for auto-cleanup |
 
-### 3.8 `sql hasbegun` — Check Transaction Status
+### 3.8 `[sql hasbegun]` — Check Transaction Status
 
-```
+```tcl
 sql hasbegun transaction ?connection?
 ```
 
@@ -255,9 +255,9 @@ sql hasbegun transaction ?connection?
   belongs to the specified connection (checks
   `Object.ReferenceEquals(transaction.Connection, connection)`)
 
-### 3.9 `sql types` — List Available Providers
+### 3.9 `[sql types]` — List Available Providers
 
-```
+```tcl
 sql types ?pattern?
 ```
 
@@ -284,8 +284,8 @@ sql execute $conn "CREATE TABLE t1(x)"
 sql close $conn
 ```
 
-If an error occurs between `open` and `close`, the connection leaks.
-While `try`/`finally` can help, it's error-prone and verbose.
+If an error occurs between `[open]` and `[close]`, the connection leaks.
+While `[try]`/`finally` can help, it's error-prone and verbose.
 
 ### 4.2 The Solution: `-variable` with DbTraceCallback
 
@@ -300,7 +300,7 @@ sql execute $conn "CREATE TABLE t1(x)"
 
 ### 4.3 How It Works
 
-When `-variable` is used with `sql open` or `sql transaction begin`,
+When `-variable` is used with `[sql open]` or `sql transaction begin`,
 the command calls `interpreter.SetDbVariableValue()` instead of simply
 returning the handle:
 
@@ -444,7 +444,7 @@ variable goes out of scope (though there may be nothing to clean up).
 
 ### 4.7 Lifecycle Diagram
 
-```
+```tcl
 sql open -variable conn "connStr"
     │
     ├── SetDbVariableValue("conn", connectionName)
@@ -468,7 +468,7 @@ $conn goes out of scope (proc returns, unset, etc.)
 
 ## 5. Query Execution Options
 
-The `execute` and `foreach` sub-commands share a large set of options
+The `execute` and `[foreach]` sub-commands share a large set of options
 defined by `ObjectOps.GetSqlExecuteOptions()`.
 
 ### 5.1 Execution Type (`-execute`)
@@ -595,7 +595,7 @@ sql execute $conn "SELECT * FROM users WHERE id = @id AND name = @name" \
 
 Each parameter is a list with the format:
 
-```
+```tcl
 {paramName ?paramType? ?paramValue? ?paramSize? ?paramValueFlags?}
 ```
 
@@ -760,7 +760,7 @@ verified against the interpreter's trusted script key rings.
 The `BundleData` class (`Eagle._Components.Private.BundleData`)
 represents a single script entry from a bundle database:
 
-```
+```tcl
 IBundleData
     ├── Language (string)
     ├── Sequence (long)
@@ -790,7 +790,7 @@ virtual file systems:
 
 **Mounting and unmounting:**
 
-```
+```tcl
 BundleManager.Mount(interpreter, fileName, password, errorOnMounted)
 BundleManager.Unmount(interpreter, fileName, errorOnNotMounted)
 BundleManager.ListMounts(interpreter, pattern, noCase)
@@ -805,13 +805,13 @@ BundleManager.ListMounts(interpreter, pattern, noCase)
 
 **Data retrieval:**
 
-```
+```tcl
 BundleManager.GetData(interpreter, cultureInfo, encoding, path, ref data)
 ```
 
 The path format for bundle scripts is `{databaseFile}:{scriptPath}`:
 
-```
+```tcl
 /path/to/scripts.db:/some/script.eagle
 ```
 
@@ -826,7 +826,7 @@ The retrieval process:
 
 **Evaluation tracking:**
 
-```
+```tcl
 BundleManager.BeginEvaluation(interpreter, fileName, out savedFileName)
 BundleManager.EndEvaluation(interpreter, ref savedFileName)
 ```
@@ -1090,7 +1090,7 @@ sql close $conn
 | Connection | `sql open -type SQLite connStr` | `sqlite3.connect("db.sqlite3")` |
 | Parameters | `{name Type value}` lists | `?` or `:name` placeholders |
 | Auto-cleanup | DbTraceCallback on variable unset | `with` statement (context manager) |
-| Result iteration | `sql foreach` | `cursor.fetchall()` / `for row in cursor` |
+| Result iteration | `[sql foreach]` | `cursor.fetchall()` / `for row in cursor` |
 | Transaction | `sql transaction begin/commit` | `connection.commit()` |
 | Script bundles | SQLite-based signed script databases | No equivalent |
 
@@ -1177,7 +1177,7 @@ of real-world use.
 
 ### 16.1 Connection Lifecycle: `setupDb` / `cleanupDb`
 
-Production code never calls `sql open` directly. Instead, a wrapper
+Production code never calls `[sql open]` directly. Instead, a wrapper
 procedure builds the connection string from multiple sources, opens the
 connection, configures PRAGMAs, and runs setup SQL:
 

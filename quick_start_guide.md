@@ -49,13 +49,13 @@ Eagle supports .NET Framework 2.0 through 4.8.1, .NET Standard 2.0 and 2.1, and 
 
 The simplest way to add Eagle to a .NET project is via NuGet:
 
-```
+```sh
 dotnet add package Eagle
 ```
 
 Or from the Package Manager Console in Visual Studio:
 
-```
+```tcl
 Install-Package Eagle
 ```
 
@@ -86,13 +86,13 @@ Pre-built release binaries can be downloaded from:
 
 ### Building from Source
 
-Eagle includes solution files for Visual Studio 2005 through 2022, as well as .NET Standard. There are three primary ways to build:
+Eagle includes solution files for Visual Studio 2005 through 2022, as well as .NET Standard. There are several ways to build:
 
 #### Windows Command Line
 
 From the repository root, run the build script:
 
-```
+```bat
 Library\Tools\build.bat
 ```
 
@@ -102,11 +102,28 @@ This uses the included build tooling to compile Eagle for the default target pla
 
 Use the `dotnet` CLI to build the .NET Standard solution:
 
-```
+```sh
 dotnet build EagleNetStandard2X.sln /property:EagleBuildType=NetStandard21 /property:EaglePatchLevel=false
 ```
 
 This works on Windows, macOS, and Linux wherever the .NET SDK is installed.
+
+#### POSIX (`make`)
+
+On Linux and macOS, the official `Makefile` wraps the steps above and adds
+install/uninstall and test targets:
+
+```sh
+cd Eagle
+make build      # build the managed assemblies
+make test       # run the test suite
+make run        # start the interactive shell
+make install    # install under PREFIX (default /opt/eagle)
+```
+
+See the [Eagle Build System (POSIX)](build_system.md) reference for the full
+list of targets, configuration variables, the optional native build, and the
+build-time MSBuild task library.
 
 #### Visual Studio
 
@@ -124,26 +141,26 @@ The repository contains multiple `.sln` files targeting different framework vers
 
 Launch the Eagle shell executable without arguments to enter interactive mode:
 
-```
+```tcl
 EagleShell.exe
 ```
 
 You will see a prompt where you can type commands and see results immediately:
 
-```
+```tcl
 % puts "Hello from Eagle!"
 Hello from Eagle!
 % expr {2 + 2}
 4
 ```
 
-Type `exit` or press Ctrl+C to leave the interactive shell. For a full list of interactive commands, see the Interactive Commands section in [core_language.md](core_language.md).
+Type `[exit]` or press Ctrl+C to leave the interactive shell. For a full list of interactive commands, see the Interactive Commands section in [core_language.md](core_language.md).
 
 ### Running a Script File
 
 Use `-file` to specify a script file to evaluate:
 
-```
+```tcl
 EagleShell.exe -file myscript.eagle
 ```
 
@@ -151,7 +168,7 @@ EagleShell.exe -file myscript.eagle
 
 Use the `-evaluate` option to evaluate a script directly:
 
-```
+```tcl
 EagleShell.exe -evaluate "puts {Hello from the command line!}"
 ```
 
@@ -170,11 +187,11 @@ puts "hello world"
 # Prints: hello world
 ```
 
-`puts` writes a string to standard output followed by a newline.
+`[puts]` writes a string to standard output followed by a newline.
 
 ### Variables
 
-Use `set` to assign a variable, and `$` to read its value:
+Use `[set]` to assign a variable, and `$` to read its value:
 
 ```tcl
 set x 1
@@ -191,8 +208,8 @@ puts $x
 ```
 
 - `set varName value` assigns a value; `set varName` reads it.
-- `incr` increments an integer variable.
-- `lappend` appends an element to a list stored in a variable.
+- `[incr]` increments an integer variable.
+- `[lappend]` appends an element to a list stored in a variable.
 
 ### Substitution
 
@@ -247,7 +264,7 @@ array names y
 ;# Returns: 1 two (order may vary)
 ```
 
-Use `array names`, `array get`, `array set`, and `array size` to work with arrays. See [core_language.md](core_language.md#cmd-array) for full details.
+Use `[array names]`, `[array get]`, `[array set]`, and `[array size]` to work with arrays. See [core_language.md](core_language.md#cmd-array) for full details.
 
 ### Control Flow
 
@@ -298,7 +315,7 @@ while {$i < 3} {
 
 ### Procedures
 
-Use `proc` to define reusable procedures:
+Use `[proc]` to define reusable procedures:
 
 ```tcl
 proc greet {name} {
@@ -365,11 +382,11 @@ lsort $colors
 ;# Returns: blue green red yellow
 ```
 
-See [core_language.md](core_language.md#lists) for the full list of commands including `linsert`, `lrange`, `lreplace`, `lsort`, `lmap`, and more.
+See [core_language.md](core_language.md#lists) for the full list of commands including `[linsert]`, `[lrange]`, `[lreplace]`, `[lsort]`, `[lmap]`, and more.
 
 ### Strings
 
-The `string` command provides a wide range of string operations:
+The `[string]` command provides a wide range of string operations:
 
 ```tcl
 # Length
@@ -399,7 +416,7 @@ string is integer 42
 
 ### Expressions
 
-The `expr` command evaluates mathematical and logical expressions. Always brace the expression for best performance and correctness:
+The `[expr]` command evaluates mathematical and logical expressions. Always brace the expression for best performance and correctness:
 
 ```tcl
 # Arithmetic
@@ -429,7 +446,7 @@ Eagle extends Tcl's expression operators with logical XOR (`^^`), bitwise implic
 
 ## Accessing .NET from Eagle
 
-Eagle's most powerful feature is its seamless .NET interoperability through the `object` command. This lets you create .NET objects, call methods, access properties, and use the entire .NET class library from Eagle scripts.
+Eagle's most powerful feature is its seamless .NET interoperability through the `[object]` command. This lets you create .NET objects, call methods, access properties, and use the entire .NET class library from Eagle scripts.
 
 ### Loading Assemblies and Importing Namespaces
 
@@ -448,7 +465,7 @@ set sb [object create StringBuilder]
 
 ### Creating Objects
 
-Use `object create` to instantiate .NET types:
+Use `[object create]` to instantiate .NET types:
 
 ```tcl
 # Create a StringBuilder
@@ -465,7 +482,7 @@ The `-alias` option creates a Tcl command named after the object handle, allowin
 
 ### Calling Methods and Properties
 
-Use `object invoke` to call methods and access properties:
+Use `[object invoke]` to call methods and access properties:
 
 ```tcl
 set sb [object create System.Text.StringBuilder]
@@ -498,7 +515,7 @@ $form Show
 
 ### Object Lifecycle and Cleanup
 
-Always clean up .NET objects when you are done with them, especially objects that implement `IDisposable`. Use `try`/`finally` to guarantee cleanup:
+Always clean up .NET objects when you are done with them, especially objects that implement `IDisposable`. Use `[try]`/`finally` to guarantee cleanup:
 
 ```tcl
 try {

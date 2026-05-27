@@ -63,7 +63,7 @@ Quick reference to all documented Eagle script library procedures.
 | `compileViaDotNetCoreCSharp` | csharp.eagle | Compile C# via .NET Core SDK |
 | `copyFilesRecursive` | file3.eagle | Recursively copy files |
 | `csharpLog` | csharp.eagle | Log C# compilation messages |
-| `debug` | shim.eagle | Intercept Eagle debug calls from Tcl |
+| `[debug]` | shim.eagle | Intercept Eagle debug calls from Tcl |
 | `doesCompileCSharpWork` | csharp.eagle | Test if C# compilation works |
 | `downloadAndExtractNativeTclKitDll` | pkgt.eagle | Download native TclKit DLL |
 | `downloadAndExtractNativeTclTkDlls` | pkgt.eagle | Download native Tcl/Tk DLLs |
@@ -171,7 +171,7 @@ Quick reference to all documented Eagle script library procedures.
 | `tclLog` | compat.eagle | Tcl-compatible logging |
 | `tclLogForCommand` | file3.eagle | Log command execution |
 | `tclPkgUnknown` | init.eagle | Package unknown handler |
-| `test` | compat.eagle | Tcl-compatible test command |
+| `[test]` | compat.eagle | Tcl-compatible test command |
 | `toggleRuntimeOption` | runopt.eagle | Toggle runtime option |
 | `tqlog` | testlog.eagle | Log to test queue |
 | `tqputs` | testlog.eagle | Write to test queue |
@@ -293,9 +293,9 @@ sourceWithInfo args
 
 Sources a script file while preserving location information for procedures defined within it.
 
-- **Arguments**: Same as the `source` command
+- **Arguments**: Same as the `[source]` command
 - **Returns**: Result of the sourced script.
-- **Note**: Eagle-only. Wraps `source` to record file path and line information for each procedure defined in the sourced file, enabling better error messages and `info body`/`info args` output.
+- **Note**: Eagle-only. Wraps `[source]` to record file path and line information for each procedure defined in the sourced file, enabling better error messages and `[info body]`/`[info args]` output.
 
 - **Example**:
 ```tcl
@@ -335,7 +335,7 @@ unknown nonexistentCmd    ;# Error: invalid command name "nonexistentCmd"
 tclPkgUnknown name args
 ```
 
-Package unknown handler. Called automatically when `package require` cannot find a package. Re-scans `auto_path` directories for `pkgIndex.tcl` files to discover newly available packages.
+Package unknown handler. Called automatically when `[package require]` cannot find a package. Re-scans `auto_path` directories for `pkgIndex.tcl` files to discover newly available packages.
 
 - **Arguments**:
   - `name` - The requested package name
@@ -467,7 +467,7 @@ exportAndImportPackageCommands namespace exports forget force
 Exports commands from a namespace and imports them into the global namespace.
 
 - **Arguments**:
-  - `namespace` - Source namespace
+  - `[namespace]` - Source namespace
   - `exports` - List of command names to export
   - `forget` - If true, forget previous imports first
   - `force` - If true, overwrite existing commands
@@ -541,7 +541,7 @@ Prints the contents of a dictionary to stdout.
 test name description args
 ```
 
-Emulates the native Tcl `test` command from the tcltest package. Automatically detects old-style vs new-style tests.
+Emulates the native Tcl `[test]` command from the tcltest package. Automatically detects old-style vs new-style tests.
 
 - **Arguments**:
   - `name` - Test name
@@ -561,7 +561,7 @@ tclLog string
 Emulates the native Tcl `tclLog` command by writing to stderr.
 
 - **Arguments**:
-  - `string` - Message to log
+  - `[string]` - Message to log
 - **Returns**: Empty string.
 
 ---
@@ -678,7 +678,7 @@ lshuffle list
 Pseudo-randomly shuffles a list using the Fisher-Yates algorithm.
 
 - **Arguments**:
-  - `list` - List to shuffle
+  - `[list]` - List to shuffle
 - **Returns**: Shuffled list.
 
 - **Example**:
@@ -720,7 +720,7 @@ filter list script
 Returns elements from the list for which the script returns non-zero.
 
 - **Arguments**:
-  - `list` - List to filter
+  - `[list]` - List to filter
   - `script` - Script that receives each element via the `item` variable and returns a boolean
 - **Returns**: Filtered list.
 
@@ -743,7 +743,7 @@ map list script
 Applies a transformation script to each list element.
 
 - **Arguments**:
-  - `list` - List to transform
+  - `[list]` - List to transform
   - `script` - Script that receives each element via the `item` variable and returns transformed value
 - **Returns**: Transformed list.
 
@@ -766,7 +766,7 @@ reduce list script
 Reduces a list to a single value by applying a script cumulatively.
 
 - **Arguments**:
-  - `list` - List to reduce
+  - `[list]` - List to reduce
   - `script` - Script receiving `result` and `item`, returns accumulated value
 - **Returns**: Final accumulated value.
 
@@ -928,7 +928,7 @@ Compares two file names for equality using the most robust method available.
   - `fileName1` - First file name
   - `fileName2` - Second file name
 - **Returns**: Non-zero if the files are the same.
-- **Note**: Uses `file same` in Eagle, string comparison in Tcl (case-insensitive on Windows).
+- **Note**: Uses `[file same]` in Eagle, string comparison in Tcl (case-insensitive on Windows).
 
 ---
 
@@ -1296,7 +1296,7 @@ Populates arrays with type options for the Windows `dir` command.
 populateTypesForGlob dirVarName fileVarName
 ```
 
-Populates arrays with `-types` option values for `glob`.
+Populates arrays with `-types` option values for `[glob]`.
 
 - **Arguments**:
   - `dirVarName` - Variable name for directory types
@@ -1424,7 +1424,7 @@ Copies files recursively using Robocopy (Windows only).
 
 Package: `Eagle.Execute`
 
-> See also: [`exec.md`](exec.md) for a comprehensive analysis of the `exec` command's argument processing, command-line building, and differences from native Tcl.
+> See also: [`exec.md`](exec.md) for a comprehensive analysis of the `[exec]` command's argument processing, command-line building, and differences from native Tcl.
 
 #### getShellExecutableName
 
@@ -1462,7 +1462,7 @@ execShell options args
 Executes a native Tcl or Eagle sub-shell with the specified arguments.
 
 - **Arguments**:
-  - `options` - Options for the `exec` command
+  - `options` - Options for the `[exec]` command
   - `args` - Arguments for the shell
 - **Returns**: Captured output from the shell.
 
@@ -1479,7 +1479,7 @@ set result [execShell {} -c {puts "Hello from sub-shell"}]
 maybeGetExitCode value {default ""}
 ```
 
-Extracts the exit code from `$::errorCode` after an `exec` command.
+Extracts the exit code from `$::errorCode` after an `[exec]` command.
 
 - **Arguments**:
   - `value` - The `$::errorCode` value
@@ -1662,7 +1662,7 @@ getReturnType object member
 Returns the type name of the return type for a CLR member.
 
 - **Arguments**:
-  - `object` - Object or type name
+  - `[object]` - Object or type name
   - `member` - Member name
 - **Returns**: Assembly-qualified type name.
 
@@ -1753,7 +1753,7 @@ Checks if a CLR object is a basic type (losslessly convertible to string).
 
 - **Arguments**:
   - `value` - Object handle
-  - `subset` - Type subset: `basic`, `integral`, `integral8`, `fixedPoint`, `floatingPoint`, `string`, `dateTime`, `dbNull`
+  - `subset` - Type subset: `basic`, `integral`, `integral8`, `fixedPoint`, `floatingPoint`, `[string]`, `dateTime`, `dbNull`
 - **Returns**: Boolean.
 
 ---
@@ -1859,7 +1859,7 @@ Waits for processes to exit within a timeout.
   - `ids` - List of process IDs
   - `timeout` - Timeout in milliseconds
   - `collect` - Run garbage collection
-  - `kill` - Kill processes if they don't exit
+  - `[kill]` - Kill processes if they don't exit
 - **Returns**: Empty string.
 
 ---
@@ -1977,7 +1977,7 @@ Emits a message to a channel and adds it to the test log queue.
 
 - **Arguments**:
   - `channel` - Output channel
-  - `string` - Message to emit
+  - `[string]` - Message to emit
 - **Returns**: Empty string.
 
 ---
@@ -1991,7 +1991,7 @@ tqlog string
 Adds a message to the test log queue for later writing.
 
 - **Arguments**:
-  - `string` - Message to log
+  - `[string]` - Message to log
 - **Returns**: Empty string.
 
 ---
@@ -2119,7 +2119,7 @@ Main procedure to check for software updates.
 
 - **Arguments**:
   - `type` - Update type
-  - `uri` - Update server URI
+  - `[uri]` - Update server URI
   - `publicKeyToken` - Product public key token
   - `name` - Product name
   - `culture` - Product culture
@@ -2199,8 +2199,8 @@ csharpLog string {object ""}
 Logs C# compilation lifecycle stages.
 
 - **Arguments**:
-  - `string` - Log message
-  - `object` - Optional object to include properties from
+  - `[string]` - Log message
+  - `[object]` - Optional object to include properties from
 - **Returns**: Empty string.
 
 ---
@@ -2273,7 +2273,7 @@ compileViaCSharpCodeProvider string memory symbols strict resultsVarName errorsV
 Compiles C# code using CSharpCodeProvider (desktop .NET Framework).
 
 - **Arguments**:
-  - `string` - C# source code
+  - `[string]` - C# source code
   - `memory` - Compile to memory
   - `symbols` - Generate debug symbols
   - `strict` - Treat warnings as errors
@@ -2414,7 +2414,7 @@ Returns a format modifier to force 64-bit integer treatment in native Tcl.
 debug args
 ```
 
-Intercepts Eagle `debug` calls from Tcl scripts.
+Intercepts Eagle `[debug]` calls from Tcl scripts.
 
 - **Arguments**: Debug command arguments
 - **Returns**: Empty string.
@@ -2486,7 +2486,7 @@ Forces a rescan of all available package indexes.
 loadPackageClientToolset {directory auto} {apiKeys ""} {hookUnknown true} {enableSecurity true} {isolateSecurity false} {strictSecurity false} {fetchKeyRing false} {debug false}
 ```
 
-Loads the package client toolset via `package require`.
+Loads the package client toolset via `[package require]`.
 
 - **Arguments**:
   - `directory` - Toolset directory ("auto" for auto-detect)
@@ -2496,7 +2496,7 @@ Loads the package client toolset via `package require`.
   - `isolateSecurity` - Isolate security
   - `strictSecurity` - Strict security mode
   - `fetchKeyRing` - Fetch key ring
-  - `debug` - Debug mode
+  - `[debug]` - Debug mode
 - **Returns**: Empty string.
 
 ---
@@ -2634,6 +2634,97 @@ Package: `Eagle.Test`
 
 The test.eagle file is the core test framework library, containing approximately 377 procedures for test execution, constraint management, logging, statistics tracking, and remote result reporting. This is the most comprehensive file in the Eagle script library.
 
+<a id="internal-test-harness"></a>
+#### Internal Test Harness Overview
+
+The `Eagle.Test` package is the harness that drives Eagle's own internal test suite. The suite is launched by `make test`, which sources `Library/Tests/all.eagle` (see [`build_system.md`](build_system.md)). That top-level file mirrors the package skeleton in `lib/Test1.0/all.eagle` and orchestrates a three-stage flow.
+
+##### Three-Stage Flow
+
+| Stage | File | Purpose |
+|-------|------|---------|
+| 1. Prologue | `prologue.eagle` | Parse test flags, set globals (`::test_path`, `::test_channel`, ...), load constraints, and prepare the run. Invoked via [`runTestPrologue`] (or sourced directly by `all.eagle`). |
+| 2. Test files | `*.eagle` test files | Each test file uses [`[test]`] (which dispatches to [`test1`] / [`test2`]) to define and run individual test cases. [`runAllTests`] iterates the discovered files. |
+| 3. Epilogue | `epilogue.eagle` | Report result counts via [`reportTestResultCounts`], clean up globals, and emit the final summary. Invoked via [`runTestEpilogue`] (or sourced directly). |
+
+`all.eagle` first sources `prologue.eagle`, then calls [`runAllTests`] over the discovered test files (skipping `prologue.eagle`, `epilogue.eagle`, `all.eagle`, and `*.tcl`), and finally sources `epilogue.eagle`. The `*.eagle` test files must be written so they can be evaluated in both Tcl and Eagle until the prologue has run; for Eagle-only suites, the `package require Eagle.Test` + [`runTestPrologue`] / [`runTestEpilogue`] pattern may be used instead of sourcing the prologue/epilogue files directly.
+
+> [!NOTE]
+> The standard `prologue.eagle`, `epilogue.eagle`, `constraints.eagle`, and `pkgIndex.eagle` files live in `lib/Test1.0/`. Eagle can also load them from an embedded copy when no external file is found.
+
+##### How a Test File Uses [`test1`] / [`test2`]
+
+Test files call the [`[test]`] stub, which inspects its arguments and dispatches to [`test1`] (positional `name description ?constraints? body result`) or [`test2`] (option-based, e.g. `-setup`, `-body`, `-cleanup`, `-constraints`, `-result`). See [`core_language.md`](core_language.md#cmd-test1) for the full command signatures and option set.
+
+```tcl
+package require Eagle.Test
+
+runTestPrologue
+
+# Positional form (test1).
+test string-length-1.1 {string length} {} {
+  string length hello
+} {5}
+
+# Option form (test2).
+test file-read-1.1 {read a temp file} -constraints {file} -setup {
+  set f [open test.txt w]; puts $f data; close $f
+} -body {
+  set f [open test.txt r]; set d [read $f]; close $f; return $d
+} -cleanup {
+  file delete test.txt
+} -result "data\n"
+
+runTestEpilogue
+```
+
+<a id="constraint-system"></a>
+##### Constraint System
+
+Constraints gate whether a test runs. A test is **skipped** unless every constraint in its `-constraints` list (and the optional `-constraintExpression`) is satisfied. The list is treated as a logical AND.
+
+| Procedure | Signature | Purpose |
+|-----------|-----------|---------|
+| [`haveConstraint`] | `haveConstraint name` | Returns true if `name` is in the active constraint set. |
+| [`addConstraint`] | `addConstraint name {value 1}` | Adds `name` to the active set when `value` is true. |
+| [`removeConstraint`] | `removeConstraint name` | Removes `name` from the active set. |
+| `haveOrAddConstraint` | `haveOrAddConstraint name {value ""}` | Query when called with one argument, otherwise add. |
+| `getConstraints` | `getConstraints` | Returns the list of currently active constraints. |
+
+The `checkFor*` procedures in `constraints.eagle` (e.g. [`checkForPlatform`], [`checkForEagle`], [`checkForNamespaces`]) probe the environment during the prologue and call [`addConstraint`] to register the constraints they detect. Each takes a `channel` argument for diagnostic output.
+
+**Constraint-expression syntax.** Within a `-constraints` list:
+
+- A bare name (e.g. `windows`) means the constraint must be **present**.
+- A `!`-prefixed name (e.g. `!mono`) means the constraint must be **absent** (negation).
+- Multiple names are combined with logical AND (e.g. `{windows !mono compileCSharp}` requires `windows` and `compileCSharp` present and `mono` absent).
+- The pseudo-constraints `fail.false` / `fail.true` toggle whether a failure counts, and `knownBug` / `!knownBug` mark a test as a known bug. These are interpreted specially and not matched as real constraints.
+
+The richer `-constraintExpression` option (handled by `CheckConstraintExpression`) evaluates a full boolean expression and is checked *after* the `-constraints` list.
+
+> [!TIP]
+> Use negation to exclude an environment: `-constraints {!mono}` runs the test everywhere except Mono. Combine constraints to require several conditions at once.
+
+##### Result-Count Reporting
+
+The epilogue calls [`reportTestResultCounts`], which reads the `::eagle_tests` array and emits one line per non-zero category to the test channel, followed by percentage lines. The categories are:
+
+```text
+LEAKED: <count>           (only when resource leaks were detected)
+KNOWN BUGS: <names>       (only when known-bug tracking is compiled in)
+PASSED: <count>
+FAILED: <count>
+SKIPPED: <count>
+DISABLED: <count>
+TOTAL: <count>
+SKIP PERCENTAGE: <n.nn>%
+PASS PERCENTAGE: <n.nn>%
+```
+
+Failed and skipped categories also emit the corresponding test names (`FAILED:`/`SKIPPED:` name lists). When known-bug tracking is enabled, `PASSED (BUG)`, `FAILED (BUG)`, `SKIPPED (BUG)`, and `DISABLED (BUG)` sub-counts are reported as well. The per-test `++++ ... PASSED` and `==== ... FAILED` lines are produced by [`test1`] / [`test2`] themselves as each test runs.
+
+---
+
 #### Alphabetical Procedure Table
 
 | Procedure | Brief Description |
@@ -2744,7 +2835,7 @@ The test.eagle file is the core test framework library, containing approximately
 | `evaluateTestScripts` | Evaluates a list of test script files |
 | `evaluateViaTemporaryFile` | Evaluates a script by writing to and sourcing a temp file |
 | `execTestShell` | Executes a test shell command with argument processing |
-| `exit` | Test framework override of exit tracking test completion |
+| `[exit]` | Test framework override of exit tracking test completion |
 | `extractTestRunIdFromLogStartSentry` | Parses test run ID from a log file start sentry |
 | `f_proc` | Creates a flexible procedure (proc or nproc) |
 | `failTestHook` | Test hook called on test failure |
@@ -2929,7 +3020,7 @@ The test.eagle file is the core test framework library, containing approximately
 | `pathToRegexp` | Converts a file path to a regular expression |
 | `private` | Makes a procedure private to its namespace |
 | `probeForScriptFileName` | Searches script locations for active script file |
-| `proc` | Built-in proc command (renamed internally) |
+| `[proc]` | Built-in proc command (renamed internally) |
 | `processTestArguments` | Parses command-line test option pairs |
 | `promptForAndGetTextInput` | Prompts user for text input with validation |
 | `purgeAndCleanup` | Clears internal caches for multiple subsystems |
@@ -2984,7 +3075,7 @@ The test.eagle file is the core test framework library, containing approximately
 | `tcltest::loadTestedCommands` | Stub compatibility shim for Tcl test scripts |
 | `tcltest::RunTest` | Rewritten to pass list args to DebugPuts |
 | `tcltest::SavedDebugPuts` | Backup of original tcltest::DebugPuts |
-| `test` | Built-in Eagle test command (shimmed) |
+| `[test]` | Built-in Eagle test command (shimmed) |
 | `testArrayGet` | Returns test array contents in sorted order |
 | `testArrayGet2` | Returns sorted array with optional pattern filtering |
 | `testCheckOverallResult` | Evaluates overall pass/fail and sets exit code |
@@ -3040,7 +3131,7 @@ Creates a "stub" procedure with minimal body, typically used as a placeholder.
 f_proc name args body {command ""}
 ```
 
-Creates a "flexible" procedure, automatically selecting `nproc` when available in Eagle.
+Creates a "flexible" procedure, automatically selecting `[nproc]` when available in Eagle.
 
 - **Arguments**:
   - `name` - Procedure name
@@ -3134,7 +3225,7 @@ evaluateTestScripts interp scriptVarName codeVarName resultVarName
 Evaluates all scripts in the script array, capturing codes and results.
 
 - **Arguments**:
-  - `interp` - Interpreter name (empty for current)
+  - `[interp]` - Interpreter name (empty for current)
   - `scriptVarName` - Script array variable
   - `codeVarName` - Variable for return codes
   - `resultVarName` - Variable for results
@@ -3154,7 +3245,7 @@ Combines test script results into a structured list.
   - `scriptVarName` - Script array variable
   - `codeVarName` - Return codes array
   - `resultVarName` - Results array
-  - `debug` - Include scripts in output
+  - `[debug]` - Include scripts in output
 - **Returns**: List of result dictionaries.
 
 ---
@@ -3211,7 +3302,7 @@ getDotNetCoreTargetFrameworkMoniker {version ""} {includeVersion false}
 Gets the Target Framework Moniker (TFM) for .NET Core.
 
 - **Arguments**:
-  - `version` - Major version (default: auto-detect)
+  - `[version]` - Major version (default: auto-detect)
   - `includeVersion` - Include version in TFM
 - **Returns**: TFM string (e.g., "net", "netcoreapp").
 
@@ -3491,7 +3582,7 @@ getFirstLineOfError error
 Extracts the first line from an error message.
 
 - **Arguments**:
-  - `error` - Error string
+  - `[error]` - Error string
 - **Returns**: First line of error.
 
 ---
@@ -3623,7 +3714,7 @@ Primary test output procedure - writes to channel and log file.
 
 - **Arguments**:
   - `channel` - Output channel
-  - `string` - Text to output
+  - `[string]` - Text to output
 - **Returns**: Empty string.
 - **Note**: Suppresses repeated consecutive output.
 
@@ -3639,7 +3730,7 @@ Raw output without repeat suppression.
 
 - **Arguments**:
   - `channel` - Output channel
-  - `string` - Text to output
+  - `[string]` - Text to output
 - **Returns**: Empty string.
 
 ---
@@ -3654,7 +3745,7 @@ Output to channel and log without repeat check.
 
 - **Arguments**:
   - `channel` - Output channel
-  - `string` - Text to output
+  - `[string]` - Text to output
 - **Returns**: Empty string.
 
 ---
@@ -3668,7 +3759,7 @@ tlog string
 Writes string to test log file only.
 
 - **Arguments**:
-  - `string` - Text to log
+  - `[string]` - Text to log
 - **Returns**: Empty string.
 
 ---
@@ -3679,10 +3770,10 @@ Writes string to test log file only.
 dputs string
 ```
 
-Debug output via `debug output`.
+Debug output via `[debug output]`.
 
 - **Arguments**:
-  - `string` - Debug text
+  - `[string]` - Debug text
 - **Returns**: Empty string.
 
 ---
@@ -3693,10 +3784,10 @@ Debug output via `debug output`.
 dlog string
 ```
 
-Debug log via `debug log`.
+Debug log via `[debug log]`.
 
 - **Arguments**:
-  - `string` - Log text
+  - `[string]` - Log text
 - **Returns**: Empty string.
 
 ---
@@ -3710,7 +3801,7 @@ dtrace string
 Debug trace output.
 
 - **Arguments**:
-  - `string` - Trace text
+  - `[string]` - Trace text
 - **Returns**: Empty string.
 
 ---
@@ -4008,7 +4099,7 @@ getProcessGroup pid {varName ""} {quiet false}
 Gets the process group ID for a process (Unix only).
 
 - **Arguments**:
-  - `pid` - Process ID
+  - `[pid]` - Process ID
   - `varName` - Variable to receive PGID
   - `quiet` - Suppress output
 - **Returns**: Boolean success.
@@ -4039,7 +4130,7 @@ maybeKillProcessGroup pid {self false} {quiet false}
 Conditionally kills a process group if safe to do so.
 
 - **Arguments**:
-  - `pid` - Target process ID
+  - `[pid]` - Target process ID
   - `self` - Allow killing own process group
   - `quiet` - Suppress output
 - **Returns**: Boolean indicating if killed.
@@ -4197,13 +4288,14 @@ Reports test resource leak statistics.
 ##### reportTestResultCounts
 
 ```tcl
-reportTestResultCounts channel
+reportTestResultCounts channel {varName ""}
 ```
 
-Reports final test result counts (passed, failed, skipped).
+Reports the final test result counts (and percentages) to the channel. In Eagle it reads the `::eagle_tests` array and emits, when non-zero, the `PASSED`, `FAILED`, `SKIPPED`, `DISABLED`, and `TOTAL` lines (plus `LEAKED` and `KNOWN BUGS`, and the matching percentage lines).
 
 - **Arguments**:
   - `channel` - Output channel
+  - `varName` (optional) - Name of a caller variable into which the computed percentage is written (linked via `[upvar]`)
 - **Returns**: Empty string.
 
 ---
@@ -4220,7 +4312,7 @@ Sends a message to a remote logging service.
 
 - **Arguments**:
   - `message` - Message content
-  - `uri` - Target URI
+  - `[uri]` - Target URI
   - `apiKey` - API authentication key
   - `password` - Optional password
   - `channel` - Output channel
@@ -4286,7 +4378,7 @@ formatList list {default ""} {columns 1}
 Formats a list for display.
 
 - **Arguments**:
-  - `list` - List to format
+  - `[list]` - List to format
   - `default` - Default if empty
   - `columns` - Number of columns
 - **Returns**: Formatted string.
@@ -4302,7 +4394,7 @@ formatListAsDict list {default ""}
 Formats a list as a dictionary.
 
 - **Arguments**:
-  - `list` - List to format
+  - `[list]` - List to format
   - `default` - Default if empty
 - **Returns**: Formatted dictionary string.
 
@@ -4576,7 +4668,7 @@ Converts a file path to a regular expression pattern.
 
 - **Arguments**:
   - `path` - File path
-  - `list` - Return as list
+  - `[list]` - Return as list
 - **Returns**: Regexp pattern.
 
 ---
@@ -4939,7 +5031,7 @@ isUriLikelyToBeRedirected uri
 Checks if a URI is likely to be a redirect service URL.
 
 - **Arguments**:
-  - `uri` - URI to check
+  - `[uri]` - URI to check
 - **Returns**: Boolean.
 - **Note**: Checks against the auxiliary base URI.
 
@@ -4954,7 +5046,7 @@ maybeResolveUri uri {varName ""} {channel stdout} {quiet false}
 Resolves a URI through redirect services if needed.
 
 - **Arguments**:
-  - `uri` - URI to resolve
+  - `[uri]` - URI to resolve
   - `varName` - Variable to receive resolution status
   - `channel` - Output channel
   - `quiet` - Suppress output
@@ -4971,7 +5063,7 @@ maybeFullyResolveUri uri redirectLimit {channel stdout} {quiet false}
 Fully resolves a URI through multiple redirects.
 
 - **Arguments**:
-  - `uri` - URI to resolve
+  - `[uri]` - URI to resolve
   - `redirectLimit` - Maximum redirects (-1 for unlimited)
   - `channel` - Output channel
   - `quiet` - Suppress output
@@ -5625,7 +5717,7 @@ Sends a chat completion request to the OpenAI API.
 | `maybeScanAutoPath` | Scans package indexes along auto_path for available packages |
 | `needTestDoEvents` | Checks whether test event processing (DoEvents) is needed |
 | `newPackageId` | Generates a unique random hex identifier for package index naming |
-| `proc` | Built-in proc command (renamed internally for framework use) |
+| `[proc]` | Built-in proc command (renamed internally for framework use) |
 | `reopenHost` | Closes and reopens the interpreter host; exits on failure |
 | `reportArrayGet varName` | Returns array contents sorted by integer value descending |
 | `savedTest` | Rename target of ::test during tsource shimming |
@@ -5635,7 +5727,7 @@ Sends a chat completion request to the OpenAI API.
 | `tclLoadForTest` | Loads the native Tcl library into Eagle for interop testing |
 | `tclLogForTester message` | Logs a string via tclLog command or stderr as fallback |
 | `tclUnloadForTest` | Unloads the native Tcl library previously loaded for testing |
-| `test` | Built-in Eagle test command (shimmed via testShim) |
+| `[test]` | Built-in Eagle test command (shimmed via testShim) |
 | `testArrayGet2 arrayName args` | Returns sorted array contents with optional pattern filtering |
 | `testCheckOverallResult channel percent args` | Evaluates overall test pass/fail result and sets exit code |
 | `testClrExec args` | Executes a CLR command-line process with runtime prefix and logging |
@@ -5990,11 +6082,11 @@ When the Eagle script library is loaded, the following system aliases are create
 |-------|-----------|-------------|
 | `igap` | `object invoke -flags +NonPublic Interpreter.GetActive` | Get active interpreter (non-public) |
 | `iga` | `object invoke Interpreter.GetActive` | Get active interpreter |
-| `mrogsf` | `interp maybereadorgetscriptfile` | Maybe read or get script file |
-| `rogsf` | `interp readorgetscriptfile` | Read or get script file |
+| `mrogsf` | `[interp maybereadorgetscriptfile]` | Maybe read or get script file |
+| `rogsf` | `[interp readorgetscriptfile]` | Read or get script file |
 | `oc` | `object create -alias` | Create object with alias |
 | `ocp` | `object create -alias -flags +NonPublic` | Create object (non-public) |
-| `oi` | `object invoke` | Invoke object method |
+| `oi` | `[object invoke]` | Invoke object method |
 | `oip` | `object invoke -flags +NonPublic` | Invoke object method (non-public) |
 | `oic` | `object invoke -create` | Invoke with create |
 | `oicp` | `object invoke -create -flags +NonPublic` | Invoke with create (non-public) |
@@ -6325,7 +6417,7 @@ set sum [lreduce $numbers 0 \
 
 #### Key-Value List Operations
 
-**Note**: Eagle now provides the `dict` command (see [core_language.md](core_language.md#cmd-dict)). The key-value list patterns below remain useful for simple cases and for the `getDictionaryValue` helper from auxiliary.eagle, which provides default-value support.
+**Note**: Eagle now provides the `[dict]` command (see [core_language.md](core_language.md#cmd-dict)). The key-value list patterns below remain useful for simple cases and for the `getDictionaryValue` helper from auxiliary.eagle, which provides default-value support.
 
 ```tcl
 # Build key-value list from pairs
@@ -6597,7 +6689,7 @@ proc trackMemory {script} {
 
 ### Timer and Polling Patterns
 
-**Note**: Eagle does NOT support `fileevent` for asynchronous I/O. Use timer-based polling or synchronous operations instead. Eagle does support `after` for scheduling callbacks.
+**Note**: Eagle does NOT support `fileevent` for asynchronous I/O. Use timer-based polling or synchronous operations instead. Eagle does support `[after]` for scheduling callbacks.
 
 #### Timer-Based Operations
 

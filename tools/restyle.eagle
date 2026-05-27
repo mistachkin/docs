@@ -1,0 +1,301 @@
+###############################################################################
+#
+# restyle.eagle --
+#
+# Applies the repository's house style to Markdown documentation, safely and
+# deterministically.  Written in Eagle so the documentation is styled by the
+# language it documents.
+#
+# Three independent transforms (enable individually, or all by default):
+#
+#   --brackets  Inside prose (never inside fenced code blocks), rewrite an
+#               inline code span that is EXACTLY an Eagle command, or a command
+#               followed by one of its real sub-commands, into bracket form:
+#                   `set`          -> `[set]`
+#                   `array names`  -> `[array names]`
+#               A span with arguments or an unknown first token is left alone
+#               (e.g. `set x 1`, `-nocase`, `Interpreter` are untouched), so
+#               code fragments and .NET identifiers are never mangled.
+#
+#   --fences    Give every untagged opening code fence a language tag, inferred
+#               from the block contents (csharp / sh / text, else tcl).
+#
+#   --emoji     Strip decorative emoji.
+#
+# Usage (from the repository root):
+#
+#   eagle tools/restyle.eagle FILE.md [FILE.md ...]      # all transforms
+#   eagle tools/restyle.eagle --brackets array.md        # one transform
+#   eagle tools/restyle.eagle --dry-run FILE.md          # report, do not write
+#
+# The Eagle source tree (for the command/sub-command map) defaults to a sibling
+# checkout (../eagle/Eagle) or $EAGLE_SRC or --eagle-src <path>.
+#
+###############################################################################
+
+set classToCommand(Namespace1) namespace
+set classToCommand(Namespace2) namespace
+set classToCommand(Test1)      test
+set classToCommand(Test2)      test
+
+###############################################################################
+
+proc readAll { path } {
+  set fp [open $path RDONLY]
+  try { fconfigure $fp -encoding utf-8; return -- [read $fp] } finally { close $fp }
+}
+
+proc writeAll { path data } {
+  set fp [open $path { WRONLY CREAT TRUNC }]
+  try {
+    # NOTE: Force LF line endings (the channel default would translate to the
+    #       platform EOL, e.g. CRLF, churning every line of these LF files).
+    fconfigure $fp -encoding utf-8 -translation lf
+    puts -nonewline $fp $data
+  } finally {
+    close $fp
+  }
+}
+
+proc stripComments { text } {
+  return -- [regsub -all -line -- {//.*$} $text ""]
+}
+
+proc classLabel { name } {
+  global classToCommand
+  # NOTE: BuiltIns.cs registers some commands under underscore-prefixed class
+  #       names (e.g. "_File"); strip the leading underscore to match files.
+  set name [string trimleft $name _]
+  if {[info exists classToCommand($name)]} { return $classToCommand($name) }
+  return [string tolower $name]
+}
+
+#
+# NOTE: The set of registered command labels (from BuiltIns.cs).  Only these
+#       are eligible for bracketing, so internal helper classes that are not
+#       real commands (e.g. Default, Alias, Core, Stub) are never bracketed.
+#
+proc scanBuiltins { eagleSrc } {
+  set path [file join $eagleSrc Library Components Private BuiltIns.cs]
+  set result [list]
+  if {[file exists $path]} {
+    set text [stripComments [readAll $path]]
+    foreach {full grp} [regexp -all -inline -- \
+        {typeof\s*\(\s*_Commands\.(\w+)\s*\)} $text] {
+      lappend result [classLabel $grp]
+    }
+  }
+  return -- $result
+}
+
+#
+# NOTE: Build a dict: command-label -> list of its sub-command names.  This is
+#       the whitelist that makes the bracketing transform safe.
+#
+proc buildCommandMap { eagleSrc } {
+  set registered [scanBuiltins $eagleSrc]
+  set map [dict create]
+  set commandsDir [file join $eagleSrc Library Commands]
+  if {![file isdirectory $commandsDir]} {
+    error "Eagle Commands directory not found: $commandsDir"
+  }
+  foreach path [lsort [glob -directory $commandsDir -- *.cs]] {
+    set label [classLabel [file rootname [file tail $path]]]
+    if {[lsearch -exact $registered $label] < 0} continue
+    if {![dict exists $map $label]} { dict set map $label [list] }
+    set text [stripComments [readAll $path]]
+    foreach {full name body} [regexp -all -inline -- \
+        {(\w+)\s*=\s*new\s+EnsembleDictionary\s*\(\s*new\s+string\[\]\s*\{([\s\S]*?)\}\s*\)} \
+        $text] {
+      if {$name ne "subCommands"} continue
+      set subs [dict get $map $label]
+      foreach {f s} [regexp -all -inline -- {"([^"]*)"} $body] { lappend subs $s }
+      dict set map $label $subs
+    }
+  }
+  return -- $map
+}
+
+###############################################################################
+
+#
+# NOTE: Decide whether an inline code-span body should be bracketed, and return
+#       the replacement body (without the surrounding backticks).
+#
+proc maybeBracket { body map stats } {
+  upvar 1 $stats st
+  set trimmed [string trim $body]
+
+  # Already bracketed, empty, or option/flag -> leave alone.
+  if {$trimmed eq "" || [string index $trimmed 0] eq "\["} { return -- $body }
+  if {[string index $trimmed 0] eq "-"} { return -- $body }
+
+  set parts [regexp -all -inline -- {\S+} $trimmed]
+  set count [llength $parts]
+  if {$count < 1 || $count > 2} { return -- $body }
+
+  set cmd [lindex $parts 0]
+  if {![dict exists $map $cmd]} { return -- $body }
+
+  if {$count == 1} {
+    incr st
+    return -- "\[$trimmed\]"
+  }
+
+  # Two tokens: only bracket when the second is a real sub-command.
+  set sub [lindex $parts 1]
+  if {[lsearch -exact [dict get $map $cmd] $sub] >= 0} {
+    incr st
+    return -- "\[$trimmed\]"
+  }
+  return -- $body
+}
+
+#
+# NOTE: Rewrite inline code spans on a single prose line.
+#
+proc restyleInline { line map stats } {
+  upvar 1 $stats st
+  set result ""
+  set rest $line
+  while {[regexp -- {^(.*?)`([^`]+)`(.*)$} $rest -> pre content post]} {
+    append result $pre "`" [maybeBracket $content $map st] "`"
+    set rest $post
+  }
+  append result $rest
+  return -- $result
+}
+
+#
+# NOTE: Infer a language tag for an untagged fenced block.
+#
+proc detectLang { block } {
+  set joined [join $block \n]
+  if {[regexp -- {(?m)^\s*(public |private |internal |protected |namespace |using\s+System|sealed class|abstract class|\[CommandFlags)} $joined]} {
+    return csharp
+  }
+  set first ""
+  foreach b $block { if {[string trim $b] ne ""} { set first [string trim $b]; break } }
+  if {[regexp -- {^(\$ |#!|dotnet |make |sudo |cd |git |\./|eagle )} $first]} {
+    return sh
+  }
+  if {[regexp -- {[─-╿]} $joined]} { return text }
+  return tcl
+}
+
+###############################################################################
+
+#
+# NOTE: Restyle one file's text.  Returns the new text; updates the stats dict
+#       (bracketed / fencesTagged / emojiStripped counts) by name.
+#
+proc restyleText { text map doBrackets doFences doEmoji statsName } {
+  upvar 1 $statsName stats
+
+  if {$doEmoji} {
+    set before $text
+    set text [regsub -all -- {[←-⇿⌀-➿⬀-⯿️\u{1F000}-\u{1FAFF}]} $text ""]
+    if {$text ne $before} { dict incr stats emojiStripped }
+  }
+
+  set lines [split $text \n]
+  set out [list]
+  set n [llength $lines]
+  set i 0
+  set brk 0
+  while {$i < $n} {
+    set line [lindex $lines $i]
+    if {[regexp -- {^(\s*)```(.*)$} $line -> indent rest]} {
+      # Opening fence; consume through the matching bare closing fence.
+      set lang [string trim $rest]
+      set j [expr {$i + 1}]
+      set block [list]
+      while {$j < $n && ![regexp -- {^\s*```\s*$} [lindex $lines $j]]} {
+        lappend block [lindex $lines $j]
+        incr j
+      }
+      if {$doFences && $lang eq ""} {
+        set lang [detectLang $block]
+        dict incr stats fencesTagged
+      }
+      lappend out "${indent}```$lang"
+      foreach b $block { lappend out $b }
+      if {$j < $n} { lappend out [lindex $lines $j] }
+      set i [expr {$j + 1}]
+      continue
+    }
+    if {$doBrackets} {
+      lappend out [restyleInline $line $map brk]
+    } else {
+      lappend out $line
+    }
+    incr i
+  }
+  dict set stats bracketed [expr {[dict get $stats bracketed] + $brk}]
+  return -- [join $out \n]
+}
+
+###############################################################################
+
+proc main { argv } {
+  global env
+
+  set scriptDir [file dirname [file normalize [info script]]]
+  set repoRoot [file dirname $scriptDir]
+
+  set eagleSrc ""
+  set files [list]
+  set doBrackets 0
+  set doFences 0
+  set doEmoji 0
+  set dryRun 0
+  set anyTransform 0
+
+  set n [llength $argv]
+  for {set i 0} {$i < $n} {incr i} {
+    set arg [lindex $argv $i]
+    switch -exact -- $arg {
+      --brackets { set doBrackets 1; set anyTransform 1 }
+      --fences   { set doFences 1;   set anyTransform 1 }
+      --emoji    { set doEmoji 1;    set anyTransform 1 }
+      --dry-run  { set dryRun 1 }
+      --eagle-src { incr i; set eagleSrc [lindex $argv $i] }
+      default {
+        if {[string match --eagle-src=* $arg]} {
+          set eagleSrc [string range $arg 12 end]
+        } elseif {[string match --* $arg]} {
+          error "unknown option: $arg"
+        } else {
+          lappend files $arg
+        }
+      }
+    }
+  }
+
+  if {!$anyTransform} { set doBrackets 1; set doFences 1; set doEmoji 1 }
+  if {[llength $files] == 0} { error "no files specified" }
+
+  if {$eagleSrc eq ""} {
+    if {[info exists env(EAGLE_SRC)] && [string length $env(EAGLE_SRC)] > 0} {
+      set eagleSrc $env(EAGLE_SRC)
+    } else {
+      set eagleSrc [file join [file dirname $repoRoot] eagle Eagle]
+    }
+  }
+
+  set map [expr {$doBrackets ? [buildCommandMap $eagleSrc] : [dict create]}]
+
+  foreach f $files {
+    set path [expr {[file pathtype $f] eq "absolute" ? $f : [file join $repoRoot $f]}]
+    set stats [dict create bracketed 0 fencesTagged 0 emojiStripped 0]
+    set text [readAll $path]
+    set new [restyleText $text $map $doBrackets $doFences $doEmoji stats]
+    set tag [expr {$dryRun ? "(dry-run) " : ""}]
+    puts "${tag}[file tail $f]: bracketed=[dict get $stats bracketed] fencesTagged=[dict get $stats fencesTagged] emojiStripped=[dict get $stats emojiStripped]"
+    # NOTE: Write unconditionally (when not a dry run) so line endings are
+    #       normalized to LF even when the styled content is unchanged.
+    if {!$dryRun} { writeAll $path $new }
+  }
+}
+
+main $argv

@@ -1,6 +1,6 @@
 # Eagle `[exec]` Command: Comprehensive Analysis of Command Line and Argument Processing
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `exec` command internals. For basic command syntax and options, see [`core_language.md`](core_language.md#cmd-exec). For usage examples, see [`core_examples.md`](core_examples.md#ex-exec). For the `exec.eagle` script library procedures, see [`core_script_library.md`](core_script_library.md#execution-utilities-execeagle).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `[exec]` command internals. For basic command syntax and options, see [`core_language.md`](core_language.md#cmd-exec). For usage examples, see [`core_examples.md`](core_examples.md#ex-exec). For the `exec.eagle` script library procedures, see [`core_script_library.md`](core_script_library.md#execution-utilities-execeagle).
 
 ## 1. Executive Summary
 
@@ -11,15 +11,15 @@ credentials, timeouts, and result mapping. The central design difference is that
 Eagle usually **re-serializes** its post-parser argument words into one
 `ProcessStartInfo.Arguments` string, either with a simple `ListOps.Concat`
 path or with the explicit `RuntimeOps.BuildCommandLine` quoting/escaping path.
-Native Tcl, by contrast, treats the `exec` arguments as a shell-pipeline
+Native Tcl, by contrast, treats the `[exec]` arguments as a shell-pipeline
 specification where each word already has semantic meaning as a command word,
 redirection token, or pipeline separator.
 
 That one architectural choice explains most of the behavioral differences. In
 native Tcl, quoting is primarily about getting the **Tcl parser** to produce
-the words you want, and then `exec` interprets those words as pipeline syntax
+the words you want, and then `[exec]` interprets those words as pipeline syntax
 and argv items. In Eagle, once the script parser has already produced words,
-`exec` often performs a **second-stage command-line construction step**; in that
+`[exec]` often performs a **second-stage command-line construction step**; in that
 stage, literal double-quote characters can be intentional data for Eagle's
 algorithm instead of just parser syntax.
 
@@ -37,7 +37,7 @@ algorithm instead of just parser syntax.
 
 ## 2. Native Tcl Baseline
 
-Native Tcl `exec` treats its arguments as a pipeline specification. The
+Native Tcl `[exec]` treats its arguments as a pipeline specification. The
 documented grammar includes `|`, `|&`, `<`, `<<`, `>`, `2>`, `2>@1`, and
 related redirection operators, and each distinct command in the pipeline becomes
 a subprocess. If the last argument is `&`, Tcl runs the pipeline in the
@@ -46,7 +46,7 @@ globbing or shell-like substitution on command arguments by default; arguments
 are passed as arguments, not reparsed by a shell unless you explicitly invoke
 one.
 
-On Windows, Tcl's `exec` also performs platform-specific quoting/escaping
+On Windows, Tcl's `[exec]` also performs platform-specific quoting/escaping
 transparently. Arguments are mapped to the called program's arguments, quotes
 are added where needed, and special characters are escaped. For shell built-ins
 like `dir` and `copy`, Tcl requires you to invoke `cmd.exe /c ...` explicitly,
@@ -58,7 +58,7 @@ redirection operators and the pipeline syntax.
 
 ## 3. Eagle's Command Syntax
 
-```
+```tcl
 exec ?options? arg ?arg ...? ?&?
 ```
 
@@ -284,7 +284,7 @@ arguments with spaces **after trimming leading and trailing whitespace from each
 one**, and skips values that become null or empty after trimming. This means the
 default Eagle path removes outer whitespace from each argument and drops
 empty/whitespace-only arguments entirely. This is a major semantic difference
-from native Tcl `exec`, where the already-parsed Tcl words are the logical argv
+from native Tcl `[exec]`, where the already-parsed Tcl words are the logical argv
 items for the command/pipeline.
 
 #### Priority Rules Among the Argument Options
@@ -412,7 +412,7 @@ quote), **middle** (each character), and **end** (before the closing quote) —
 the method calls `MaybeEscapeSubString()`. If `-escapesubstring` specifies a
 command, that command is evaluated with the following appended arguments:
 
-```
+```tcl
 <command> <argument_value> <start_index> <stop_index> <escape_mode>
 ```
 
@@ -563,7 +563,7 @@ exec ls -la | grep ".txt" | wc -l
 ```
 
 **Eagle:** Pipelines are **not supported**. The `|` and `|&` characters have
-no special meaning. Each `exec` call launches exactly one subprocess. To
+no special meaning. Each `[exec]` call launches exactly one subprocess. To
 achieve pipelines, use the shell:
 ```tcl
 exec -commandline cmd /c "ls -la | grep .txt | wc -l"
@@ -604,7 +604,7 @@ syntax.
 Eagle's `[exec]` has **45+ options** organized into categories (output control,
 capture control, variable storage, execution control, authentication, callbacks,
 logging, argument processing, debugging, event processing, and miscellaneous).
-Tcl `exec` is centered on pipeline execution; Eagle `exec` exposes the
+Tcl `[exec]` is centered on pipeline execution; Eagle `[exec]` exposes the
 underlying process-launch object model.
 
 ### 9.4 Command Line Building Model
@@ -613,7 +613,7 @@ underlying process-launch object model.
 `argv` array passed to `execvp()`. No quoting or escaping is needed because Unix
 process creation preserves argument boundaries natively.
 
-**Tcl** on Windows: Tcl's `exec` builds a Windows command line string from the
+**Tcl** on Windows: Tcl's `[exec]` builds a Windows command line string from the
 argument list, applying its own quoting rules to preserve argument boundaries
 through the `CommandLineToArgvW` parsing step. This is transparent to the user.
 
@@ -641,8 +641,8 @@ exec -commandline program "arg with spaces"
 ```
 
 This is the single most important behavioral fact for wrapper scripts. If you
-call Eagle `exec` in its default mode, the command-line text is not built from
-a raw argv array; it is built by a `concat`-like pass over the remaining words.
+call Eagle `[exec]` in its default mode, the command-line text is not built from
+a raw argv array; it is built by a `[concat]`-like pass over the remaining words.
 That is why literal quotes or placeholder text can be useful data in Eagle
 wrappers in ways that would look suspicious if you were reasoning from native
 Tcl alone.
@@ -663,7 +663,7 @@ internally and transparently on Windows.
 
 ### 9.6 Exit Code Handling
 
-**Tcl**: A non-zero exit code causes `exec` to return `TCL_ERROR`. The error
+**Tcl**: A non-zero exit code causes `[exec]` to return `TCL_ERROR`. The error
 code is set to `CHILDSTATUS pid exitcode`. There is no way to specify an
 alternative "success" exit code.
 
@@ -676,7 +676,7 @@ it's considered a success or failure.
 
 ### 9.7 stderr Handling
 
-**Tcl**: Any output on stderr causes `exec` to return an error (unless `2>`
+**Tcl**: Any output on stderr causes `[exec]` to return an error (unless `2>`
 or `2>@` redirects it).
 
 **Eagle**: stderr output does **not** automatically cause an error. The
@@ -696,7 +696,7 @@ variable. Eagle additionally supports:
 - `-timeout` to kill the process after a specified time.
 - `-killonerror` to kill the process if the interpreter encounters an error.
 - Background log paths (`-stdoutlogpath`, `-stderrlogpath`) that continue
-  logging on a thread-pool thread after the `exec` call returns.
+  logging on a thread-pool thread after the `[exec]` call returns.
 
 ### 9.9 Shell Model
 
@@ -744,13 +744,13 @@ Native Tcl starts from already-parsed words and maps them to subprocess
 arguments/pipeline words, preserving argument boundaries through the process
 creation mechanism.
 
-Eagle's default path performs a `concat`-style reconstruction that trims each
+Eagle's default path performs a `[concat]`-style reconstruction that trims each
 argument and drops empty/whitespace-only ones entirely. The default Eagle path
 is **not argv-preserving** in the same sense. Quote characters in Eagle can be
 deliberate **input to Eagle's command-line builder**, not just Tcl syntax. This
 is especially true when shaping the default `ListOps.Concat` result or
 intentionally feeding the `BuildCommandLine` logic. A review based only on
-native Tcl instincts would miss this, because native Tcl `exec` does not have
+native Tcl instincts would miss this, because native Tcl `[exec]` does not have
 Eagle's second-stage command-line construction model.
 
 ## 10. The `exec.eagle` Script Library
@@ -842,9 +842,9 @@ adopts Tcl's `CHILDSTATUS` error code convention.
 - `lib/Eagle1.0/exec.eagle` — Script-level execution utilities
 
 ### Eagle Documentation
-- [`core_language.md`](core_language.md#cmd-exec) — `exec` command syntax and options reference
+- [`core_language.md`](core_language.md#cmd-exec) — `[exec]` command syntax and options reference
 - [`core_script_library.md`](core_script_library.md#execution-utilities-execeagle) — `Eagle.Execute` package (`exec.eagle` procedures)
-- [`core_examples.md`](core_examples.md#ex-exec) — `exec` usage examples
+- [`core_examples.md`](core_examples.md#ex-exec) — `[exec]` usage examples
 
 ### Tcl Reference
 - [Tcl 8.5 exec manual](https://www.tcl-lang.org/man/tcl8.5/TclCmd/exec.htm)

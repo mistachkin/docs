@@ -1,10 +1,10 @@
-# Eagle `info` Command — Deep-Dive Analysis
+# Eagle `[info]` Command — Deep-Dive Analysis
 
 ## 1. Executive Summary
 
-The Eagle `info` command is the interpreter's primary introspection
-mechanism, providing **87 sub-commands** for querying every aspect of the
-runtime environment. Tcl's `info` offers roughly 25 sub-commands focused
+The Eagle `[info]` command is the interpreter's primary introspection
+mechanism, providing **86 sub-commands** for querying every aspect of the
+runtime environment. Tcl's `[info]` offers roughly 25 sub-commands focused
 on procedure, variable, and script introspection. Eagle extends this
 dramatically with .NET/CLR integration, Windows-specific queries, database
 connection tracking, plugin/module inspection, policy and security
@@ -14,35 +14,35 @@ Key differentiators from Tcl:
 
 | Area | Tcl | Eagle |
 |------|-----|-------|
-| Sub-commands | ~25 | 87 |
+| Sub-commands | ~25 | 86 |
 | .NET integration | None | assembly, framework, runtime, appdomain, objects, delegates, bindertypes |
 | Security introspection | None | policies, decision, administrator |
-| Plugin system | `info loaded` (basic) | plugin, pluginflags, loaded, modules |
+| Plugin system | `[info loaded]` (basic) | plugin, pluginflags, loaded, modules |
 | Database | None | connections, transactions |
 | Windows-specific | None | hwnd, windows, windowtext |
 | Culture/i18n | None | culture, cultures |
-| Engine metadata | `info patchlevel` | engine (9 attributes), setup, source |
-| Process info | `info pid` (only) | pid, ppid, previouspid, ptid, tid, processors |
+| Engine metadata | `[info patchlevel]` | engine (9 attributes), setup, source |
+| Process info | `[info pid]` (only) | pid, ppid, previouspid, ptid, tid, processors |
 | Command typing | None | cmdtype, cmdcount (with usage data), ensembles |
 | Procedure protection | None | Obfuscated procedure access blocked |
 
 ---
 
-## 2. Why the Eagle `info` Command Differs from Tcl
+## 2. Why the Eagle `[info]` Command Differs from Tcl
 
-Eagle's `info` command reflects the interpreter's deep .NET/CLR integration
+Eagle's `[info]` command reflects the interpreter's deep .NET/CLR integration
 and its role as an embeddable, security-aware scripting engine:
 
-- **Reflection infrastructure** — `info assembly`, `info engine`, and
-  `info identifier` use .NET reflection (`Assembly.FullName`,
+- **Reflection infrastructure** — `[info assembly]`, `[info engine]`, and
+  `[info identifier]` use .NET reflection (`Assembly.FullName`,
   `FileVersionInfo`, assembly attributes) to expose metadata
-- **Security model** — `info policies`, `info decision`, and safe
+- **Security model** — `[info policies]`, `[info decision]`, and safe
   interpreter sub-command filtering give scripts visibility into the
   interpreter's security posture
-- **Plugin architecture** — `info plugin`, `info pluginflags`, `info loaded`,
-  and `info modules` reflect Eagle's extensible plugin system
-- **Embeddable runtime** — `info active`, `info interps`, `info appdomain`,
-  and `info context` support multi-interpreter and multi-AppDomain scenarios
+- **Plugin architecture** — `[info plugin]`, `[info pluginflags]`, `[info loaded]`,
+  and `[info modules]` reflect Eagle's extensible plugin system
+- **Embeddable runtime** — `[info active]`, `[info interps]`, `[info appdomain]`,
+  and `[info context]` support multi-interpreter and multi-AppDomain scenarios
 - **Platform awareness** — conditional compilation (`#if NATIVE`,
   `#if WINDOWS`, `#if DATA`, `#if SHELL`) enables platform-specific
   sub-commands without runtime overhead on other platforms
@@ -61,7 +61,7 @@ and its role as an embeddable, security-aware scripting engine:
 
 ### Architecture note
 
-The `info` command is implemented as a single large switch statement
+The `[info]` command is implemented as a single large switch statement
 dispatching on sub-command name (`Info.cs` lines 152–4564). The
 developers acknowledge this design limitation in a TODO comment (lines
 70–72), noting that a dictionary-of-delegates approach would be
@@ -72,7 +72,7 @@ compile-time conditionals (`#if` guards) per sub-command.
 
 ## 3. Sub-Command Reference
 
-Eagle's 87 `info` sub-commands are organized below by functional category.
+Eagle's 86 `[info]` sub-commands are organized below by functional category.
 Sub-commands marked **(Eagle)** have no Tcl equivalent. Sub-commands
 marked **(Enhanced)** extend Tcl's version with additional options or
 behavior.
@@ -212,8 +212,8 @@ Returns all variables in the current scope matching `pattern`.
 | `-interpreter` | (Unsafe) Query a different interpreter's variables |
 
 Eagle supports an `InterpreterFlags.InfoVarsMayHaveGlobal` flag that
-causes `info vars` to include global variables merged with locals,
-matching Tcl's behavior where `info vars` at the global level returns
+causes `[info vars]` to include global variables merged with locals,
+matching Tcl's behavior where `[info vars]` at the global level returns
 globals.
 
 ```tcl
@@ -244,7 +244,7 @@ info undefined   ;# Variables referenced but not set
 #### `info varlinks ?pattern?` **(Eagle)**
 
 Returns a list of linked variables (variable aliases created with
-`upvar` or similar mechanisms) matching `pattern`.
+`[upvar]` or similar mechanisms) matching `pattern`.
 
 ```tcl
 info varlinks   ;# All variable links
@@ -253,7 +253,7 @@ info varlinks   ;# All variable links
 #### `info linkedname varName` **(Eagle)**
 
 Returns the qualified name of the link target for the variable
-`varName` (i.e., for variables created via `upvar` or similar
+`varName` (i.e., for variables created via `[upvar]` or similar
 linking mechanisms), conforming to TIP #471.
 
 ```tcl
@@ -305,7 +305,7 @@ info commands -nocommands -library  ;# Only library procedures
 
 #### `info cmdtype commandName` **(Eagle)**
 
-Returns the type of `commandName` as one of: `proc`, `alias`, `object`,
+Returns the type of `commandName` as one of: `[proc]`, `alias`, `[object]`,
 `ensemble`, or `native`.
 
 The implementation inspects the `IExecute` interface hierarchy:
@@ -449,7 +449,7 @@ info operands +     ;# Operand info for + operator
 
 ### 3.5 Call Stack Introspection
 
-#### `info level`
+#### `[info level]`
 
 Returns the current call level (depth of procedure nesting).
 
@@ -459,7 +459,7 @@ proc outer {} { inner }
 outer   ;# 2 (two levels of procedure nesting)
 ```
 
-#### `info levelid` **(Eagle)**
+#### `[info levelid]` **(Eagle)**
 
 Returns the call frame ID for the current level, providing a unique
 identifier for the execution frame.
@@ -468,7 +468,7 @@ identifier for the execution frame.
 info levelid   ;# Unique frame identifier
 ```
 
-#### `info frame`
+#### `[info frame]`
 
 **Not implemented.** This sub-command exists as a compatibility stub for
 Tcl TIP #280 style stack frame introspection. Returns an error indicating
@@ -486,7 +486,7 @@ info script                ;# /path/to/current/script.eagle
 info script newscript.eagle ;# Set script name
 ```
 
-#### `info cmdline` **(Eagle)**
+#### `[info cmdline]` **(Eagle)**
 
 Returns the full command-line of the current process.
 
@@ -496,7 +496,7 @@ Implementation: `Environment.CommandLine`
 info cmdline   ;# "eagle.exe -script test.eagle arg1 arg2"
 ```
 
-#### `info argv` **(Eagle, conditional: SHELL)**
+#### `[info argv]` **(Eagle, conditional: SHELL)**
 
 Returns the saved shell arguments.
 
@@ -504,7 +504,7 @@ Returns the saved shell arguments.
 info argv   ;# {arg1 arg2 arg3}
 ```
 
-#### `info interactive` **(Eagle)**
+#### `[info interactive]` **(Eagle)**
 
 Returns `1` if the interpreter is in interactive mode, `0` otherwise.
 
@@ -522,7 +522,7 @@ info library        ;# /path/to/eagle/library
 info library true   ;# Refresh and return library path
 ```
 
-#### `info context` **(Eagle)**
+#### `[info context]` **(Eagle)**
 
 Returns the current interpreter context information.
 
@@ -530,7 +530,7 @@ Returns the current interpreter context information.
 info context   ;# Context details
 ```
 
-#### `info lastinput` **(Eagle, conditional: NATIVE && WINDOWS)**
+#### `[info lastinput]` **(Eagle, conditional: NATIVE && WINDOWS)**
 
 Returns the Windows idle time tick count via
 `WindowOps.GetLastInputTickCount()`. Takes no arguments.
@@ -563,7 +563,7 @@ Returns the machine hostname.
 info hostname   ;# "WORKSTATION01"
 ```
 
-#### `info user` **(Eagle)**
+#### `[info user]` **(Eagle)**
 
 Returns the current user name.
 
@@ -573,7 +573,7 @@ Implementation: `PlatformOps.GetUserName(true)`
 info user   ;# "jsmith"
 ```
 
-#### `info administrator` **(Eagle, conditional: NATIVE)**
+#### `[info administrator]` **(Eagle, conditional: NATIVE)**
 
 Returns `1` if the current process is running with administrator/root
 privileges. Windows-only via native API check.
@@ -582,7 +582,7 @@ privileges. Windows-only via native API check.
 info administrator   ;# 0 or 1
 ```
 
-#### `info pid`
+#### `[info pid]`
 
 Returns the current process ID.
 
@@ -592,7 +592,7 @@ Implementation: `ProcessOps.GetId()`
 info pid   ;# 12345
 ```
 
-#### `info ppid` **(Eagle, conditional: NATIVE)**
+#### `[info ppid]` **(Eagle, conditional: NATIVE)**
 
 Returns the parent process ID.
 
@@ -620,7 +620,7 @@ info previouspid       ;# PID of "echo" process
 info previouspid true  ;# Reset tracking
 ```
 
-#### `info processors` **(Eagle)**
+#### `[info processors]` **(Eagle)**
 
 Returns the number of logical processors.
 
@@ -649,7 +649,7 @@ info tid true    ;# Native thread ID
 info tid false   ;# Managed thread ID
 ```
 
-#### `info ptid` **(Eagle)**
+#### `[info ptid]` **(Eagle)**
 
 Returns a combined process/thread ID pair.
 
@@ -657,7 +657,7 @@ Returns a combined process/thread ID pair.
 info ptid   ;# "12345.67890"
 ```
 
-#### `info base` **(Eagle)**
+#### `[info base]` **(Eagle)**
 
 Returns the base path of the Eagle installation.
 
@@ -677,7 +677,7 @@ non-default AppDomains, returns the entry assembly path instead of
 info binary   ;# /usr/local/bin/eagle.exe
 ```
 
-#### `info nameofexecutable`
+#### `[info nameofexecutable]`
 
 Returns the name of the main executable.
 
@@ -687,7 +687,7 @@ Implementation: `PathOps.GetUnixPath(PathOps.GetExecutableName())`
 info nameofexecutable   ;# /usr/local/bin/eagle.exe
 ```
 
-#### `info programextension` **(Eagle)**
+#### `[info programextension]` **(Eagle)**
 
 Returns the file extension of the executable.
 
@@ -695,7 +695,7 @@ Returns the file extension of the executable.
 info programextension   ;# .exe
 ```
 
-#### `info sharedlibextension`
+#### `[info sharedlibextension]`
 
 Returns the platform-appropriate shared library extension.
 
@@ -707,7 +707,7 @@ info sharedlibextension   ;# .dll (Windows), .so (Linux), .dylib (macOS)
 
 Returns the shell library path information.
 
-#### `info newline` **(Eagle)**
+#### `[info newline]` **(Eagle)**
 
 Returns the platform newline character(s).
 
@@ -717,7 +717,7 @@ Implementation: `Environment.NewLine`
 info newline   ;# \r\n (Windows) or \n (Unix)
 ```
 
-#### `info whitespace` **(Eagle)**
+#### `[info whitespace]` **(Eagle)**
 
 Returns a string containing all recognized whitespace characters.
 
@@ -727,7 +727,7 @@ Implementation: `Characters.WhiteSpaceChars`
 info whitespace   ;# All whitespace characters
 ```
 
-#### `info path`
+#### `[info path]`
 
 Returns the library search path.
 
@@ -737,7 +737,7 @@ Implementation: `GlobalState.GetLibraryPath()`
 info path   ;# /usr/local/lib/Eagle/lib
 ```
 
-#### `info externals` **(Eagle)**
+#### `[info externals]` **(Eagle)**
 
 Returns the externals path (location of external dependencies).
 
@@ -790,7 +790,7 @@ checks across multiple runtime environments.
 info runtimeversion   ;# Detailed runtime version string
 ```
 
-#### `info appdomain` **(Eagle)**
+#### `[info appdomain]` **(Eagle)**
 
 Returns the current AppDomain ID.
 
@@ -869,7 +869,7 @@ compatibility level.
 info tclversion   ;# "8.4"
 ```
 
-#### `info setup` **(Eagle, conditional: !NET_STANDARD_20)**
+#### `[info setup]` **(Eagle, conditional: !NET_STANDARD_20)**
 
 Returns setup/installation configuration information.
 
@@ -893,7 +893,7 @@ Implementation: `interpreter.ObjectsToString(pattern, false)`
 
 #### `info delegates ?pattern?` **(Eagle, conditional: EMIT && NATIVE && LIBRARY)**
 
-Returns a list of dynamically created delegates (from `library declare`
+Returns a list of dynamically created delegates (from `[library declare]`
 or Reflection.Emit operations).
 
 ```tcl
@@ -980,7 +980,7 @@ info interps * true   ;# All interpreters including hidden
 #### `info loaded ?options? ?interp? ?pattern?` **(Enhanced)**
 
 Returns a list of loaded packages/plugins. Supports a `-nocore` option
-to exclude core packages. With `interp`, queries a specific interpreter.
+to exclude core packages. With `[interp]`, queries a specific interpreter.
 With `pattern`, filters the results by pattern.
 
 ```tcl
@@ -1131,7 +1131,7 @@ info windowtext 0x001A02B4   ;# "Eagle Interactive Shell"
 
 ## 4. Safe Interpreter Sub-Command Filtering
 
-The `info` command uses `PolicyOps.AllowedInfoSubCommandNames` to
+The `[info]` command uses `PolicyOps.AllowedInfoSubCommandNames` to
 restrict which sub-commands are available in safe interpreters. The
 command is marked with `CommandFlags.Unsafe | CommandFlags.Standard`,
 and implements `IPolicyEnsemble` for fine-grained sub-command control.
@@ -1142,7 +1142,7 @@ The following sub-commands are permitted in safe interpreters:
 
 `appdomain`, `args`, `body`, `commands`, `complete`, `context`,
 `default`, `engine`, `ensembles`, `exists`, `functions`, `globals`,
-`level`, `library`, `locals`, `nprocs`, `objects`, `operands`,
+`level`, `[library]`, `locals`, `nprocs`, `objects`, `operands`,
 `operators`, `patchlevel`, `procs`, `script`, `subcommands`,
 `tclversion`, `vars`
 
@@ -1150,7 +1150,7 @@ The following sub-commands are permitted in safe interpreters:
 
 All other sub-commands are blocked, including:
 
-- **System information**: `os`, `hostname`, `user`, `pid`, `ppid`,
+- **System information**: `os`, `hostname`, `user`, `[pid]`, `ppid`,
   `processors`, `tid`, `binary`, `path`, `cmdline`, `administrator`
 - **Security/policy**: `policies`, `decision`
 - **.NET details**: `assembly`, `framework`, `runtime`, `appdomain` (allowed
@@ -1173,13 +1173,13 @@ determine visibility of hidden items, not the target interpreter's.
 This prevents a safe interpreter from using `-interpreter` to inspect
 a parent interpreter's hidden commands:
 
-```
+```tcl
 listHidden = hidden && !interpreter.InternalIsSafe()
 ```
 
 ### Processor count masking
 
-`info processors` always returns `1` in safe interpreters to prevent
+`[info processors]` always returns `1` in safe interpreters to prevent
 system fingerprinting.
 
 ---
@@ -1187,14 +1187,14 @@ system fingerprinting.
 ## 5. Obfuscated Procedure Protection
 
 Eagle supports procedure obfuscation via `ProcedureFlags.Obfuscated`.
-When this flag is set, the `info` command blocks access to sensitive
+When this flag is set, the `[info]` command blocks access to sensitive
 procedure internals:
 
 | Sub-command | Blocked behavior |
 |-------------|-----------------|
-| `info args` | Returns error: "procedure {name} arguments are unavailable" |
-| `info body` | Returns error: "procedure {name} body is unavailable" |
-| `info default` | Returns error (cannot inspect argument defaults) |
+| `[info args]` | Returns error: "procedure {name} arguments are unavailable" |
+| `[info body]` | Returns error: "procedure {name} body is unavailable" |
+| `[info default]` | Returns error (cannot inspect argument defaults) |
 
 This mechanism protects intellectual property in distributed Eagle
 scripts, preventing introspection of procedures that have been
@@ -1204,12 +1204,12 @@ explicitly marked as obfuscated.
 
 ## 6. .NET Reflection Integration
 
-The `info` command uses .NET reflection extensively for engine and
+The `[info]` command uses .NET reflection extensively for engine and
 assembly introspection:
 
 ### Assembly metadata
 
-`info assembly` accesses:
+`[info assembly]` accesses:
 - `Assembly.FullName` — fully qualified assembly name
 - `Assembly.Location` — filesystem path to the assembly
 
@@ -1219,7 +1219,7 @@ Entry assembly vs. Eagle assembly selection:
 
 ### Engine attributes
 
-`info engine` uses multiple reflection APIs:
+`[info engine]` uses multiple reflection APIs:
 - `AttributeOps.GetAssemblyConfiguration()` — Debug/Release
 - `SharedAttributeOps.GetAssemblyRelease()` — release string
 - `SharedAttributeOps.GetAssemblySourceId()` — source control ID
@@ -1228,14 +1228,14 @@ Entry assembly vs. Eagle assembly selection:
 
 ### Identifier resolution
 
-`info identifier` queries interfaces:
+`[info identifier]` queries interfaces:
 - `IIdentifier` — base metadata (name, group, description)
 - `ISyntax` — syntax information
 - `IPlugin` — plugin association and metadata
 
 ### Command type inspection
 
-`info cmdtype` inspects the interface hierarchy:
+`[info cmdtype]` inspects the interface hierarchy:
 - `IExecute` — base execution interface
 - `IAlias` → `IWrapper` — alias with target unwrapping
 - `ICommand` → `PolicyOps.GetSubCommandsUnsafe()` — ensemble detection
@@ -1246,13 +1246,13 @@ Entry assembly vs. Eagle assembly selection:
 
 ### Synchronized access
 
-Several `info` sub-commands require thread-safe access to interpreter
+Several `[info]` sub-commands require thread-safe access to interpreter
 state:
 
-- `info exists` with `valueVarName` — `lock (interpreter.InternalSyncRoot)`
-- `info bindertypes` — locked access to script binder
-- `info previouspid` — locked access to process tracking
-- `info vars` — frame-level locking marked with `TRANSACTIONAL` comment
+- `[info exists]` with `valueVarName` — `lock (interpreter.InternalSyncRoot)`
+- `[info bindertypes]` — locked access to script binder
+- `[info previouspid]` — locked access to process tracking
+- `[info vars]` — frame-level locking marked with `TRANSACTIONAL` comment
 
 ### Platform variable caching
 
@@ -1275,7 +1275,7 @@ and cannot trigger system queries.
 
 ## 8. Conditional Compilation
 
-The `info` command uses preprocessor symbols to include platform-specific
+The `[info]` command uses preprocessor symbols to include platform-specific
 sub-commands only when the build supports them:
 
 | Symbol | Sub-commands enabled |
@@ -1415,7 +1415,7 @@ puts "PTID:    [info ptid]"
 
 ## 10. Comparison with Tcl
 
-| Feature | Tcl `info` | Eagle `info` |
+| Feature | Tcl `[info]` | Eagle `[info]` |
 |---------|-----------|-------------|
 | Procedure introspection | args, body, default, procs | Same + nprocs, source, obfuscation protection |
 | Variable introspection | exists, globals, locals, vars | Same + sysvars, undefined, varlinks, check-and-read exists |
@@ -1442,14 +1442,14 @@ puts "PTID:    [info ptid]"
 
 ### Information disclosure
 
-Many `info` sub-commands reveal system details that could aid an
+Many `[info]` sub-commands reveal system details that could aid an
 attacker:
 
-- `info os`, `info hostname`, `info user` — system identification
-- `info pid`, `info ppid`, `info processors` — process fingerprinting
-- `info binary`, `info path`, `info base` — installation paths
-- `info assembly`, `info framework` — runtime version fingerprinting
-- `info windows`, `info hwnd` — window enumeration
+- `[info os]`, `[info hostname]`, `[info user]` — system identification
+- `[info pid]`, `[info ppid]`, `[info processors]` — process fingerprinting
+- `[info binary]`, `[info path]`, `[info base]` — installation paths
+- `[info assembly]`, `[info framework]` — runtime version fingerprinting
+- `[info windows]`, `[info hwnd]` — window enumeration
 
 All of these are blocked in safe interpreters via
 `PolicyOps.AllowedInfoSubCommandNames`.
@@ -1457,15 +1457,15 @@ All of these are blocked in safe interpreters via
 ### Obfuscation boundary
 
 `ProcedureFlags.Obfuscated` provides a code protection boundary, but
-it is enforced only at the `info` command level. Other introspection
+it is enforced only at the `[info]` command level. Other introspection
 mechanisms (direct interpreter API access from .NET code) may bypass
 this protection. The obfuscation flag should be considered a
 script-level access control, not a cryptographic protection.
 
 ### Cross-interpreter queries
 
-The `-interpreter` option on `info commands`, `info functions`,
-`info operators`, and `info vars` allows querying other interpreters.
+The `-interpreter` option on `[info commands]`, `[info functions]`,
+`[info operators]`, and `[info vars]` allows querying other interpreters.
 This option is marked `Unsafe` and is blocked in safe interpreters.
 Security checks use the calling interpreter's safe status, preventing
 privilege escalation.
@@ -1488,7 +1488,7 @@ information-revealing system queries.
   introspection methods
 - **Procedure data**: `eagle/Eagle/Library/Components/Public/ProcedureData.cs`
 - **Command data**: `eagle/Eagle/Library/Components/Public/CommandData.cs`
-- **Core language reference**: `core_language.md` § Introspection → `info`
+- **Core language reference**: `core_language.md` § Introspection → `[info]`
   command
 - **Examples**: `core_examples.md` § info
-- **Tcl reference**: [Tcl `info` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/info.htm)
+- **Tcl reference**: [Tcl `[info]` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/info.htm)

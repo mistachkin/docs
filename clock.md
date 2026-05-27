@@ -1,19 +1,19 @@
 # Eagle `[clock]` Command: Deep-Dive Analysis of Time Operations, Format Translation, and Performance Timing
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `clock` command internals, including the 15 sub-commands, the Tcl-to-.NET format string translation layer (static mappings and dynamic delegates), custom epoch support, the `ClockData` / `IClockData` interface, high-resolution performance counters, ISO 8601 formatting modes, fake time injection for testing, and the `TimeOps` / `FormatOps` infrastructure. For basic command syntax, see [`core_language.md`](core_language.md#cmd-clock). For usage examples, see [`core_examples.md`](core_examples.md#ex-clock).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `[clock]` command internals, including the 15 sub-commands, the Tcl-to-.NET format string translation layer (static mappings and dynamic delegates), custom epoch support, the `ClockData` / `IClockData` interface, high-resolution performance counters, ISO 8601 formatting modes, fake time injection for testing, and the `TimeOps` / `FormatOps` infrastructure. For basic command syntax, see [`core_language.md`](core_language.md#cmd-clock). For usage examples, see [`core_examples.md`](core_examples.md#ex-clock).
 
 ## 1. Executive Summary
 
 Eagle's `[clock]` command provides **Tcl-compatible date/time operations**
 powered by .NET's `System.DateTime`, `System.TimeZone`, and
 `System.Globalization.CultureInfo` infrastructure. It supports the
-standard Tcl sub-commands (`format`, `scan`, `seconds`, `clicks`) while
+standard Tcl sub-commands (`[format]`, `scan`, `seconds`, `clicks`) while
 adding substantial Eagle-specific extensions for high-resolution timing,
 duration calculation, build numbering, and flexible epoch management.
 
 There are three key areas of complexity:
 
-1. **Tcl-to-.NET format string translation** — The `format` and `scan`
+1. **Tcl-to-.NET format string translation** — The `[format]` and `scan`
    sub-commands must translate Tcl's `%`-style format specifiers (e.g.,
    `%Y`, `%m`, `%d`) to .NET's `DateTime` format patterns (e.g.,
    `yyyy`, `MM`, `dd`). This is handled by a dual-layer system in
@@ -92,9 +92,9 @@ Eagle adds 9 sub-commands beyond Tcl's standard set:
 
 ### Time querying
 
-#### `clock seconds`
+#### `[clock seconds]`
 
-```
+```tcl
 clock seconds ?epoch?
 ```
 
@@ -104,25 +104,25 @@ optional `epoch` parameter overrides the default Unix epoch.
 Internally calls `TimeOps.DateTimeToSeconds()` with `TimeOps.GetUtcNow()`
 and the specified epoch.
 
-#### `clock milliseconds`
+#### `[clock milliseconds]`
 
-```
+```tcl
 clock milliseconds ?epoch?
 ```
 
 Returns milliseconds since the epoch. Same epoch semantics as `seconds`.
 
-#### `clock microseconds`
+#### `[clock microseconds]`
 
-```
+```tcl
 clock microseconds ?epoch?
 ```
 
 Returns microseconds since the epoch. Same epoch semantics as `seconds`.
 
-#### `clock now`
+#### `[clock now]`
 
-```
+```tcl
 clock now ?-gmt boolean?
 ```
 
@@ -133,9 +133,9 @@ otherwise returns local ticks.
 This is an Eagle extension — Tcl has no equivalent. It provides the
 highest-resolution time representation available from the .NET runtime.
 
-#### `clock clicks`
+#### `[clock clicks]`
 
-```
+```tcl
 clock clicks ?-milliseconds? ?-microseconds?
 ```
 
@@ -148,14 +148,14 @@ Returns a high-resolution counter value from `PerformanceOps`:
 | `-microseconds` | `PerformanceOps.GetMicroseconds()` | Microseconds |
 
 The default (no option) returns the raw performance counter value, which
-is not directly comparable across machines. Use `clock start` / `clock
+is not directly comparable across machines. Use `[clock start]` / `clock
 stop` for portable elapsed-time measurement.
 
 ### Formatting
 
-#### `clock format`
+#### `[clock format]`
 
-```
+```tcl
 clock format clockValue ?options?
 ```
 
@@ -189,9 +189,9 @@ human-readable string.
 
 ### Parsing
 
-#### `clock scan`
+#### `[clock scan]`
 
-```
+```tcl
 clock scan dateString ?options?
 ```
 
@@ -218,9 +218,9 @@ Parses a date/time string and returns seconds since the epoch.
 
 ### Validation and calendar
 
-#### `clock isvalid`
+#### `[clock isvalid]`
 
-```
+```tcl
 clock isvalid dateString
 ```
 
@@ -228,9 +228,9 @@ Returns `1` if `dateString` can be parsed as a valid `DateTime`, `0`
 otherwise. No options — it uses the interpreter's default culture and
 parsing styles.
 
-#### `clock monthdays`
+#### `[clock monthdays]`
 
-```
+```tcl
 clock monthdays ?month?
 ```
 
@@ -238,9 +238,9 @@ Returns the number of days in the specified month (1–12). If no month
 is given, returns days in the current month. Leap year handling is
 automatic via `TimeOps.GetDaysInMonth()`.
 
-#### `clock days`
+#### `[clock days]`
 
-```
+```tcl
 clock days ?options? ?dateString?
 ```
 
@@ -254,9 +254,9 @@ Returns the number of days elapsed since an epoch.
 
 ### Duration
 
-#### `clock duration`
+#### `[clock duration]`
 
-```
+```tcl
 clock duration ?options? startDateString endDateString
 ```
 
@@ -272,9 +272,9 @@ Without it, returns a .NET `TimeSpan` representation.
 
 ### Build numbering
 
-#### `clock buildnumber`
+#### `[clock buildnumber]`
 
-```
+```tcl
 clock buildnumber ?options? ?dateString?
 ```
 
@@ -294,9 +294,9 @@ version numbers compatible with MSBuild's auto-versioning scheme.
 
 ### Windows file time
 
-#### `clock filetime`
+#### `[clock filetime]`
 
-```
+```tcl
 clock filetime fileTimeValue ?options?
 ```
 
@@ -311,27 +311,27 @@ intervals since 1601-01-01) to a formatted date string.
 
 ### Performance timing
 
-#### `clock start`
+#### `[clock start]`
 
-```
+```tcl
 clock start
 ```
 
 Returns the current high-resolution performance counter value via
 `PerformanceOps.GetCount()`. This value is only meaningful when passed
-to `clock stop`.
+to `[clock stop]`.
 
-#### `clock stop`
+#### `[clock stop]`
 
-```
+```tcl
 clock stop startCount
 ```
 
-Takes the `startCount` from a previous `clock start` and returns the
+Takes the `startCount` from a previous `[clock start]` and returns the
 elapsed time in **microseconds** via
 `PerformanceOps.GetMicrosecondsFromCount()`.
 
-**Security note**: The `clock stop` sub-command is explicitly exempted
+**Security note**: The `[clock stop]` sub-command is explicitly exempted
 from timing side-channel mitigation. This exemption is necessary to
 provide accurate performance measurements — the mitigation would
 introduce artificial jitter that defeats the purpose of precise timing.
@@ -408,7 +408,7 @@ Each delegate receives the `DateTime`, `TimeZone`, `CultureInfo`, and
 
 ### Translation flow
 
-```
+```tcl
 clock format $seconds -format "%Y-%m-%d %H:%M:%S %Z (day %j)"
 |
 +-- FormatOps.TclClockDateTime(culture, timezone, format, dateTime, epoch)
@@ -563,7 +563,7 @@ proper pluralization.
 
 ## 8. Performance Counters (`PerformanceOps`)
 
-The `clock start` / `clock stop` pair uses `PerformanceOps` for
+The `[clock start]` / `[clock stop]` pair uses `PerformanceOps` for
 high-resolution timing:
 
 | Method | Resolution | Source |
@@ -575,10 +575,10 @@ high-resolution timing:
 
 ### Timing side-channel exemption
 
-The `clock stop` sub-command explicitly bypasses timing side-channel
+The `[clock stop]` sub-command explicitly bypasses timing side-channel
 mitigation. This is marked in the source code because Eagle normally
 adds small random delays to timing operations to prevent side-channel
-attacks. For `clock stop`, this would defeat the purpose of precise
+attacks. For `[clock stop]`, this would defeat the purpose of precise
 measurement, so the exemption is applied.
 
 ## 9. Interpreter Configuration
@@ -597,10 +597,10 @@ modifying global state.
 
 ## 10. Safe Interpreter Restrictions
 
-In safe interpreters, the following `clock` sub-commands are allowed
+In safe interpreters, the following `[clock]` sub-commands are allowed
 (via `PolicyOps.AllowedClockSubCommandNames`):
 
-- `buildnumber`, `days`, `duration`, `filetime`, `format`, `isvalid`,
+- `buildnumber`, `days`, `duration`, `filetime`, `[format]`, `isvalid`,
   `monthdays`, `scan`, `seconds`
 
 The following are restricted (not in the allowed list):
@@ -742,22 +742,22 @@ set buildInfo [clock buildnumber]
 
 | Feature | Tcl | Eagle |
 |---------|-----|-------|
-| `clock seconds` | Unix epoch only | Configurable epoch via `-epoch` |
-| `clock milliseconds` | Returns milliseconds | Configurable epoch |
-| `clock microseconds` | Returns microseconds | Configurable epoch |
-| `clock clicks` | Single resolution | Three modes: default, `-milliseconds`, `-microseconds` |
-| `clock format` | Tcl format engine | .NET `DateTime.ToString()` with translation layer |
-| `clock scan` | Tcl parser with natural language | .NET `DateTime.Parse()` with format translation |
-| `clock now` | Not available | Returns .NET `DateTime.Ticks` |
-| `clock start` / `stop` | Not available | High-resolution performance counters |
-| `clock buildnumber` | Not available | .NET-style build number generation |
-| `clock days` | Not available | Elapsed days since epoch |
-| `clock duration` | Not available | Human-readable duration calculation |
-| `clock filetime` | Not available | Windows FILETIME conversion |
-| `clock isvalid` | Not available | Date string validation |
-| `clock monthdays` | Not available | Calendar day-in-month query |
+| `[clock seconds]` | Unix epoch only | Configurable epoch via `-epoch` |
+| `[clock milliseconds]` | Returns milliseconds | Configurable epoch |
+| `[clock microseconds]` | Returns microseconds | Configurable epoch |
+| `[clock clicks]` | Single resolution | Three modes: default, `-milliseconds`, `-microseconds` |
+| `[clock format]` | Tcl format engine | .NET `DateTime.ToString()` with translation layer |
+| `[clock scan]` | Tcl parser with natural language | .NET `DateTime.Parse()` with format translation |
+| `[clock now]` | Not available | Returns .NET `DateTime.Ticks` |
+| `[clock start]` / `stop` | Not available | High-resolution performance counters |
+| `[clock buildnumber]` | Not available | .NET-style build number generation |
+| `[clock days]` | Not available | Elapsed days since epoch |
+| `[clock duration]` | Not available | Human-readable duration calculation |
+| `[clock filetime]` | Not available | Windows FILETIME conversion |
+| `[clock isvalid]` | Not available | Date string validation |
+| `[clock monthdays]` | Not available | Calendar day-in-month query |
 | `-epoch` option | Not available | Custom epoch on most sub-commands |
-| `-ticks` option | Not available | .NET tick interpretation in `format` |
+| `-ticks` option | Not available | .NET tick interpretation in `[format]` |
 | `-iso` / `-full` | Not available | ISO 8601 formatting modes |
 | `-kind` option | Not available | `DateTimeKind` control |
 | `%Q` (stardate) | Available | Available (Tcl-compatible algorithm) |
@@ -778,9 +778,9 @@ set buildInfo [clock buildnumber]
   sub-commands are blocked in safe interpreters to prevent timing
   side-channel attacks.
 
-- **Timing side-channel mitigation exemption** — `clock stop` bypasses
+- **Timing side-channel mitigation exemption** — `[clock stop]` bypasses
   the normal timing mitigation to provide accurate measurements. Code
-  that uses `clock stop` should be aware that the precise timing values
+  that uses `[clock stop]` should be aware that the precise timing values
   could potentially be used for side-channel analysis.
 
 - **Fake time in testing** — The `SetFakeNow()` / `SetFakeUtcNow()`
@@ -792,10 +792,10 @@ set buildInfo [clock buildnumber]
 
 | Related command | Relationship |
 |----------------|-------------|
-| `time` | Benchmarking: executes a script N times and returns average microseconds per iteration |
-| `after` | Event scheduling: uses millisecond delays, not clock values |
-| `info` | `info runtime` returns interpreter runtime duration |
-| `uri time` | Queries a remote network time server; see [`uri.md`](uri.md) |
+| `[time]` | Benchmarking: executes a script N times and returns average microseconds per iteration |
+| `[after]` | Event scheduling: uses millisecond delays, not clock values |
+| `[info]` | `[info runtime]` returns interpreter runtime duration |
+| `[uri time]` | Queries a remote network time server; see [`uri.md`](uri.md) |
 
 ## 15. References
 
@@ -805,8 +805,8 @@ set buildInfo [clock buildnumber]
 - **Source code**: `Eagle/Library/Components/Private/PerformanceOps.cs` — high-resolution performance counters
 - **Source code**: `Eagle/Library/Components/Public/ClockData.cs` — `IClockData` implementation
 - **Source code**: `Eagle/Library/Components/Public/Value.cs` — `GetDateTime2` parsing with format translation
-- **Command reference**: [`core_language.md`](core_language.md#cmd-clock) — `clock` syntax and options
-- **Examples**: [`core_examples.md`](core_examples.md#ex-clock) — `clock` examples
-- **Tcl reference**: [Tcl `clock` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/clock.htm)
+- **Command reference**: [`core_language.md`](core_language.md#cmd-clock) — `[clock]` syntax and options
+- **Examples**: [`core_examples.md`](core_examples.md#ex-clock) — `[clock]` examples
+- **Tcl reference**: [Tcl `[clock]` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/clock.htm)
 - **.NET reference**: [DateTime Structure](https://docs.microsoft.com/en-us/dotnet/api/system.datetime)
 - **.NET reference**: [Custom Date and Time Format Strings](https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings)

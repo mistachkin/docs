@@ -71,33 +71,33 @@ interp eval myChild {
 The following command categories are fully available in safe
 interpreters:
 
-**Control flow**: `if`, `else`, `elseif`, `for`, `foreach`, `while`,
-`switch`, `break`, `continue`, `return`, `catch`, `try`, `throw`,
-`error`
+**Control flow**: `[if]`, `else`, `elseif`, `[for]`, `[foreach]`, `[while]`,
+`[switch]`, `[break]`, `[continue]`, `[return]`, `[catch]`, `[try]`, `[throw]`,
+`[error]`
 
-**Variables**: `set`, `unset`, `append`, `lappend`, `incr`, `array`,
-`global`, `variable`, `upvar`, `uplevel`
+**Variables**: `[set]`, `[unset]`, `[append]`, `[lappend]`, `[incr]`, `[array]`,
+`[global]`, `[variable]`, `[upvar]`, `[uplevel]`
 
-**Strings**: `string` (all sub-commands), `format`, `scan`, `regexp`,
-`regsub`, `split`, `join`, `concat`, `subst`, `base64`
+**Strings**: `[string]` (all sub-commands), `[format]`, `scan`, `[regexp]`,
+`[regsub]`, `[split]`, `[join]`, `[concat]`, `[subst]`, `[base64]`
 
-**Lists**: `list`, `lindex`, `llength`, `lrange`, `lreplace`,
-`linsert`, `lsearch`, `lsort`, `lset`, `lmap`, `lassign`, `lget`,
-`lremove`, `lreverse`
+**Lists**: `[list]`, `[lindex]`, `[llength]`, `[lrange]`, `[lreplace]`,
+`[linsert]`, `[lsearch]`, `[lsort]`, `[lset]`, `[lmap]`, `[lassign]`, `[lget]`,
+`[lremove]`, `[lreverse]`
 
-**Math**: `expr` (all operators and functions), `incr`
+**Math**: `[expr]` (all operators and functions), `[incr]`
 
-**Procedures**: `proc`, `nproc`, `apply`, `rename`
+**Procedures**: `[proc]`, `[nproc]`, `[apply]`, `[rename]`
 
-**I/O** (on shared channels only): `puts`, `gets`, `read`, `close`,
-`fconfigure`, `fcopy`, `eof`, `fblocked`, `flush`
+**I/O** (on shared channels only): `[puts]`, `[gets]`, `[read]`, `[close]`,
+`[fconfigure]`, `[fcopy]`, `[eof]`, `[fblocked]`, `[flush]`
 
-**Evaluation**: `eval`, `uplevel`, `subst`
+**Evaluation**: `[eval]`, `[uplevel]`, `[subst]`
 
-**Dictionaries**: `dict` (all sub-commands)
+**Dictionaries**: `[dict]` (all sub-commands)
 
-**Other**: `after` (limited events), `vwait`, `update`, `namespace`,
-`scope`, `hash`, `parse`, `encoding`
+**Other**: `[after]` (limited events), `[vwait]`, `[update]`, `[namespace]`,
+`[scope]`, `[hash]`, `[parse]`, `[encoding]`
 
 </details>
 
@@ -109,24 +109,24 @@ These commands are hidden when a safe interpreter is created with
 script. The parent interpreter can selectively re-expose them via
 policies.
 
-**Filesystem**: `file` (most sub-commands), `cd`, `pwd`, `glob`,
-`source`, `open`
+**Filesystem**: `[file]` (most sub-commands), `[cd]`, `[pwd]`, `[glob]`,
+`[source]`, `[open]`
 
-**Process execution**: `exec`, `kill`
+**Process execution**: `[exec]`, `[kill]`
 
-**Plugin/library loading**: `load`, `unload`, `library`
+**Plugin/library loading**: `[load]`, `[unload]`, `[library]`
 
-**Network**: `socket`, `uri`
+**Network**: `[socket]`, `[uri]`
 
-**Host access**: `host` (all sub-commands)
+**Host access**: `[host]` (all sub-commands)
 
-**.NET interop**: `object` (most sub-commands), `debug`
+**.NET interop**: `[object]` (most sub-commands), `[debug]`
 
-**Interpreter management**: `interp` (most sub-commands)
+**Interpreter management**: `[interp]` (most sub-commands)
 
-**Timing**: `clock` (most sub-commands), `time`
+**Timing**: `[clock]` (most sub-commands), `[time]`
 
-**Information disclosure**: `info` (restricted sub-commands)
+**Information disclosure**: `[info]` (restricted sub-commands)
 
 </details>
 
@@ -169,7 +169,7 @@ Even for commands that ARE available in safe interpreters, individual
 options can be restricted. Options marked with `OptionFlags.Unsafe` are
 rejected at parse time when the interpreter is safe:
 
-```
+```tcl
 permission denied: safe interpreter cannot use option -timeout
 ```
 
@@ -188,10 +188,10 @@ ensemble has a pre-defined list of permitted sub-commands:
 
 | Command | Allowed Sub-Commands |
 |---------|---------------------|
-| `[info]` | `appdomain`, `args`, `body`, `commands`, `complete`, `context`, `default`, `engine`, `ensembles`, `exists`, `functions`, `globals`, `level`, `library`, `locals`, `nprocs`, `objects`, `operands`, `operators`, `patchlevel`, `procs`, `script`, `subcommands`, `tclversion`, `vars` |
-| `[interp]` | `alias`, `aliases`, `cancel`, `children`, `exists`, `issafe`, `issdk`, `rename` |
-| `[file]` | `channels`, `dirname`, `join`, `split`, `validname` |
-| `[object]` | `dispose`, `exists`, `invoke`, `invokeall`, `invokeraw`, `isnull`, `isoftype` |
+| `[info]` | `appdomain`, `args`, `body`, `commands`, `complete`, `context`, `default`, `engine`, `ensembles`, `exists`, `functions`, `globals`, `level`, `[library]`, `locals`, `nprocs`, `objects`, `operands`, `operators`, `patchlevel`, `procs`, `script`, `subcommands`, `tclversion`, `vars` |
+| `[interp]` | `alias`, `aliases`, `cancel`, `children`, `exists`, `issafe`, `issdk`, `[rename]` |
+| `[file]` | `channels`, `dirname`, `[join]`, `[split]`, `validname` |
+| `[object]` | `dispose`, `exists`, `[invoke]`, `invokeall`, `invokeraw`, `isnull`, `isoftype` |
 
 Sub-commands not in the allow-list produce a "permission denied" error.
 The lists are defined in `PolicyOps.cs` and enforced by policy
@@ -278,7 +278,7 @@ controlled communication channels.
 <details>
 <summary><strong>Aliases (Capability Delegation)</strong></summary>
 
-The `interp alias` command creates a bridge between interpreters. An
+The `[interp alias]` command creates a bridge between interpreters. An
 alias in the safe child forwards to a command in the parent:
 
 ```tcl
@@ -410,7 +410,7 @@ types, and integration points throughout the evaluation engine.
 
 ### Historical Context: Safe Tcl
 
-In Tcl's Safe Tcl model, the parent interpreter creates `interp alias`
+In Tcl's Safe Tcl model, the parent interpreter creates `[interp alias]`
 commands that bridge specific operations from the safe child to the
 parent. For example, to let a safe interpreter read files from one
 directory:
@@ -445,13 +445,13 @@ execution context to the policy callback:
 | `Execute` | `IExecute` | The command or procedure being evaluated |
 | `Arguments` | `ArgumentList` | The command arguments |
 | `Script` | `IScript` | The script being evaluated (for script policies) |
-| `FileName` | `string` | Source file name (for file policies) |
+| `FileName` | `[string]` | Source file name (for file policies) |
 | `Bytes` | `byte[]` | Raw content bytes |
-| `Text` | `string` | Text content |
+| `Text` | `[string]` | Text content |
 | `Encoding` | `Encoding` | Content encoding |
 | `AssemblyName` | `AssemblyName` | Assembly identity (for type policies) |
 | `HashValue` | `byte[]` | Cryptographic hash of the content |
-| `HashAlgorithmName` | `string` | Hash algorithm used (default: SHA-512) |
+| `HashAlgorithmName` | `[string]` | Hash algorithm used (default: SHA-512) |
 
 The context also provides a **voting interface**:
 
@@ -683,7 +683,7 @@ Two additional policy types control .NET type access and URI access:
 When a hidden command is invoked in a safe interpreter, the engine
 performs this sequence (in `Engine.cs`, `EvaluateCommand`):
 
-```
+```tcl
 1. Resolve command name → found in hidden command dictionary
 2. Check: is interpreter safe? AND are policies enabled?
 3. If yes:
@@ -709,7 +709,7 @@ where policy A triggers command B which triggers policy A.
 
 File and stream policies fire during `[source]` and related operations:
 
-```
+```tcl
 1. Before reading: CheckBeforeFilePolicies()
    - Computes SHA-512 hash of the file path
    - All BeforeFile policies vote

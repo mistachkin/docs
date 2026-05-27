@@ -52,7 +52,7 @@ with CPython releases.
 | Area | Eagle | Python / IronPython |
 |---|---|---|
 | .NET embedding | First-class: `Interpreter.Create()`, add commands, link variables, enforce policies -- all with a stable, public API designed for embedding. | IronPython can be embedded, but the hosting API is heavier and IronPython 3.x lags behind CPython, creating a fragmented ecosystem. |
-| Security | Safe interpreters restrict commands at a granular level. Script signing via Harpy/Badge ensures only approved code runs. No scripting-engine bytecode/JIT surface. | Python's `exec` / `eval` are difficult to sandbox. There is no built-in safe interpreter or script-signing infrastructure. |
+| Security | Safe interpreters restrict commands at a granular level. Script signing via Harpy/Badge ensures only approved code runs. No scripting-engine bytecode/JIT surface. | Python's `[exec]` / `[eval]` are difficult to sandbox. There is no built-in safe interpreter or script-signing infrastructure. |
 | Cross-platform | One script, one engine: .NET Framework 2.0 through .NET 10+, Mono, Windows, Linux, macOS. | CPython is portable, but IronPython is limited to specific .NET versions and may lack packages that depend on CPython C extensions. |
 | Native interop | The `[tcl]` command loads native Tcl libraries directly from Eagle; the Garuda package enables the reverse direction.  Both work cross-platform. | ctypes and cffi are powerful but require manual structure definitions and are outside the managed safety net. |
 | Startup overhead | The Eagle interpreter is lightweight and designed for rapid instantiation inside a host process. | Python's import machinery and IronPython's DLR compilation add measurable startup latency. |
@@ -74,7 +74,7 @@ but has been effectively abandoned since 2012.
 | .NET integration | Actively maintained with support from .NET Framework 2.0 through .NET 10+. New .NET APIs are adopted as they ship. | IronRuby is unmaintained.  MRI Ruby has no native .NET integration. |
 | Security model | Policy-based execution, safe interpreters, script signing. | Ruby lacks a built-in sandbox.  `$SAFE` levels were removed in Ruby 3.0. |
 | Embeddability | Designed to be embedded: create an interpreter, register custom commands, and evaluate scripts in three lines of C#. | MRI Ruby's C API is not designed for .NET embedding; IronRuby's DLR-based API is complex and unsupported. |
-| Testing | Built-in test framework (`test` command, `runTest` library procedure) with constraints, setup/cleanup blocks, and deep .NET introspection. | Ruby has excellent test tooling (RSpec, Minitest), but none of it can introspect or drive a .NET application natively. |
+| Testing | Built-in test framework (`[test]` command, `runTest` library procedure) with constraints, setup/cleanup blocks, and deep .NET introspection. | Ruby has excellent test tooling (RSpec, Minitest), but none of it can introspect or drive a .NET application natively. |
 
 **Choose Eagle when** your target is .NET and you need a maintained,
 embeddable engine.  **Choose Ruby when** you are building web
@@ -110,8 +110,8 @@ Shell scripting is the default automation tool on Unix-like systems.
 | Platform support | Windows, Linux, and macOS with identical behavior. | Bash and Zsh are POSIX-only.  Windows support requires WSL, Cygwin, or MSYS2 -- all adding friction and subtle incompatibilities. |
 | .NET integration | Scripts create .NET objects, call APIs, and link variables without leaving the language. | Shell scripts can invoke `dotnet` CLI tools but cannot interact with .NET APIs or objects in-process. |
 | Security | Safe interpreters, script signing, and policy enforcement.  Scripts can be cryptographically verified before execution. | Shell scripts run with the full privileges of the invoking user.  There is no built-in signing or sandboxing mechanism. |
-| Error handling | Structured return codes, exception interception from .NET, `catch` for error trapping, and `try`/`finally` for cleanup guarantees. | `set -e` and trap-based error handling are fragile and difficult to compose. |
-| Data structures | Lists, dictionaries (`dict` command), arrays, and full access to .NET collections. | Arrays and associative arrays are limited and have inconsistent syntax across Bash versions. |
+| Error handling | Structured return codes, exception interception from .NET, `[catch]` for error trapping, and `[try]`/`finally` for cleanup guarantees. | `set -e` and trap-based error handling are fragile and difficult to compose. |
+| Data structures | Lists, dictionaries (`[dict]` command), arrays, and full access to .NET collections. | Arrays and associative arrays are limited and have inconsistent syntax across Bash versions. |
 | Testability | Built-in test framework with constraints, setup, cleanup, and expected-result matching. | Testing shell scripts typically requires external frameworks (bats, shunit2) and is inherently brittle. |
 
 **Choose Eagle when** you need cross-platform automation that works

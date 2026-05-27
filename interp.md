@@ -1,6 +1,6 @@
 # Eagle `[interp]` Command: Deep-Dive Analysis of Interpreter Management and Security
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `interp` command internals, with particular emphasis on the security model. For basic command syntax and options, see [`core_language.md`](core_language.md#cmd-interp). For usage examples, see [`core_examples.md`](core_examples.md#ex-interp). For the policy subsystem architecture, see the [Security Policy Subsystem](core_language.md#security-policy-subsystem) section. For safe interpreter script library helpers, see [`core_script_library.md`](core_script_library.md).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `[interp]` command internals, with particular emphasis on the security model. For basic command syntax and options, see [`core_language.md`](core_language.md#cmd-interp). For usage examples, see [`core_examples.md`](core_examples.md#ex-interp). For the policy subsystem architecture, see the [Security Policy Subsystem](core_language.md#security-policy-subsystem) section. For safe interpreter script library helpers, see [`core_script_library.md`](core_script_library.md).
 
 ## 1. Executive Summary
 
@@ -14,7 +14,7 @@ control, and object sharing.
 
 The command's most important role is as Eagle's **primary security
 mechanism**. Safe interpreters — created via `interp create -safe` or
-converted via `interp makesafe` — form sandboxed execution environments
+converted via `[interp makesafe]` — form sandboxed execution environments
 where untrusted code can run with controlled access to system resources.
 The security model is built on three interlocking mechanisms:
 
@@ -76,7 +76,7 @@ except through explicitly created aliases.
 
 ### Comparison to native Tcl
 
-Native Tcl's `interp` command provides a subset of this functionality:
+Native Tcl's `[interp]` command provides a subset of this functionality:
 
 | Feature | Tcl | Eagle |
 |---------|-----|-------|
@@ -94,7 +94,7 @@ Native Tcl's `interp` command provides a subset of this functionality:
 | SDK/restricted modes | **No** | **Yes** (`-sdk`, `issdk`) |
 | Immutable/readonly modes | **No** | **Yes** |
 | Object sharing | **No** | **Yes** (`shareobject`, `shareinterp`) |
-| Script cancellation | Limited (`interp cancel`) | **Enhanced** (`cancel`, `resetcancel`, flags) |
+| Script cancellation | Limited (`[interp cancel]`) | **Enhanced** (`cancel`, `resetcancel`, flags) |
 | `makesafe` (runtime conversion) | **No** | **Yes** |
 | `makestandard` | **No** | **Yes** |
 | `marktrusted` | **No** | **Yes** |
@@ -108,7 +108,7 @@ Native Tcl's `interp` command provides a subset of this functionality:
 Eagle's safe interpreter security operates through three complementary
 layers, each providing defense-in-depth:
 
-```
+```tcl
 ┌──────────────────────────────────────────────────────┐
 │           Layer 1: Command Hiding                    │
 │                                                      │
@@ -142,9 +142,9 @@ table to the hidden command table. This means:
 - Scripts running in the safe interpreter cannot see or call hidden
   commands (they appear to not exist).
 - The parent interpreter can invoke hidden commands in the child via
-  `interp invokehidden`, bypassing the restriction.
-- Commands can be manually hidden (`interp hide`) or exposed
-  (`interp expose`) by the parent — but **not** by a safe interpreter
+  `[interp invokehidden]`, bypassing the restriction.
+- Commands can be manually hidden (`[interp hide]`) or exposed
+  (`[interp expose]`) by the parent — but **not** by a safe interpreter
   itself.
 
 **Security invariant**: A safe interpreter cannot hide or expose
@@ -169,24 +169,24 @@ The same pattern appears in `hide`, `addcommands`, `stub`,
 
 ### 3.3. Policy-based access control
 
-Commands that remain exposed in safe interpreters (like `file`, `info`,
-`object`, `interp`, `package`, `source`) are not unrestricted — they
+Commands that remain exposed in safe interpreters (like `[file]`, `[info]`,
+`[object]`, `[interp]`, `[package]`, `[source]`) are not unrestricted — they
 are guarded by **policy callbacks** that filter which sub-commands and
 operations are permitted.
 
-When `interp create -safe` or `interp makesafe` is called, eight
+When `interp create -safe` or `[interp makesafe]` is called, eight
 default policy callbacks are installed:
 
 | Command | Strategy | Allowed/Denied |
 |---------|----------|----------------|
-| `clock` | Allow list | `buildnumber`, `days`, `duration`, `filetime`, `format`, `isvalid`, `monthdays`, `scan`, `seconds` |
-| `file` | Allow list | `channels`, `dirname`, `join`, `split`, `validname` |
-| `info` | Allow list | `appdomain`, `args`, `body`, `commands`, `complete`, `context`, `default`, `engine`, `ensembles`, `exists`, `functions`, `globals`, `level`, `library`, `locals`, `nprocs`, `objects`, `operands`, `operators`, `patchlevel`, `procs`, `script`, `subcommands`, `tclversion`, `vars` |
-| `interp` | Allow list | `alias`, `aliases`, `cancel`, `children`, `exists`, `issafe`, `issdk`, `rename` |
-| `object` | Allow list | `dispose`, `exists`, `invoke`, `invokeall`, `invokeraw`, `isnull`, `isoftype` |
-| `package` | Deny list | Disallowed sub-commands: `alias`, `aliases`, `indexes`, `relativefilename`, `reset`, `scan`, `vloaded` |
-| `source` | URI/directory validation | Only trusted URIs and directories |
-| `uri` | Allow list | `get`, `isvalid`, `post` |
+| `[clock]` | Allow list | `buildnumber`, `days`, `duration`, `filetime`, `[format]`, `isvalid`, `monthdays`, `scan`, `seconds` |
+| `[file]` | Allow list | `channels`, `dirname`, `[join]`, `[split]`, `validname` |
+| `[info]` | Allow list | `appdomain`, `args`, `body`, `commands`, `complete`, `context`, `default`, `engine`, `ensembles`, `exists`, `functions`, `globals`, `level`, `[library]`, `locals`, `nprocs`, `objects`, `operands`, `operators`, `patchlevel`, `procs`, `script`, `subcommands`, `tclversion`, `vars` |
+| `[interp]` | Allow list | `alias`, `aliases`, `cancel`, `children`, `exists`, `issafe`, `issdk`, `[rename]` |
+| `[object]` | Allow list | `dispose`, `exists`, `[invoke]`, `invokeall`, `invokeraw`, `isnull`, `isoftype` |
+| `[package]` | Deny list | Disallowed sub-commands: `alias`, `aliases`, `indexes`, `relativefilename`, `reset`, `scan`, `vloaded` |
+| `[source]` | URI/directory validation | Only trusted URIs and directories |
+| `[uri]` | Allow list | `get`, `isvalid`, `post` |
 
 **Key design principle: Deny by default.** If no policy votes to
 approve an operation, it is denied. This means any new command or
@@ -197,7 +197,7 @@ explicitly allowed by a policy.
 `Approved` votes. This ensures that a restrictive policy cannot be
 overridden by a permissive one.
 
-### 3.4. The `interp` sub-commands allowed in safe interpreters
+### 3.4. The `[interp]` sub-commands allowed in safe interpreters
 
 Of the 60 total sub-commands, only **8** are permitted in safe
 interpreters via the default policy:
@@ -211,11 +211,11 @@ interpreters via the default policy:
 | `exists` | Checks interpreter existence (read-only) |
 | `issafe` | Queries safety status (read-only) |
 | `issdk` | Queries SDK status (read-only) |
-| `rename` | Can rename commands within the safe interpreter |
+| `[rename]` | Can rename commands within the safe interpreter |
 
 The remaining 52 sub-commands are **denied** in safe interpreters,
 including all commands that could modify the security posture:
-`create`, `delete`, `eval`, `expose`, `hide`, `invokehidden`,
+`create`, `delete`, `[eval]`, `expose`, `hide`, `invokehidden`,
 `makesafe`, `makestandard`, `marktrusted`, `policy`, `nopolicy`,
 `addcommands`, `stub`, `subcommand`, `shareobject`, `shareinterp`,
 and all limit/timeout sub-commands.
@@ -272,7 +272,7 @@ computations:
 
 ## 4. Interpreter Lifecycle
 
-### 4.1. Creation (`interp create`)
+### 4.1. Creation (`[interp create]`)
 
 Creating a child interpreter is the most complex sub-command, with
 20+ options controlling every aspect of initialization:
@@ -336,7 +336,7 @@ set child [interp create -safe -namespaces -- myChild]
 interpreters are always created safe — the `-safe` flag is inherited
 and cannot be overridden.
 
-### 4.2. Deletion (`interp delete`)
+### 4.2. Deletion (`[interp delete]`)
 
 ```tcl
 interp delete myChild otherChild
@@ -347,7 +347,7 @@ Accepts multiple paths and deletes each child interpreter. Deletion:
 - Removes the child from the parent's child collection.
 - Cascading: if the child has its own children, they are also deleted.
 
-### 4.3. Runtime conversion (`interp makesafe`)
+### 4.3. Runtime conversion (`[interp makesafe]`)
 
 An existing unsafe interpreter can be converted to safe mode at runtime:
 
@@ -369,11 +369,11 @@ interp makesafe $child
 The reverse (making a safe interpreter unsafe) is also possible via
 `interp makesafe $child false`, but only from an unsafe parent.
 
-The `interp makestandard` sub-command performs a similar conversion
+The `[interp makestandard]` sub-command performs a similar conversion
 for "standard" mode, which hides non-standard (Eagle-specific) commands
 while leaving standard Tcl-compatible commands exposed.
 
-### 4.4. Marking trusted (`interp marktrusted`)
+### 4.4. Marking trusted (`[interp marktrusted]`)
 
 ```tcl
 interp marktrusted $child
@@ -386,7 +386,7 @@ need to run. Only an unsafe parent can mark a child as trusted.
 
 ## 5. Cross-Interpreter Communication
 
-### 5.1. Evaluation (`interp eval`, `interp expr`, `interp subst`)
+### 5.1. Evaluation (`[interp eval]`, `[interp expr]`, `[interp subst]`)
 
 ```tcl
 interp eval $child {set x [expr {2 + 2}]}
@@ -403,11 +403,11 @@ in the context of the child interpreter. Internally:
 4. Error information is copied from child to parent if an error occurs.
 5. The call frame is popped (including any leftover scope frames).
 
-**Security note**: `interp eval` in a safe child is subject to all
+**Security note**: `[interp eval]` in a safe child is subject to all
 of the child's policies. The parent is not granting additional
 privileges — the code runs with the child's restrictions.
 
-### 5.2. Aliases (`interp alias`)
+### 5.2. Aliases (`[interp alias]`)
 
 Aliases create cross-interpreter command bridges:
 
@@ -438,7 +438,7 @@ controlling exactly what operations the child can perform. This is the
 recommended pattern for granting specific capabilities to safe
 interpreters.
 
-### 5.3. Variable access (`interp set`, `interp unset`)
+### 5.3. Variable access (`[interp set]`, `[interp unset]`)
 
 ```tcl
 interp set $child varName value
@@ -450,7 +450,7 @@ Direct variable access across interpreter boundaries. No policy
 check is performed — the parent has full access to the child's
 variable table.
 
-### 5.4. Script queuing (`interp queue`)
+### 5.4. Script queuing (`[interp queue]`)
 
 ```tcl
 interp queue $child -when [clock seconds] {puts "deferred"}
@@ -459,7 +459,7 @@ interp queue $child -when [clock seconds] {puts "deferred"}
 Queues a script for later evaluation in the child interpreter's
 event loop, optionally with a scheduled time.
 
-### 5.5. Object sharing (`interp shareobject`, `interp shareinterp`)
+### 5.5. Object sharing (`[interp shareobject]`, `[interp shareinterp]`)
 
 ```tcl
 set obj [object create System.Text.StringBuilder]
@@ -491,7 +491,7 @@ through shared objects.
 
 Every Eagle interpreter maintains two command tables:
 
-```
+```tcl
 ┌────────────────────────────┐
 │        Interpreter         │
 │                            │
@@ -529,7 +529,7 @@ Only an unsafe parent can hide or expose commands. A safe interpreter
 cannot modify its own command visibility — this is a critical security
 invariant.
 
-### 6.3. Invoking hidden commands (`interp invokehidden`)
+### 6.3. Invoking hidden commands (`[interp invokehidden]`)
 
 ```tcl
 interp invokehidden $child source trusted_script.eagle
@@ -567,18 +567,18 @@ the command from the hidden command table, then calls
 
 | Sub-command | Syntax | Purpose |
 |------------|--------|---------|
-| `eval` | `interp eval path arg ?arg ...?` | Evaluate script in child |
-| `expr` | `interp expr path arg ?arg ...?` | Evaluate expression in child |
-| `subst` | `interp subst ?options? path string` | Perform substitution in child |
-| `source` | `interp source ?options? path fileName` | Source file in child |
+| `[eval]` | `interp eval path arg ?arg ...?` | Evaluate script in child |
+| `[expr]` | `interp expr path arg ?arg ...?` | Evaluate expression in child |
+| `[subst]` | `interp subst ?options? path string` | Perform substitution in child |
+| `[source]` | `interp source ?options? path fileName` | Source file in child |
 | `queue` | `interp queue path ?options? arg ?arg ...?` | Queue script for later evaluation |
 
 ### Variable access
 
 | Sub-command | Syntax | Purpose |
 |------------|--------|---------|
-| `set` | `interp set interp varName ?newValue?` | Get or set variable in child |
-| `unset` | `interp unset interp varName` | Unset variable in child |
+| `[set]` | `interp set interp varName ?newValue?` | Get or set variable in child |
+| `[unset]` | `interp unset interp varName` | Unset variable in child |
 
 ### Command aliases
 
@@ -648,7 +648,7 @@ the command from the hidden command table, then calls
 | Sub-command | Syntax | Purpose |
 |------------|--------|---------|
 | `addcommands` | `interp addcommands ?options? path pattern` | Add commands to child |
-| `rename` | `interp rename ?options? path oldName newName` | Rename a command |
+| `[rename]` | `interp rename ?options? path oldName newName` | Rename a command |
 | `stub` | `interp stub ?options? path name` | Create a stub command |
 | `subcommand` | `interp subcommand ?options? path cmdName subCmdName ?command?` | Manage ensemble sub-commands |
 
@@ -670,7 +670,7 @@ the command from the hidden command table, then calls
 
 | Sub-command | Syntax | Purpose |
 |------------|--------|---------|
-| `bgerror` | `interp bgerror path ?cmdPrefix?` | Get/set background error handler |
+| `[bgerror]` | `interp bgerror path ?cmdPrefix?` | Get/set background error handler |
 | `service` | `interp service path ?options?` | Event servicing operations |
 
 ## 8. Security Boundaries and Invariants
@@ -708,13 +708,13 @@ Through the default policy allow lists:
 - Define and call procedures
 - Perform math operations
 - Manipulate strings, lists, dictionaries
-- Use allowed `info`, `file`, `clock` sub-commands
-- Use `.NET` objects (if shared and marked safe) via allowed `object` sub-commands
-- Use allowed `package` sub-commands
+- Use allowed `[info]`, `[file]`, `[clock]` sub-commands
+- Use `.NET` objects (if shared and marked safe) via allowed `[object]` sub-commands
+- Use allowed `[package]` sub-commands
 
 ### The `IPolicyEnsemble` mechanism
 
-The `interp` command class implements `IPolicyEnsemble`, which provides
+The `[interp]` command class implements `IPolicyEnsemble`, which provides
 an `AllowedSubCommands` dictionary used by the policy system:
 
 ```csharp
@@ -914,15 +914,15 @@ from untrusted code:
 
 | Threat | Defense |
 |--------|---------|
-| File system access | `exec`, `open`, `file` (most sub-commands) hidden; `source` policy-restricted |
-| Network access | `socket` hidden; `uri` policy-restricted |
-| Process execution | `exec` hidden |
-| Native code execution | `library` hidden (NativeCode + Unsafe + Critical) |
-| .NET type instantiation | `object create` restricted by trusted types |
-| Interpreter escape | `interp` restricted to 8 safe sub-commands |
+| File system access | `[exec]`, `[open]`, `[file]` (most sub-commands) hidden; `[source]` policy-restricted |
+| Network access | `[socket]` hidden; `[uri]` policy-restricted |
+| Process execution | `[exec]` hidden |
+| Native code execution | `[library]` hidden (NativeCode + Unsafe + Critical) |
+| .NET type instantiation | `[object create]` restricted by trusted types |
+| Interpreter escape | `[interp]` restricted to 8 safe sub-commands |
 | Resource exhaustion | 12 resource limits + timeout + watchdog |
-| Information disclosure | `info` restricted to safe sub-commands; `env` hidden |
-| Policy manipulation | `interp policy`/`nopolicy` denied in safe mode |
+| Information disclosure | `[info]` restricted to safe sub-commands; `env` hidden |
+| Policy manipulation | `[interp policy]`/`nopolicy` denied in safe mode |
 | State modification | `immutable` and `readonly` modes |
 
 ### Known limitations
@@ -934,7 +934,7 @@ from untrusted code:
    via the policy system).
 
 2. **Shared objects may leak privileges.** Objects shared via
-   `interp shareobject` retain their original `ObjectFlags`. The parent
+   `[interp shareobject]` retain their original `ObjectFlags`. The parent
    must manually adjust flags for the object to be usable-but-safe in
    the child.
 
@@ -957,12 +957,12 @@ from untrusted code:
    objects unless absolutely necessary.
 4. **Validate alias arguments** — alias targets in the parent should
    validate all arguments from the child.
-5. **Use `interp invokehidden`** for trusted initialization rather
+5. **Use `[interp invokehidden]`** for trusted initialization rather
    than temporarily exposing commands.
-6. **Prefer `interp create -safe`** over `interp makesafe` — creating
+6. **Prefer `interp create -safe`** over `[interp makesafe]` — creating
    safe from the start is cleaner than converting.
 
-## 12. The `interp create` Options In Depth
+## 12. The `[interp create]` Options In Depth
 
 The `create` sub-command has the richest option surface in the entire
 `[interp]` ensemble. Many options are flagged `OptionFlags.Unsafe`,
@@ -1006,7 +1006,7 @@ is itself safe.
 This dual-visibility design ensures that safe interpreters cannot
 create children with elevated privileges.
 
-## 13. Event Servicing (`interp service`)
+## 13. Event Servicing (`[interp service]`)
 
 The `service` sub-command processes events in a child interpreter's
 event queue:
@@ -1044,4 +1044,4 @@ executing while the child processes its events asynchronously.
 | [Built-in Virtual Scripts](core_language.md#built-in-virtual-scripts) | `safe.eagle`, `removeCommands`, `removeVariables` scripts |
 | [`scope.md`](scope.md) | Scope command (persistent state management) |
 | [`tcl.md`](tcl.md) | Tcl integration (uses child interpreters internally) |
-| [Tcl `interp` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/interp.htm) | Native Tcl `interp` reference for comparison |
+| [Tcl `[interp]` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/interp.htm) | Native Tcl `[interp]` reference for comparison |

@@ -1,9 +1,9 @@
-# Eagle `file` Command — Deep-Dive Analysis
+# Eagle `[file]` Command — Deep-Dive Analysis
 
 ## 1. Executive Summary
 
-The Eagle `file` command provides **52 sub-commands** for file system
-operations with deep .NET/CLR integration. While Tcl's `file` offers roughly
+The Eagle `[file]` command provides **53 sub-commands** for file system
+operations with deep .NET/CLR integration. While Tcl's `[file]` offers roughly
 25 sub-commands focused on portable path manipulation and basic I/O, Eagle
 extends this to include Windows security descriptors (SDDL), ACL access
 checks, PE file magic number parsing, .NET assembly verification, object IDs,
@@ -14,21 +14,21 @@ Key differentiators from Tcl:
 
 | Area | Tcl | Eagle |
 |------|-----|-------|
-| Sub-commands | ~25 | 52 |
+| Sub-commands | ~25 | 53 |
 | Security | Basic permissions | ACL, SDDL, ownership, trusted/verified |
 | Path validation | Minimal | `validname` with platform-specific rules |
 | Temporary files | `file tempfile` (8.6) | `tempname`/`temppath` with env precedence |
 | PE inspection | None | `magic` extracts PE headers, CLR info |
-| Glob matching | `glob` command | `file glob` with `MatchMode` enum |
-| Cleanup | Manual | `file cleanup` with interpreter lifecycle |
-| Timestamp setting | `file mtime` only | `atime`, `ctime`, `mtime` all settable |
+| Glob matching | `[glob]` command | `[file glob]` with `MatchMode` enum |
+| Cleanup | Manual | `[file cleanup]` with interpreter lifecycle |
+| Timestamp setting | `[file mtime]` only | `atime`, `ctime`, `mtime` all settable |
 | Platform details | Abstracted | `drive`, `system`, `objectid`, `information` |
 
 ---
 
-## 2. Why the Eagle `file` Command Differs from Tcl
+## 2. Why the Eagle `[file]` Command Differs from Tcl
 
-Eagle's `file` command sits atop .NET's `System.IO` and
+Eagle's `[file]` command sits atop .NET's `System.IO` and
 `System.Security.AccessControl` namespaces, giving it direct access to:
 
 - **FileAttributes enum** — 14 attribute flags (Archive, Compressed,
@@ -42,7 +42,7 @@ Eagle's `file` command sits atop .NET's `System.IO` and
   and file object IDs on Windows
 
 This integration means Eagle can perform operations that would require external
-packages or `exec` calls in Tcl, while maintaining the familiar `file`
+packages or `[exec]` calls in Tcl, while maintaining the familiar `[file]`
 sub-command interface.
 
 ### Source files
@@ -59,7 +59,7 @@ sub-command interface.
 
 ## 3. Sub-Command Reference
 
-Eagle's 52 `file` sub-commands are organized below by functional category.
+Eagle's 53 `[file]` sub-commands are organized below by functional category.
 Sub-commands marked **(Eagle)** have no Tcl equivalent. Sub-commands marked
 **(Enhanced)** extend Tcl's version with additional options or behavior.
 
@@ -245,7 +245,7 @@ evaluation.
 
 #### `file type name`
 
-Returns the type of `name`: `file`, `directory`, `link`, or raises an error
+Returns the type of `name`: `[file]`, `directory`, `link`, or raises an error
 if the path does not exist.
 
 #### `file size name`
@@ -352,7 +352,7 @@ Uses `GetDateTimeCallback` / `SetDateTimeCallback` delegates that map to
 #### `file ctime name ?time?` **(Eagle)**
 
 Gets or sets the creation time as Unix epoch seconds (UTC). Tcl does not
-expose creation time at all — the `ctime` in Tcl's `file stat` is the
+expose creation time at all — the `ctime` in Tcl's `[file stat]` is the
 inode change time on Unix, not the creation time.
 
 ```tcl
@@ -377,7 +377,7 @@ on Windows, `stat` syscall on Unix/macOS) for accurate results.
 
 #### `file lstat name varName`
 
-Like `file stat` but does not follow symbolic links. Uses native `lstat`
+Like `[file stat]` but does not follow symbolic links. Uses native `lstat`
 on Unix/macOS and native file information APIs on Windows.
 
 #### `file attributes name ?option? ?value? ?option value ...?`
@@ -593,7 +593,7 @@ file mkdir /tmp/new/nested/dir   ;# Creates all intermediate dirs
 #### `file rmdir dir ?dir ...?` **(Eagle)**
 
 Removes one or more **empty** directories. Not available in standard Tcl
-(Tcl uses `file delete` for directories).
+(Tcl uses `[file delete]` for directories).
 
 ```tcl
 file rmdir /tmp/emptydir
@@ -627,7 +627,7 @@ file channels file*    ;# Channels matching "file*"
 #### `file list ?directory? ?pattern?` **(Eagle)**
 
 Lists directory contents, optionally filtered by a glob pattern. Simpler
-alternative to `file glob` for basic directory listing.
+alternative to `[file glob]` for basic directory listing.
 
 ```tcl
 file list                    ;# Current directory contents
@@ -638,7 +638,7 @@ file list /tmp *.txt         ;# Filter by pattern
 #### `file glob ?options? ?pattern?` **(Eagle)**
 
 Advanced file globbing with extensive options beyond Tcl's standalone
-`glob` command.
+`[glob]` command.
 
 **Options:**
 
@@ -674,7 +674,7 @@ file glob -match SubString -nocase -directory /docs readme
 - Special entries `.` and `..` conditionally included
 - File attribute filtering (Hidden, System, etc.)
 
-#### `file volumes`
+#### `[file volumes]`
 
 Returns a list of mounted filesystem volumes.
 
@@ -684,7 +684,7 @@ file volumes   ;# {C:/ D:/ E:/} (Windows) or {/} (Unix)
 
 ### 3.7 Temporary File Management
 
-#### `file tempname` **(Eagle)**
+#### `[file tempname]` **(Eagle)**
 
 Returns a unique temporary filename. Eagle uses .NET's
 `Path.GetRandomFileName()` for name generation and supports
@@ -702,7 +702,7 @@ set tmp [file tempname]   ;# /tmp/esc_xxxxxxxx.xxxx (random)
 3. Prepend the prefix `"esc_"` (Eagle Script Command)
 4. Combine with the temp directory path
 
-#### `file temppath` **(Eagle)**
+#### `[file temppath]` **(Eagle)**
 
 Returns the system temporary directory path. Eagle checks multiple
 environment variables in a defined precedence order.
@@ -804,10 +804,10 @@ file objectid -create true newfile.txt  ;# Create if missing
 
 ## 4. Callback Infrastructure
 
-The `file` command uses two callback delegate types for timestamp
+The `[file]` command uses two callback delegate types for timestamp
 operations, defined in `Delegates.cs`:
 
-```
+```tcl
 GetDateTimeCallback(string path) -> DateTime
 SetDateTimeCallback(string path, DateTime dateTime) -> void
 ```
@@ -835,9 +835,9 @@ the key becomes `"directory.mtime"`, selecting `Directory.GetLastWriteTimeUtc`.
 `PathOps` provides two hook points for overriding temp file behavior:
 
 - `GetStringValueCallback getTempFileNameCallback` -- override
-  `file tempname` generation
+  `[file tempname]` generation
 - `GetStringValueCallback getTempPathCallback` -- override
-  `file temppath` resolution
+  `[file temppath]` resolution
 
 These allow test frameworks or embedders to redirect temporary files to
 controlled locations.
@@ -851,7 +851,7 @@ Eagle implements a three-tier access verification system in `FileOps.cs`:
 ### Tier 1 -- Simple verification methods
 
 `VerifyExecutable()`, `VerifyReadable()`, `VerifyWritable()` are the
-entry points called by `file executable`, `file readable`, `file writable`.
+entry points called by `[file executable]`, `[file readable]`, `[file writable]`.
 
 On Windows (non-Mono), these delegate to Tier 2. On other platforms, they
 fall back to Tier 3.
@@ -884,8 +884,8 @@ and immediately cleans up.
 
 ## 6. Glob Implementation
 
-Eagle's `file glob` is implemented in `FileOps.GlobFiles()` and supports
-features beyond Tcl's standalone `glob` command.
+Eagle's `[file glob]` is implemented in `FileOps.GlobFiles()` and supports
+features beyond Tcl's standalone `[glob]` command.
 
 ### Pattern features
 
@@ -967,19 +967,19 @@ The source uses these preprocessor symbols for platform-specific code:
 
 ## 8. Safe Interpreter Restrictions
 
-The `file` command is marked with `CommandFlags.Unsafe | CommandFlags.Critical`
+The `[file]` command is marked with `CommandFlags.Unsafe | CommandFlags.Critical`
 and enforces sub-command filtering in safe interpreters via the
 `AllowedSubCommands` property, which delegates to
 `PolicyOps.AllowedFileSubCommandNames`.
 
 ### Restricted sub-commands
 
-In a safe interpreter, only a subset of `file` sub-commands are available.
+In a safe interpreter, only a subset of `[file]` sub-commands are available.
 Operations that modify the filesystem, access security information, or
 reveal system details are blocked:
 
 - **Blocked categories**: all sub-commands not explicitly listed below
-- **Allowed sub-commands**: `channels`, `dirname`, `join`, `split`,
+- **Allowed sub-commands**: `channels`, `dirname`, `[join]`, `[split]`,
   `validname`
 
 The exact set of allowed sub-commands is determined by
@@ -1177,22 +1177,22 @@ if {[file under -mode Glob -searchoption AllDirectories /project $path]} {
 
 ## 11. Comparison with Tcl
 
-| Feature | Tcl `file` | Eagle `file` |
+| Feature | Tcl `[file]` | Eagle `[file]` |
 |---------|-----------|-------------|
 | Path manipulation | dirname, tail, rootname, extension, join, split, normalize, nativename, separator, pathtype | Same + `rootpath`, `drive`, `tildeexpand`, `validname` |
 | File tests | exists, isdirectory, isfile, readable, writable, executable, type | Same + `same`, `owned`, `rights`, `under` |
 | Timestamps | mtime (get/set), atime (get only) | atime/ctime/mtime all get/set |
-| Attributes | `file attributes` (platform-specific) | `file attributes` with 12 .NET `FileAttributes` options |
+| Attributes | `[file attributes]` (platform-specific) | `[file attributes]` with 12 .NET `FileAttributes` options |
 | Security | Basic permissions | ACL evaluation, SDDL get/set, ownership, trusted/verified |
-| Stat/lstat | `file stat`, `file lstat` | Same (native P/Invoke on all platforms) |
+| Stat/lstat | `[file stat]`, `[file lstat]` | Same (native P/Invoke on all platforms) |
 | File operations | copy, rename, delete, mkdir | Same + `rmdir`, `touch` |
-| Globbing | Separate `glob` command | `file glob` with `MatchMode` (Exact, Glob, Regexp, SubString) |
-| Directory listing | `glob -directory` | `file list` (simpler) + `file glob` (advanced) |
+| Globbing | Separate `[glob]` command | `[file glob]` with `MatchMode` (Exact, Glob, Regexp, SubString) |
+| Directory listing | `glob -directory` | `[file list]` (simpler) + `[file glob]` (advanced) |
 | Temporary files | `file tempfile` (8.6+) | `tempname`, `temppath` with env precedence |
-| PE inspection | None | `magic`, `version` |
+| PE inspection | None | `magic`, `[version]` |
 | System info | None | `system`, `objectid`, `information`, `drive`, `volumes` |
-| Cleanup | Manual | `file cleanup` with interpreter lifecycle |
-| Channels | `file channels` | Same |
+| Cleanup | Manual | `[file cleanup]` with interpreter lifecycle |
+| Channels | `[file channels]` | Same |
 
 ---
 
@@ -1203,25 +1203,25 @@ if {[file under -mode Glob -searchoption AllDirectories /project $path]} {
 - All path arguments are validated before use
 - Safe interpreters apply `PathOps.ResolveFullPath()` to prevent
   directory traversal via `..` components
-- `file validname` should be used to validate user-supplied filenames
+- `[file validname]` should be used to validate user-supplied filenames
 
 ### Race conditions (TOCTOU)
 
-- `file exists` followed by `file delete` is subject to time-of-check-
+- `[file exists]` followed by `[file delete]` is subject to time-of-check-
   time-of-use races, as in any filesystem API
-- For critical operations, use error handling (`catch`) rather than
+- For critical operations, use error handling (`[catch]`) rather than
   pre-checking existence
 
 ### Information leakage
 
-- `file information`, `file sddl`, `file objectid`, and `file magic`
+- `[file information]`, `[file sddl]`, `[file objectid]`, and `[file magic]`
   can reveal system details
 - These are blocked in safe interpreters
 - Exception messages are sanitized in safe mode
 
 ### Temporary file security
 
-- `file tempname` uses .NET's `Path.GetRandomFileName()` for generating
+- `[file tempname]` uses .NET's `Path.GetRandomFileName()` for generating
   unique filenames
 - Generated names are verified non-existent before returning
 - The `EAGLE_TEST_TEMP` and `EAGLE_TEMP` environment variables allow
@@ -1229,9 +1229,9 @@ if {[file under -mode Glob -searchoption AllDirectories /project $path]} {
 
 ### Trust verification
 
-- `file trusted` checks Authenticode signatures
-- `file verified` checks .NET strong name verification
-- Both should be used before loading untrusted assemblies via `load`
+- `[file trusted]` checks Authenticode signatures
+- `[file verified]` checks .NET strong name verification
+- Both should be used before loading untrusted assemblies via `[load]`
 
 ---
 
@@ -1243,6 +1243,6 @@ if {[file under -mode Glob -searchoption AllDirectories /project $path]} {
 - **Delegates**: `eagle/Eagle/Library/Components/Public/Delegates.cs` --
   `GetDateTimeCallback`, `SetDateTimeCallback`
 - **Core language reference**: `core_language.md` -- String Processing -->
-  `file` command
+  `[file]` command
 - **Examples**: `core_examples.md` -- file
-- **Tcl reference**: [Tcl `file` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/file.htm)
+- **Tcl reference**: [Tcl `[file]` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/file.htm)

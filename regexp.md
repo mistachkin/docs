@@ -1,6 +1,6 @@
 # Eagle `[regexp]` / `[regsub]` Commands: Deep-Dive Analysis of Regular Expression Operations
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `regexp` and `regsub` command internals, including .NET `System.Text.RegularExpressions` integration, the Tcl-to-.NET substitution translation layer (`TranslateSubSpec`), three replacement modes (normal, `-eval`, `-command`), pattern mutation prefixes, and the many Eagle-specific options. For basic command syntax, see [`core_language.md`](core_language.md#cmd-regexp) and [`core_language.md`](core_language.md#cmd-regsub). For usage examples, see [`core_examples.md`](core_examples.md#ex-regexp) and [`core_examples.md`](core_examples.md#ex-regsub). For tips on `-compiled`, `-command`/`-eval`, and `-options`, see [`tips_and_tricks.md`](tips_and_tricks.md).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `[regexp]` and `[regsub]` command internals, including .NET `System.Text.RegularExpressions` integration, the Tcl-to-.NET substitution translation layer (`TranslateSubSpec`), three replacement modes (normal, `-eval`, `-command`), pattern mutation prefixes, and the many Eagle-specific options. For basic command syntax, see [`core_language.md`](core_language.md#cmd-regexp) and [`core_language.md`](core_language.md#cmd-regsub). For usage examples, see [`core_examples.md`](core_examples.md#ex-regexp) and [`core_examples.md`](core_examples.md#ex-regsub). For tips on `-compiled`, `-command`/`-eval`, and `-options`, see [`tips_and_tricks.md`](tips_and_tricks.md).
 
 ## 1. Executive Summary
 
@@ -89,7 +89,7 @@ syntax, but implements them via .NET mechanisms:
 
 ### Syntax
 
-```
+```tcl
 regexp ?switches? exp string ?matchVar? ?subMatchVar subMatchVar ...?
 ```
 
@@ -198,7 +198,7 @@ regexp -all -global {(\w+)} "hello world" m0 m1 m2 m3
 
 ### Syntax
 
-```
+```tcl
 regsub ?switches? exp string subSpec ?varName?
 ```
 
@@ -529,7 +529,7 @@ delegate that receives match information from the .NET regex engine. The
 | `pattern` | The original pattern string |
 | `input` | The original input string |
 | `replacement` | The substitution specification (subSpec) |
-| `text` | The eval script text from the `-eval` option (`string`) |
+| `text` | The eval script text from the `-eval` option (`[string]`) |
 | `count` | The replacement count (incremented by each callback) |
 | `quote` | Whether to quote the replacement for list safety |
 | `extra` | Whether extended substitution sequences are enabled |
@@ -774,11 +774,11 @@ considerations:
 
 | Related command | Relationship |
 |----------------|-------------|
-| `string match` | Glob-style pattern matching; simpler but less powerful than `regexp` |
-| `string map` | Fixed-string substitution; faster than `regsub` for literal replacements |
-| `string first` / `string last` | Find substrings by position; no regex support |
-| `split` | Split strings on literal characters; for regex-based splitting, combine `regexp -all -inline` with list processing |
-| `scan` | **(Not available in Eagle)** — use `regexp` with capture groups instead |
+| `[string match]` | Glob-style pattern matching; simpler but less powerful than `[regexp]` |
+| `[string map]` | Fixed-string substitution; faster than `[regsub]` for literal replacements |
+| `[string first]` / `[string last]` | Find substrings by position; no regex support |
+| `[split]` | Split strings on literal characters; for regex-based splitting, combine `regexp -all -inline` with list processing |
+| `scan` | **(Not available in Eagle)** — use `[regexp]` with capture groups instead |
 
 ## 17. References
 
@@ -786,13 +786,13 @@ considerations:
 - **Source code**: `Eagle/Library/Commands/Regsub.cs` — `[regsub]` command
 - **Source code**: `Eagle/Library/Components/Private/RegExOps.cs` — regex operations and substitution translation
 - **Source code**: `Eagle/Library/Components/Private/RegsubClientData.cs` — callback state
-- **Command reference**: [`core_language.md`](core_language.md#cmd-regexp) — `regexp` syntax and options
-- **Command reference**: [`core_language.md`](core_language.md#cmd-regsub) — `regsub` syntax and options
-- **Examples**: [`core_examples.md`](core_examples.md#ex-regexp) — `regexp` examples
-- **Examples**: [`core_examples.md`](core_examples.md#ex-regsub) — `regsub` examples
+- **Command reference**: [`core_language.md`](core_language.md#cmd-regexp) — `[regexp]` syntax and options
+- **Command reference**: [`core_language.md`](core_language.md#cmd-regsub) — `[regsub]` syntax and options
+- **Examples**: [`core_examples.md`](core_examples.md#ex-regexp) — `[regexp]` examples
+- **Examples**: [`core_examples.md`](core_examples.md#ex-regsub) — `[regsub]` examples
 - **Tips**: [`tips_and_tricks.md`](tips_and_tricks.md) — Regular Expression Enhancements section
 - **.NET reference**: [System.Text.RegularExpressions.Regex](https://docs.microsoft.com/en-us/dotnet/api/system.text.regularexpressions.regex)
 - **.NET reference**: [RegexOptions Enum](https://docs.microsoft.com/en-us/dotnet/api/system.text.regularexpressions.regexoptions)
-- **Tcl reference**: [Tcl `regexp` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/regexp.htm)
-- **Tcl reference**: [Tcl `regsub` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/regsub.htm)
+- **Tcl reference**: [Tcl `[regexp]` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/regexp.htm)
+- **Tcl reference**: [Tcl `[regsub]` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/regsub.htm)
 - **TIP #463**: [Tcl TIP #463 — `regsub -command`](https://core.tcl-lang.org/tips/doc/trunk/tip/463.md)

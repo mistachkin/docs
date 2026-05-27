@@ -1,6 +1,6 @@
 # Eagle `[load]` / `[unload]` Commands: Deep-Dive Analysis of Plugin Loading
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `load` and `unload` command internals, including the plugin loading infrastructure, security verification chain, AppDomain isolation, built-in plugins, and enterprise plugins. For basic command syntax and options, see [`core_language.md`](core_language.md#cmd-load) and [`core_language.md`](core_language.md#cmd-unload). For usage examples, see [`core_examples.md`](core_examples.md#ex-load). For the interpreter security model, see [`interp.md`](interp.md). For the native library FFI system, see [`library.md`](library.md).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `[load]` and `[unload]` command internals, including the plugin loading infrastructure, security verification chain, AppDomain isolation, built-in plugins, and enterprise plugins. For basic command syntax and options, see [`core_language.md`](core_language.md#cmd-load) and [`core_language.md`](core_language.md#cmd-unload). For usage examples, see [`core_examples.md`](core_examples.md#ex-load). For the interpreter security model, see [`interp.md`](interp.md). For the native library FFI system, see [`library.md`](library.md).
 
 ## 1. Executive Summary
 
@@ -85,7 +85,7 @@ Eagle operates in the .NET/CLR environment and needs a plugin system that:
 The plugin system follows a **discover → verify → load → populate →
 register** pipeline:
 
-```
+```tcl
 File/Resource → Assembly → Security Check → Type Discovery → Plugin Instance
     → Entity Population → Interpreter Registration
 ```
@@ -116,7 +116,7 @@ This distinction is critical and often causes confusion:
 
 Eagle's `[library]` command is conceptually closer to Tcl's `[load]` —
 both deal with native code — while Eagle's `[load]` has no direct Tcl
-equivalent. The closest Tcl concept is `package require` combined with
+equivalent. The closest Tcl concept is `[package require]` combined with
 `[load]`, but Eagle's system is architecturally richer.
 
 ## 4. Plugin Loading Architecture
@@ -125,7 +125,7 @@ equivalent. The closest Tcl concept is `package require` combined with
 
 Every Eagle plugin implements a chain of interfaces:
 
-```
+```tcl
 IPluginData (metadata)
     ├── Name, Description, Group, Tags
     ├── Flags (PluginFlags enumeration)
@@ -241,7 +241,7 @@ the `-viaresource` option:
 
 **File-based loading** (default):
 
-```
+```tcl
 [load] → Interpreter.LoadPlugin(fileName, ...) → Assembly.LoadFrom(fileName)
 ```
 
@@ -251,7 +251,7 @@ verification and hash-based integrity checking.
 
 **Resource-based loading** (`-viaresource`):
 
-```
+```tcl
 [load] -viaresource → RuntimeOps.LoadPlugin(resourceName, ...)
     → fileSystemHost.GetData(resourceName)
     → Security verification (via temporary file)
@@ -276,8 +276,8 @@ The `[load]` and `[unload]` commands themselves carry security-relevant
 
 | Command | CommandFlags | Meaning |
 |---------|-------------|---------|
-| `load` | `Unsafe \| Critical \| Standard \| SecuritySdk \| LicenseSdk` | Cannot be called from safe interpreters; part of the security and licensing SDK surface |
-| `unload` | `Unsafe \| Critical \| Standard` | Cannot be called from safe interpreters |
+| `[load]` | `Unsafe \| Critical \| Standard \| SecuritySdk \| LicenseSdk` | Cannot be called from safe interpreters; part of the security and licensing SDK surface |
+| `[unload]` | `Unsafe \| Critical \| Standard` | Cannot be called from safe interpreters |
 
 Both commands belong to the `managedEnvironment` object group.
 
@@ -347,7 +347,7 @@ Two optional security checks run in sequence:
 
 **Strong name verification** (when `PluginFlags.VerifiedOnly` is set):
 
-```
+```tcl
 RuntimeOps.IsStrongNameVerified(interpreter, assemblyBytes/fileName)
 ```
 
@@ -367,7 +367,7 @@ integrity check.
 
 **Authenticode trust verification** (when `PluginFlags.TrustedOnly` is set):
 
-```
+```tcl
 RuntimeOps.IsFileTrusted(interpreter, null, assemblyBytes/fileName)
 ```
 
@@ -388,7 +388,7 @@ known-good assemblies.
 When `ISOLATED_PLUGINS` is compiled in and `PluginFlags.NoPreview` is
 **not** set, the system performs a lightweight preview:
 
-```
+```tcl
 RuntimeOps.PreviewPluginFlagsAndUpdateUri()
 ```
 
@@ -615,7 +615,7 @@ Plugins loaded into isolated AppDomains communicate with the interpreter
 through .NET remoting transparent proxies. The `Plugin` wrapper class
 (`Eagle/Library/Wrappers/Plugin.cs`) acts as the proxy:
 
-```
+```tcl
 [Host AppDomain]                    [Isolated AppDomain]
 
 Interpreter ──→ Plugin (wrapper)    Actual IPlugin implementation
@@ -784,7 +784,7 @@ Disabled with `CreateFlags.NoTestPlugin`.
 
 ### 8.5 Plugin Class Hierarchy
 
-```
+```tcl
 _Plugins.Default (base class for all plugins)
     ├── _Plugins.Core (core system plugin)
     ├── _Plugins.Test (test plugin)
@@ -970,7 +970,7 @@ translation and encrypted string transformation.
 
 ## 10. Complete `[load]` Options Reference
 
-```
+```tcl
 load ?options? fileName ?packageName? ?interp?
 ```
 
@@ -1007,11 +1007,11 @@ load ?options? fileName ?packageName? ?interp?
 |----------|----------|-------------|
 | `fileName` | Yes | Path to the plugin assembly (or resource name with `-viaresource`) |
 | `packageName` | No | Type name of the plugin class (auto-discovered if omitted) |
-| `interp` | No | Target interpreter path (defaults to current) |
+| `[interp]` | No | Target interpreter path (defaults to current) |
 
 ## 11. Complete `[unload]` Options Reference
 
-```
+```tcl
 unload ?options? fileName ?packageName? ?interp?
 ```
 
@@ -1031,7 +1031,7 @@ unload ?options? fileName ?packageName? ?interp?
 |----------|----------|-------------|
 | `fileName` | Yes | Path to the plugin assembly to unload |
 | `packageName` | No | Type name or plugin name to match (if assembly contains multiple plugins) |
-| `interp` | No | Target interpreter path (defaults to current) |
+| `[interp]` | No | Target interpreter path (defaults to current) |
 
 ## 12. Practical Patterns
 
@@ -1283,7 +1283,7 @@ load -maybeverifiedonly /path/to/DevPlugin.dll
 | Command | Relationship |
 |---------|-------------|
 | `[library]` | Loads *native* (unmanaged) shared libraries for P/Invoke-style FFI. Complementary to `[load]`, which loads *managed* .NET plugins. See [`library.md`](library.md). |
-| `[interp]` | Manages interpreter lifecycle and security. Plugins can be loaded into child interpreters via the `interp` argument. Safe interpreters cannot call `[load]`/`[unload]`. See [`interp.md`](interp.md). |
+| `[interp]` | Manages interpreter lifecycle and security. Plugins can be loaded into child interpreters via the `[interp]` argument. Safe interpreters cannot call `[load]`/`[unload]`. See [`interp.md`](interp.md). |
 | `[object]` | Provides .NET object manipulation. Plugin-provided commands often use `[object]` internally. Plugins can provide custom object resolvers. |
 | `[package]` | Package management. Unless `-noprovide` is used, loaded plugins are registered as packages. |
 | `[info]` | `[info loaded]` lists currently loaded plugins. |

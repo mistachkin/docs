@@ -123,7 +123,7 @@ the script result.
 
 **Substitution** performs command, variable, and backslash substitutions within
 the input text but does not parse it as a complete script. This is analogous to
-Tcl's `subst` command.
+Tcl's `[subst]` command.
 
 ### Integration Summary
 
@@ -263,8 +263,8 @@ class:
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `Text` | `string` | Yes | The expression, script, file path, or template to process |
-| `Args` | `string` | No | Command-line arguments for the interpreter (space-separated list) |
+| `Text` | `[string]` | Yes | The expression, script, file path, or template to process |
+| `Args` | `[string]` | No | Command-line arguments for the interpreter (space-separated list) |
 | `CreateFlags` | `CreateFlags` | No | Interpreter creation flags (default: `EmbeddedUse`) |
 | `HostCreateFlags` | `HostCreateFlags` | No | Host creation flags (default: `EmbeddedUse`) |
 | `EngineFlags` | `EngineFlags` | No | Flags for modifying engine behavior (default: `None`) |
@@ -283,7 +283,7 @@ of the enum value.
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `Code` | `ReturnCode` | The Eagle return code (`Ok`, `Error`, etc.) |
-| `Result` | `string` | The result value on success, or error message on failure |
+| `Result` | `[string]` | The result value on success, or error message on failure |
 
 ### The \_\_task Object
 
@@ -305,7 +305,7 @@ catch {
 }
 ```
 
-The `catch` wrapper is necessary (see [Known Limitations](#known-limitations))
+The `[catch]` wrapper is necessary (see [Known Limitations](#known-limitations))
 because a CLR version mismatch between the built Eagle assembly and MSBuild
 can cause reflection errors when accessing `BuildEngine`.
 
@@ -338,7 +338,7 @@ Result: `Code` = `Ok`, `Result` = `4`.
 ```
 
 Uses the MSBuild property `$(TargetPath)` embedded in the script text. The
-Eagle `file version` command retrieves the Win32 file version.
+Eagle `[file version]` command retrieves the Win32 file version.
 
 **Script with Args parameter:**
 
@@ -371,7 +371,7 @@ Result: `Code` = `Ok`, `Result` = `3 one two {three four}`.
 </EvaluateScript>
 ```
 
-The `catch` command prevents build errors from CLR version mismatches. The
+The `[catch]` command prevents build errors from CLR version mismatches. The
 `Args` parameter sets `$argv` to `High`, which becomes the message importance
 level.
 
@@ -413,7 +413,7 @@ evaluation. The `Text` parameter specifies the file path, not a script string.
 - **CLR version mismatch**: When Eagle is built for one .NET Framework version
   (e.g., .NET 2.0) and MSBuild runs under another (e.g., .NET 4.0), accessing
   `BuildEngine` or other MSBuild types through the `__task` object may cause
-  reflection errors. Wrap such calls in `catch` to handle this gracefully.
+  reflection errors. Wrap such calls in `[catch]` to handle this gracefully.
 
 - **New interpreter per task invocation** (design choice): Each task creates
   and disposes its own interpreter instance, providing clean isolation between
@@ -464,7 +464,7 @@ Default flags:
 
 Eagle variables are accessed from WiX source files using the syntax:
 
-```
+```tcl
 $(eagle.variableName)
 ```
 
@@ -486,7 +486,7 @@ details.
 
 Eagle commands can be invoked from WiX using the function call syntax:
 
-```
+```tcl
 $(eagle.commandName(arg1,arg2,...))
 ```
 
@@ -562,7 +562,7 @@ the Eagle interpreter.
           Value="$(eagle.set(dir,$(sys.SOURCEFILEDIR)))" />
 ```
 
-Invokes the Eagle `set` command to store the WiX system variable
+Invokes the Eagle `[set]` command to store the WiX system variable
 `$(sys.SOURCEFILEDIR)` into an Eagle variable named `dir`. This variable is
 then available to subsequent scripts and pragmas in the same compilation
 session.
@@ -642,7 +642,7 @@ Pragma processing requires WiX 3.5 or higher. The `FinalizePreprocess` method
   early and referencing it in later pragmas. If isolation between operations
   is preferred, the `Preprocessor` class can be modified to create a fresh
   interpreter for each pragma or function call. Scripts that need cleanup
-  within the shared model can use `unset -nocomplain` or `try`/`finally`
+  within the shared model can use `unset -nocomplain` or `[try]`/`finally`
   blocks to manage state explicitly.
 
 ---
@@ -725,9 +725,9 @@ All other parameters accept pipeline input by property name.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `-Text` | `string` | The string, expression, script, or file name to process (required) |
-| `-Args` | `string` | Command-line arguments for the interpreter |
-| `-PreInitialize` | `string` | Script to evaluate during interpreter creation |
+| `-Text` | `[string]` | The string, expression, script, or file name to process (required) |
+| `-Args` | `[string]` | Command-line arguments for the interpreter |
+| `-PreInitialize` | `[string]` | Script to evaluate during interpreter creation |
 | `-CreateFlags` | `CreateFlags` | Flags for interpreter creation (default: `SafeEmbeddedUse`) |
 | `-HostCreateFlags` | `HostCreateFlags` | Flags for interpreter host creation (default: `SafeEmbeddedUse`) |
 | `-InitializeFlags` | `InitializeFlags` | Flags for interpreter initialization (default: `Default`) |
@@ -758,16 +758,16 @@ pipeline, providing 9 sub-commands:
 | Sub-Command | Arguments | Description |
 |-------------|-----------|-------------|
 | `about` | (none) | Returns plugin about information |
-| `debug` | `text` | Calls `WriteDebug` on the PowerShell cmdlet |
-| `error` | `code result` | Writes an error record to the PowerShell error stream |
-| `invoke` | `?options? script` | Invokes a PowerShell pipeline command |
+| `[debug]` | `text` | Calls `WriteDebug` on the PowerShell cmdlet |
+| `[error]` | `code result` | Writes an error record to the PowerShell error stream |
+| `[invoke]` | `?options? script` | Invokes a PowerShell pipeline command |
 | `options` | (none) | Returns compile-time define constants or plugin options |
 | `progress` | `?options? activityId activity statusDescription` | Writes a progress record |
 | `remove` | (none) | Removes the meta-command from the interpreter |
 | `status` | (none) | Returns cmdlet object status and properties |
 | `verbose` | `text` | Calls `WriteVerbose` on the PowerShell cmdlet |
 
-The `invoke` sub-command supports the `-addToHistory` option. The `progress`
+The `[invoke]` sub-command supports the `-addToHistory` option. The `progress`
 sub-command supports `-currentOperation`, `-parentActivityId`,
 `-percentComplete`, `-recordType`, and `-secondsRemaining` options.
 
@@ -883,7 +883,7 @@ Enables the policy engine but suppresses confirmation prompts with `-Force`.
 
 The following warning appears verbatim in all source files:
 
-```
+```tcl
 *WARNING* *WARNING* *WARNING* *WARNING* *WARNING* *WARNING* *WARNING*
 
 Please do not use this code, it is a proof-of-concept only.  It is not

@@ -1,13 +1,13 @@
-# Eagle `array` Command — Deep-Dive Analysis
+# Eagle `[array]` Command — Deep-Dive Analysis
 
 ## 1. Executive Summary
 
-The Eagle `array` command provides **17 sub-commands** for associative
+The Eagle `[array]` command provides **17 sub-commands** for associative
 array manipulation, backed by a polymorphic storage system that supports
-eight distinct backend types. While Tcl's `array` offers roughly 10
+eight distinct backend types. While Tcl's `[array]` offers roughly 10
 sub-commands for basic hash table operations, Eagle extends this with
 deep copy support, default values (TIP #508), random element selection,
-`array for`/`array foreach`/`array lmap` iteration, per-element flags,
+`[array for]`/`[array foreach]`/`[array lmap]` iteration, per-element flags,
 and virtual arrays backed by environment variables, .NET `System.Array`
 objects, database connections, network state, Windows registry, and
 thread-local storage.
@@ -18,11 +18,11 @@ Key differentiators from Tcl:
 |------|-----|-------|
 | Sub-commands | ~10 | 17 |
 | Storage backend | Single hash table | 8 polymorphic backends |
-| Default values | None | `array default` (TIP #508) |
-| Copy | Manual via `array get`/`set` | `array copy` with `-deep` option |
-| Random access | None | `array random` with 5 options |
-| Iteration | `array for` (8.7+) | `array for`, `array foreach`, `array lmap` |
-| Values query | None | `array values` with match modes |
+| Default values | None | `[array default]` (TIP #508) |
+| Copy | Manual via `[array get]`/`[set]` | `[array copy]` with `-deep` option |
+| Random access | None | `[array random]` with 5 options |
+| Iteration | `[array for]` (8.7+) | `[array for]`, `[array foreach]`, `[array lmap]` |
+| Values query | None | `[array values]` with match modes |
 | Per-element flags | None | Read-only elements via `ElementDictionary` |
 | Thread safety | None | Per-variable locking and event signaling |
 | Match modes | `-glob`, `-regexp`, `-exact` | Same + `-substring` |
@@ -30,7 +30,7 @@ Key differentiators from Tcl:
 
 ---
 
-## 2. Why the Eagle `array` Command Differs from Tcl
+## 2. Why the Eagle `[array]` Command Differs from Tcl
 
 Eagle arrays sit atop .NET's collection infrastructure and serve as a
 bridge between script-level associative arrays and multiple .NET data
@@ -42,8 +42,8 @@ sources:
 - **Virtual arrays** — the `env`, tests, thread, database, network, and
   registry variables present their backing .NET data structures through
   the standard array interface, allowing scripts to manipulate them
-  with `array get`, `array names`, etc.
-- **Variable trace integration** — `array set` and `array copy` fire
+  with `[array get]`, `[array names]`, etc.
+- **Variable trace integration** — `[array set]` and `[array copy]` fire
   `BeforeVariableSet` traces, enabling watch callbacks
 - **Thread safety** — every sub-command acquires
   `lock (interpreter.InternalSyncRoot)` for transactional access, and
@@ -66,7 +66,7 @@ sources:
 
 ## 3. Sub-Command Reference
 
-Eagle's 17 `array` sub-commands are organized below by functional
+Eagle's 17 `[array]` sub-commands are organized below by functional
 category. Sub-commands marked **(Eagle)** have no Tcl equivalent.
 
 ### 3.1 Basic Array Operations
@@ -109,7 +109,7 @@ Sets multiple array elements from a flat key-value list. Creates the
 array if it does not exist.
 
 **Validation:**
-- `list` must have an even number of elements
+- `[list]` must have an even number of elements
 - Enforces interpreter array element limit
 - Cannot operate on special variables
 
@@ -190,7 +190,7 @@ array names data -exact apple   ;# {apple}
 #### `array values arrayName ?mode? ?pattern?` **(Eagle)**
 
 Returns a list of array element values, optionally filtered by the
-same match modes as `array names`. Not available in standard Tcl.
+same match modes as `[array names]`. Not available in standard Tcl.
 
 ```tcl
 array set data {a 10 b 20 c 30}
@@ -202,7 +202,7 @@ array values data -glob 2*     ;# {20}
 
 #### `array copy ?options? source destination` **(Eagle)**
 
-Copies the contents of array `source` to a new array `destination`.
+Copies the contents of array `[source]` to a new array `destination`.
 
 **Options:**
 
@@ -233,7 +233,7 @@ array copy -deep src dst2       ;# Deep copy
 
 ### 3.4 Default Values (TIP #508)
 
-#### `array default` **(Eagle)**
+#### `[array default]` **(Eagle)**
 
 Manages default values for array elements. When a default is set,
 accessing a non-existent element returns the default value instead
@@ -266,7 +266,7 @@ array default unset counts
 
 This is particularly useful for counter patterns, accumulation, and
 any scenario where a known initial value eliminates the need for
-`info exists` checks before first use.
+`[info exists]` checks before first use.
 
 ---
 
@@ -307,7 +307,7 @@ array foreach key rgb {
 
 #### `array lmap varList arrayName body` **(Eagle)**
 
-Like `array foreach` but collects the result of each `body` evaluation
+Like `[array foreach]` but collects the result of each `body` evaluation
 into a list. The mapping equivalent for arrays.
 
 ```tcl
@@ -344,7 +344,7 @@ Returns `1` if there are more elements in the search, `0` otherwise.
 
 Implementation creates a fresh enumerator and advances to the current
 position to peek ahead — this is an O(N) operation per call, so
-prefer `array for`/`array foreach` for performance-sensitive iteration.
+prefer `[array for]`/`[array foreach]` for performance-sensitive iteration.
 
 #### `array nextelement arrayName searchId`
 
@@ -369,10 +369,10 @@ array donesearch data $sid
 
 ## 5. Polymorphic Storage Backends
 
-Eagle arrays are polymorphic: the `array` command detects the variable
+Eagle arrays are polymorphic: the `[array]` command detects the variable
 type and dispatches to the appropriate backend. This is the mechanism
 that allows `array names env` to return environment variable names
-and `array get` on a database variable to return query results.
+and `[array get]` on a database variable to return query results.
 
 ### Backend detection order
 
@@ -503,12 +503,12 @@ scalar and array values:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `value` | `object` | Scalar value |
+| `value` | `[object]` | Scalar value |
 | `arrayValue` | `ElementDictionary` | Array elements |
 | `flags` | `VariableFlags` | State and behavior flags |
 | `traces` | `TraceList` | Read/write/unset callbacks |
-| `link` | `IVariable` | Alias target (for `upvar`/`global`) |
-| `linkIndex` | `string` | Array element alias index |
+| `link` | `IVariable` | Alias target (for `[upvar]`/`[global]`) |
+| `linkIndex` | `[string]` | Array element alias index |
 | `threadId` | `long?` | Thread lock owner |
 | `levels` | `long` | Re-entrance count |
 | `@event` | `EventWaitHandle` | Change signaling |
@@ -558,7 +558,7 @@ behavior. Key flags for arrays:
 
 ### Thread safety
 
-Every `array` sub-command acquires
+Every `[array]` sub-command acquires
 `lock (interpreter.InternalSyncRoot)` before operating. The `Variable`
 class additionally supports per-variable locking:
 
@@ -579,11 +579,11 @@ Array operations interact with Eagle's variable trace infrastructure:
 
 | Sub-command | Traces fired |
 |-------------|-------------|
-| `array set` | `BeforeVariableSet` via `FireArraySetTraces()` |
-| `array copy` | `BeforeVariableSet` via `FireTraces()` |
-| `array get` | None (known limitation — FIXME in source) |
-| `array names` | None (known limitation) |
-| `array unset` | Fires through `UnsetVariable2()` per element |
+| `[array set]` | `BeforeVariableSet` via `FireArraySetTraces()` |
+| `[array copy]` | `BeforeVariableSet` via `FireTraces()` |
+| `[array get]` | None (known limitation — FIXME in source) |
+| `[array names]` | None (known limitation) |
+| `[array unset]` | Fires through `UnsetVariable2()` per element |
 
 ### TraceList
 
@@ -597,7 +597,7 @@ for read, write, and unset events. Traces are:
 ### Variable event signaling
 
 The `Variable.@event` (`EventWaitHandle`) is signaled when the
-variable changes. This supports `vwait`-style waiting on array
+variable changes. This supports `[vwait]`-style waiting on array
 modifications. The `EntityOps.SignalDirty()` method marks the variable
 as dirty and signals the event handle.
 
@@ -713,19 +713,19 @@ foreach {key value} [array get source] {
 
 ## 11. Comparison with Tcl
 
-| Feature | Tcl `array` | Eagle `array` |
+| Feature | Tcl `[array]` | Eagle `[array]` |
 |---------|-----------|-------------|
 | exists / size | Standard | Same (polymorphic backends) |
 | get / set | Standard | Same (8 backend types) |
 | names | `-exact`, `-glob`, `-regexp` | Same + `-substring` |
-| values | Not available | `array values` with match modes |
+| values | Not available | `[array values]` with match modes |
 | unset | Standard | Same (cannot match-unset System.Array) |
-| copy | Not available | `array copy` with `-deep` |
+| copy | Not available | `[array copy]` with `-deep` |
 | default | Tcl 8.7 (TIP #508) | `array default exists/get/set/unset` |
-| random | Not available | `array random` with 5 options |
-| for | Tcl 8.7 | `array for` (name-value iteration) |
-| foreach | `foreach` + `array names` | `array foreach` (direct key iteration) |
-| lmap | `lmap` + `array names` | `array lmap` (direct mapped iteration) |
+| random | Not available | `[array random]` with 5 options |
+| for | Tcl 8.7 | `[array for]` (name-value iteration) |
+| foreach | `[foreach]` + `[array names]` | `[array foreach]` (direct key iteration) |
+| lmap | `[lmap]` + `[array names]` | `[array lmap]` (direct mapped iteration) |
 | startsearch / anymore / nextelement / donesearch | Standard | Same (backend-aware) |
 | statistics | `array statistics` | Not implemented |
 | Backing store | Hash table | `ElementDictionary` + 7 virtual backends |
@@ -740,7 +740,7 @@ foreach {key value} [array get source] {
 
 ### Safe interpreter access
 
-The `array` command is marked `CommandFlags.Safe` — it runs in safe
+The `[array]` command is marked `CommandFlags.Safe` — it runs in safe
 interpreters. However, access to array variables is controlled by:
 
 - Variable resolver: safe interpreters may not have access to all
@@ -748,7 +748,7 @@ interpreters. However, access to array variables is controlled by:
 - Forbidden variable checks: `interpreter.IsForbiddenVariableForArrayCopy()`
   blocks copying of protected variables
 - Special variable checks: `interpreter.IsSpecialVariable()` blocks
-  `array set` on special variables
+  `[array set]` on special variables
 - Option error messages are sanitized in safe interpreters
 
 ### Thread safety
@@ -765,7 +765,7 @@ sensitive data from lingering in the managed heap.
 
 ### Element limits
 
-`array set` enforces an interpreter-configured array element limit to
+`[array set]` enforces an interpreter-configured array element limit to
 prevent denial-of-service through unbounded array growth.
 
 ---
@@ -778,6 +778,6 @@ prevent denial-of-service through unbounded array growth.
 - **ArrayOps**: `eagle/Eagle/Library/Components/Private/ArrayOps.cs`
 - **ArraySearch**: `eagle/Eagle/Library/Components/Private/ArraySearch.cs`
 - **Core language reference**: `core_language.md` § Variables / Data →
-  `array` command
+  `[array]` command
 - **Examples**: `core_examples.md` § array
-- **Tcl reference**: [Tcl `array` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/array.htm)
+- **Tcl reference**: [Tcl `[array]` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/array.htm)

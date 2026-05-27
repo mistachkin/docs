@@ -1,22 +1,22 @@
 # Eagle `[string]` Command: Deep-Dive Analysis of String Operations, Type Checking, and .NET Integration
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `string` command internals, including the 29 sub-commands, the 64-class `string is` type-checking system (per-character and whole-string validation), culture-aware comparison and casing via `CultureInfo` and `CompareOptions`, the extended `string map` with regex/eval/multipass modes, `string format` with .NET `String.Format` reflection dispatch, prefix/suffix testing, Unicode character operations, and the `StringOps` infrastructure. For basic command syntax, see [`core_language.md`](core_language.md#cmd-string). For usage examples, see [`core_examples.md`](core_examples.md#ex-string). For string concatenation tips, see [`tips_and_tricks.md`](tips_and_tricks.md).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `[string]` command internals, including the 29 sub-commands, the 64-class `[string is]` type-checking system (per-character and whole-string validation), culture-aware comparison and casing via `CultureInfo` and `CompareOptions`, the extended `[string map]` with regex/eval/multipass modes, `[string format]` with .NET `String.Format` reflection dispatch, prefix/suffix testing, Unicode character operations, and the `StringOps` infrastructure. For basic command syntax, see [`core_language.md`](core_language.md#cmd-string). For usage examples, see [`core_examples.md`](core_examples.md#ex-string). For string concatenation tips, see [`tips_and_tricks.md`](tips_and_tricks.md).
 
 ## 1. Executive Summary
 
 Eagle's `[string]` command provides **Tcl-compatible string operations**
 with substantial .NET-powered extensions. It is one of the largest
-commands in Eagle, with 29 sub-commands and a `string is` type-checking
+commands in Eagle, with 29 sub-commands and a `[string is]` type-checking
 system that supports 64 character and validation classes.
 
 There are four key areas of complexity:
 
-1. **The `string is` type-checking system** — Beyond Tcl's basic
+1. **The `[string is]` type-checking system** — Beyond Tcl's basic
    character classes (`alnum`, `alpha`, `digit`, etc.), Eagle adds 40+
    validation classes that test for .NET types (`decimal`, `single`,
-   `guid`, `timespan`), file system validity (`directory`, `file`,
-   `path`, `component`), interpreter objects (`command`, `object`,
-   `plugin`, `interpreter`), and data formats (`base64`, `uri`, `xml`,
+   `[guid]`, `timespan`), file system validity (`directory`, `[file]`,
+   `path`, `component`), interpreter objects (`command`, `[object]`,
+   `plugin`, `interpreter`), and data formats (`[base64]`, `[uri]`, `[xml]`,
    `cidr`, `inetaddr`). The system distinguishes per-character classes
    (tested via callbacks) from whole-string classes (tested via
    dedicated validators), and supports options like `-not`, `-any`,
@@ -30,14 +30,14 @@ There are four key areas of complexity:
    reflection to invoke `String.ToLower(CultureInfo)` and similar
    methods.
 
-3. **Extended `string map`** — Beyond Tcl's simple key-value mapping,
-   Eagle's `string map` supports `-regexp` (regex-based matching),
+3. **Extended `[string map]`** — Beyond Tcl's simple key-value mapping,
+   Eagle's `[string map]` supports `-regexp` (regex-based matching),
    `-eval` (script evaluation for replacements), `-multipass` (repeated
    application until no changes), `-subspec` (substitution
    specification processing), `-maximum` (replacement count limit), and
    `-countvar` (store replacement count in a variable).
 
-4. **`string format` with .NET integration** — Eagle's `string format`
+4. **`[string format]` with .NET integration** — Eagle's `[string format]`
    uses .NET's `String.Format` via reflection, supporting `-culture`
    for culture-specific formatting, `-valueformat` for type-specific
    format strings, `-datetimekind` and `-datetimestyles` for date/time
@@ -51,9 +51,9 @@ CommandFlags.Initialize | CommandFlags.SecuritySdk` and belongs to the
 
 | File | Lines | Role |
 |------|-------|------|
-| `Eagle/Library/Commands/String.cs` | 2,822 | Main command implementation (29 sub-commands) |
-| `Eagle/Library/Components/Private/StringOps.cs` | 7,438 | String operations: character classification, mapping, encoding, validation |
-| `Eagle/Library/Components/Shared/StringOps.cs` | 339 | Shared comparison operations: `Compare`, `Equals`, `StartsWith`, `EndsWith` |
+| `Eagle/Library/Commands/String.cs` | 2,737 | Main command implementation (29 sub-commands) |
+| `Eagle/Library/Components/Private/StringOps.cs` | 7,534 | String operations: character classification, mapping, encoding, validation |
+| `Eagle/Library/Components/Shared/StringOps.cs` | 338 | Shared comparison operations: `Compare`, `Equals`, `StartsWith`, `EndsWith` |
 
 ## 2. Why This Command Differs from Tcl
 
@@ -79,14 +79,14 @@ Eagle adds 8 sub-commands beyond Tcl's standard set:
 | `bytelength` | Byte length with configurable encoding |
 | `cat` | String concatenation (Tcl 8.6.2+, but Eagle adds it for compatibility) |
 | `character` | Integer code point → character conversion |
-| `classes` | List all valid `string is` class names |
+| `classes` | List all valid `[string is]` class names |
 | `ends` | Test if string ends with suffix |
 | `ordinal` | Character → Unicode code point conversion |
 | `starts` | Test if string starts with prefix |
 
-### Extended `string is` classes
+### Extended `[string is]` classes
 
-Tcl's `string is` supports approximately 18 character classes. Eagle
+Tcl's `[string is]` supports approximately 18 character classes. Eagle
 extends this to 64 classes by adding .NET type validation, file system
 checks, interpreter object existence checks, and data format
 validators.
@@ -95,17 +95,17 @@ validators.
 
 ### String measurement and access
 
-#### `string length`
+#### `[string length]`
 
-```
+```tcl
 string length string
 ```
 
 Returns the number of characters in the string.
 
-#### `string bytelength`
+#### `[string bytelength]`
 
-```
+```tcl
 string bytelength string ?encoding?
 ```
 
@@ -114,36 +114,36 @@ an encoding argument, returns `length * sizeof(char)` (UTF-16 byte
 count). With an encoding, calls `StringOps.AddByteCount()` using the
 specified .NET `Encoding` object.
 
-#### `string index`
+#### `[string index]`
 
-```
+```tcl
 string index string charIndex
 ```
 
 Returns the character at `charIndex`. Supports Eagle's `end-N` index
 notation.
 
-#### `string range`
+#### `[string range]`
 
-```
+```tcl
 string range string first last
 ```
 
 Returns the substring from `first` to `last` (inclusive). Both indices
 support `end-N` notation.
 
-#### `string character`
+#### `[string character]`
 
-```
+```tcl
 string character integer
 ```
 
 Converts an integer Unicode code point to a single character via
 `ConversionOps.ToChar()`. Eagle extension — Tcl has no equivalent.
 
-#### `string ordinal`
+#### `[string ordinal]`
 
-```
+```tcl
 string ordinal string charIndex
 ```
 
@@ -153,9 +153,9 @@ equivalent.
 
 ### String comparison
 
-#### `string compare`
+#### `[string compare]`
 
-```
+```tcl
 string compare ?options? string1 string2
 ```
 
@@ -178,9 +178,9 @@ When `-culture` and `-options` are provided, the comparison uses
 This enables culture-aware comparisons that handle locale-specific
 sorting rules (e.g., Turkish dotless-i, German sharp-s).
 
-#### `string equal`
+#### `[string equal]`
 
-```
+```tcl
 string equal ?options? string1 string2
 ```
 
@@ -189,9 +189,9 @@ Same options as `compare`, but returns `1` if the strings are equal,
 
 ### String searching
 
-#### `string first`
+#### `[string first]`
 
-```
+```tcl
 string first ?options? needleString haystackString ?startIndex?
 ```
 
@@ -203,9 +203,9 @@ Returns the index of the first occurrence of `needleString` in
 | `-nocase` | flag | Case-insensitive search |
 | `-comparison` | StringComparison | .NET comparison type |
 
-#### `string last`
+#### `[string last]`
 
-```
+```tcl
 string last ?options? needleString haystackString ?startIndex?
 ```
 
@@ -214,13 +214,13 @@ Returns the index of the last occurrence, searching backwards from
 
 Same options as `first`.
 
-#### `string match`
+#### `[string match]`
 
-```
+```tcl
 string match ?options? pattern string
 ```
 
-Tests if `string` matches `pattern`. Returns `1` on match, `0` otherwise.
+Tests if `[string]` matches `pattern`. Returns `1` on match, `0` otherwise.
 
 | Option | Type | Description |
 |--------|------|-------------|
@@ -230,9 +230,9 @@ Tests if `string` matches `pattern`. Returns `1` on match, `0` otherwise.
 The `-mode` option is an Eagle extension that allows switching the
 pattern matching engine beyond Tcl's default glob matching.
 
-#### `string wordstart` / `string wordend`
+#### `[string wordstart]` / `[string wordend]`
 
-```
+```tcl
 string wordstart string index
 string wordend string index
 ```
@@ -243,9 +243,9 @@ or connector punctuation).
 
 ### String modification
 
-#### `string cat`
+#### `[string cat]`
 
-```
+```tcl
 string cat ?arg ...?
 ```
 
@@ -253,35 +253,35 @@ Concatenates all arguments. Uses `StringBuilderFactory.Create()` with
 pre-calculated capacity for efficiency, and
 `StringBuilderCache.GetStringAndRelease()` for memory management.
 
-#### `string repeat`
+#### `[string repeat]`
 
-```
+```tcl
 string repeat string count
 ```
 
-Repeats `string` the specified number of times. Subject to result size
+Repeats `[string]` the specified number of times. Subject to result size
 limits (`RESULT_LIMITS` conditional) to prevent memory exhaustion.
 
-#### `string replace`
+#### `[string replace]`
 
-```
+```tcl
 string replace string first last ?newString?
 ```
 
 Replaces the characters from `first` to `last` (inclusive) with
 `newString`. If `newString` is omitted, the range is deleted.
 
-#### `string reverse`
+#### `[string reverse]`
 
-```
+```tcl
 string reverse string
 ```
 
 Reverses the string.
 
-#### `string map`
+#### `[string map]`
 
-```
+```tcl
 string map ?options? charMap string
 ```
 
@@ -329,9 +329,9 @@ string map {ab cd cd ef} "abcd"  ;# Result: "cdcd"
 string map -multipass {ab cd cd ef} "abcd"  ;# Result: "efef"
 ```
 
-#### `string format`
+#### `[string format]`
 
-```
+```tcl
 string format format ?arg ...?
 ```
 
@@ -362,9 +362,9 @@ string format -culture de-DE "{0:C}" 1234.56
 
 ### Case conversion and trimming
 
-#### `string tolower` / `string toupper` / `string totitle`
+#### `[string tolower]` / `[string toupper]` / `[string totitle]`
 
-```
+```tcl
 string tolower ?options? string ?first? ?last?
 string toupper ?options? string ?first? ?last?
 string totitle ?options? string ?first? ?last?
@@ -383,9 +383,9 @@ culture-specific casing (e.g., Turkish dotless-i rules).
 `totitle` converts the first character to uppercase and the rest to
 lowercase, optionally within the specified range.
 
-#### `string trim` / `string trimleft` / `string trimright`
+#### `[string trim]` / `[string trimleft]` / `[string trimright]`
 
-```
+```tcl
 string trim string ?chars?
 string trimleft string ?chars?
 string trimright string ?chars?
@@ -397,13 +397,13 @@ whitespace. Maps to .NET's `String.Trim()`, `String.TrimStart()`, and
 
 ### Prefix/suffix testing
 
-#### `string starts`
+#### `[string starts]`
 
-```
+```tcl
 string starts ?options? prefix string
 ```
 
-Returns `1` if `string` starts with `prefix`, `0` otherwise.
+Returns `1` if `[string]` starts with `prefix`, `0` otherwise.
 
 | Option | Type | Description |
 |--------|------|-------------|
@@ -411,35 +411,35 @@ Returns `1` if `string` starts with `prefix`, `0` otherwise.
 | `-comparison` | StringComparison | .NET comparison type |
 | `-culture` | CultureInfo | Culture for comparison |
 
-Eagle extension — Tcl has no `string starts` sub-command.
+Eagle extension — Tcl has no `[string starts]` sub-command.
 
-#### `string ends`
+#### `[string ends]`
 
-```
+```tcl
 string ends ?options? suffix string
 ```
 
-Returns `1` if `string` ends with `suffix`, `0` otherwise. Same options
+Returns `1` if `[string]` ends with `suffix`, `0` otherwise. Same options
 as `starts`.
 
-Eagle extension — Tcl has no `string ends` sub-command.
+Eagle extension — Tcl has no `[string ends]` sub-command.
 
 ### Utility
 
-#### `string classes`
+#### `[string classes]`
 
-```
+```tcl
 string classes
 ```
 
-Returns the list of all valid class names for `string is`. Eagle
+Returns the list of all valid class names for `[string is]`. Eagle
 extension — Tcl has no equivalent.
 
-## 4. The `string is` Type-Checking System
+## 4. The `[string is]` Type-Checking System
 
 ### Overview
 
-The `string is` sub-command tests whether a string belongs to a
+The `[string is]` sub-command tests whether a string belongs to a
 specified class. It supports 64 classes organized into two categories:
 
 - **Per-character classes** (18): Each character is tested individually
@@ -451,7 +451,7 @@ specified class. It supports 64 classes organized into two categories:
 
 ### Syntax
 
-```
+```tcl
 string is ?not? class ?options? string
 ```
 
@@ -461,7 +461,7 @@ string is ?not? class ?options? string
 | `-nocomplain` | flag | Suppress error messages |
 | `-not` | bool | Negate the result |
 | `-any` | bool | Pass if ANY character matches (vs all) |
-| `-via` | bool | Treat `string` as a variable name |
+| `-via` | bool | Treat `[string]` as a variable name |
 | `-count` | int | Expected character count |
 | `-good` | varName | Store passing characters/values |
 | `-bad` | varName | Store failing characters/values |
@@ -523,30 +523,30 @@ ASCII range, unlike `alnum`/`alpha`/`digit` which use Unicode-aware
 |-------|-----------|-------------|
 | `datetime` | `Value.GetDateTime` | Parseable as .NET `DateTime` |
 | `timespan` | `Value.GetTimeSpan` | Parseable as .NET `TimeSpan` |
-| `guid` | `Value.GetGuid` | Valid GUID format |
-| `version` | `Value.GetVersion` | Parseable as .NET `Version` |
+| `[guid]` | `Value.GetGuid` | Valid GUID format |
+| `[version]` | `Value.GetVersion` | Parseable as .NET `Version` |
 | `versionrange` | `Value.GetVersionRange` | Two `Version` values |
-| `uri` | `Value.GetUri` | Valid URI |
-| `base64` | `StringOps.IsBase64` | Valid Base64 string |
-| `xml` | `XmlOps.LoadString` | Valid XML (conditional on XML flag) |
+| `[uri]` | `Value.GetUri` | Valid URI |
+| `[base64]` | `StringOps.IsBase64` | Valid Base64 string |
+| `[xml]` | `XmlOps.LoadString` | Valid XML (conditional on XML flag) |
 
 ### Whole-string validation classes — String structure
 
 | Class | Validator | Description |
 |-------|-----------|-------------|
-| `list` | `ListOps.GetOrCopyOrSplitList` | Valid Tcl list |
-| `dict` | `ListOps` + even count | Valid dictionary (even element count, TIP #501) |
+| `[list]` | `ListOps.GetOrCopyOrSplitList` | Valid Tcl list |
+| `[dict]` | `ListOps` + even count | Valid dictionary (even element count, TIP #501) |
 | `annotation` | `Value.IsAnnotation` | Valid annotation format |
 | `identifier` | `StringOps.IsValidIdentifier` | Valid C#-style identifier |
 | `idxranges` | `RuntimeOps.ParseIndexRanges` | Valid index range specification |
-| `encoding` | `interpreter.GetEncoding` | Valid encoding name |
+| `[encoding]` | `interpreter.GetEncoding` | Valid encoding name |
 
 ### Whole-string validation classes — File system
 
 | Class | Validator | Description |
 |-------|-----------|-------------|
 | `directory` | `PathOps.ValidatePathAsDirectory` | Valid directory path |
-| `file` | `PathOps.ValidatePathAsFile` | Valid file path |
+| `[file]` | `PathOps.ValidatePathAsFile` | Valid file path |
 | `path` | `PathOps.ValidatePathAsPath` | Valid generic path |
 | `component` | `PathOps.CheckForValid` | Valid path component |
 
@@ -561,11 +561,11 @@ ASCII range, unlike `alnum`/`alpha`/`digit` which use Unicode-aware
 
 | Class | Validator | Description |
 |-------|-----------|-------------|
-| `array` | Variable resolution + `EntityOps.IsArray` | Existing array variable |
+| `[array]` | Variable resolution + `EntityOps.IsArray` | Existing array variable |
 | `command` | `interpreter.InternalDoesIExecuteExistViaResolvers` | Existing command |
 | `element` | `EntityOps.IsArray` + `FlagOps.HasFlags` for `VariableFlags.WasElement` + `interpreter.GetVariableValue` | Existing array element |
 | `interpreter` | `Value.GetInterpreter` | Existing child interpreter |
-| `object` | `Value.GetObject` | Existing opaque object handle |
+| `[object]` | `Value.GetObject` | Existing opaque object handle |
 | `plugin` | `interpreter.GetPlugin` + `interpreter.InternalFindPlugin` | Loaded plugin |
 | `ruleset` | `RuleSet.Create` to test parseability | Existing rule set |
 | `scalar` | `EntityOps.IsScalar` | Existing scalar variable |
@@ -674,7 +674,7 @@ Additional flags can modify matching behavior:
 ## 7. Character Classification Methods
 
 The `StringOps` class provides the character testing callbacks used by
-`string is` per-character classes:
+`[string is]` per-character classes:
 
 ### `CharIsWord(char character)`
 
@@ -726,14 +726,14 @@ characters.
 Several sub-commands use `StringBuilderFactory` and
 `StringBuilderCache` for memory-efficient string construction:
 
-- **`string cat`**: Pre-calculates total capacity from all arguments,
+- **`[string cat]`**: Pre-calculates total capacity from all arguments,
   creates a `StringBuilder` with exact capacity, appends all arguments,
   and releases via `StringBuilderCache.GetStringAndRelease()`.
 
-- **`string replace`**: Builds the result by appending the prefix,
+- **`[string replace]`**: Builds the result by appending the prefix,
   replacement, and suffix to a `StringBuilder`.
 
-- **`string tolower`/`toupper`/`totitle` with range**: When applying
+- **`[string tolower]`/`toupper`/`totitle` with range**: When applying
   case conversion to a substring range, uses `StringBuilder` to
   assemble the unchanged prefix, converted range, and unchanged suffix.
 
@@ -865,12 +865,12 @@ string map -maximum 2 {a X} "aaaa"
 
 | Feature | Tcl | Eagle |
 |---------|-----|-------|
-| `string bytelength` with encoding | Not available | Configurable encoding |
-| `string character` | Not available | Code point → character |
-| `string ordinal` | Not available | Character → code point |
-| `string classes` | Not available | List all `string is` classes |
-| `string starts` | Not available | Prefix testing |
-| `string ends` | Not available | Suffix testing |
+| `[string bytelength]` with encoding | Not available | Configurable encoding |
+| `[string character]` | Not available | Code point → character |
+| `[string ordinal]` | Not available | Character → code point |
+| `[string classes]` | Not available | List all `[string is]` classes |
+| `[string starts]` | Not available | Prefix testing |
+| `[string ends]` | Not available | Suffix testing |
 | `string compare -culture` | Not available | Culture-aware comparison |
 | `string compare -options` | Not available | `CompareOptions` flags |
 | `string compare -comparison` | Not available | `StringComparison` enum |
@@ -879,10 +879,10 @@ string map -maximum 2 {a X} "aaaa"
 | `string map -multipass` | Not available | Iterative mapping |
 | `string map -maximum` | Not available | Replacement count limit |
 | `string map -countvar` | Not available | Replacement count tracking |
-| `string format` | Tcl `%`-style | .NET `String.Format` composite style |
+| `[string format]` | Tcl `%`-style | .NET `String.Format` composite style |
 | `string tolower -culture` | Not available | Culture-specific casing |
 | `string match -mode` | Glob only | `Glob`, `RegExp`, `Exact`, `CIDR`, etc. |
-| `string is` classes | ~18 | 64 (18 per-character + 46 whole-string) |
+| `[string is]` classes | ~18 | 64 (18 per-character + 46 whole-string) |
 | `string is -not` | Not available | Negation option |
 | `string is -any` | Not available | Any-character matching |
 | `string is -good / -bad` | Not available | Separate good/bad results |
@@ -898,15 +898,15 @@ string map -maximum 2 {a X} "aaaa"
 ## 11. Security Considerations
 
 - **`CommandFlags.Safe`** — The command is available in safe
-  interpreters. However, some `string is` classes that query
-  interpreter state (`command`, `object`, `plugin`, `interpreter`)
+  interpreters. However, some `[string is]` classes that query
+  interpreter state (`command`, `[object]`, `plugin`, `interpreter`)
   may reveal information about the interpreter's internal state.
 
-- **Result size limits** — `string repeat` is subject to result size
+- **Result size limits** — `[string repeat]` is subject to result size
   limits (when compiled with `RESULT_LIMITS`) to prevent denial-of-service
   via memory exhaustion.
 
-- **Reflection usage** — `string format` and culture-aware casing use
+- **Reflection usage** — `[string format]` and culture-aware casing use
   .NET reflection to invoke `String` methods. This is an internal
   implementation detail and does not expose reflection to scripts.
 
@@ -914,25 +914,25 @@ string map -maximum 2 {a X} "aaaa"
 
 | Related command | Relationship |
 |----------------|-------------|
-| `format` | Tcl-style `%` formatting; `string format` uses .NET composite formatting |
-| `regexp` / `regsub` | Full regex operations; `string match -mode RegExp` is simpler; see [`regexp.md`](regexp.md) |
-| `split` / `join` | List-oriented string operations |
-| `append` / `lappend` | Variable-modifying string/list operations |
-| `scan` | Not available in Eagle — use `regexp` or `string is` instead |
-| `encoding` | Encoding operations; `string bytelength` uses encodings |
+| `[format]` | Tcl-style `%` formatting; `[string format]` uses .NET composite formatting |
+| `[regexp]` / `[regsub]` | Full regex operations; `string match -mode RegExp` is simpler; see [`regexp.md`](regexp.md) |
+| `[split]` / `[join]` | List-oriented string operations |
+| `[append]` / `[lappend]` | Variable-modifying string/list operations |
+| `scan` | Not available in Eagle — use `[regexp]` or `[string is]` instead |
+| `[encoding]` | Encoding operations; `[string bytelength]` uses encodings |
 | `binary` | Binary string operations |
-| `info` | `info complete` tests if a string is a complete Tcl command |
+| `[info]` | `[info complete]` tests if a string is a complete Tcl command |
 
 ## 13. References
 
-- **Source code**: `Eagle/Library/Commands/String.cs` — `[string]` command (29 sub-commands, 2,822 lines)
-- **Source code**: `Eagle/Library/Components/Private/StringOps.cs` — string operations (7,438 lines)
+- **Source code**: `Eagle/Library/Commands/String.cs` — `[string]` command (29 sub-commands, 2,737 lines)
+- **Source code**: `Eagle/Library/Components/Private/StringOps.cs` — string operations (7,534 lines)
 - **Source code**: `Eagle/Library/Components/Shared/StringOps.cs` — shared comparison operations (339 lines)
-- **Command reference**: [`core_language.md`](core_language.md#cmd-string) — `string` syntax and options
-- **Examples**: [`core_examples.md`](core_examples.md#ex-string) — `string` examples
+- **Command reference**: [`core_language.md`](core_language.md#cmd-string) — `[string]` syntax and options
+- **Examples**: [`core_examples.md`](core_examples.md#ex-string) — `[string]` examples
 - **Tips**: [`tips_and_tricks.md`](tips_and_tricks.md) — String Handling section (`appendArgs`)
 - **Related**: [`regexp.md`](regexp.md) — full regex operations
-- **Tcl reference**: [Tcl `string` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/string.htm)
+- **Tcl reference**: [Tcl `[string]` manual page](https://www.tcl-lang.org/man/tcl8.6/TclCmd/string.htm)
 - **.NET reference**: [String Class](https://docs.microsoft.com/en-us/dotnet/api/system.string)
 - **.NET reference**: [StringComparison Enum](https://docs.microsoft.com/en-us/dotnet/api/system.stringcomparison)
 - **.NET reference**: [CompareOptions Enum](https://docs.microsoft.com/en-us/dotnet/api/system.globalization.compareoptions)

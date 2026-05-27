@@ -1,11 +1,11 @@
-# Eagle `object` Command — Deep-Dive Analysis
+# Eagle `[object]` Command — Deep-Dive Analysis
 
-> **For AI agents**: This document provides a deep-dive analysis of Eagle's `object` command internals, including all 44 sub-commands, the opaque object handle system (`ObjectDictionary` → `ObjectWrapper` → `ObjectData`), handle naming (`Type#N` format), the `FixupReturnValue` pipeline (decides handle creation vs. string return, alias attachment, reference counting), method overload resolution via `FindMethodsAndFixupArguments` (parameter type matching, params arrays, by-ref arguments), the `ObjectFlags` enum (40+ flags controlling disposal, aliasing, naming, references), `MarshalFlags` (30+ flags controlling method resolution and type conversion), `ByRefArgumentFlags`, command alias dispatch, `IObject`/`IObjectData` interfaces, assembly loading with trust verification, namespace imports, type aliases, reference counting (permanent and temporary), and the `Default` → `Engine` → `File` → `Profile` → `Shell` → `Core` → `Console` host integration. For basic command syntax, see [`core_language.md`](core_language.md#cmd-object). For usage examples, see [`core_examples.md`](core_examples.md#ex-object). For workflow patterns, see [`tips_and_tricks.md`](tips_and_tricks.md).
+> **For AI agents**: This document provides a deep-dive analysis of Eagle's `[object]` command internals, including all 43 sub-commands, the opaque object handle system (`ObjectDictionary` → `ObjectWrapper` → `ObjectData`), handle naming (`Type#N` format), the `FixupReturnValue` pipeline (decides handle creation vs. string return, alias attachment, reference counting), method overload resolution via `FindMethodsAndFixupArguments` (parameter type matching, params arrays, by-ref arguments), the `ObjectFlags` enum (40+ flags controlling disposal, aliasing, naming, references), `MarshalFlags` (30+ flags controlling method resolution and type conversion), `ByRefArgumentFlags`, command alias dispatch, `IObject`/`IObjectData` interfaces, assembly loading with trust verification, namespace imports, type aliases, reference counting (permanent and temporary), and the `Default` → `Engine` → `File` → `Profile` → `Shell` → `Core` → `Console` host integration. For basic command syntax, see [`core_language.md`](core_language.md#cmd-object). For usage examples, see [`core_examples.md`](core_examples.md#ex-object). For workflow patterns, see [`tips_and_tricks.md`](tips_and_tricks.md).
 
 ## 1. Executive Summary
 
-The Eagle `object` command is the gateway to the entire .NET Common
-Language Runtime (CLR) from script level. It provides **44 sub-commands**
+The Eagle `[object]` command is the gateway to the entire .NET Common
+Language Runtime (CLR) from script level. It provides **43 sub-commands**
 for creating .NET objects, invoking methods and properties, managing
 object lifecycle, loading assemblies, importing namespaces, and
 performing reflection — all through a system of opaque string handles
@@ -13,7 +13,7 @@ that bridge the managed/.NET world and the script world.
 
 Tcl has no built-in .NET integration (Tcl uses extensions like `tclOO`
 for object orientation, and separate packages for .NET bridging). Eagle's
-`object` command is a first-class, deeply integrated .NET interop system
+`[object]` command is a first-class, deeply integrated .NET interop system
 with sophisticated method overload resolution, reference counting,
 automatic disposal, and command alias creation.
 
@@ -26,18 +26,18 @@ Key differentiators from Tcl:
 
 | Area | Tcl | Eagle |
 |------|-----|-------|
-| .NET object creation | None (requires extension) | `object create` with constructor overload resolution |
-| Method invocation | None | `object invoke` with 40+ options, overload resolution |
+| .NET object creation | None (requires extension) | `[object create]` with constructor overload resolution |
+| Method invocation | None | `[object invoke]` with 40+ options, overload resolution |
 | Object lifecycle | None | Reference counting, auto-disposal, `IDisposable` support |
-| Assembly loading | None | `object load` with trust/strong-name verification |
+| Assembly loading | None | `[object load]` with trust/strong-name verification |
 | Type resolution | None | Namespace imports, type aliases, assembly scanning |
-| Reflection | None | `object members`, `object search`, `object interfaces` |
-| Collection iteration | None | `object foreach` / `object lmap` over `IEnumerable` |
+| Reflection | None | `[object members]`, `[object search]`, `[object interfaces]` |
+| Collection iteration | None | `[object foreach]` / `[object lmap]` over `IEnumerable` |
 | Command aliases | None | Objects usable as commands via `-alias` option |
 | By-ref parameters | None | Automatic output parameter → variable mapping |
 | Static members | None | `object invoke TypeName StaticMember` |
-| Remote objects | None | `object get` via `Activator.GetObject()` |
-| Assembly verification | None | `object verifyall`, `object certificate`, `object strongname` |
+| Remote objects | None | `[object get]` via `Activator.GetObject()` |
+| Assembly verification | None | `[object verifyall]`, `[object certificate]`, `[object strongname]` |
 
 ---
 
@@ -46,8 +46,8 @@ Key differentiators from Tcl:
 ### 2.1 The Opaque Handle System
 
 Eagle bridges .NET and script worlds through **opaque string handles**.
-When a .NET object enters the script world (via `object create`, return
-values from `object invoke`, etc.), the `FixupReturnValue` pipeline:
+When a .NET object enters the script world (via `[object create]`, return
+values from `[object invoke]`, etc.), the `FixupReturnValue` pipeline:
 
 1. Wraps the .NET object in an `ObjectData` → `_Objects.Default` →
    `ObjectWrapper` three-layer structure
@@ -58,7 +58,7 @@ values from `object invoke`, etc.), the `FixupReturnValue` pipeline:
 Handle names follow the format `Type#N` where dots in the type name are
 replaced with `#`:
 
-```
+```tcl
 System.Text.StringBuilder  →  System#Text#StringBuilder#1
 System.DateTime            →  System#DateTime#2
 System.Int32               →  Int32#3
@@ -118,7 +118,7 @@ object invoke System#Text#StringBuilder#1 Append "Hello"
 System#Text#StringBuilder#1 Append "Hello"
 ```
 
-Aliases support namespace mapping via `object aliasnamespaces` — assembly
+Aliases support namespace mapping via `[object aliasnamespaces]` — assembly
 names can be mapped to Eagle namespace prefixes.
 
 ### 2.4 Method Overload Resolution
@@ -149,7 +149,7 @@ match is selected.
 
 | File | Role |
 |------|------|
-| `Commands/Object.cs` (~5,575 lines) | Command implementation: 44 sub-commands |
+| `Commands/Object.cs` (~5,616 lines) | Command implementation: 43 sub-commands |
 | `Components/Private/MarshalOps.cs` (~11,000+ lines) | Marshalling: `FixupReturnValue`, `FindMethodsAndFixupArguments`, type resolution, handle naming |
 | `Components/Private/ObjectOps.cs` (~7,177 lines) | Option definitions, defaults, disposal helpers |
 | `Components/Public/ObjectData.cs` | `IObjectData` implementation: handle metadata |
@@ -166,9 +166,9 @@ match is selected.
 These are the most important sub-commands. They form the fundamental
 create → use → dispose workflow.
 
-### 3.1 `object create` — Instantiate a .NET Type
+### 3.1 `[object create]` — Instantiate a .NET Type
 
-```
+```tcl
 object create ?options? typeName ?arg ...?
 ```
 
@@ -255,9 +255,9 @@ set obj [object create -objectname myObj System.Object]
 set cfg [object create -nodispose System.Configuration.Something]
 ```
 
-### 3.2 `object invoke` — Call Methods, Properties, and Fields
+### 3.2 `[object invoke]` — Call Methods, Properties, and Fields
 
-```
+```tcl
 object invoke ?options? object member ?arg ...?
 ```
 
@@ -323,7 +323,7 @@ interaction after object creation.
 
 **Member resolution:**
 
-The `object` argument can be either an opaque handle (for instance
+The `[object]` argument can be either an opaque handle (for instance
 members) or a type name (for static members). The `member` argument
 names the method, property, or field. Nested member navigation is
 supported: `Prop.SubProp.Method`.
@@ -380,9 +380,9 @@ object invoke $obj Config.Settings.Value
 set type [object invoke -typeidentity $obj ignored]
 ```
 
-### 3.3 `object invokeraw` — Raw Reflection Invocation
+### 3.3 `[object invokeraw]` — Raw Reflection Invocation
 
-```
+```tcl
 object invokeraw ?options? object member ?arg ...?
 ```
 
@@ -390,18 +390,18 @@ object invokeraw ?options? object member ?arg ...?
 Eagle's argument conversion pipeline. Useful when you need exact control
 over the reflection call.
 
-Has the same options as `object invoke` except `-invokeraw` is ignored
+Has the same options as `[object invoke]` except `-invokeraw` is ignored
 (since you're already using it) and `-invoke` redirects back to
-`object invoke`.
+`[object invoke]`.
 
 ```tcl
 # Direct invocation without type conversion
 object invokeraw $obj MethodName arg1 arg2
 ```
 
-### 3.4 `object invokeall` — Chained Member Invocation
+### 3.4 `[object invokeall]` — Chained Member Invocation
 
-```
+```tcl
 object invokeall ?options? object memberAndArgs ?memberAndArgs ...?
 ```
 
@@ -417,8 +417,8 @@ name and the rest are arguments.
 | `-lastresult` | switch | Return only the last result |
 | `-keepresults` | switch | Keep all results as a list |
 | `-nocomplain` | switch | Ignore invocation errors |
-| `-invoke` | switch | Use `object invoke` for each call |
-| `-invokeraw` | switch | Use `object invokeraw` for each call |
+| `-invoke` | switch | Use `[object invoke]` for each call |
+| `-invokeraw` | switch | Use `[object invokeraw]` for each call |
 
 ```tcl
 # Multiple method calls
@@ -431,9 +431,9 @@ set result [object invokeall -chained $obj \
     {GetBuilder} {Append Hello} {ToString}]
 ```
 
-### 3.5 `object dispose` — Dispose and Release
+### 3.5 `[object dispose]` — Dispose and Release
 
-```
+```tcl
 object dispose ?options? object ?object ...?
 ```
 
@@ -495,21 +495,21 @@ try {
 
 ## 4. Sub-Command Reference — Invocation Variants and Iteration
 
-### 4.1 `object foreach` / `object lmap` — Collection Iteration
+### 4.1 `[object foreach]` / `[object lmap]` — Collection Iteration
 
-```
+```tcl
 object foreach ?options? varName object body
 object lmap ?options? varName object body
 ```
 
-**Purpose:** Iterate over any `IEnumerable` .NET object. `foreach`
-evaluates the body for each element; `lmap` collects results.
+**Purpose:** Iterate over any `IEnumerable` .NET object. `[foreach]`
+evaluates the body for each element; `[lmap]` collects results.
 
 **Options:**
 
 | Option | Type | Purpose |
 |--------|------|---------|
-| `-collect` | boolean | Collect results (default: true for `lmap`, false for `foreach`) |
+| `-collect` | boolean | Collect results (default: true for `[lmap]`, false for `[foreach]`) |
 | `-synchronous` | switch | Synchronous disposal of iteration handles |
 | `-objectname` | string | Custom handle name for each element |
 | `-type` | Type | Expected element type |
@@ -533,9 +533,9 @@ evaluates the body for each element; `lmap` collects results.
    - Each element passes through `FixupReturnValue`
    - Sets `varName` in the caller's scope
    - Evaluates `body`
-   - Handles `break`, `continue`, `return`, `error`
+   - Handles `[break]`, `[continue]`, `[return]`, `[error]`
 4. Respects interpreter iteration limit
-5. For `lmap`: collects body results into a list
+5. For `[lmap]`: collects body results into a list
 
 ```tcl
 set list [object create System.Collections.ArrayList]
@@ -555,9 +555,9 @@ set upper [object lmap item $list {
 ;# Returns: {ONE TWO THREE}
 ```
 
-### 4.2 `object fromvar` — Handle from Variable
+### 4.2 `[object fromvar]` — Handle from Variable
 
-```
+```tcl
 object fromvar ?options? varName
 ```
 
@@ -572,9 +572,9 @@ Options include the standard return-value options (`-alias`, `-objectflags`,
 
 ## 5. Sub-Command Reference — Assembly and Type Management
 
-### 5.1 `object load` — Load Assembly
+### 5.1 `[object load]` — Load Assembly
 
-```
+```tcl
 object load ?options? assembly
 ```
 
@@ -638,9 +638,9 @@ set dt [object create DataTable]     ;# Short name works
 object load -declare -import System.Data
 ```
 
-### 5.2 `object import` / `object unimport` — Namespace Management
+### 5.2 `[object import]` / `[object unimport]` — Namespace Management
 
-```
+```tcl
 object import ?options? ?name name ...?
 object unimport ?options?
 ```
@@ -648,7 +648,7 @@ object unimport ?options?
 **Purpose:** Import .NET namespaces so types can be referenced by short
 names (e.g., `StringBuilder` instead of `System.Text.StringBuilder`).
 
-**`object import` options:**
+**`[object import]` options:**
 
 | Option | Type | Purpose |
 |--------|------|---------|
@@ -659,7 +659,7 @@ names (e.g., `StringBuilder` instead of `System.Text.StringBuilder`).
 | `-clr` | switch | Import standard CLR namespaces |
 | `-nocase` | switch | Case-insensitive matching |
 
-**`object unimport` options:**
+**`[object unimport]` options:**
 
 | Option | Type | Purpose |
 |--------|------|---------|
@@ -682,9 +682,9 @@ object import -eagle
 object unimport -pattern "System.Text"
 ```
 
-### 5.3 `object type` / `object untype` — Type Aliases
+### 5.3 `[object type]` / `[object untype]` — Type Aliases
 
-```
+```tcl
 object type ?options? ?fromName toName ...? fromName toName
 object untype ?options?
 ```
@@ -703,9 +703,9 @@ set sb [object create SB]          ;# Uses the alias
 object untype -pattern "SB"
 ```
 
-### 5.4 `object declare` / `object undeclare` — Interface Declarations
+### 5.4 `[object declare]` / `[object undeclare]` — Interface Declarations
 
-```
+```tcl
 object declare ?options? ?name name ...?
 object undeclare ?options?
 ```
@@ -713,9 +713,9 @@ object undeclare ?options?
 **Purpose:** Declare interfaces that the type resolution system should
 be aware of.
 
-### 5.5 `object search` — Type Search
+### 5.5 `[object search]` — Type Search
 
-```
+```tcl
 object search ?options? typeName
 ```
 
@@ -740,17 +740,17 @@ object search System.Text.StringBuilder
 object search -nocase stringbuilder
 ```
 
-### 5.6 `object resolve` — Assembly Resolution
+### 5.6 `[object resolve]` — Assembly Resolution
 
-```
+```tcl
 object resolve assembly
 ```
 
 **Purpose:** Resolve an assembly reference to its full name.
 
-### 5.7 `object assemblies` — List Loaded Assemblies
+### 5.7 `[object assemblies]` — List Loaded Assemblies
 
-```
+```tcl
 object assemblies ?pattern?
 ```
 
@@ -773,7 +773,7 @@ optionally filtered by pattern.
 | `object flags object ?flags?` | Get/set `ObjectFlags` | Flags value |
 | `object referencecount object` | Get reference count | Integer |
 
-**`object isnull` options:**
+**`[object isnull]` options:**
 
 | Option | Purpose |
 |--------|---------|
@@ -784,9 +784,9 @@ optionally filtered by pattern.
 | `-cannotcheck` | Default value if check impossible |
 | `-caughtexception` | Default value if exception caught |
 
-**`object isdisposed` options:** Same as `isnull` disposal options.
+**`[object isdisposed]` options:** Same as `isnull` disposal options.
 
-**`object isoftype` options:**
+**`[object isoftype]` options:**
 
 | Option | Purpose |
 |--------|---------|
@@ -806,9 +806,9 @@ if {[object exists $obj]} {
 }
 ```
 
-### 6.2 `object members` — Reflection
+### 6.2 `[object members]` — Reflection
 
-```
+```tcl
 object members ?options? object
 ```
 
@@ -846,9 +846,9 @@ object members -signatures -membertypes Method $obj
 object members -pattern "Get*" $obj
 ```
 
-### 6.3 `object interfaces` / `object namespaces` / `object types`
+### 6.3 `[object interfaces]` / `[object namespaces]` / `[object types]`
 
-```
+```tcl
 object interfaces ?pattern?    ;# List declared interfaces
 object namespaces ?pattern?    ;# List imported namespaces
 object types ?pattern?         ;# List type aliases
@@ -858,9 +858,9 @@ object types ?pattern?         ;# List type aliases
 
 ## 7. Sub-Command Reference — Aliases and References
 
-### 7.1 `object alias` / `object unalias`
+### 7.1 `[object alias]` / `[object unalias]`
 
-```
+```tcl
 object alias ?options? object
 object unalias object
 ```
@@ -868,7 +868,7 @@ object unalias object
 **Purpose:** Create or remove a command alias for an existing object
 handle.
 
-**`object alias` options:**
+**`[object alias]` options:**
 
 | Option | Purpose |
 |--------|---------|
@@ -893,9 +893,9 @@ myObj SomeMethod arg1 arg2
 object unalias myObj
 ```
 
-### 7.2 `object aliasnamespaces` / `object unaliasnamespace`
+### 7.2 `[object aliasnamespaces]` / `[object unaliasnamespace]`
 
-```
+```tcl
 object aliasnamespaces ?pattern?
 object unaliasnamespace ?options?
 ```
@@ -903,9 +903,9 @@ object unaliasnamespace ?options?
 **Purpose:** Manage namespace mappings for object aliases. When an alias
 is created, the assembly name can be mapped to an Eagle namespace prefix.
 
-### 7.3 `object addreference` / `object removereference` / `object referencecount`
+### 7.3 `[object addreference]` / `[object removereference]` / `[object referencecount]`
 
-```
+```tcl
 object addreference object
 object removereference object
 object referencecount object
@@ -919,7 +919,7 @@ prevents automatic cleanup; removing allows it.
 | Type | When used |
 |------|-----------|
 | `Create` | Initial handle creation |
-| `Demand` | `object addreference` |
+| `Demand` | `[object addreference]` |
 | `Trace` | `[set]` trace on variable containing handle |
 | `Return` | `[return]` of handle value |
 | `Command` | Alias command creation |
@@ -937,9 +937,9 @@ object dispose $longLived
 
 ## 8. Sub-Command Reference — Cleanup and Verification
 
-### 8.1 `object cleanup` — Bulk Object Cleanup
+### 8.1 `[object cleanup]` — Bulk Object Cleanup
 
-```
+```tcl
 object cleanup ?options?
 ```
 
@@ -968,18 +968,18 @@ object cleanup -pattern "*StringBuilder*"
 object cleanup -references -synchronous
 ```
 
-### 8.2 `object verifyall` — Assembly Verification
+### 8.2 `[object verifyall]` — Assembly Verification
 
-```
+```tcl
 object verifyall ?options?
 ```
 
 **Purpose:** Verify all loaded assemblies for strong names, signatures,
 and certificates.
 
-### 8.3 `object certificate` — Assembly Certificate
+### 8.3 `[object certificate]` — Assembly Certificate
 
-```
+```tcl
 object certificate ?options? assembly
 ```
 
@@ -994,9 +994,9 @@ object certificate ?options? assembly
 | `-x509revocationmode` | Certificate revocation mode |
 | `-x509revocationflag` | Revocation flag |
 
-### 8.4 `object hash` / `object strongname`
+### 8.4 `[object hash]` / `[object strongname]`
 
-```
+```tcl
 object hash assembly
 object strongname assembly
 ```
@@ -1008,9 +1008,9 @@ Requires `CAS_POLICY` compile flag.
 
 ## 9. Sub-Command Reference — Callbacks and Remote Objects
 
-### 9.1 `object callbackflags` / `object removecallback`
+### 9.1 `[object callbackflags]` / `[object removecallback]`
 
-```
+```tcl
 object callbackflags name ?flags?
 object removecallback name
 ```
@@ -1018,9 +1018,9 @@ object removecallback name
 **Purpose:** Get/set callback flags or remove a named callback. Callbacks
 are created when Eagle wraps script procedures as .NET delegates.
 
-### 9.2 `object get` — Remote Object Activation
+### 9.2 `[object get]` — Remote Object Activation
 
-```
+```tcl
 object get ?options? type url ?state?
 ```
 
@@ -1310,7 +1310,7 @@ set count [$list Count]
 
 ## 14. Safe Interpreter Behavior
 
-The `object` command is marked `CommandFlags.Unsafe | CommandFlags.Critical |
+The `[object]` command is marked `CommandFlags.Unsafe | CommandFlags.Critical |
 CommandFlags.NonStandard` and **is not available in safe interpreters by default**.
 However, the policy subsystem may grant access to it, subject to heavy restrictions:
 
@@ -1329,7 +1329,7 @@ member invocation, and assembly load against registered policies.
 
 ## 15. Tcl Comparison
 
-| Feature | Tcl approach | Eagle `object` approach |
+| Feature | Tcl approach | Eagle `[object]` approach |
 |---------|-------------|----------------------|
 | Object creation | `tclOO`: `oo::class create` | `object create TypeName ?args?` (any .NET type) |
 | Method calls | `$obj method args` | `object invoke $obj method args` |
@@ -1337,13 +1337,13 @@ member invocation, and assembly load against registered policies.
 | Static members | N/A | `object invoke TypeName Member` |
 | Type checking | N/A | `object isoftype $obj Type` |
 | Reflection | `info class` (limited) | `object members -signatures $obj` |
-| Disposal | N/A | `object dispose` with `IDisposable` support |
-| Assembly loading | `package require` | `object load` with trust verification |
-| Namespace import | N/A | `object import` for short type names |
-| Collection iteration | Manual | `object foreach` / `object lmap` over `IEnumerable` |
+| Disposal | N/A | `[object dispose]` with `IDisposable` support |
+| Assembly loading | `[package require]` | `[object load]` with trust verification |
+| Namespace import | N/A | `[object import]` for short type names |
+| Collection iteration | Manual | `[object foreach]` / `[object lmap]` over `IEnumerable` |
 | Type aliases | N/A | `object type shortName fullName` |
 | By-ref parameters | N/A | Automatic output → variable mapping |
-| Reference counting | N/A | `object addreference` / `object removereference` |
+| Reference counting | N/A | `[object addreference]` / `[object removereference]` |
 | Command aliases | N/A | `-alias` creates callable command from handle |
 | Remote objects | N/A | `object get type url` via `Activator.GetObject()` |
 | Certificate verification | N/A | `object certificate -chain assembly` |
@@ -1360,9 +1360,9 @@ member invocation, and assembly load against registered policies.
 - `ObjectFlags.NoDispose` prevents accidental disposal of shared objects
 - By-ref argument handling can modify script variables — ensure output
   variable names are intended
-- `object invokeraw` bypasses Eagle's type conversion safety, exposing
+- `[object invokeraw]` bypasses Eagle's type conversion safety, exposing
   raw .NET reflection
-- `object get` (remote activation) connects to external services —
+- `[object get]` (remote activation) connects to external services —
   validate URLs
 - Command aliases execute with the creating interpreter's privileges
-- Assembly verification via `object verifyall` can audit loaded code
+- Assembly verification via `[object verifyall]` can audit loaded code
