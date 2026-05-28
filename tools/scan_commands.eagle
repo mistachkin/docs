@@ -74,10 +74,42 @@ proc readAll { path } {
   }
 }
 
-proc writeAll { path data } {
+#
+# NOTE: Returns "crlf" if the file already exists and contains any CRLF byte
+#       sequence, otherwise "lf".  Used by [writeAll] to preserve a file's
+#       original line endings (CRLF is the Eagle script-source default; this
+#       docs repo uses LF per .gitattributes).
+#
+proc detectEol { path } {
+  if {![file exists $path]} { return -- lf }
+  set fp [open $path RDONLY]
+  try {
+    fconfigure $fp -encoding binary -translation binary
+    set head [read $fp 65536]
+  } finally {
+    close $fp
+  }
+  if {[string first \r\n $head] >= 0} { return -- crlf }
+  return -- lf
+}
+
+#
+# NOTE: Writes a file with EXPLICIT control over the line-ending translation.
+#       This tool only ever writes the docs-repo command_inventory.md snapshot,
+#       so "lf" is the correct default here (matches .gitattributes).  The
+#       eol parameter accepts "lf", "crlf", or "auto" (detect via [detectEol]);
+#       it exists so a future caller cannot silently clobber CRLF line endings
+#       and thereby invalidate detached Harpy signatures (the same class of
+#       bug that previously bit the Eagle script library).
+#
+proc writeAll { path data {eol lf} } {
+  if {$eol eq "auto"} { set eol [detectEol $path] }
+  if {$eol ne "lf" && $eol ne "crlf"} {
+    error "invalid eol mode: $eol (expected lf, crlf, or auto)"
+  }
   set fp [open $path { WRONLY CREAT TRUNC }]
   try {
-    fconfigure $fp -encoding utf-8 -translation lf
+    fconfigure $fp -encoding utf-8 -translation $eol
     puts -nonewline $fp $data
   } finally {
     close $fp

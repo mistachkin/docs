@@ -28,6 +28,15 @@
 #   eagle tools/restyle.eagle --brackets array.md        # one transform
 #   eagle tools/restyle.eagle --dry-run FILE.md          # report, do not write
 #
+# Line-ending control (defaults to --lf, matching this docs repo's
+# .gitattributes; pass --preserve-eol for any cross-repo use against signed
+# Eagle script source, otherwise rewriting CRLF files as LF will INVALIDATE
+# their detached Harpy signatures):
+#
+#   --lf            (default) write LF line endings.
+#   --crlf          force CRLF line endings.
+#   --preserve-eol  detect each file's existing EOL and preserve it.
+#
 # The Eagle source tree (for the command/sub-command map) defaults to a sibling
 # checkout (../eagle/Eagle) or $EAGLE_SRC or --eagle-src <path>.
 #
@@ -45,12 +54,46 @@ proc readAll { path } {
   try { fconfigure $fp -encoding utf-8; return -- [read $fp] } finally { close $fp }
 }
 
-proc writeAll { path data } {
+#
+# NOTE: Returns "crlf" if the file already exists and contains any CRLF byte
+#       sequence, otherwise "lf".  Used by [writeAll] to preserve the file's
+#       original line endings (the documented house default is CRLF for Eagle
+#       script source, LF for this docs repository).  Returns "lf" for files
+#       that do not yet exist so a freshly-written artifact is LF.
+#
+proc detectEol { path } {
+  if {![file exists $path]} { return -- lf }
+  set fp [open $path RDONLY]
+  try {
+    fconfigure $fp -encoding binary -translation binary
+    set head [read $fp 65536]
+  } finally {
+    close $fp
+  }
+  if {[string first \r\n $head] >= 0} { return -- crlf }
+  return -- lf
+}
+
+#
+# NOTE: Writes a file with EXPLICIT control over the line-ending translation.
+#       Defaults to "auto" -- preserve the file's existing EOL (detected via
+#       [detectEol]) so a CRLF-signed Eagle script stays CRLF after editing.
+#       Pass "lf" or "crlf" to force a specific ending (this docs repository
+#       deliberately forces "lf" from [main] below; see .gitattributes).
+#
+#       The "auto" default exists to prevent a recurrence of the EOL clobber
+#       that invalidated detached Harpy signatures when an ad-hoc helper
+#       silently rewrote CRLF script files as LF.  Any new tool that edits
+#       Eagle script source files should follow this same "auto" pattern.
+#
+proc writeAll { path data {eol auto} } {
+  if {$eol eq "auto"} { set eol [detectEol $path] }
+  if {$eol ne "lf" && $eol ne "crlf"} {
+    error "invalid eol mode: $eol (expected lf, crlf, or auto)"
+  }
   set fp [open $path { WRONLY CREAT TRUNC }]
   try {
-    # NOTE: Force LF line endings (the channel default would translate to the
-    #       platform EOL, e.g. CRLF, churning every line of these LF files).
-    fconfigure $fp -encoding utf-8 -translation lf
+    fconfigure $fp -encoding utf-8 -translation $eol
     puts -nonewline $fp $data
   } finally {
     close $fp
@@ -251,15 +294,24 @@ proc main { argv } {
   set dryRun 0
   set anyTransform 0
 
+  # NOTE: EOL mode for the rewritten files.  "lf" matches this docs repo's
+  #       .gitattributes default; pass --preserve-eol to honor each file's
+  #       existing line endings (the only safe mode when ever running this
+  #       tool against signed Eagle script source outside the docs repo).
+  set eolMode lf
+
   set n [llength $argv]
   for {set i 0} {$i < $n} {incr i} {
     set arg [lindex $argv $i]
     switch -exact -- $arg {
-      --brackets { set doBrackets 1; set anyTransform 1 }
-      --fences   { set doFences 1;   set anyTransform 1 }
-      --emoji    { set doEmoji 1;    set anyTransform 1 }
-      --dry-run  { set dryRun 1 }
-      --eagle-src { incr i; set eagleSrc [lindex $argv $i] }
+      --brackets     { set doBrackets 1; set anyTransform 1 }
+      --fences       { set doFences 1;   set anyTransform 1 }
+      --emoji        { set doEmoji 1;    set anyTransform 1 }
+      --dry-run      { set dryRun 1 }
+      --lf           { set eolMode lf }
+      --crlf         { set eolMode crlf }
+      --preserve-eol { set eolMode auto }
+      --eagle-src    { incr i; set eagleSrc [lindex $argv $i] }
       default {
         if {[string match --eagle-src=* $arg]} {
           set eagleSrc [string range $arg 12 end]
@@ -292,9 +344,9 @@ proc main { argv } {
     set new [restyleText $text $map $doBrackets $doFences $doEmoji stats]
     set tag [expr {$dryRun ? "(dry-run) " : ""}]
     puts "${tag}[file tail $f]: bracketed=[dict get $stats bracketed] fencesTagged=[dict get $stats fencesTagged] emojiStripped=[dict get $stats emojiStripped]"
-    # NOTE: Write unconditionally (when not a dry run) so line endings are
-    #       normalized to LF even when the styled content is unchanged.
-    if {!$dryRun} { writeAll $path $new }
+    # NOTE: Write unconditionally (when not a dry run) so the chosen $eolMode
+    #       is applied even when the styled content is otherwise unchanged.
+    if {!$dryRun} { writeAll $path $new $eolMode }
   }
 }
 

@@ -73,10 +73,44 @@ eagle tools/restyle.eagle --dry-run FILE.md        # report only, no write
 eagle tools/restyle.eagle --brackets array.md      # one transform
 ```
 
-Output is always written with LF line endings (see `.gitattributes`).
+Output is written with LF line endings by default (matching `.gitattributes`).
+Override per run with `--crlf` or, when operating on signed Eagle script source
+outside this repo, `--preserve-eol` (the only safe mode in that case).
 
 > [!NOTE]
 > The bracketer cannot know context: a code span that matches a command name is
 > always bracketed. In `build_system.md`, `` `test` `` is a **Makefile target**,
 > not the `[test]` command, so that file is kept out of the bracketing pass.
 > Review `--dry-run` output before styling docs that discuss build targets.
+
+## Editing files outside this docs repo — line-ending rule
+
+> [!IMPORTANT]
+> Any tool, script, or ad-hoc helper that **rewrites Eagle script source files**
+> (`.eagle` / `.tcl` under the `eagle/`, `pkgd/`, or scratch trees) **MUST
+> preserve the file's original line endings** (CRLF is the Eagle script-source
+> default). Silently rewriting a CRLF file as LF — for example, Python's
+> `Path.write_text()`, which uses the platform default on macOS/Linux —
+> changes the bytes of every line and **invalidates any detached Harpy
+> signature** issued against the file.
+>
+> **Python helpers** must read in binary and write in binary with the original
+> line endings restored, e.g.:
+>
+> ```python
+> raw  = path.read_bytes()
+> eol  = b"\r\n" if b"\r\n" in raw else b"\n"
+> text = raw.decode("utf-8")
+> # ... mutate text using "\n" internally ...
+> path.write_bytes(text.replace("\r\n", "\n").replace("\n", eol.decode()).encode("utf-8"))
+> ```
+>
+> **Eagle/Tcl helpers** must follow the pattern in this directory's
+> `scan_commands.eagle` / `restyle.eagle`: detect the file's EOL with the
+> `detectEol` proc and pass it explicitly to `writeAll`, e.g.
+> `writeAll $path $new auto`. Never rely on the channel's translation default.
+>
+> This rule exists because a prior bracket-consistency pass silently flipped
+> 18 signed Eagle script files from CRLF to LF, invalidating their `.harpy`
+> signatures. Both Eagle tools in this directory are now hardened (default
+> `--lf` for this docs repo; `--preserve-eol` for any other use).
