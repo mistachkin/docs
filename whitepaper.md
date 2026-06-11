@@ -1,18 +1,23 @@
 # Two Languages, On Purpose: The Dual-Language Architecture in Practice
 
 > [!NOTE]
-> **Status: complete first draft.** Every section (§1 through §9), every
-> subsection (including the worked examples in §8.4), and every reference
-> appendix (A through E) is now fleshed out as prose. The §8.4 examples
-> are drafted from the audit work on Eagle's actual code and may be
-> refined or replaced by the author based on better knowledge of the
-> codebase as a whole. The whitepaper is currently approximately 30,000
-> words; this exceeds the original 14,000–18,000 body target, but the
-> length is dominated by reference material (the appendices) and by the
-> §8.4 close readings. A compression pass on §§2 and §7 and a tightening
-> of the appendices would bring the total closer to a typical whitepaper
-> length; the current draft is defensible without compression if the
-> reference orientation is preserved.
+> **Status: complete first draft, cross-checked against the Eagle docs
+> repository.** Every section (§1 through §9), every subsection
+> (including the worked examples in §8.5), and every reference appendix
+> (A through E) is fleshed out as prose. The current draft has been
+> updated against the canonical Eagle documentation — notably
+> `architecture_patterns.md`, `safe.md`, `why_eagle.md`,
+> `build_system.md`, `object.md`, `interp.md`, and the companion paper
+> `paper_love_and_software.md`. Where the whitepaper's claims could be
+> sharpened with specific numbers, names, or design-principle quotes
+> from those documents, the sharpening has been applied. The whitepaper
+> is currently approximately 32,000 words; this exceeds the original
+> 14,000–18,000 body target, but the length is dominated by reference
+> material (the appendices) and by the §8.5 close readings. A
+> compression pass on §§2 and §7 and a tightening of the appendices
+> would bring the total closer to a typical whitepaper length; the
+> current draft is defensible without compression if the reference
+> orientation is preserved.
 
 ## Abstract
 
@@ -260,9 +265,33 @@ that an honest boundary between primitive code and policy code produces
 measurably better outcomes than a hidden one, and that the conventions
 required to maintain that visibility are worth their cost.
 
-> **Diagram to add when expanded:** cost curves for systems-language work and
-> policy-language work, plotted against project lifetime. The crossover
-> argument made visual.
+**The cost-curve argument, visualized:**
+
+```text
+                    SCRIPTING LANGUAGE         SYSTEMS LANGUAGE
+                    (e.g., Tcl / Eagle)        (e.g., C / C#)
+                    ───────────────────        ───────────────
+
+    PRIMITIVE       expensive                  cheap
+    WORK
+    (algorithms,    runtime errors,            types catch errors,
+    invariants,     no AOT optimization,       optimizer works,
+    correctness     slow hot paths             fast hot paths
+    load-bearing)
+
+
+    POLICY          cheap                      expensive
+    WORK
+    (composition,   terse, malleable,          rigid, verbose,
+    configuration,  fast to change,            slow to change,
+    change-heavy)   runtime malleability       awkward composition
+
+
+    Neither language is optimal for both kinds of work.  This is the
+    dichotomy.  A single-language system pays the cost on its weak
+    side.  A dual-language system uses each language on its strong
+    side and lets the boundary mediate the difference.
+```
 
 ---
 
@@ -644,9 +673,39 @@ more complex than the dual-language baseline. The dual-language model
 achieves hot reload as a side effect; everything else achieves it as a
 feature.
 
-> **Diagram to add when expanded:** the boundary as the place where seven
-> properties (auditability, performance separation, sandboxing, testability,
-> signing, config-as-code, hot reload) intersect.
+**The boundary as the place where seven properties intersect:**
+
+```text
+   ┌─────────────────────────────────────────────────────────┐
+   │              PRIMITIVE LAYER (C# / .NET)                │
+   │             typed, compiled, optimized                  │
+   └──────────────────────────┬──────────────────────────────┘
+                              │
+                    ╔═════════╧═════════╗
+                    ║                   ║
+                    ║   THE BOUNDARY    ║
+                    ║                   ║
+                    ║  [object create]  ║
+                    ║  [object invoke]  ║
+                    ║  [object dispose] ║
+                    ║                   ║
+                    ╚═════════╤═════════╝
+                              │
+   ┌──────────────────────────┴──────────────────────────────┐
+   │              POLICY LAYER (Eagle / Tcl)                 │
+   │             small-kernel, malleable, terse              │
+   └─────────────────────────────────────────────────────────┘
+
+   When the boundary is explicit, seven properties fall out:
+
+     1. Auditability             every cross-call is grep-able
+     2. Performance separation   hot paths in compiled primitives
+     3. Safety surfaces          trust enforced at the bridge
+     4. Testability              each layer tested in its own style
+     5. Signed-artifact trust    source-level signatures (Harpy)
+     6. Configuration-as-code    policy IS configuration
+     7. Hot reload of policy     re-source without rebuilding
+```
 
 ---
 
@@ -679,20 +738,42 @@ not the other way around. A Lisp-on-CLI or a Python-on-CLI would inherit each
 of those languages' opinions about what counts as a useful idiom; Tcl-on-CLI
 inherits a minimum.
 
-Why .NET specifically? Three reasons. First, the .NET type system gives Eagle
-an enormous primitive layer for free — every .NET class is available as an
-Eagle primitive via the `[object]` command. Second, .NET's strong-name and
-Authenticode infrastructure gives Eagle a working trust model out of the box.
-Third, .NET has mature cross-language interop (CLI metadata, reflection,
-ECMA-335 standardization) — exactly the surface a scripting layer needs to
-reach into a primitive layer.
+Why .NET specifically? Three reasons. First, the .NET type system gives
+Eagle an enormous primitive layer for free — every .NET class is available
+as an Eagle primitive via the `[object]` command (which offers
+forty-three sub-commands, from `[object create]` through `[object emit]`
+to `[object verifyall]`). Second, .NET's strong-name and Authenticode
+infrastructure gives Eagle a working trust model out of the box. Third,
+.NET has mature cross-language interop (CLI metadata, reflection,
+ECMA-335 standardization) — exactly the surface a scripting layer needs
+to reach into a primitive layer.
 
-The combination is unusual. There is no "the scripting language for .NET" —
-F# and PowerShell aimed at parts of the space but neither is a clean instance
-of the dual-language model. F# is a systems language. PowerShell is a shell
-with some scripting affordances bolted on. Eagle is the scripting layer
-Ousterhout's thesis predicts you would build if you took the dichotomy
-seriously and the host was the CLI.
+Eagle's actual deployment surface is large. The same codebase compiles
+against .NET Framework 2.0 RTM, every 4.x point release, .NET Standard
+2.0 and 2.1, and .NET 5 through .NET 10+; it runs on Mono; it targets
+Windows, Linux, and macOS. The cross-version support is not a happy
+accident — it is enforced by an eleven-project `.csproj` matrix, with
+each project representing a real build configuration that some
+deployment depends on. The dual-language model would be less defensible
+in a language whose primitive layer fragmented across runtime versions;
+Eagle deliberately accepted the maintenance cost of staying portable so
+that the dual model itself stays portable.
+
+Eagle also closes the loop in the other direction. The `[tcl]` command
+lets an Eagle script load a native Tcl library and drive it; the Garuda
+package lets a native Tcl interpreter load the CLR and drive Eagle. The
+bidirectional bridge means an Eagle deployment can interoperate with
+existing Tcl ecosystems in both directions — Tcl as a primitive layer
+to Eagle's policy code when there is a useful Tcl library to call, Eagle
+as a CLR-bridged scripting layer to existing native Tcl programs when
+the Tcl side is the primary host.
+
+The combination is unusual. There is no "the scripting language for
+.NET" — F# and PowerShell aimed at parts of the space but neither is a
+clean instance of the dual-language model. F# is a systems language.
+PowerShell is a shell with some scripting affordances bolted on. Eagle
+is the scripting layer Ousterhout's thesis predicts you would build if
+you took the dichotomy seriously and the host was the CLI.
 
 ### 4.2 The `object` command: the boundary made visible
 
@@ -925,45 +1006,73 @@ if {[interp issafe]} then {
 }
 ```
 
-But `[interp create -safe]` is only the entry-level mechanism. Eagle's
-security model is layered:
+But `[interp create -safe]` is only the entry-level mechanism. The
+canonical Eagle safe-interpreter model is *five independent security
+layers*; an attacker has to bypass all five to escape the sandbox:
 
-- **Safe interpreters** (`[interp create -safe]`) provide the baseline:
-  a restricted command set, sandboxed file system access, no network,
-  no native interop. This is the Tcl-compatible mode.
-- **Custom rule sets** extend the safe-interpreter model by enumerating
-  exactly which commands, sub-commands, and options are permitted in a
-  given interpreter. A rule set is itself a policy artifact: a
-  `.ruleSet` file, deployed alongside the scripts, containing `rule`
-  blocks of the form `rule { type Include kind Command mode {Include
-  Exact} patterns nop }` plus optional `includeRuleSet` directives for
-  composition. Every rule set file has a sibling `.ruleSet.harpy`
-  detached signature, so the policy itself is a signed artifact whose
-  authenticity is verified by the same trust chain that verifies the
-  scripts. Eagle ships a layered library of rule sets — `common`
-  (permits only `[nop]`, the safest baseline), `expr`, `event`,
-  `control`, `entity`, `fileSystem`, `configuration`, `critical`,
-  `full`, and others — and a deployment selects or composes them by
-  name. A script may operate under a permissive rule set during
-  development and a restrictive rule set in production without any
-  change to the script.
-- **Policy callbacks (C# and Eagle)** are the most expressive layer. A
-  callback is a method or procedure that the interpreter consults
-  before performing a privileged action. The callback decides, given
-  the action and the calling context, whether the action is permitted.
-  Policy callbacks can be implemented in C# (for performance and for
-  cases where the policy is part of the primitive layer) or in Eagle
-  (for cases where the policy is itself part of the deployment's
-  configuration). A parent interpreter can install policy callbacks on
-  a child interpreter, so the trust relationship between parent and
-  child is mediated by code that the parent controls.
+1. **Command hiding.** When a safe interpreter is created, every
+   command without the `CommandFlags.Safe` attribute is automatically
+   hidden. Hidden commands exist in a separate dictionary
+   (`hiddenExecutes`) that is inaccessible from script. The command
+   resolver skips hidden commands entirely during normal lookup.
+2. **Option flag enforcement.** Even for commands that *are* available
+   in safe interpreters, individual options can be restricted. Options
+   marked with `OptionFlags.Unsafe` are rejected at parse time. The
+   `[test2]` command, for example, is safe but its `-timeout`,
+   `-debug`, and `-trace` options are not.
+3. **Sub-command allow-lists.** Ensemble commands that are partially
+   safe enumerate which sub-commands are permitted. The `[info]`
+   ensemble exposes twenty-five sub-commands in safe interpreters;
+   `[interp]` exposes nine; `[file]` exposes five; `[object]`, when
+   policy grants it any access at all, exposes seven (including
+   `[object invoke]` with reduced flag surface). Sub-commands outside
+   the allow-list produce a "permission denied" error.
+4. **Policy callbacks.** Each restricted command has a policy callback
+   that runs *before* the command executes. Eight default callbacks
+   ship — `ClockCommandCallback`, `FileCommandCallback`,
+   `InfoCommandCallback`, `InterpCommandCallback`,
+   `ObjectCommandCallback`, `PackageCommandCallback`,
+   `SourceCommandCallback`, `UriCommandCallback` — and any number of
+   custom callbacks (in C# or in Eagle) can be installed by the parent
+   interpreter. Policy callbacks execute in the parent's context with
+   full privileges, so they make decisions on information the safe
+   child cannot access.
+5. **Resource limits.** Sixteen hard limits cap consumption to prevent
+   denial of service: child interpreters forbidden; scope depth 50;
+   pending events 50; callbacks 50; loop iterations 1,000; namespaces
+   50; procedures 100; variables 100; array elements 100; operations
+   200,000; command invocations 100,000; unknown lookups 1,000;
+   dictionary nesting 5; dictionary pairs 100; result size 1 MB; nested
+   result size 1 MB. Exceeding any limit halts the interpreter.
 
-The three layers compose. A child interpreter may be safe, operate under
-a rule set, *and* dispatch privileged actions through callbacks; each
-layer adds an independent constraint, and an action that any layer denies
-is denied overall. The composition is by design: the layered model
-matches the layered trust requirements of real deployments, where a
-single binary policy is rarely sufficient.
+Layered above the safe-interpreter mechanism is the **rule set system**.
+A rule set is a policy artifact — a `.ruleSet` file deployed alongside
+the scripts, containing `rule` blocks of the form `rule { type Include
+kind Command mode {Include Exact} patterns nop }` plus optional
+`includeRuleSet` directives for composition. Every rule set file has a
+sibling `.ruleSet.harpy` detached signature, so the policy itself is a
+signed artifact whose authenticity is verified by the same trust chain
+that verifies the scripts. Eagle ships a layered library — `common`
+(permits only `[nop]`, the safest baseline), `expr`, `event`,
+`control`, `entity`, `fileSystem`, `configuration`, `critical`,
+`full`, and others — and a deployment selects or composes them by name.
+A script may operate under a permissive rule set during development and
+a restrictive rule set in production without any change to the script.
+
+Rule sets express the policy callback layer (layer 4) in a composable,
+signable, declarative form. The five layers and the rule set system
+compose. An action denied by any layer is denied overall; the
+composition is by design, because the layered model matches the layered
+trust requirements of real deployments where a single binary policy is
+rarely sufficient.
+
+A complementary security property is that **Eagle has no JIT compiler**.
+The interpreter evaluates parsed scripts directly; there is no separate
+code-generation stage that could be subverted, no bytecode cache whose
+contents might bypass policy, no expression compilation path that could
+produce code that did not go through the policy callbacks. The
+single-stage evaluation surface is part of what makes the five-layer
+model audit-tractable.
 
 Security flags affect which commands are available, whether file system
 operations are permitted, whether the network can be reached, whether
@@ -999,7 +1108,7 @@ approximately six thousand lines of C#; together they implement
 roughly the entire surface that the user interacts with when running
 `EagleShell`.
 
-**`PrivateShellMainCore` (≈4,700 lines).** This is the shell's main
+**`PrivateShellMainCore` (≈4,800 lines).** This is the shell's main
 dispatcher. Its responsibilities, in order:
 
 1. Initialize the active interpreter and the parent / child interpreter
@@ -1024,12 +1133,23 @@ dispatcher. Its responsibilities, in order:
 The method is large, and its size is honest about what it has to
 coordinate: every shell-level concern that a user can touch from the
 command line is handled here. The structure is `#region`-delimited
-throughout, so a reader navigating to a specific concern (interpreter
+throughout, *and* the method is internally organized as a finite-state
+machine using labeled `goto` blocks: `retryArgv:`, `readArgv:`,
+`option:`, `haveArgv:`, `kiosk:`, `done:`, `doneArgs:`. Each label is
+a state in the argv-processing automaton, and the transitions are the
+explicit `goto`s. The labeled-goto pattern is unusual in modern C# and
+is a deliberate choice: the alternative — extracting each state into a
+method and threading thirty-plus shared variables through a context
+object — would obscure the state-machine topology without reducing
+complexity. A reader navigating to a specific concern (interpreter
 switching, option parsing, exit handling, child interpreter cleanup)
-finds it without scrolling through unrelated code. The `#region` system
-is doing the work that the §6.3 large-file convention argues for:
-cohesion within a single artifact, with structural navigation rather
-than file-level decomposition.
+finds the relevant `#region` and follows the `goto` transitions
+between states. The `#region` system handles spatial navigation; the
+`goto` labels handle behavioral navigation; the combination makes the
+4,800-line method tractable in a way that a "clean architecture"
+decomposition would not. This is the §6.3 large-file argument made
+concrete: cohesion within a single artifact, with structural and
+behavioral navigation rather than file-level decomposition.
 
 **`PrivateInteractiveLoop` (≈1,600 lines).** This is the read-eval-print
 loop. Its structure, again `#region`-delimited:
@@ -1127,8 +1247,50 @@ from a design that names the boundary and pays its costs deliberately.
 > shows the introspection-driven gating, an `[object invoke]` call site that
 > drives a `Eagle._Components.Private.*` primitive.
 >
-> **Diagram to add:** the Harpy verify-on-load flow as a signed-artifact trust
-> chain.
+**The Harpy verify-on-load flow:**
+
+```text
+   AUTHOR SIDE
+   ┌─────────────────────────────────────────────────────────┐
+   │                                                         │
+   │   foo.eagle ────── sign with private key ──────►        │
+   │   (source)                                              │
+   │                                       foo.eagle.harpy   │
+   │                                       (detached sig)    │
+   │                                                         │
+   └───────────────────────────┬─────────────────────────────┘
+                               │
+                               │  distribute (git, copy, package)
+                               │  source + signature travel together
+                               ▼
+   RUNTIME SIDE
+   ┌─────────────────────────────────────────────────────────┐
+   │                                                         │
+   │   [source foo.eagle]                                    │
+   │           │                                             │
+   │           ▼                                             │
+   │   ┌────────────────┐         ┌──────────────────┐       │
+   │   │  Interpreter   │         │   Key ring       │       │
+   │   │  reads bytes   │ ◄────── │   (trusted       │       │
+   │   │  from disk     │         │    public keys)  │       │
+   │   └────────┬───────┘         └──────────────────┘       │
+   │            │                                            │
+   │            ▼                                            │
+   │   ┌─────────────────────────────────────────────┐       │
+   │   │      Harpy plugin                           │       │
+   │   │      verify(script bytes, signature,        │       │
+   │   │             trusted key ring)               │       │
+   │   └─────────────┬──────────────────┬────────────┘       │
+   │                 │                  │                    │
+   │           valid │                  │ invalid            │
+   │                 ▼                  ▼                    │
+   │       ┌─────────────────┐  ┌─────────────────┐          │
+   │       │  evaluate the   │  │  refuse and     │          │
+   │       │  script bytes   │  │  raise an error │          │
+   │       └─────────────────┘  └─────────────────┘          │
+   │                                                         │
+   └─────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -1432,6 +1594,20 @@ not, because it works around a specific failure mode." A `# TODO:` is a
 debt acknowledgment that grep can audit. A `# NOTE:` is a design record
 that survives the original author.
 
+The Eagle codebase contains over 1,400 `// HACK:` comments in its C#
+layer (the `# HACK:` form is the Eagle-script equivalent). Each one
+marks a deliberate deviation from conventional practice and explains
+why the deviation exists. A typical example, from the safe-interpreter
+option-flag enforcement code: `// HACK: The "-maybetrustedonly" option
+is allowed in "safe" interpreters due to its lack of a value, its
+relative harmlessness, and because the core library binary plugin
+loader uses it, e.g. for HotKey, et al.` These comments are not
+admissions of poor quality; they are acts of honesty. Each one says:
+"I know this looks wrong; here is why it is right; judge it on its
+merits." The volume of HACK comments in Eagle is a feature, not a
+defect — it is the visible signature of an author who documents every
+deviation rather than hiding compromises behind clean abstractions.
+
 The convention costs effort to maintain. It pays off in a codebase that
 survives its original developers. In a system whose lifetime is measured
 in decades — which is the system Ousterhout's argument is about — the
@@ -1560,39 +1736,64 @@ fits the policy layer.
 
 ### 6.4 Conditional compilation as architecture, not debt
 
-C# tradition treats `#if SOMETHING` blocks as code smell. The reasoning is
-that conditional compilation creates code paths that are not exercised in
-every build, that may rot silently, that complicate testing.
+C# tradition treats `#if SOMETHING` blocks as code smell. The reasoning
+is that conditional compilation creates code paths that are not
+exercised in every build, that may rot silently, that complicate
+testing.
 
-Eagle's C# primitive layer uses conditional compilation extensively —
-`NATIVE`, `HISTORY`, `DEBUGGER`, `DEBUGGER_BREAKPOINTS`, `SECURITY`,
-`EMIT`, `THREADING`. Each is a build-time switch that includes or excludes
-entire subsystems. A build with `DEBUGGER` enabled has a script-level
-debugger; a build without it does not. A build with `NATIVE` enabled can
-call native libraries; a build without it cannot.
+Eagle's primitive layer uses conditional compilation extensively, and
+does so for *two distinct architectural reasons* — both of which are
+defensible, and neither of which is "debt."
 
-The defense is that the alternative — runtime feature flags — leaks
-complexity into every code path. A runtime feature flag for the debugger
-means that every place the debugger could be invoked has to check whether
-the flag is set. The check is constant runtime cost. The check is a
-place where the wrong answer (debugger thinks it is enabled when it is
-not) leads to a crash. The check creates a dependency between the
-debugger and every consumer.
+**Subsystem gating.** `NATIVE`, `HISTORY`, `DEBUGGER`,
+`DEBUGGER_BREAKPOINTS`, `SECURITY`, `EMIT`, `THREADING`, and roughly
+eighty other feature-flag properties define which subsystems are
+present in a given build. A build with `DEBUGGER` enabled has a
+script-level debugger; a build without it does not. A build with
+`NATIVE` enabled can call native libraries; a build without it cannot.
+The alternative — runtime feature flags — leaks complexity into every
+code path: every place the debugger could be invoked has to check
+whether the flag is set; the check is constant runtime cost; the check
+is a place where the wrong answer (debugger thinks it is enabled when
+it is not) leads to a crash; the check creates a dependency between
+the debugger and every consumer. Compile-time gating is honest about
+what is and is not in the binary. A `NATIVE`-disabled build literally
+does not contain the code that calls native libraries; you cannot
+accidentally invoke it; you cannot test it because it does not exist.
 
-Compile-time gating is honest about what is and is not in the binary. A
-`NATIVE`-disabled build literally does not contain the code that calls
-native libraries; you cannot accidentally invoke it; you cannot test it
-because it does not exist. The build configuration is the architecture.
-The deployments that need the feature have the feature; the deployments
-that do not have a smaller, simpler binary.
+**Multi-version compatibility.** This is the second use, and it is the
+more load-bearing one. Eagle compiles against .NET Framework 2.0 RTM,
+every 4.x point release, .NET Standard 2.0 and 2.1, and .NET 5
+through .NET 10+. It runs on Mono. When a .NET API changes between
+versions, Eagle does not drop support for the old version; it provides
+both paths under `#if`. The conditional compilation system is not a
+collection of feature flags — it is a *compatibility architecture*.
+Every new feature must be implemented in a way that compiles on all
+targets; every new API usage must be checked against the lowest
+supported framework. The `#if` guards accumulate, and accumulating is
+the point: each one is a guarantee that "if your code worked on this
+framework yesterday, it works on this framework today."
 
-The cost is that the build matrix is real. Each combination of flags is a
-different binary, and the test matrix multiplies accordingly. The Eagle
-build system addresses this by supporting all the combinations as
-first-class build configurations and by running tests under each
-configuration. The mainstream alternative — a single binary with runtime
-flags — appears to be simpler but moves the matrix into the runtime,
-where it is harder to audit.
+The mechanism by which the two uses cohere is the `EagleBuildType`
+preset selector. The build system defines eleven `.csproj` files, each
+representing a real deployment target; each project selects an
+`EagleBuildType` preset that sets dozens of feature-flag properties to
+a tested, validated combination. There are roughly eighty individual
+flag properties; the eleven presets are the curated combinations that
+have been verified to compile, test, and run end-to-end. A deployment
+chooses a preset; the preset is the architecture.
+
+The cost is that the build matrix is real. Each combination of flags
+is a different binary, and the test matrix multiplies accordingly. The
+Eagle build system addresses this by supporting all the combinations
+as first-class build configurations and by running tests under each.
+The mainstream alternative — a single binary with runtime flags —
+appears simpler but moves the matrix into the runtime, where it is
+harder to audit. The mainstream alternative also does not address
+multi-version compatibility at all; it either picks one framework and
+abandons the rest, or it picks a lowest-common-denominator API surface
+that gives up the features the newer frameworks added. Eagle's
+approach gives up neither.
 
 ### 6.5 CRLF as a contract
 
@@ -2000,10 +2201,13 @@ whitepaper is a way to make it bearable.
 
 ## §8 Beauty and correctness: an aesthetic argument
 
-> **Status:** drafted in full. §8.4 (the worked Eagle examples) was
-> drafted from the audit work on the actual code; the author may wish
-> to refine the selection or add historical context that the audit
-> could not surface.
+> **Status:** drafted in full. §8.3 (Eagle's specific beauty standards)
+> was added at the author's request after the initial draft, to
+> operationalize the language-agnostic properties of §8.2 with the
+> concrete conventions that the Eagle codebase actually uses. §8.5
+> (the worked Eagle examples) was drafted from the audit work on the
+> actual code; the author may wish to refine the selection or add
+> historical context that the audit could not surface.
 
 **Section thesis.** Beautiful code is significantly more likely to be correct
 than ugly code. The relationship is probabilistic, not deterministic — but it
@@ -2095,7 +2299,255 @@ beautiful. When several are absent, peers tend to call it ugly. The
 judgment is not arbitrary; it is the integration of several testable
 properties into a single label.
 
-### 8.3 Why beauty correlates with correctness
+### 8.3 Eagle's specific beauty standards
+
+The general properties of §8.2 are language-agnostic. Eagle
+operationalizes them through a set of specific, recognizable
+conventions that experienced readers of the codebase spot within
+seconds of opening any file. The conventions are not enforced by
+tooling; they are enforced by *consistency*, which is what makes them
+load-bearing rather than decorative. A new procedure that follows the
+conventions is immediately readable. A new procedure that breaks them
+is immediately noticeable. The standards fall into seven categories.
+
+**Whitespace and indentation.**
+
+Eagle scripts use two-space indentation. The C# primitive layer uses
+four-space indentation. Tabs are absent from both. Every nested level
+adds exactly its indentation step; nothing is "shortened" because the
+nesting got deep. A reader can count nesting levels by counting
+indentation steps without consulting the code.
+
+Vertical whitespace separates logical blocks at consistent intervals.
+A `# NOTE:` block is preceded by one blank line. A new logical phase
+within a procedure begins on a new blank line. Procedures are
+separated by exactly one blank line; classes by exactly two. The
+pattern is rigid because rigidity is what makes the pattern useful —
+a reader skimming a file finds phase boundaries by visual rhythm, not
+by careful parsing. A file that varies its blank-line discipline
+forces the reader to *decide* where each phase ends; a file that
+maintains the discipline lets the reader *see* where each phase ends.
+
+**Parameter list splitting.**
+
+Single-line parameter lists are used when the parameters fit cleanly:
+`proc foo { a b c }`. The braces have a space inside; the parameters
+are separated by single spaces. Default values appear in nested
+braces: `proc foo { a {b ""} {c false} }`. The convention is uniform
+and grep-able.
+
+When the list does not fit, every parameter goes on its own indented
+line:
+
+```tcl
+proc compileCSharp {
+        codeText assembly assemblyName resultVarName errorsVarName
+        {createExecutable false} {flagsOnly false} {memory true}
+        {strict true} {types null} {extra ""} } {
+```
+
+The opening brace stays on the first line. The closing brace sits
+adjacent to the body's opening brace. Each parameter sits on its own
+line, eight-space indented. Required parameters come before optional
+ones; the visual order matches the call-site order.
+
+C# parameter splitting follows the same pattern. A method whose
+signature does not fit on one line splits at the parenthesis, with
+each parameter on its own line:
+
+```csharp
+private static ReturnCode PrivateInteractiveLoop(
+    Interpreter interpreter,
+    IInteractiveLoopData loopData,
+    ref Result result
+    )
+```
+
+Method overload resolution is a related concern. Eagle's `[object
+invoke]` performs runtime resolution against the .NET reflection API
+when a script calls into the primitive layer; the C# layer relies on
+compile-time overload resolution. The convention that keeps both
+tractable is *uniform overload semantics*: when `Foo(int)` and
+`Foo(string)` both exist, they answer the same conceptual question
+with different input types, never different conceptual questions with
+different signatures. Overloads that would have semantically different
+meanings get different names. A script that calls `Foo` with an `int`
+gets the int-handling overload, not a semantically different one. The
+convention keeps the script-to-primitive binding predictable.
+
+**Visual cues.**
+
+The Eagle codebase uses a few recurring visual markers, each with a
+stable meaning.
+
+- **Horizontal separator lines.** A line of seventy-six `#`
+  characters in Eagle scripts (and a corresponding `//` form of the
+  same width in the C# layer) marks a major section boundary in a
+  file. The width is wide enough to be visually unmistakable in any
+  reasonable terminal.
+- **Block comments at file head.** Every `.eagle` script begins with
+  a fixed seven-line block comment: a separator, the file name with
+  a `-- short description` annotation, the project name (`Extensible
+  Adaptable Generalized Logic Engine (Eagle)`), the copyright line,
+  the license-terms reference, the RCS Id line, and a closing
+  separator. The block is identical across hundreds of files. The
+  uniformity is the point: a reader opening any Eagle file knows
+  where the actual code starts and what license it claims.
+- **ALL CAPS for emphasis inside comments.** Words like `IMPORTANT`,
+  `WARNING`, `NOTE`, `HACK`, `TODO`, `BUGBUG`, `BUGFIX`,
+  `SECURITY` are written in capitals inside comments. The all-caps
+  form is rare enough elsewhere that it functions as a high-attention
+  marker. A reader scanning a file's comments registers the caps
+  before reading the surrounding text.
+- **Prefixed comments with grep-able taxonomy.** Discussed in §5.7.
+  The prefixes (`# NOTE:`, `# HACK:`, `# TODO:`, `# BUGFIX:`,
+  `# BUGBUG:`) make intent searchable. The prefixes are always
+  followed by a colon and a space; never abbreviated; never combined.
+- **Hanging-indent multi-line `[appendArgs]` calls.** When a string
+  is built from many fragments, the call wraps with each fragment on
+  its own line, indented to align under the first argument. The
+  shape of the construction is visible at a glance — the reader sees
+  the assembled string without parsing the substitution syntax.
+
+The visual cues are not decoration. They are part of the codebase's
+grammar. A reader reads the cues alongside the code.
+
+**Names: one combination, one concept.**
+
+The strongest naming convention in Eagle is that *a given combination
+of name prefix, base name, and suffix maps to exactly one concept,
+subsystem, or data domain across the entire codebase*. This is the
+rule that makes everything else possible. A few representative
+patterns:
+
+- **`eagle_*` prefix.** Procedures with the `eagle_` prefix are
+  Eagle-specific extensions to the test framework that have no native
+  Tcl analog: `[eagle_shellUnknown]`, `[eagle_shellBuildCommand]`,
+  `[eagle_isShellScriptLevel]`, `[eagle_getShellPromptScript]`. A
+  reader seeing `eagle_` knows this is Eagle-only territory.
+- **`have*` predicates.** `[haveConstraint]`, `[haveSecurity]`,
+  `[havePluginLicenseEnvironmentVariableNames]`, `[haveCaches]`,
+  `[haveModernNetFx]` answer a boolean question: does the named thing
+  currently exist or apply? The pattern is uniform; the return is
+  always boolean.
+- **`get*` accessors.** `[getTestRunId]`,
+  `[getRequestLicenseCertificateUri]`,
+  `[getDotNetCoreRuntimeVersions]` return a value. The pattern
+  matches the .NET property-getter convention. The return is never
+  void; the procedure is referentially transparent in any context
+  with a result.
+- **`set*` mutators.** `[setKeyName]`, `[setApprovedDataPolicy]`
+  update state. The return is conventionally the empty string (the
+  side effect is the point).
+- **`is*` predicates.** `[isEagle]`, `[isMono]`, `[isDotNetCore]`,
+  `[isValidKeyRing]`, `[isOsWindows11]` answer a boolean question
+  about a current property. The pattern matches the .NET `bool Is*`
+  property convention.
+- **`save*` / `restore*` pairs.** Discussed in §5.5. Every `save*`
+  has a matching `restore*`; the pair is the atomic unit of mutable
+  composability.
+- **`add*` / `remove*` pairs.** `[addConstraint]` has a matching
+  `[removeConstraint]`; `[addToArgv]` has a matching
+  `[removeFromArgv]`; `[addRuntimeOption]` has a matching
+  `[removeRuntimeOption]`. The convention is uniform.
+- **`checkFor*` probes.** Test-framework conventions for runtime
+  feature detection. Discussed in §8.5.3.
+- **`maybe*` for conditional actions.** `[maybeInvokeHook]`,
+  `[maybeAddToAutoPath]`, `[maybeKillProcessGroup]` perform the named
+  action *conditionally* — typically when some override flag is
+  unset and the precondition holds. The pattern signals to the caller
+  that the procedure is safe to call unconditionally; the conditional
+  logic is internal.
+- **`try*` for fallible actions.** `[tryToLoadZeus]`,
+  `[tryDetectFossilRoot]`, `[tryTestRunCommand]` attempt the named
+  action and report success or failure via return value rather than
+  via exception. The pattern matches the .NET `TryGetValue` /
+  `TryParse` convention.
+
+The patterns compose. `[tryDetectFossilRoot]` is a `try*` (fallible
+action) about `Fossil` (the subsystem). `[checkForTestExec]` is a
+`checkFor*` (test-framework probe) about `TestExec` (the subsystem). A
+reader who has internalized the prefixes and suffixes can predict what
+a procedure does from its name, with high accuracy, before reading
+the body.
+
+The strictness of the convention is what makes it useful. A `have*`
+that returned a non-boolean would break the reader's mental model. A
+`get*` with side effects would break the convention. An `add*`
+without a matching `remove*` would be an asymmetry that demanded
+explanation. The Eagle codebase, across roughly six hundred script
+procedures and tens of thousands of C# methods, maintains the
+convention almost without exception — and where exceptions exist,
+they are documented inline.
+
+**Nouns and verbs aligned with .NET.**
+
+Eagle's script-level vocabulary is calibrated to match .NET's
+vocabulary where the concepts are shared. The alignment makes the
+cross-language boundary easier to cross.
+
+| Eagle verb | .NET equivalent | Examples |
+|---|---|---|
+| `Create` | factory methods | `[interp create]`, `[object create]`, `Interpreter.Create()` |
+| `Dispose` | `IDisposable.Dispose()` | `[object dispose]`, the six-phase interpreter teardown |
+| `Get` / `Set` | property accessors | `[getRuntimeVersion]`, `[setKeyName]`, `Interpreter.GetActive()` |
+| `Try*` | `TryParse` / `TryGetValue` | `[tryToLoadZeus]`, `Try*` C# helpers |
+| `Has*` | `bool Has*` properties | `[hasRuntimeOption]`, `[hasInterpreterFlags]`, `Interpreter.HasSecurity` |
+| `Is*` | `bool Is*` properties | `[isEagle]`, `[isSafe]`, `Interpreter.IsSafe()` |
+| `To` / `From` | conversion methods | `[publicKeyTokenToBytes]`, `[getStringFromObjectHandle]` |
+
+The alignment has a structural reason. A script call that names a
+.NET method by its conventional name binds correctly without mental
+translation. When the script says `[object invoke $obj Dispose]`, the
+script author thinks "dispose the object" and the .NET layer responds
+with the `IDisposable.Dispose()` method. The vocabulary is unified
+across the boundary. The boundary remains visible (because the call
+goes through `[object invoke]`), but the vocabulary does not change
+as it crosses.
+
+**Consistency, consistency, consistency.**
+
+The deepest beauty standard is that conventions, once adopted, are
+applied uniformly. A convention that is applied "most of the time" is
+worse than no convention at all, because the exceptions force readers
+to *verify* rather than *trust*. A codebase whose conventions are
+consistent admits readers without ceremony. A codebase whose
+conventions are sometimes-this, sometimes-that requires every reader
+to decide which convention applies in any given case. The decision
+overhead compounds across the codebase's lifetime; over decades, the
+difference between consistent and almost-consistent is the difference
+between a codebase that survives its original author and one that
+does not.
+
+Eagle's conventions are applied near-uniformly. A new contributor can
+learn the indentation rules in five minutes; the consistency takes
+years to build and is paid for one procedure at a time. The audit
+work that produced this whitepaper's case study found, in practice,
+that the consistency was near-total across the codebase. Procedures
+that had been edited by multiple authors over decades still followed
+the original conventions, because each editor read the surrounding
+code before making changes and matched the style they found.
+
+This is the part of the beauty discipline that most resists shortcut.
+It cannot be added later. It cannot be enforced retroactively. It can
+only be built by every contributor, every edit, choosing the
+convention over their own preference. The codebase that emerges is
+one where any reader, anywhere in the file, can predict the shape of
+the next ten lines before reading them.
+
+**What this gives the §8 thesis.**
+
+These standards are how the §8.2 properties get from "abstract design
+principles" to "concrete, recognizable, enforceable conventions that
+a reader can verify in seconds." Consistency makes symmetry visible.
+Naming conventions make cohesion visible. Visual cues make
+predictable control flow visible. The standards are not the beauty
+themselves; they are the *vocabulary* through which the beauty is
+expressed. A codebase that follows them produces code whose beauty is
+*recognizable*, which is the necessary precondition for the
+beauty-correctness correlation in §8.4 to operate at all.
+
+### 8.4 Why beauty correlates with correctness
 
 The correlation is real because the properties that produce beauty also
 reduce the entry of bugs and increase the chance of catching the ones
@@ -2151,7 +2603,7 @@ is not an issue. Each mechanism is one of several independent inputs to
 correctness; beauty is the conjunction of these inputs, but the
 conjunction is not deterministic.
 
-### 8.4 Examples from Eagle
+### 8.5 Examples from Eagle
 
 > **Status:** drafted. The author should expand each example with
 > whatever historical context they consider most illuminating: the
@@ -2171,7 +2623,7 @@ properties from §8.2 that it exhibits, (c) the correctness properties
 that fall out, and (d) the historical defect record from the audit work
 that produced this whitepaper's case study.
 
-#### 8.4.1 The `[appendArgs]` foundational primitive
+#### 8.5.1 The `[appendArgs]` foundational primitive
 
 The primitive is two lines:
 
@@ -2217,7 +2669,7 @@ no place for a bug to hide; there is also no missing context that a
 future maintainer would have to recover. The audit found nothing to
 find.
 
-#### 8.4.2 The `list.eagle` functional core
+#### 8.5.2 The `list.eagle` functional core
 
 `list.eagle` contains six procedures: `[lappendArgs]`, `[lshuffle]`,
 `[ldifference]`, `[filter]`, `[map]`, and `[reduce]`. Together they
@@ -2272,7 +2724,7 @@ is consistent because every procedure follows the same pattern; the
 consistency is what makes it usable as a toolkit rather than as six
 separate procedures.
 
-#### 8.4.3 The constraint system
+#### 8.5.3 The constraint system
 
 The Eagle test framework's constraint system consists of three core
 procedures — `[haveConstraint]`, `[addConstraint]`,
@@ -2333,7 +2785,7 @@ The beauty property that pays off most here is cohesion. The protocol
 does exactly what tests need; nothing more, nothing less. The closure
 under composition is the dividend.
 
-#### 8.4.4 Shell argument processing
+#### 8.5.4 Shell argument processing
 
 The test framework's argv handling decomposes into three stages:
 `[augmentTestArguments]`, `[processTestArguments]`,
@@ -2404,7 +2856,7 @@ The beauty property that pays off most here is clear abstraction. The
 three-stage decomposition matches the domain perfectly; that fit is
 what makes each stage simple and the composition straightforward.
 
-#### 8.4.5 The interactive command loop
+#### 8.5.5 The interactive command loop
 
 The Eagle interactive shell is the cleanest available example of the
 dual-language model expressing itself in user-visible behavior. It is
@@ -2563,7 +3015,7 @@ in `[eagle_shellUnknown]` — and zero substantive code defects across
 either layer. The correlation between the §8.2 properties and the
 correctness record is, in this example, total.
 
-#### 8.4.6 The `# <help>` block convention
+#### 8.5.6 The `# <help>` block convention
 
 The convention itself — embedded XML-shaped documentation inside
 brace-quoted procedure bodies, parsed at runtime by the `HelpOps`
@@ -2617,11 +3069,11 @@ system from the primitives the language already has. The lack of new
 machinery is what makes the convention survivable across changes that
 would break a more elaborate system.
 
-#### 8.4.7 The pattern across the examples
+#### 8.5.7 The pattern across the examples
 
 Six examples, six instances of the §8.2 properties holding in
 conjunction, six procedures or systems whose audit defect rate is
-consistent with the §8.3 mechanisms.
+consistent with the §8.4 mechanisms.
 
 The pattern across the examples is that the beauty properties are not
 decoration. They produce concrete correctness benefits: bugs that
@@ -2632,12 +3084,12 @@ examples are not selected because they are beautiful; they are
 selected because their beauty is *visible* and their correctness
 record is consistent with the visibility.
 
-A reader who finishes §8.4 should also notice an absence. Not one of
+A reader who finishes §8.5 should also notice an absence. Not one of
 the six examples is "clever" in the sense of using a non-obvious
 technique. None of them performs a virtuoso compression of intent
 into syntax. None of them relies on an obscure feature of the
 language. The examples are beautiful because they are *simple*, not
-because they are surprising. That is what the §8.3 mechanisms predict:
+because they are surprising. That is what the §8.4 mechanisms predict:
 the beauty properties that correlate with correctness are the ones
 that make code *easier* to understand, not harder. Cleverness pulls
 in the opposite direction.
@@ -2647,7 +3099,7 @@ visible signature of an author who chose simple over clever every
 time the choice came up. The correlation with correctness follows
 because simple code is verifiable and clever code is not.
 
-### 8.5 Counterexamples and what they teach
+### 8.6 Counterexamples and what they teach
 
 The thesis is probabilistic, not deterministic. Counterexamples exist,
 and they instruct.
@@ -2692,15 +3144,32 @@ together, not individually. Clean abstraction without minimality is
 over-engineering. Symmetry without cohesion is ritual. The signal comes
 from the conjunction.
 
-### 8.6 Beauty as a design discipline
+**Eagle's own articulation: reliability over elegance.** The Eagle
+architecture documentation explicitly states a design principle —
+"when a choice exists between a pattern that looks clean and one that
+works correctly under all conditions (threading, disposal, platform
+differences, AppDomain boundaries), correctness wins." This is the
+counterexample teaching internalized as a design rule. The §8 thesis
+is that beauty *correlates* with correctness, not that beauty *is*
+correctness; Eagle's own design principle says the same thing from the
+opposite direction. When the two would conflict, the architecture picks
+correctness; the code that results may not look maximally elegant, but
+it is right, and "right" is what the beauty discipline was a heuristic
+for in the first place. The architecture's stated rule and the
+whitepaper's stated thesis are the same observation, calibrated for
+different cases: most of the time they agree, and the rare cases where
+they would disagree are decided in correctness's favor on both
+sides.
+
+### 8.7 Beauty as a design discipline
 
 The thesis can be inverted into a discipline: write code that you find
 beautiful, and you will produce code that is more likely to be correct.
 
 The discipline is not aesthetic posturing. It is the application of a
-heuristic with empirical support. The mechanisms in §8.3 explain why
-the heuristic works; the examples in §8.4 illustrate it; the
-counterexamples in §8.5 calibrate it.
+heuristic with empirical support. The mechanisms in §8.4 explain why
+the heuristic works; the examples in §8.5 illustrate it; the
+counterexamples in §8.6 calibrate it.
 
 The discipline scales because it can be taught. A developer asking
 "what would make this beautiful?" is asking a tractable question:
@@ -2730,7 +3199,7 @@ typical of large codebases. Both facts have the same explanation: the
 model produces a structural environment in which beautiful code is
 the natural local minimum.
 
-### 8.7 The relationship to the dual-language model
+### 8.8 The relationship to the dual-language model
 
 The dual-language model supports beauty structurally.
 
@@ -2918,6 +3387,23 @@ still worth naming explicitly. A reader who finishes this whitepaper
 should not be persuaded to use Eagle. A reader who finishes this
 whitepaper should be able to ask, of any system they encounter: where
 is the boundary?
+
+A companion paper, *If You Want a Project to Be Good, You Have to Love
+Working on It* (also in the Eagle docs repository, as
+`paper_love_and_software.md`), makes a complementary argument from the
+opposite direction: that the characteristics of software described in
+§§4–6 of this whitepaper — relentless attention to edge cases,
+willingness to refactor working code because the abstraction is not
+quite right, documentation of every deviation from convention, design
+decisions that optimize for the next twenty years rather than the next
+sprint — emerge only when the author is intrinsically motivated to do
+the work. The two papers describe the same phenomenon from different
+angles. The dual-language model is the architectural shape that
+sustained intrinsic motivation produces over time. The intrinsic
+motivation is what keeps the architectural shape from decaying. Either
+paper read alone makes a case; both papers read together make the
+fuller observation that good architecture and good motivation reinforce
+each other across decades.
 
 If the boundary is visible, the system is applying the model. If the
 boundary is hidden, the system is paying for its hiding. The choice
@@ -3396,13 +3882,78 @@ the higher-level `[runTest]`, et al; see §3.4.
   tuples of CLR values for return across the script boundary.
 - `Result` is the canonical return-value carrier used by the primitive
   layer; many methods take a `ref Result` parameter that the caller
-  can inspect after the call.
+  can inspect after the call. The `Result` class carries thirty-plus
+  implicit conversion operators (from/to `string`, `int`, `long`,
+  `double`, `decimal`, `DateTime`, `TimeSpan`, `Guid`, `Uri`, `byte[]`,
+  `Version`, `Exception`, `StringList`, `BigInteger`, and more) so any
+  .NET return value flows into the result pipeline without explicit
+  conversion at the call site.
 - `ReturnCode` enumerates the script-level return codes (Ok, Error,
   Break, Continue, Return, WhatIf) that primitive methods communicate
   to the script layer.
 
+**Patterns worth knowing.**
+
+- **Intentionally mutable static fields.** Many private static fields
+  in the primitive layer are marked with a `purposely not read-only`
+  comment. These are ambient configuration knobs — `HelpOps.
+  DefaultShowTopics`, `ChannelOps.DefaultBufferSize`,
+  `ScriptOps.SubCommandNoCase`, `StringOps.DefaultMatchMode` — that a
+  test harness, host application, or interactive session can adjust
+  without recompilation or method-signature changes. The pattern is
+  the C# layer's expression of the §6.2 "mutation as a feature"
+  argument.
+- **Runtime immutability enforcement.** Rather than relying on C#'s
+  compile-time `readonly` semantics, Eagle enforces immutability via a
+  boolean flag (`immutable`) checked in every setter, with a
+  `MakeImmutable()` method that flips the flag. Objects like
+  `ParseState`, `ExpressionState`, `Token`, `BundleData`, and `Script`
+  start mutable (populated during construction) and become immutable
+  when cached. Compile-time `readonly` cannot express "mutable during
+  construction, immutable after caching"; the runtime flag can.
+- **Six-phase interpreter disposal.** `Interpreter.Dispose` executes
+  six ordered phases: vwait/events/threads/child interpreters; bundle
+  manager and plugins; database/objects/channels; events/scopes/
+  aliases/procedures; plugin/command cleanup; final cleanup and
+  threading resources. The phasing exists because plugins may hold
+  references to interpreter resources, and disposing in the wrong
+  order causes use-after-dispose exceptions in plugin cleanup code.
+- **Trait-based host interface composition.** The `IHost` interface
+  aggregates ten-plus smaller interfaces (`IColorHost`, `IBoxHost`,
+  `IPositionHost`, `ISizeHost`, `IStreamHost`, `IDebugHost`,
+  `IReadHost`, `IWriteHost`, and others) rather than using deep
+  inheritance. The `HostFlags` enum (sixty-plus flags) provides
+  runtime capability queries via `DoesSupport(HostFlags.Color)`. The
+  pattern lets each host implement exactly the capabilities it
+  supports — a console host needs color and positioning; a file host
+  needs streams; a null host needs nothing.
+- **Polymorphic variable storage backends.** The `IVariable` interface
+  supports transparent delegation to external storage. Backends
+  include `DatabaseVariable` (rows in SQL databases), `RegistryVariable`
+  (Windows registry keys), `NetworkVariable` (HTTP-based remote
+  storage), `ElementDictionary` (standard in-memory), `System.Array`
+  (.NET arrays), plus thread, environment, and test backends. Script
+  code like `[set myVar "hello"]` works identically regardless of
+  where the variable lives; the variable trace system fires callbacks
+  on read/write/unset to enable transparent persistence.
+- **`ObjectId` GUID on every type.** Every class, interface, struct,
+  enum, and delegate in the codebase carries an `[ObjectId("guid")]`
+  attribute with a unique GUID. This enables type identification
+  across `AppDomain` boundaries (where `typeof()` yields different
+  objects in different domains), plugin versioning, and serialization
+  identity. It also lets tooling track type additions, removals, and
+  renames across releases.
+- **`goto` state machine pattern.** Roughly 240 `goto` occurrences
+  exist outside `[switch]` statements, primarily in
+  `PrivateShellMainCore`, `ScriptOps`, and `InteractiveOps`. These
+  methods are finite-state machines; the labeled-block representation
+  makes the state topology visible in ways that nested loops with
+  state variables would not.
+
 These idioms are not strictly required for new primitives, but
 following them keeps new code consistent with the existing surface.
+The full catalog of intentional patterns is in `architecture_patterns.
+md` in the Eagle docs repository.
 
 ### Appendix E — Bibliography and further reading
 
@@ -3478,13 +4029,26 @@ argument.
 
 **Tcl- and Eagle-specific.**
 
-- The Eagle command reference and documentation (the docs repo
-  sibling to this whitepaper). The canonical source for Eagle command
-  behavior.
+- The Eagle docs repository (`docs/`) — the canonical source for Eagle
+  command behavior. Key files: `index.md` (overview), `core_language.md`
+  (the full command catalog), `core_script_library.md` (script library
+  procedures), `architecture_patterns.md` (Eagle's deliberate
+  unorthodox patterns, with rationale), `safe.md` (the safe-interpreter
+  security model in detail), `object.md` (deep-dive on the `[object]`
+  command), `interp.md` (interpreter management and security),
+  `info.md` (introspection), `why_eagle.md` (rationale and
+  comparisons), `quick_start_guide.md` (practical orientation),
+  `build_system.md` (the build matrix and `EagleBuildType` presets).
 - The `EAGLE_COMMAND_REFERENCE.md` file in the Eagle source tree. The
   manifest of every documented command, used by the documentation
   tooling (`scan_commands.eagle`, `restyle.eagle`) to keep the docs in
   sync with the source.
+- The companion paper *If You Want a Project to Be Good, You Have to
+  Love Working on It* (`paper_love_and_software.md` in the same docs
+  repository). Argues that the engineering characteristics this
+  whitepaper documents emerge only under sustained intrinsic
+  motivation. The architectural argument and the motivational argument
+  describe the same phenomenon from different sides.
 
 **Optional reading for context on the larger argument.**
 
@@ -3517,9 +4081,11 @@ The whitepaper is written out of order. The recommended sequence:
    will fight you, so they need the most care. §5 follows from §4; §6 follows
    from §5. **Status: drafted.**
 4. **§8 (beauty and correctness) added next.** A substantive aesthetic
-   argument that complements the architectural argument. §§ 8.1–8.3 and
-   8.5–8.7 are drafted; §8.4 (the worked Eagle examples) is outlined and
-   awaits the author's expansion. **Status: drafted apart from §8.4.**
+   argument that complements the architectural argument. All
+   subsections (§§ 8.1–8.8) are now drafted as prose, including §8.3
+   (Eagle's specific beauty standards, added at the author's request)
+   and §8.5 (the worked Eagle examples, expanded in a follow-up pass).
+   **Status: drafted.**
 5. **§2 (mainstream abandonment) and §7 (costs) next.** These are the
    credibility sections — they buy the right to make the §6 arguments.
    **Status: drafted.**
@@ -3532,7 +4098,7 @@ The whitepaper is written out of order. The recommended sequence:
 The whitepaper is now a complete first draft. The remaining pieces are
 editorial:
 
-1. **§8.4 author's pass.** The worked Eagle examples are drafted from
+1. **§8.5 author's pass.** The worked Eagle examples are drafted from
    the audit work on the actual code, but the author has better knowledge
    of the codebase than the audit could surface. The six examples (the
    `[appendArgs]` primitive, the `list.eagle` functional core, the
@@ -3543,30 +4109,25 @@ editorial:
    alternatives, reasons for specific design choices) that the audit
    work did not have access to.
 
-2. **Compression pass.** The current draft is approximately 30,000 words.
-   A compression pass that tightens each section without losing the
-   argument would bring the length closer to a typical whitepaper. The
-   candidates for compression are §2 (which restates familiar history at
-   length), §7 (which could trim some redundancy with §6 around developer
-   skill costs), and the §8.4 examples (each of which could be tightened
-   to perhaps two-thirds of its current length). §§3–6 and §§8.1–8.3 and
-   §§8.5–8.7 are doing load-bearing argumentative work and should not be
-   compressed without losing substance.
+2. **Compression pass.** The current draft is now well over the original
+   14,000–18,000 word body target. A compression pass that tightens each
+   section without losing the argument would bring the length closer to
+   a typical whitepaper. The candidates for compression are §2 (which
+   restates familiar history at length), §7 (which could trim some
+   redundancy with §6 around developer skill costs), and the §8.5
+   examples (each of which could be tightened to perhaps two-thirds of
+   its current length). §§3–6 and §§8.1–8.4 and §§8.6–8.8 are doing
+   load-bearing argumentative work and should not be compressed without
+   losing substance.
 
-3. **Diagrams.** Several sections include placeholder notes for diagrams
-   (cost curves in §1.5, the "seven benefits intersect at the boundary"
-   figure in §3, the Harpy verify-on-load flow in §4.6). These are
-   editorial — the whitepaper works without them, but they would help
-   readers who think visually.
-
-4. **Cross-reference audit.** With every section drafted, a pass over the
+3. **Cross-reference audit.** With every section drafted, a pass over the
    `§`-references in the body would catch any that no longer point to the
    right material, plus place any new cross-references that the final
    structure invites (for example, several appendix entries currently
    reference body sections, but some body sections could usefully cite
    appendix entries in return).
 
-5. **A final review pass.** A complete read-through of the whole document
+4. **A final review pass.** A complete read-through of the whole document
    in order is the only way to catch terminology drift between sections
    written in different drafting sessions. The pass would also be the
    right time to verify that the argument's through-line is clear from
