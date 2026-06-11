@@ -2505,6 +2505,53 @@ across the boundary. The boundary remains visible (because the call
 goes through `[object invoke]`), but the vocabulary does not change
 as it crosses.
 
+**Predicates: name the question, not the boundary.**
+
+A comparison operator is not just an arithmetic test; it is a
+statement of what the surrounding code thinks is meaningful. The Eagle
+codebase consistently prefers `$len > 0` over `$len >= 1`, even though
+for integer `$len` the two expressions evaluate to the same boolean.
+The preference is communicative, not computational, and it illustrates
+a deeper standard: an expression should name the question it is
+asking, not merely produce the right answer.
+
+`$len > 0` says "is there *anything*?" The reader sees zero as the
+boundary between "empty" and "non-empty," because zero *is* that
+boundary in every numeric domain. `$len >= 1` says "is there at least
+*one*?" — a threshold predicate that introduces the magic number `1`
+and asks the reader to recover the "any" semantics from a
+"threshold-of-one" formulation. When the actual question is "do we
+have any?", the first form names it; the second describes a different
+question that happens to produce the same answer.
+
+Four reasons reinforce the preference. *Intent*: `> 0` matches the
+natural mathematical sense of "positive"; `>= 1` requires the reader
+to translate. *Robustness to refactoring*: if `$len` is ever
+recomputed to a non-integer — a duration, a ratio, a floating-point
+measurement — `> 0` continues to mean "is there any of it?" while
+`>= 1` silently changes meaning, because `0.5` is positive but fails
+the threshold. In a scripting language whose substrate is
+everything-is-a-string, this kind of silent type drift is not caught
+by a compiler. *Negation symmetry*: the natural negation of `> 0` is
+`== 0`, which reads cleanly as "empty"; the natural negation of
+`>= 1` is `< 1`, which reads as "less than the threshold" — awkward
+when the threshold was never the point. *Convention alignment*: the
+.NET layer writes `list.Count > 0` (or `list.Any()`) for the same
+question; keeping the script-side expression aligned with the
+primitive-side expression keeps the boundary easy to cross.
+
+The convention reserves `>= N` for cases where `N` is a *real domain
+value* — batch sizes, retry counts, minimum-required-version checks,
+pagination limits. There the threshold *is* the point, and naming it
+explicitly is what the reader wants to see. The discipline of using
+`> 0` for the "any?" question and `>= N` only when `N` matters keeps
+the two patterns visually distinct: a reader who sees `>= 1` in the
+codebase pauses, because the appearance of `1` as a threshold is
+anomalous; a reader who sees `> 0` glides past it as the obvious
+phrasing of "any?". This is the §8.2 *clear abstraction* property
+applied at the level of an expression rather than a procedure: the
+form of the code should match the form of the question it is asking.
+
 **Consistency, consistency, consistency.**
 
 The deepest beauty standard is that conventions, once adopted, are
