@@ -775,13 +775,13 @@ Eagle scripts can ask the questions a debugger asks, *while running*, and act
 on the answers. The relevant commands are part of the language kernel, not a
 separate library:
 
-| Command | What it returns |
+| Primitive | What it returns |
 |---|---|
 | `[info level]` | The call stack depth at the current site. |
 | `[info level $n]` | The arguments to frame `$n`. Note: `[info level [info level]]` returns the *current* frame, not the caller — a Tcl convention that surprises newcomers. |
 | `[info commands]` | Every command currently defined in the interpreter. |
 | `[info procs]` | Every proc, with bodies retrievable via `[info body]`. |
-| `[eagle_platform(...)]` | Runtime properties — framework version, runtime engine, build options, processor architecture. |
+| `$::eagle_platform(...)` | A global array variable (not a command) holding runtime properties — framework version, runtime engine, build options, processor architecture. |
 | `[info script]` | The script file currently sourcing. |
 | `[info engine]` | The hosting engine (Eagle vs. native Tcl), with sub-keys for vendor, version, compile options. |
 
@@ -868,12 +868,18 @@ security-enabled interpreter is refused.
 
 Several design choices in this trust chain are load-bearing.
 
-**Detached, not inline.** The signature lives alongside the artifact without
-altering it. Editing a signed script does not corrupt the script — it only
-invalidates the signature. The script remains a readable, executable
-artifact; only its trust status changes. This means signed and unsigned
-variants of the same script can coexist, and unsigned variants can be tested
-before signing.
+**Detached by default; inline supported.** The default deployment shape is
+a detached signature alongside the artifact: editing a signed script does
+not corrupt the script, it only invalidates the signature. The script
+remains a readable, executable artifact; only its trust status changes.
+This means signed and unsigned variants of the same script can coexist,
+and unsigned variants can be tested before signing. Harpy also supports
+*embedded* signatures — the signature can be carried inside the script
+file rather than alongside it — for deployments where a single artifact
+is operationally preferable. The detached form is the default because it
+preserves the source as a directly editable, directly readable artifact;
+the embedded form remains available where deployment constraints prefer a
+single file over a pair.
 
 **Source-based, not bytecode-based.** The signed artifact is the script
 *bytes*, not a compiled form. There is no compile-link-sign cycle. The
@@ -904,41 +910,199 @@ This is the dual-language model's deployment story.
 
 ### 4.7 Security as runtime state
 
-The primitive layer exposes security policy as mutable interpreter state. A
-script can query the current security state of its interpreter, gate behavior
-on it, and (with appropriate authorization) construct child interpreters with
-different security settings:
+The primitive layer exposes security policy as mutable interpreter state.
+A script can query the current security state of its interpreter, gate
+behavior on it, and (with appropriate authorization) construct child
+interpreters with different security settings:
 
 ```tcl
 if {[interp issafe]} then {
-    # restricted command set, sandboxed file system, no network
+  # restricted command set, sandboxed file system, no network
 } else {
-    # unrestricted; may create sandboxed children for untrusted work
-    set sandbox [interp create -safe child-name]
-    interp eval $sandbox $untrustedScript
+  # unrestricted; may create sandboxed children for untrusted work
+  set sandbox [interp create -safe child-name]
+  interp eval $sandbox $untrustedScript
 }
 ```
 
-Security flags affect which commands are available, whether file system
-operations are permitted, whether the network can be reached, whether unsigned
-scripts can be loaded. A script running in a security-enabled interpreter
-cannot escalate to an unrestricted one without explicit policy permission; a
-script running in a security-disabled interpreter can dynamically introduce
-a security-enabled child for sandboxed evaluation.
+But `[interp create -safe]` is only the entry-level mechanism. Eagle's
+security model is layered:
 
-This is structurally different from compile-time security models. There is no
-separate "secure build" and "debug build." The same binary, the same scripts,
-the same interpreter — but the security state is interpreter-scoped runtime
-data, queryable from script, settable by policy.
+- **Safe interpreters** (`[interp create -safe]`) provide the baseline:
+  a restricted command set, sandboxed file system access, no network,
+  no native interop. This is the Tcl-compatible mode.
+- **Custom rule sets** extend the safe-interpreter model by enumerating
+  exactly which commands, sub-commands, and options are permitted in a
+  given interpreter. A rule set is itself a policy artifact: a
+  `.ruleSet` file, deployed alongside the scripts, containing `rule`
+  blocks of the form `rule { type Include kind Command mode {Include
+  Exact} patterns nop }` plus optional `includeRuleSet` directives for
+  composition. Every rule set file has a sibling `.ruleSet.harpy`
+  detached signature, so the policy itself is a signed artifact whose
+  authenticity is verified by the same trust chain that verifies the
+  scripts. Eagle ships a layered library of rule sets — `common`
+  (permits only `[nop]`, the safest baseline), `expr`, `event`,
+  `control`, `entity`, `fileSystem`, `configuration`, `critical`,
+  `full`, and others — and a deployment selects or composes them by
+  name. A script may operate under a permissive rule set during
+  development and a restrictive rule set in production without any
+  change to the script.
+- **Policy callbacks (C# and Eagle)** are the most expressive layer. A
+  callback is a method or procedure that the interpreter consults
+  before performing a privileged action. The callback decides, given
+  the action and the calling context, whether the action is permitted.
+  Policy callbacks can be implemented in C# (for performance and for
+  cases where the policy is part of the primitive layer) or in Eagle
+  (for cases where the policy is itself part of the deployment's
+  configuration). A parent interpreter can install policy callbacks on
+  a child interpreter, so the trust relationship between parent and
+  child is mediated by code that the parent controls.
+
+The three layers compose. A child interpreter may be safe, operate under
+a rule set, *and* dispatch privileged actions through callbacks; each
+layer adds an independent constraint, and an action that any layer denies
+is denied overall. The composition is by design: the layered model
+matches the layered trust requirements of real deployments, where a
+single binary policy is rarely sufficient.
+
+Security flags affect which commands are available, whether file system
+operations are permitted, whether the network can be reached, whether
+unsigned scripts can be loaded. A script running in a security-enabled
+interpreter cannot escalate to an unrestricted one without explicit
+policy permission; a script running in a security-disabled interpreter
+can dynamically introduce a security-enabled child for sandboxed
+evaluation.
+
+This is structurally different from compile-time security models. There
+is no separate "secure build" and "debug build." The same binary, the
+same scripts, the same interpreter — but the security state is
+interpreter-scoped runtime data, queryable from script, settable by
+policy, mediated by callbacks the parent controls.
 
 The pattern recurs throughout the system. Runtime options
-(`[hasRuntimeOption logExtraTestResults]`), trust state, debug instrumentation,
-performance flags — all are interpreter state, not compile-time configuration.
-This is what scripts mean when they say `[hasRuntimeOption ...]` instead of
-`#if SOMETHING`: the dual-language model puts the gating where it belongs, in
-the policy layer, where it can be changed without re-deploying primitives.
+(`[hasRuntimeOption logExtraTestResults]`), trust state, debug
+instrumentation, performance flags — all are interpreter state, not
+compile-time configuration. This is what scripts mean when they say
+`[hasRuntimeOption ...]` instead of `#if SOMETHING`: the dual-language
+model puts the gating where it belongs, in the policy layer, where it
+can be changed without re-deploying primitives.
 
-### 4.8 Summary of the case
+### 4.8 The shell core: `PrivateShellMainCore` and `PrivateInteractiveLoop`
+
+The shell itself is the most visible instance of the dual-language model
+in Eagle: a C# scaffolding that prepares an interpreter, dispatches
+command-line work, and hands control to a script-driven interactive
+loop. The two methods in the primitive layer that carry this work are
+`PrivateShellMainCore` and `PrivateInteractiveLoop`, both defined in
+`Library/Components/Public/Interpreter.cs`. Together they are
+approximately six thousand lines of C#; together they implement
+roughly the entire surface that the user interacts with when running
+`EagleShell`.
+
+**`PrivateShellMainCore` (≈4,700 lines).** This is the shell's main
+dispatcher. Its responsibilities, in order:
+
+1. Initialize the active interpreter and the parent / child interpreter
+   relationship. The shell supports `-child` and `-parent` command-line
+   options that switch the *active* interpreter between an original and a
+   child; the method owns the bookkeeping that keeps the switch
+   consistent across command-line arguments and evaluated scripts.
+2. Walk the argument vector, dispatching each recognized option to its
+   handler. Many options have parameters; many options affect state that
+   subsequent options will read. The walk is order-preserving and stop-
+   sensitive: an option that requests a `-stop` (or that causes a fatal
+   error) halts further processing.
+3. Decide whether the shell should enter interactive mode. The decision
+   is contextual: a script supplied via `-file` does not enter the loop;
+   an explicit `-interactive` does; the absence of either may, depending
+   on host capability.
+4. If interactive, hand off to `PrivateInteractiveLoop` with the
+   appropriate loop data.
+5. On exit, dispose the child interpreter (if one was created) and
+   propagate the result through `ref` parameters to the caller.
+
+The method is large, and its size is honest about what it has to
+coordinate: every shell-level concern that a user can touch from the
+command line is handled here. The structure is `#region`-delimited
+throughout, so a reader navigating to a specific concern (interpreter
+switching, option parsing, exit handling, child interpreter cleanup)
+finds it without scrolling through unrelated code. The `#region` system
+is doing the work that the §6.3 large-file convention argues for:
+cohesion within a single artifact, with structural navigation rather
+than file-level decomposition.
+
+**`PrivateInteractiveLoop` (≈1,600 lines).** This is the read-eval-print
+loop. Its structure, again `#region`-delimited:
+
+- **Setup.** Parameter checks, cross-AppDomain checks, native stack
+  checks, save/push of the interactive-loop level. The setup ensures
+  that the loop is being entered in a state where it can operate safely.
+- **Initialization (optional).** When the loop is being entered for the
+  first time, an "initialize interactive loop" region handles
+  one-time setup (debugger active level, hooks, banner text).
+- **Header.** The "Write Interactive Header" region produces the
+  banner the user sees on entry.
+- **Save / push engine flags.** The loop saves the calling engine flags
+  and pushes its own. The saved values are restored on exit, so the
+  loop's mutation of flag state is bounded.
+- **Local variable declarations.** Multiple regions declare the locals
+  the loop will use, grouped by concern (flag variables, Tcl shell
+  emulation variables, GC test thread variables, input variables,
+  loop variables). The decomposition lets a reader find any local by
+  the concern it belongs to.
+- **Reset interactive loop event.** A region that ensures the loop's
+  signalling event is in the expected state.
+- **The interactive loop itself.** A large `#region` containing the
+  main loop. Within it, further `#region`s for: per-iteration flag
+  bookkeeping, debugger command dump, paused-loop waiting, input and
+  result processing variables, input processing, input buffering check,
+  host-begin-processing hook callback, done/input flags check, input
+  buffering, command-hook callback, empty-input check, debugger active
+  level entry, error-line reset, and so on. Each concern is its own
+  `#region`; each `#region` is the smallest scope that meaningfully
+  isolates the concern.
+
+The total method is large. The internal structure is fine-grained. The
+combination is exactly the §6.3 argument made concrete: large files (or
+large methods) are not a defect when the cohesion is real and the
+internal navigation is good. A reader who wants to understand "what
+happens when the user pauses the interactive loop" goes to the
+"Wait On Paused Interactive Loop" region; they do not have to read the
+other 1,500 lines first.
+
+What the case study illustrates:
+
+- **The C# shell core hands control to the Eagle script layer
+  ([eagle_shellUnknown] and the prompt-setup procedures from §4.5) at
+  the right moments.** The C# layer does not implement the
+  interactive shell's "personality" — it implements the loop. The
+  personality is in Eagle: which commands are dispatched to a system
+  shell, what the prompt looks like, how unknown commands are
+  handled. This is the dual-language model expressing itself in the
+  most user-visible component of the system.
+- **The C# layer's complexity is contained.** A user who wants a
+  different prompt does not modify `PrivateInteractiveLoop`; they
+  redefine the Eagle prompt-setup procedures. A user who wants
+  different unknown-command behavior does not modify the C# loop;
+  they replace `[eagle_shellUnknown]`. The C# layer provides the
+  scaffolding; the Eagle layer provides the policy.
+- **The trust boundary is in the right place.** The C# layer
+  enforces the security state of the active interpreter, the rule
+  set, and the policy callbacks (see §4.7). The Eagle layer can
+  observe security state and adapt, but cannot escape it. A script
+  that wants to perform a privileged action goes through the
+  primitive layer, which checks the policy before performing the
+  action. The shell's user-visible surface is in the script layer;
+  the trust enforcement is in the primitive layer; the boundary is
+  the `[object]` command.
+
+The shell is, in this sense, the cleanest instance of the entire
+whitepaper's argument: a substantial, complex piece of software whose
+*architecture* is the dual-language model and whose *behavior* is
+explained, end to end, by following the boundary between the two
+layers.
+
+### 4.9 Summary of the case
 
 Eagle is a working instance of the dual-language model. Its boundary is
 explicit (the `[object]` command). Its scripts are first-class introspective
@@ -2021,15 +2185,19 @@ without a single line of ceremony.
 
 *What makes it beautiful.* **Cohesion** is total. The procedure does
 exactly one thing. Its name describes the thing. There is no alternate
-behavior, no special case, no flag. **Minimality** is absolute. There is
-nothing in the body that could be removed without breaking the
-semantics. The initialization to the empty string and the `[eval
-append]` are both necessary; nothing else exists. **Clear abstraction.**
-The signature matches the semantics: take any number of arguments;
-return their concatenation. The mental model fits in one phrase.
-**Consistent naming.** The verb is `append`, which matches the
-underlying Tcl primitive. The plural noun `Args` matches the variadic
-parameter. **Predictable control flow.** There is no control flow.
+behavior, no special case, no flag. **Minimality** is near-absolute,
+with one informative exception: the initial `[set result ""]` is not
+*strictly* required (Tcl's `[append]` will create the variable on its
+own), but the explicit initialization expresses intent — the author
+wants a fresh, empty result regardless of any later refactoring that
+might introduce a `result` use earlier in the procedure body. The
+two-line shape is therefore not the shortest possible body; it is the
+shortest body that documents what it means. **Clear abstraction.** The
+signature matches the semantics: take any number of arguments; return
+their concatenation. The mental model fits in one phrase. **Consistent
+naming.** The verb is `append`, which matches the underlying Tcl
+primitive. The plural noun `Args` matches the variadic parameter.
+**Predictable control flow.** There is no control flow.
 
 *What follows for correctness.* The procedure has zero defects in the
 audit history. There is nothing in it that could be wrong; the cost of
@@ -2042,8 +2210,12 @@ everywhere; the absence of bugs in `[appendArgs]` means that thousands
 of call sites can rely on it without verification. The primitive's
 correctness is amortized over its uses in a way that compounds.
 
-The beauty property that pays off most here is minimality. There is no
-place for a bug to hide. The audit found nothing to find.
+The beauty property that pays off most here is the disciplined kind of
+minimality — the body is as short as it can be *while still expressing
+the author's intent*, not as short as it could possibly be. There is
+no place for a bug to hide; there is also no missing context that a
+future maintainer would have to recover. The audit found nothing to
+find.
 
 #### 8.4.2 The `list.eagle` functional core
 
@@ -2234,11 +2406,62 @@ what makes each stage simple and the composition straightforward.
 
 #### 8.4.5 The interactive command loop
 
-The Eagle interactive shell's command loop is a system of cooperating
-procedures. The procedure that most rewards close reading is
-`[eagle_shellUnknown]` — the script-level `[unknown]` handler that gives
-the interactive shell its ability to dispatch operating-system commands
-(`DIR`, `Get-Process`, `ls`) as if they were Eagle commands.
+The Eagle interactive shell is the cleanest available example of the
+dual-language model expressing itself in user-visible behavior. It is
+also the example where the beauty argument has the most surface to
+land on, because the shell is *two* cooperating pieces of code in two
+different languages: the C# scaffolding (`PrivateShellMainCore` and
+`PrivateInteractiveLoop`, both in `Interpreter.cs`) and the Eagle
+policy layer (`[eagle_shellUnknown]`, the prompt-setup procedures,
+the security-aware command parsing). The pieces are beautiful
+*together* in a way that neither would be alone.
+
+**The C# scaffolding.** `PrivateShellMainCore` is approximately 4,700
+lines; `PrivateInteractiveLoop` is approximately 1,600. Both are
+large. Both are organized internally by `#region` blocks at a
+fine-grained scale: a reader navigating to "Wait On Paused Interactive
+Loop" or "Interactive Host Begin-Processing Hook Callback" goes to a
+single region and finds everything that concerns that subject. The
+two methods exhibit the §8.2 beauty properties at the C# scale:
+
+- **Cohesion within each region.** Every region does one thing. The
+  region names are the thing they do. A reader who is wondering
+  whether the loop saves engine flags before entry finds a "Save /
+  Push Engine Flags" region and reads the answer in twenty lines.
+- **Symmetry across regions.** Save/restore pairs are always in
+  matched regions ("Save / Push" with "Restore / Pop"). Entry hooks
+  ("Interactive Host Begin-Processing Hook Callback") are paired
+  with exit hooks ("Interactive Host End-Processing Hook
+  Callback"). The internal structure mirrors the §5.5 save/restore
+  convention from the Eagle script layer.
+- **Predictable control flow at the method scale.** Each method has
+  a setup phase, a working phase, and a teardown phase. Within the
+  working phase, the per-iteration structure is the same on every
+  iteration. A reader who wants to know "what happens for each
+  command the user types" reads one iteration's worth of regions.
+- **Clear abstraction.** `PrivateShellMainCore` does the work of
+  preparing the shell and dispatching command-line arguments; it
+  hands off to `PrivateInteractiveLoop` for the read-eval-print
+  loop. The decomposition matches the natural shape of a shell:
+  one method for the launch, one for the loop. The boundary
+  between them is at the right place.
+
+**The Eagle policy layer.** The C# methods provide the scaffolding;
+they do not implement the shell's *personality*. That work is in
+Eagle: `[eagle_shellUnknown]` decides whether an unrecognized
+command should be dispatched to a system shell, and how;
+`[eagle_getShellPromptScript]` and `[eagle_setupPromptScript]`
+control what the prompt looks like; runtime options control
+which sub-behaviors are active. A user who wants a different
+prompt does not modify `PrivateInteractiveLoop`; they redefine the
+Eagle prompt-setup procedures. A user who wants different
+unknown-command behavior does not modify the C# loop; they
+replace `[eagle_shellUnknown]`.
+
+The procedure that most rewards close reading on the Eagle side is
+`[eagle_shellUnknown]` — the script-level `[unknown]` handler that
+gives the interactive shell its ability to dispatch operating-system
+commands (`DIR`, `Get-Process`, `ls`) as if they were Eagle commands.
 
 The dispatcher's structure:
 
@@ -2312,6 +2535,33 @@ system, the guard structure, the delegation precondition — each is
 uniform with the rest of the procedure, and the uniformity is what
 makes both the documentation correction and the test observability
 possible.
+
+**What the C# and Eagle pieces look like together.** Reading
+`PrivateShellMainCore` and `PrivateInteractiveLoop` alongside
+`[eagle_shellUnknown]` is what makes the shell example land as a
+beauty argument rather than as two unrelated case studies. The C#
+scaffolding is beautiful in the §8.2 sense — large but cohesive,
+fine-grained in its regions, predictable in its control flow,
+clearly abstracted into the launch/loop pair. The Eagle handler is
+beautiful in the same sense — small and focused, with symmetric
+guards and a uniform hook placement. Both pieces would be smaller
+and weaker if forced into a single language. The C# layer would
+have to embed personality decisions that are properly the
+deployment's concern; the Eagle layer would have to reach into
+process-level scaffolding that is properly the runtime's concern.
+The boundary between them is the same boundary the rest of this
+whitepaper has been about. The boundary is where the beauty lives.
+
+That last claim is worth stating directly. The §8 argument is that
+beauty correlates with correctness. The shell example shows that
+the beauty is not in either layer alone — it is in the *fit* between
+them. The C# scaffolding fits because it knows what to leave to
+Eagle. The Eagle handler fits because it knows what the C# layer is
+going to do around it. The fit is the design. The audit found one
+substantive issue in the entire family — a documentation correction
+in `[eagle_shellUnknown]` — and zero substantive code defects across
+either layer. The correlation between the §8.2 properties and the
+correctness record is, in this example, total.
 
 #### 8.4.6 The `# <help>` block convention
 
