@@ -7,6 +7,16 @@ language built from the ground up for the Common Language Runtime (CLR).
 It speaks Tcl, lives inside your C# applications, and runs everywhere
 the CLR does -- Windows, Linux, and macOS.
 
+Architecturally, Eagle is a clean instance of what John Ousterhout called
+the *dual-language model* in his 1998 essay *Scripting: Higher-Level
+Programming for the 21st Century*: a small-kernel scripting layer (Tcl
+semantics) driving a strongly typed primitive layer (the .NET CLR),
+with the boundary between them made syntactically explicit via the
+`[object]` command. The architectural rationale and the conventions
+that fall out of it are developed at length in the companion
+[whitepaper](whitepaper.md); this document gives the practical
+orientation.
+
 This document explains what makes Eagle different from other scripting
 languages and where it excels.
 
@@ -28,6 +38,48 @@ languages and where it excels.
   Garuda package lets native Tcl load the CLR and use Eagle.
 - **Multiple UI toolkits** -- WinForms, WPF, WinUI, Xamarin, and Tk
   (via the `[tcl]` command) are all usable, even simultaneously.
+- **Universal Option Parser with typed flag enums** -- every command
+  that takes a `[Flags]`-typed option (`-flags`, `-objectflags`,
+  `-marshalflags`, `-bindingflags`, ...) accepts the same declarative
+  mini-language for adding, removing, replacing, and masking flag
+  values (`{+NonPublic +Static -DeclaredOnly}`), implemented once and
+  shared across the entire command surface.
+- **Runtime C# compilation** -- the `csharp.eagle` library compiles
+  C# source into a loadable .NET assembly at runtime, so a script
+  can extend its own primitive layer without redeploying the
+  interpreter.
+
+---
+
+## Design Philosophy
+
+Three principles, articulated at length in
+[`architecture_patterns.md`](architecture_patterns.md), explain most
+of the unusual choices in Eagle's codebase.
+
+1. **Everything should be introspectable and customizable.** The
+   system should be able to describe itself to anything that asks,
+   and anything that asks should be able to change what it finds.
+   This is why interpreter state is queryable as runtime data
+   (`[info]` has eighty-six sub-commands), why the `# <help>`
+   convention makes documentation a live runtime feature, and why
+   hooks are named procedures discovered by `[info commands]` rather
+   than registered through an API.
+2. **Maximum backward compatibility.** A single codebase targets
+   .NET Framework 2.0 RTM through .NET 10+, Mono, and .NET Standard
+   2.0/2.1. Eleven `.csproj` files exist because each represents a
+   real build configuration that someone depends on. The `#if`
+   conditional-compilation system is a *compatibility architecture*,
+   not feature flags: when a .NET API changes between versions,
+   Eagle provides both paths rather than dropping support for the
+   older one.
+3. **Reliability over elegance.** When a choice exists between a
+   pattern that looks clean and one that works correctly under all
+   conditions (threading, disposal, platform differences, AppDomain
+   boundaries), correctness wins. The 4,800-line
+   `PrivateShellMainCore` method, the goto-based state machines, the
+   six-phase interpreter disposal protocol, and the runtime
+   immutability flags are all instances of this principle.
 
 ---
 
@@ -360,3 +412,33 @@ features, native Tcl is the right choice.
 
 Eagle is freely available open-source software.  See the
 `license.terms` file in the repository for details.
+
+### Further Reading
+
+The following companion documents go deeper than this overview:
+
+- **[`whitepaper.md`](whitepaper.md)** -- the long-form
+  architectural argument: the dual-language model, the explicit
+  boundary, the conventions that fall out, the divergences from
+  mainstream "best practice," the costs, and the aesthetic case for
+  why the conventions produce code that is more likely to be
+  correct.
+- **[`architecture_patterns.md`](architecture_patterns.md)** -- a
+  catalog of thirty-one deliberate, non-obvious design patterns
+  found throughout the Eagle codebase, each with its rationale.
+  Read this when a piece of the source code looks like it shouldn't
+  work that way and you want to know why it does.
+- **[`paper_love_and_software.md`](paper_love_and_software.md)** --
+  a companion paper to the whitepaper, arguing that the
+  characteristics described in the architecture documents emerge
+  only under sustained intrinsic motivation. The architectural
+  argument and the motivational argument describe the same
+  phenomenon from different sides.
+- **[`core_language.md`](core_language.md)** -- the full command
+  catalog with syntax, options, and worked examples.
+- **[`core_script_library.md`](core_script_library.md)** -- the
+  five-hundred-plus script-library procedures organized by
+  package.
+- **[`safe.md`](safe.md)** -- the safe-interpreter security model
+  in detail: command hiding, option flag enforcement, sub-command
+  allow-lists, policy callbacks, and resource limits.

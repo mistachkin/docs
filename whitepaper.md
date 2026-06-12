@@ -735,6 +735,24 @@ more complex than the dual-language baseline. The dual-language model
 achieves hot reload as a side effect; everything else achieves it as a
 feature.
 
+The same property extends, with a twist, to the primitive layer
+itself. Eagle's `csharp.eagle` script library exposes a procedure
+called `[compileCSharp]` that accepts C# source as a string,
+compiles it into a .NET assembly at runtime (via
+`Microsoft.CSharp.CSharpCodeProvider` on Framework, or by invoking
+`csc.dll` through `dotnet exec` on .NET Core), and returns a handle
+the script can load via `[object load]`. The policy layer can,
+deliberately and explicitly, *generate new primitive code* at
+runtime and bring it into the same interpreter that produced it.
+The dual-language boundary, in this case, loops back on itself:
+script-side policy code reaches into the primitive-language design
+space, produces a typed primitive, and the boundary the rest of
+this whitepaper describes mediates between the script that asked
+and the primitive that resulted. This is hot reload extended to
+its most extreme form — not merely "the policy can be changed
+without rebuilding," but "the set of available primitives can be
+changed without rebuilding either."
+
 **The boundary as the place where seven properties intersect:**
 
 ```text
