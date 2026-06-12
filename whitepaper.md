@@ -789,9 +789,13 @@ strings in `[format]`, `printf`, `strftime`, `[clock format]`. SQL
 itself embedded via parameterized queries. XPath and CSS selectors
 embedded in DOM traversal. JSONPath in JSON tooling. Cron
 expressions in schedulers. Semver constraints in package managers.
-CIDR notation in network configurations. Each is a small grammar for
-a specific domain; each lives inside a host language as a string
-that gets compiled and interpreted by an engine.
+CIDR notation in network configurations. Host-specific primitive
+layers add their own: Eagle, for instance, ships an attribute-flags
+mini-language for per-entity flag markers and a flag-enum
+mini-language for `[Flags]`-typed parameters (with a table-selection
+extension) — both discussed below. Each is a small grammar for a
+specific domain; each lives inside a host language as a string that
+gets compiled and interpreted by an engine.
 
 The mini-language and its host obey the same boundary properties §3.1
 through §3.7 named at the top level. The pattern is auditable (grep
@@ -895,6 +899,81 @@ the rest of the host: pass-by-name matches `[upvar]` and the broader
 output-parameter convention, and the script callback matches the
 §5.4 "hooks as named procs" pattern of putting extension points
 where the language already extends.
+
+**Eagle's flag-enum mini-language and its table-selection
+extension.** Beyond `[regexp]`, Eagle's primitive layer ships two
+further mini-languages that show what well-designed integration
+looks like at the small scale. The first, in
+`Eagle._Components.Private.AttributeFlags`, parses per-entity
+attribute markers identified by hexadecimal keys and modified by a
+small set of operator characters: `+` adds a flag, `-` removes one,
+`=` sets one. Beyond the operators, the syntax defines character-class
+wildcards — `*` for all flags, `#` for digit-named flags, `!` for
+alphabetic, `$` for upper-case, `@` for lower-case — so an expression
+like `+*` enables every flag in the namespace and `-#` removes every
+digit-keyed one.
+
+The second, in `Eagle._Components.Private.EnumOps`, parses values
+for `[Flags]`-typed enumeration parameters. The base operator set is
+similar but tuned for declarative manipulation of typed bit-fields:
+`+` adds (bitwise OR), `-` removes (bitwise AND NOT), `=` sets
+(replace), `:` sets-then-adds (the default if no operator is given,
+so a bare `{NonPublic Static}` reads as `{:NonPublic +Static}`), and
+`&` keeps (bitwise AND). A value like `{+NonPublic +Static
+-DeclaredOnly}` reads as a sequence of declarative mutations against
+the parameter's current or default value, and Eagle's *Universal
+Option Parser* dispatches the syntax automatically wherever a command
+option is typed as a `[Flags]` enum — so `[object invoke -flags
+{+NonPublic +Static} $obj Method]` and dozens of similar call sites
+all share the same mini-language without each command having to
+re-implement it.
+
+The interesting design choice in this second mini-language is the
+**table-selection extension**: a `/` operator that switches the
+*active table* the subsequent operators apply to. When an enum
+decorates its members with `[ParameterIndex(N)]` attributes, EnumOps
+can partition the enum into multiple sub-enumerations grouped by
+parameter index. A single mini-language expression then drives all
+of them at once: `{/0 +ReadOnly +SignedScript /1 +AllowAlias}`
+switches to table 0, adds two flags, then switches to table 1, adds
+one. The host call ends up with multiple typed enum values populated
+from a single string — without the script-side having to thread
+the values through separate calls.
+
+The extension is interesting precisely because the design of the
+base operator set anticipated it. The operator characters
+(`+`, `-`, `=`, `:`, `&`) are all reserved at start-of-token
+position; `/` joins that set without colliding with anything in the
+base syntax. The "active table" state is purely lexical — it
+persists across tokens within a single expression and resets per
+call — so the mini-language stays declarative even with the
+state-switching operator. A script call to a primitive that takes
+multiple flag-typed parameters becomes one expression instead of one
+call per parameter, and the call site documents which flags belong
+to which parameter through the `/N` markers.
+
+This is the same integration discipline `[regexp]`'s pass-by-name
+captures use. The mini-language's syntactic conventions (operator
+characters, lexical state, brace-quoted token lists) compose with
+the host's existing conventions (brace-quoted bodies, declarative
+options). A reader who has internalized the host's idioms recognizes
+the mini-language as following the same shape, just specialized for
+the flag-mutation domain. The dual-language model recurs: the
+mini-language is a sub-policy syntax; the parser is its primitive;
+the design choice was to make the syntax extend the host rather than
+colonize it.
+
+These two Eagle mini-languages are also, in their own right, worked
+examples of the §8.4 thesis. The base operator sets are cohesive,
+symmetric, and minimal; the table-selection extension was anticipated
+by the base design rather than retrofitted into it (the `/` operator
+joined a five-character reserved start-of-token set without colliding
+with anything); the syntax composes with the host's existing
+conventions rather than fighting them. Both subsystems have shipped
+across years of Eagle development with effectively zero substantive
+defects in either the parsers or the integration surfaces — their
+beauty by the §8.2 criteria and their correctness by the criterion of
+"no audit found a bug" are not independent facts.
 
 **Other languages' choices, briefly.** Python returns a `Match`
 object queried by group index or group name (`m.group("year")` when
