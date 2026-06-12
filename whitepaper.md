@@ -1,24 +1,5 @@
 # Two Languages, On Purpose: The Dual-Language Architecture in Practice
 
-> [!NOTE]
-> **Status: complete first draft, cross-checked against the Eagle docs
-> repository.** Every section (§1 through §9), every subsection
-> (including the worked examples in §8.5), and every reference appendix
-> (A through E) is fleshed out as prose. The current draft has been
-> updated against the canonical Eagle documentation — notably
-> `architecture_patterns.md`, `safe.md`, `why_eagle.md`,
-> `build_system.md`, `object.md`, `interp.md`, and the companion paper
-> `paper_love_and_software.md`. Where the whitepaper's claims could be
-> sharpened with specific numbers, names, or design-principle quotes
-> from those documents, the sharpening has been applied. The whitepaper
-> is currently approximately 32,000 words; this exceeds the original
-> 14,000–18,000 body target, but the length is dominated by reference
-> material (the appendices) and by the §8.5 close readings. A
-> compression pass on §§2 and §7 and a tightening of the appendices
-> would bring the total closer to a typical whitepaper length; the
-> current draft is defensible without compression if the reference
-> orientation is preserved.
-
 ## Abstract
 
 Ousterhout's 1998 essay *Scripting: Higher-Level Programming for the 21st
@@ -68,8 +49,6 @@ cost of being honest about a system's actual structure.
 ---
 
 ## §1 The dichotomy, restated
-
-> **Status:** drafted.
 
 **Section thesis.** Ousterhout's 1998 paper made an irreducible architectural
 observation, not a language preference. The observation has not been refuted —
@@ -297,8 +276,6 @@ required to maintain that visibility are worth their cost.
 
 ## §2 Why the mainstream "won the argument" by abandoning it
 
-> **Status:** drafted.
-
 **Section thesis.** The languages most often cited as evidence that the
 dichotomy is dead are precisely the languages that walked away from what made
 scripting languages scripting languages. They absorbed every reasonable
@@ -329,16 +306,11 @@ Async/await models I/O concurrency cleanly.
 The cumulative effect is that Python is no longer a small scripting
 language. It is a typed, multi-paradigm, general-purpose programming
 language with a scripting heritage. The cheat sheet does not fit on one
-page. A "modern" Python project carries a dependency on `mypy` for type
-checking, `ruff` for linting, `black` for formatting, `pytest` for testing,
-`poetry` or `pdm` for packaging, `pre-commit` for hooks, and several other
-tools whose configuration files together exceed the size of an early Python
-project.
-
-The trajectory is not unique to Python. The same pattern repeats across
-every "winning" scripting language. Each addition was justified by the
-immediate problem it solved. The cumulative direction was away from the
-small-kernel character that made scripting languages distinctive.
+page; a senior Python developer in 2026 acknowledges corners of the
+language they have never had to use. Each addition was justified by the
+immediate problem it solved; the cumulative direction was away from the
+small-kernel character that made scripting languages distinctive. The
+same trajectory repeats across every "winning" scripting language.
 
 ### 2.2 The TypeScript turn
 
@@ -385,15 +357,13 @@ made dependency management work at the cost of ten different package
 managers competing for dominance.
 
 The cumulative direction was determined by the population of users, not by
-language design. Users who had been writing C++ wanted Python to be safer;
-users who had been writing Java wanted Python to be more performant; users
-who had been writing Erlang wanted Python to handle concurrency better.
+language design. Each generation of refugees from another language pushed
+for the feature it missed: safety, performance, concurrency, packaging.
 The language responded to each constituency.
 
 The result was not a better scripting language. It was a systems language
-with a scripting heritage. The scripting character became vestigial — a
-duck-typed dynamic core wrapped in increasingly thick layers of optional
-static infrastructure.
+with a scripting heritage — a duck-typed dynamic core wrapped in
+increasingly thick layers of optional static infrastructure.
 
 A few languages resisted this drift. Lua stayed small. Tcl stayed small.
 The shell stayed shell-shaped. But each of these became niche specifically
@@ -419,33 +389,25 @@ treated as a problem to be solved (with `Protocol` or `TypedDict`), not as
 a feature to be used. The malleability is still possible, but the tools
 encourage you not to use it.
 
-**The "glue" character.** Code as composition rather than construction. A
-Python script that wires together three libraries used to be a few lines.
-The same wiring in 2026, done idiomatically, involves dataclasses to
-model the inputs, type-annotated functions to compose them, an async
-context to handle I/O, and a test suite that exercises the composition.
-The composition is no longer the code; the composition is the work the
-code does.
-
-**The mental model where a script is a configuration.** Early Python
-scripts were configurations expressed in code. The script said what to
-do; the language ran it. Modern Python applications are applications
-expressed in code that happens to be Python. The configuration is
-somewhere else — in YAML, in environment variables, in argparse parsers,
-in `.env` files. The script is no longer the configuration; the script
-is the loader.
+**The "glue" character — and the script-as-configuration mental model.**
+Early scripts were configurations expressed in code. A Python script that
+wired together three libraries was a few lines that said *what to do*;
+the language ran them. The same wiring in 2026, done idiomatically,
+involves dataclasses to model the inputs, type-annotated functions to
+compose them, an async context to handle I/O, and a test suite that
+exercises the composition. The script is no longer the configuration;
+the script is the loader, and the configuration is somewhere else — in
+YAML, in environment variables, in argparse parsers, in `.env` files.
 
 ### 2.5 The price
 
 The mainstream languages absorbed every reasonable demand. The result is
 operationally complex in ways the original scripting languages were not.
 
-**Toolchain complexity.** A "modern" Python project carries dev
-dependencies on `mypy`, `ruff`, `black`, `pytest`, `pre-commit`, `tox`,
-`coverage`, `poetry` or `pdm`, plus type stubs for every external library
-that does not ship with annotations. The CI configuration that runs all
-of these is several hundred lines of YAML. The combined cognitive cost of
-these tools approximates a small operating system.
+**Toolchain complexity.** The tools named in §2.1 — mypy, ruff, black,
+pytest, poetry, pre-commit, tox, coverage, and type stubs for every
+unannotated dependency — together have a configuration surface and a
+combined cognitive cost that approximates a small operating system.
 
 **Slow CI.** A scripting project's CI used to be "run the tests." A modern
 Python project's CI is type-check, lint, format-check, dependency-audit,
@@ -473,14 +435,114 @@ refuses to acknowledge it.
 The mainstream did not refute Ousterhout. It built systems where
 Ousterhout's dichotomy still applies but is no longer visible.
 
+### 2.6 The model abandoned in plain sight: Bash and templated YAML
+
+Two ecosystems make the abandonment most visible — and the failure mode
+most acute. Neither was ever a real scripting language. Both ended up
+doing programming-language work because no real scripting language was
+adopted for the policy layer. Both produce code that is harder to write,
+harder to read, and harder to maintain than the same work done in a
+small, well-designed scripting language with a real boundary. Both have
+nonetheless become the default in their domains.
+
+**Bash as a scripting language.** The Bourne shell and its descendants
+were designed as command languages — type a command, get a result, move
+on. The scripting affordances accreted around that core: variables,
+conditionals, loops, functions. Each addition was reasonable in
+isolation; cumulatively the result is a language whose semantics defy
+reasoning at any nontrivial scale.
+
+Word splitting depends on `IFS`. Quoting rules differ between single
+and double quotes, between command substitution and parameter
+expansion, between arithmetic context and string context. Unquoted
+variable references silently lose word boundaries; quoted references
+preserve them but suppress glob expansion; quoted references with array
+indices do something else again. Error handling defaults to "continue
+and hope" unless `set -euo pipefail` is set early. Conditional tests
+have at least four syntactic flavors (`[ ... ]`, `[[ ... ]]`,
+`(( ... ))`, `test`), each with its own quoting and operator semantics.
+Numeric vs. string comparison is a runtime question.
+
+The result is that Bash scripts of any size become exercises in
+defensive coding against the language itself. A senior shell
+developer's working knowledge is largely a catalog of quoting traps
+avoided. The existence of `shellcheck` is itself evidence: no community
+builds a dedicated linter for a language unless the language's quoting
+rules are so error-prone that a separate tool is needed to catch the
+common mistakes.
+
+This is not the trade-off Ousterhout had in mind. A scripting language
+is supposed to be *cheaper* than a systems language for composition
+work. Bash is, in practice, *more* expensive — every variable use
+requires careful escaping, and an error at any quoting boundary can
+corrupt the entire script's behavior. A real scripting language (Tcl,
+Lua, Python before the type-system additions) costs less per line of
+policy code than Bash does, because the language does not require
+constant defense against its own evaluation model. The lesson is not
+that Bash is bad. The lesson is that the shell-as-scripting-language
+model is not a substitute for the dual-language model. Bash works
+admirably as a command language. When it is pressed into service as a
+policy layer for systems of any complexity, the cost compounds until
+the shell script becomes a system in its own right — with all the
+maintenance burden of a program but none of the language affordances.
+
+**Templated YAML as a programming language.** §3.6 will argue that
+configuration should be expressed in a real scripting language. The
+mainstream alternative is a configuration language (YAML, JSON, TOML,
+HCL) plus a templating system (Jinja2 for Ansible, Go templates for
+Helm, Mustache for various, Sprig for the brave). The result is, in
+practice, a programming language; but a programming language assembled
+by accretion rather than designed.
+
+Consider Helm. A Helm chart is YAML processed through Go's
+`text/template` with the Sprig function library. The template syntax
+is not YAML; it embeds *into* YAML through delimited substitutions,
+evaluated before the YAML parser sees them, so a template error
+surfaces as a YAML syntax error somewhere downstream. The Sprig
+library provides hundreds of functions, each with its own semantics.
+Conditional rendering, looping, scope inheritance, variable
+assignment, and recursion are all available. The result is
+Turing-complete. The only thing missing is the design of an actual
+language.
+
+A real scripting language with a small custom DSL — `[helmRelease
+$name { values { ... } }]` style, where `helmRelease` is a command,
+`values` is a sub-command, and the body is real script code — would
+be radically simpler. The DSL commands are the structure; the script
+body is the policy code. Syntax is uniform; errors point at the
+source rather than at the post-expansion artifact; the type system,
+the scoping rules, and the error model are properties of the
+language rather than emergent properties of the templating layer.
+This is precisely what the dual-language model offers and what
+templated YAML reinvents badly.
+
+The same pattern recurs in Ansible (YAML with Jinja2), in Kubernetes
+manifests with Kustomize patches, in GitLab CI YAML with included
+templates, in GitHub Actions with expression syntax embedded in YAML
+strings. In each case, the underlying realization is the same: a
+configuration language was not enough; the project needed a
+programming language; rather than adopt one, the ecosystem invented
+one inside the configuration language, badly.
+
+**The shared lesson.** Bash and templated YAML are different failures
+of the same design choice. Bash is a command language strained into a
+scripting language. Templated YAML is a configuration language
+strained into a programming language. Both reach the same outcome —
+an ad-hoc, accreted, hard-to-reason-about substrate doing work that a
+small, well-designed scripting language could have done cleanly. The
+mainstream alternative to the dual-language model is, in plain sight,
+this: pretend you do not need a scripting language, then accidentally
+build one anyway. Each shellcheck, each helm-lint, each ansible-lint
+is a confession that the underlying language was not designed for the
+work it is doing.
+
 The dual-language model, by contrast, treats the boundary as a feature.
-The remainder of this whitepaper argues that visibility is worth its costs.
+The remainder of this whitepaper argues that visibility is worth its
+costs.
 
 ---
 
 ## §3 What the dual-language model actually buys you
-
-> **Status:** drafted.
 
 **Section thesis.** When the boundary is explicit and the two layers are kept
 distinct, several properties fall out automatically that single-language systems
@@ -711,8 +773,6 @@ feature.
 
 ## §4 Eagle as a case study
 
-> **Status:** drafted.
-
 **Section thesis.** Eagle is interesting not as an end in itself but as a
 working instance of the model — a Tcl-semantics scripting layer on a .NET
 primitive layer, with an explicit boundary and a designed trust chain. The
@@ -937,7 +997,9 @@ byproduct — is a real ongoing cost. The convention pays for itself by
 collapsing documentation, source, and runtime help into one artifact; it does
 not pay *itself*. Someone has to write and maintain the blocks. The systems
 that succeed at this discipline budget for it as a permanent line item, not
-as an occasional cleanup pass.
+as an occasional cleanup pass. (Appendix C presents a complete worked
+example: the `[lshuffle]` procedure with its `# <help>` block, annotated
+and accompanied by the rules the block illustrates.)
 
 ### 4.6 The Harpy trust chain
 
@@ -1296,8 +1358,6 @@ from a design that names the boundary and pays its costs deliberately.
 
 ## §5 The conventions that fall out
 
-> **Status:** drafted.
-
 **Section thesis.** The Eagle / Harpy / Kapok / Zeus coding conventions look
 idiosyncratic in isolation. Each one is the inevitable consequence of taking
 the model seriously. The conventions are not stylistic preferences; they are
@@ -1617,8 +1677,6 @@ cost is dwarfed by the benefit.
 
 ## §6 Where this diverges from "best practice" — and why
 
-> **Status:** drafted.
-
 **Section thesis.** Each of these is a deliberate departure from mainstream
 advice. Each has a load-bearing reason. The departures are listed, defended,
 and the costs acknowledged honestly — but no point that does not need
@@ -1781,7 +1839,10 @@ representing a real deployment target; each project selects an
 a tested, validated combination. There are roughly eighty individual
 flag properties; the eleven presets are the curated combinations that
 have been verified to compile, test, and run end-to-end. A deployment
-chooses a preset; the preset is the architecture.
+chooses a preset; the preset is the architecture. Appendix D enumerates
+the canonical conditional-compilation flags Eagle defines (`NATIVE`,
+`HISTORY`, `DEBUGGER`, `SECURITY`, `EMIT`, `THREADING`, and others) and
+the build-system mechanisms by which they are composed into presets.
 
 The cost is that the build matrix is real. Each combination of flags
 is a different binary, and the test matrix multiplies accordingly. The
@@ -1960,13 +2021,13 @@ have a keyword for.
 The model could also be expressed through assembly partitioning — one
 assembly per visibility class. The Eagle codebase does some of this; the
 residue is the namespace convention. The trade is between assembly count
-and namespace prefix; the project chose the prefix.
+and namespace prefix; the project chose the prefix. (Appendix D gives
+the full taxonomy of the `_Components.Public` / `_Components.Private` /
+`_Components.Internal` split, with examples.)
 
 ---
 
 ## §7 What the model costs
-
-> **Status:** drafted.
 
 **Section thesis.** The model is not free. The costs are real, persistent,
 and worth naming explicitly — both for the reader weighing adoption and for
@@ -2071,23 +2132,14 @@ not C# cannot extend the primitive layer; a developer who can write C# but
 not Tcl cannot script the system. Both halves are required; neither alone
 suffices.
 
-The boundary understanding is the cost of working at the seam. A developer
-needs to know which operations are cheap inside one language (Tcl-level
-operations are cheap; C#-level operations are cheap) and which are
-expensive at the boundary (cross-language calls have marshalling cost;
-allocations cross the boundary; references can be held on either side).
-This is not difficult, but it is non-obvious — and a developer who does
-not internalize it can write code that is slow without understanding why.
-
-The cost is real but bounded. Senior developers internalize the boundary
-in weeks; the marginal cost of working in a dual-language system, for
-someone who knows both languages, is small.
-
-The cost compounds in small teams. A solo developer who is fluent in both
-languages can work efficiently. A team of three where one is C#-only and
-two are Tcl-only is paying coordination cost on every cross-language
-change. The model favors teams that share the skill set, not teams that
-specialize within it.
+The boundary understanding — knowing which operations are cheap inside
+each language and which are expensive at the cross — is the cost of
+working at the seam. It is bounded: senior developers internalize the
+boundary in weeks; the marginal cost for someone fluent in both
+languages is small. It does compound in small teams, however. The model
+favors teams that share the skill set, not teams that specialize within
+it — a team where one developer is C#-only and two are Tcl-only pays
+coordination cost on every cross-language change.
 
 ### 7.5 Trust chain operational overhead
 
@@ -2130,18 +2182,13 @@ becomes an Eagle composition layer; the C extension layer becomes a .NET
 primitive layer; the boundary becomes the `[object]` command. The tooling
 has to be replaced. The hiring criteria have to change.
 
-The model rewards committed adoption. A team that migrates fully gets the
-full benefit; a team that migrates partially gets the costs without the
-benefits. Hybrid systems — some scripts signed and some not, some
-boundaries marked and some not — combine the discipline costs of the
-dual-language model with the brittleness of the single-language model.
-The combination is worse than either pure choice.
-
-The honest assessment: incremental migration is hard, and full migration
-is expensive. New projects that adopt the model from the start pay no
-migration cost. Existing projects that adopt it are choosing a
-multi-quarter migration that they have to commit to. There is no
-half-measure that captures most of the benefit at a fraction of the cost.
+The model rewards committed adoption. Hybrid systems — some scripts
+signed and some not, some boundaries marked and some not — combine the
+discipline costs of the dual-language model with the brittleness of the
+single-language model, and so are worse than either pure choice. New
+projects that adopt the model from the start pay no migration cost.
+Existing projects face a multi-quarter migration with no useful
+half-measure.
 
 ### 7.7 Performance ceiling at the boundary
 
@@ -2161,16 +2208,11 @@ This is not a defect of the model; it is the model's natural shape. The
 primitive layer is where hot paths live. A script that does not push hot
 paths into primitives is using the model wrong.
 
-The cost is paid in developer time. A developer who has not yet
-internalized the boundary may write slow code; once they have
-internalized it, they write fast code. The lesson is permanent but the
+The cost is paid in developer time. The lesson is permanent but the
 initial mistake is recurring — every new developer learns the same
-boundary the same way.
-
-The benefit, when the model is used correctly, is that the policy code is
-as expressive as the developer wants while the primitives remain as fast
-as they need to be. The performance ceiling exists only when the model is
-misapplied.
+boundary the same way. When the model is used correctly, policy code
+stays as expressive as the developer wants and primitives stay as fast
+as they need to be; the ceiling only exists when the model is misapplied.
 
 ### 7.8 Onboarding curve
 
@@ -2200,14 +2242,6 @@ whitepaper is a way to make it bearable.
 ---
 
 ## §8 Beauty and correctness: an aesthetic argument
-
-> **Status:** drafted in full. §8.3 (Eagle's specific beauty standards)
-> was added at the author's request after the initial draft, to
-> operationalize the language-agnostic properties of §8.2 with the
-> concrete conventions that the Eagle codebase actually uses. §8.5
-> (the worked Eagle examples) was drafted from the audit work on the
-> actual code; the author may wish to refine the selection or add
-> historical context that the audit could not surface.
 
 **Section thesis.** Beautiful code is significantly more likely to be correct
 than ugly code. The relationship is probabilistic, not deterministic — but it
@@ -2652,15 +2686,6 @@ conjunction is not deterministic.
 
 ### 8.5 Examples from Eagle
 
-> **Status:** drafted. The author should expand each example with
-> whatever historical context they consider most illuminating: the
-> development trajectory, the reasons for specific design choices, the
-> alternatives that were considered and rejected. The whitepaper's
-> argument does not depend on any single example landing; it depends on
-> the pattern being recognizable across the examples. The six examples
-> below are ordered from simplest (a two-line primitive) to most
-> meta (the documentation convention that frames the others).
-
 The Eagle codebase contains procedures and small systems that
 experienced peers tend to call beautiful. The criteria of §8.2 can be
 applied to each; the resulting beauty correlates, in practice, with the
@@ -2698,23 +2723,19 @@ naming.** The verb is `append`, which matches the underlying Tcl
 primitive. The plural noun `Args` matches the variadic parameter.
 **Predictable control flow.** There is no control flow.
 
-*What follows for correctness.* The procedure has zero defects in the
-audit history. There is nothing in it that could be wrong; the cost of
-being wrong is the same as the cost of writing the body, which is two
-lines. The procedure is used thousands of times across the Eagle
-codebase. Each call site is shorter and more readable than the
-equivalent built-up double-quoted string would be, because the procedure
-does not perform substitution. A bug in `[appendArgs]` would propagate
-everywhere; the absence of bugs in `[appendArgs]` means that thousands
-of call sites can rely on it without verification. The primitive's
-correctness is amortized over its uses in a way that compounds.
+*What follows for correctness.* Zero defects in the audit history;
+there is nothing in the body that could be wrong. The procedure is used
+thousands of times across the Eagle codebase, and each call site is
+shorter and more readable than the equivalent double-quoted string
+would be (the procedure does not perform substitution). A bug in
+`[appendArgs]` would propagate everywhere; the absence of bugs means
+that thousands of call sites can rely on it without verification. The
+primitive's correctness amortizes over its uses in a way that compounds.
 
-The beauty property that pays off most here is the disciplined kind of
-minimality — the body is as short as it can be *while still expressing
-the author's intent*, not as short as it could possibly be. There is
-no place for a bug to hide; there is also no missing context that a
-future maintainer would have to recover. The audit found nothing to
-find.
+The beauty property that pays off most here is *disciplined* minimality
+— as short as the body can be *while still expressing the author's
+intent*, not as short as it could possibly be. No place for a bug to
+hide; no missing context for a future maintainer to recover.
 
 #### 8.5.2 The `list.eagle` functional core
 
@@ -3008,26 +3029,20 @@ work. The guards are guards. The dispatcher is the dispatcher. The
 delegation is the delegation. There is no commingling of concerns.
 
 *What follows for correctness.* The audit found one substantive issue
-in this procedure family: the delegation precondition in
-`[eagle_shellUnknown]` was originally documented as "error-fallback or
-ok-fallback," but the actual code delegates only on
-`skipped || OkFallback`. The fix was a documentation correction, not a
-code change — the code was right and the documentation was wrong. The
-procedure's beauty caught the bug, because the code was simple enough
-to read carefully. The "magic offset of three" — the number of
-`EvaluateScript` frames between the interactive loop and this
-procedure — is documented explicitly, with a `# HACK:` comment
-pointing the maintainer to `[eagle_isShellScriptLevel]` where the
-accounting is explained. This is exactly the kind of subtlety that,
-undocumented, would cause bugs in distant changes; documented, it is
-a load-bearing piece of information that survives the change. The
-hook system means that test code can observe and influence every
-phase of the dispatch without modifying the procedure. A test that
-wants to verify the dispatch path can register `::beforeShellUnknown`
-and inspect what the dispatcher is about to do; a test that wants to
-mock the dispatch can register `::shellUnknownError` and influence
-the error path. The extensibility is a consequence of the symmetric
-hook placement.
+in this family: the delegation precondition in `[eagle_shellUnknown]`
+was originally documented as "error-fallback or ok-fallback," but the
+code delegates only on `skipped || OkFallback`. The fix was a
+documentation correction, not a code change — the code was right and
+the documentation was wrong. The procedure's beauty caught the bug,
+because the code was simple enough to read carefully. The "magic
+offset of three" — the number of `EvaluateScript` frames between the
+interactive loop and this procedure — is documented explicitly, with
+a `# HACK:` comment pointing the maintainer to
+`[eagle_isShellScriptLevel]` where the accounting is explained;
+load-bearing context that survives distant changes. The hook system
+means test code can observe and influence every phase of the dispatch
+without modifying the procedure — extensibility as a consequence of
+symmetric hook placement.
 
 The beauty property that pays off most here is symmetry. The hook
 system, the guard structure, the delegation precondition — each is
@@ -3286,8 +3301,6 @@ These are the same property, viewed from different angles.
 
 ## §9 Conclusion: the boundary is the feature
 
-> **Status:** drafted.
-
 **Section thesis.** The dual-language model is a *design philosophy*, not a
 language preference. It can be applied in Python (C extensions plus Python
 policy), Rust (with embedded scripting), C# (with Eagle or another
@@ -3462,8 +3475,6 @@ The boundary is the feature.
 ---
 
 ## Appendices
-
-> **Status:** drafted.
 
 ### Appendix A — References
 
@@ -4112,93 +4123,3 @@ argument.
   inversion: not "worse is better" but "smaller is right," which is a
   weaker claim that survives where the Gabriel argument does not.
 
----
-
-## Drafting plan
-
-The whitepaper is written out of order. The recommended sequence:
-
-1. **§4 (Eagle case study) first.** It is the most concrete, the most fun to
-   write, and it grounds every other section. If §4 does not carry, the rest
-   will not either. **Status: drafted.**
-2. **§1 (Ousterhout) and §3 (what the model buys) next.** These are the
-   load-bearing argument. Together they justify the case study.
-   **Status: drafted.**
-3. **§5 (conventions) and §6 (divergences) next.** These are the place readers
-   will fight you, so they need the most care. §5 follows from §4; §6 follows
-   from §5. **Status: drafted.**
-4. **§8 (beauty and correctness) added next.** A substantive aesthetic
-   argument that complements the architectural argument. All
-   subsections (§§ 8.1–8.8) are now drafted as prose, including §8.3
-   (Eagle's specific beauty standards, added at the author's request)
-   and §8.5 (the worked Eagle examples, expanded in a follow-up pass).
-   **Status: drafted.**
-5. **§2 (mainstream abandonment) and §7 (costs) next.** These are the
-   credibility sections — they buy the right to make the §6 arguments.
-   **Status: drafted.**
-6. **§9 (conclusion) last.** It can only be written once the actual argument
-   is on the page. Renumbered from the original §8 to make room for the
-   beauty section. **Status: drafted.**
-
-### Remaining work
-
-The whitepaper is now a complete first draft. The remaining pieces are
-editorial:
-
-1. **§8.5 author's pass.** The worked Eagle examples are drafted from
-   the audit work on the actual code, but the author has better knowledge
-   of the codebase than the audit could surface. The six examples (the
-   `[appendArgs]` primitive, the `list.eagle` functional core, the
-   constraint system, the three-stage shell argument processing, the
-   `[eagle_shellUnknown]` interactive-loop handler, the `# <help>`
-   convention) can be refined, reordered, or replaced. The author may
-   wish to add historical context (development trajectory, considered
-   alternatives, reasons for specific design choices) that the audit
-   work did not have access to.
-
-2. **Compression pass.** The current draft is now well over the original
-   14,000–18,000 word body target. A compression pass that tightens each
-   section without losing the argument would bring the length closer to
-   a typical whitepaper. The candidates for compression are §2 (which
-   restates familiar history at length), §7 (which could trim some
-   redundancy with §6 around developer skill costs), and the §8.5
-   examples (each of which could be tightened to perhaps two-thirds of
-   its current length). §§3–6 and §§8.1–8.4 and §§8.6–8.8 are doing
-   load-bearing argumentative work and should not be compressed without
-   losing substance.
-
-3. **Cross-reference audit.** With every section drafted, a pass over the
-   `§`-references in the body would catch any that no longer point to the
-   right material, plus place any new cross-references that the final
-   structure invites (for example, several appendix entries currently
-   reference body sections, but some body sections could usefully cite
-   appendix entries in return).
-
-4. **A final review pass.** A complete read-through of the whole document
-   in order is the only way to catch terminology drift between sections
-   written in different drafting sessions. The pass would also be the
-   right time to verify that the argument's through-line is clear from
-   §1 to §9 without requiring forward references the reader has not yet
-   encountered.
-
-If at any point during writing §1 the Ousterhout framing turns out not to need
-defending — if the argument carries itself once stated cleanly — that is a
-signal to shrink §1 and §2 and let §4 do the work. The strongest version of
-this whitepaper might be 80% case study and 20% framing.
-
-### Open questions for the author
-
-- **Audience confirmation.** The whitepaper currently assumes a technical
-  audience (architects, language designers, security-conscious developers).
-  A practitioner audience would want more code excerpts and less Ousterhout
-  framing.
-- **Eagle-as-topic or Eagle-as-example?** Current draft uses Eagle as example
-  to ground a general thesis. A topic-first version would attract a smaller
-  but more engaged audience.
-- **Scope of "coding style."** Currently focused on Eagle scripts and the
-  C#/Eagle boundary. Pure C# style (the `_Components.Private` namespace
-  convention, conditional compilation as architecture, accessor patterns)
-  could warrant its own treatment — Appendix D, or its own section.
-- **Length target.** Current draft targets 30–40 pages. A 60-page version
-  could give §4 the room it deserves; a 20-page version would force harder
-  prioritization of the §5 and §6 material.
