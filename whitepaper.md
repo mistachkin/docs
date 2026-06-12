@@ -769,6 +769,168 @@ feature.
      7. Hot reload of policy     re-source without rebuilding
 ```
 
+### 3.8 The boundary is fractal: mini-languages as embedded boundaries
+
+The argument so far has treated the boundary as a top-level
+architectural property — primitive layer on one side, policy layer on
+the other, `[object]` in the middle. The same boundary discipline
+recurs at smaller scales. Anywhere a host language embeds a string
+that gets interpreted as a domain-specific grammar, there is a
+*mini-language* with its own primitive / policy split. The pattern is
+the policy (what to match, what to compute, what to format); the
+engine that interprets it is the primitive (how to match, compute,
+format).
+
+The examples are everywhere. Regular expressions in nearly every
+language. Glob patterns with braced alternation (`*.{txt,md}`) in
+shells and in `[glob]` / `[string match]`. Mathematical expressions
+in `[expr]`, in SQL `WHERE` clauses, in spreadsheet formulas. Format
+strings in `[format]`, `printf`, `strftime`, `[clock format]`. SQL
+itself embedded via parameterized queries. XPath and CSS selectors
+embedded in DOM traversal. JSONPath in JSON tooling. Cron
+expressions in schedulers. Semver constraints in package managers.
+CIDR notation in network configurations. Each is a small grammar for
+a specific domain; each lives inside a host language as a string
+that gets compiled and interpreted by an engine.
+
+The mini-language and its host obey the same boundary properties §3.1
+through §3.7 named at the top level. The pattern is auditable (grep
+for regex literals, lint them, test them in isolation). Performance
+separation holds (the regex engine compiles once and matches many;
+the host string operations do not). The safety surface is the
+engine's parser (a malformed regex is a parse error before it does
+any harm). Testability is real (each pattern is its own artifact).
+Configuration-as-code applies (the pattern *is* the configuration,
+expressed in a small domain-specific syntax rather than a generic
+data structure that has to be parsed twice).
+
+**Mini-languages are data domains, not strings.** A regular
+expression is not just a string. It is a string in the well-defined
+sub-domain of *valid regex patterns* — the strings that the host's
+regex engine recognizes as a parseable pattern. Similarly, a cron
+expression is a string in the sub-domain of cron-grammar-valid
+strings; a CIDR notation is a string in the IPv4-or-IPv6
+prefix-syntax sub-domain; a semver constraint is a string in the
+version-constraint sub-domain. Each mini-language defines what
+counts as a valid value, and the set of valid values is a *data
+domain* — a type-like restriction over the broader string type that
+the host language exposes.
+
+The distinction matters because string types in most host languages
+are wide open. A function whose signature says "takes a string"
+accepts every string the host can produce, including the many
+strings that are not valid regex patterns / cron expressions /
+CIDRs / semver constraints. The data domain is invisible to the
+host's type system; if it is enforced at all, it is enforced *at
+the boundary* — when the regex engine parses the pattern, when the
+cron scheduler validates the expression, when the IP library
+parses the CIDR notation. This is the §3.3 safety-surface argument
+at a smaller scale: the mini-language's engine is the type
+checker, and the parse step is where type errors get caught.
+
+What varies across host languages is two things at once: how
+visible the data domain is at the host level, and what *integration
+design* the host uses to bind the mini-language's outputs back into
+host-level values. Some hosts treat mini-language strings
+opaquely until use (Tcl, Eagle, shell scripts). Some give the
+mini-language its own syntactic category distinct from strings
+(Perl's `m/.../`). Some expose the parsed form as its own host type
+(`System.Text.RegularExpressions.Regex` in .NET,
+`re.Pattern` in Python). Each choice is a different answer to the
+same question: how much should the host's type system know about
+the mini-language's domain? And once parsed, how should the
+mini-language's outputs — matches, captures, computed values —
+re-enter host-level code?
+
+The two questions are independent in principle but coupled in
+practice. A host that exposes the parsed form as a type tends also
+to expose match results as typed objects (`Match.Groups[1]`). A
+host that treats the pattern as a string tends also to expose
+matches as strings (with the binding to host variables done by some
+other mechanism). The integration design is where those choices
+land. The choice reveals what the host considers important.
+
+**Tcl's and Eagle's `[regexp]` as a study in integration.** The
+integration uses three mechanisms in concert, each chosen to fit the
+rest of the host language.
+
+*Return value names the question.* `[regexp $pattern $string]`
+returns the number of matches found — zero for no match, positive
+integer otherwise. This composes naturally with the §8.3 predicate
+convention (`if {[regexp $pattern $string] > 0]}`), reads as "did
+anything match?", and degrades cleanly when the caller does not care
+about captures.
+
+*Output variable names pass captures by name.* `[regexp $pattern
+$string fullVar group1Var group2Var ...]` writes captured groups
+into caller-named variables via `[upvar]`. The convention is uniform
+with how the host handles output parameters elsewhere — see also
+`[regsub]`, `[binary scan]`, the `[lassign]` form. The caller chooses
+the variable names at the call site, so a regex extracting an HTTP
+method, path, and version writes them into `method`, `path`,
+`version` rather than into indexed positions in a returned array.
+The names at the call site document what the captures mean; a reader
+does not need to consult the pattern to know what each group
+represents.
+
+*Eagle adds per-match script callbacks on the substitution path.*
+The script-side `[regsub]` accepts a backreference template (`\1`,
+`\2`) for the replacement. Eagle extends this with a per-match
+script callback: each match runs a script that has access to the
+captures and returns the replacement string. The callback is policy
+code executing inside what would otherwise be a single primitive
+operation; the mini-language and the host language interleave at
+every match boundary. A regex substitution that wants to perform
+arbitrary computation per match — case conversion, validation,
+lookup, conditional replacement — does not have to fall back to
+manual loop-and-match.
+
+The three mechanisms compose. A complex regex over text, where each
+match needs computed replacement and the captures need to flow into
+named variables, would in most languages require splitting into
+match → extract → compute → substitute steps. In Eagle it can be
+one `[regsub]` call whose script callback reads captures from named
+variables and returns the replacement. The design is consistent with
+the rest of the host: pass-by-name matches `[upvar]` and the broader
+output-parameter convention, and the script callback matches the
+§5.4 "hooks as named procs" pattern of putting extension points
+where the language already extends.
+
+**Other languages' choices, briefly.** Python returns a `Match`
+object queried by group index or group name (`m.group("year")` when
+named groups are used). Perl uses implicit globals (`$1`, `$2`,
+`$&`, `$+`) and a successful match returns true. JavaScript returns
+an array or `null`. Ruby uses a magic variable (`$~`) plus indexed
+access. Each choice fits the surrounding language: Python's
+named-group access matches its affinity for named arguments;
+Perl's implicit globals match its terse pipeline aesthetic;
+JavaScript's array-or-null matches its conditional-shortcut
+idioms. There is no universally right choice; there are only
+choices that integrate well with the rest of the language and
+choices that don't.
+
+**Why this matters for the dual-language argument.** The boundary
+§§3.1–3.7 named is not a single boundary at the top of the system; it
+is a discipline that recurs at every scale. A primitive layer that
+exposes mini-languages well — with consistent capture mechanisms, a
+callback story, parser-level error reporting — is one whose §3
+benefits compound; the regex engine is tested independently of the
+script that uses it, the cron expression is auditable independently
+of the scheduler, the format string is parseable independently of
+the I/O call. A primitive layer that exposes mini-languages badly —
+stringly typed escapes, no consistent capture mechanism, no callback
+story — leaks complexity into every call site.
+
+The dual-language model is, in this sense, fractal. A scripting
+language that drives a primitive layer at the top level also drives
+mini-languages at every operation that touches a domain-specific
+grammar. The discipline that makes the top-level boundary work makes
+the mini-language boundaries work too, and the §5 conventions —
+override patterns, defensive guards, the predicate idioms of §8.3 —
+apply at this scale the same way they apply to cross-layer calls.
+The fractal is not a metaphor; it is a property of how the model
+scales.
+
 ---
 
 ## §4 Eagle as a case study
