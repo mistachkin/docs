@@ -400,16 +400,342 @@ declaratively via settings, not hard-coded in procedural logic.
 
 ---
 
+## Coding Conventions
+
+> The entries above are architectural. The conventions below are
+> prescriptive, codebase-wide C# style rules. They exist for readability,
+> reliability, and bulk auditability rather than for any one subsystem's
+> behavior -- but they are applied just as deliberately. They were recently
+> applied wholesale while refactoring `CompletionOps.cs` in the Featherlight
+> plugin, which is a good worked example of all three together.
+
+---
+
+<details>
+<summary><strong>18. Defensive Parameter Validation</strong></summary>
+
+Methods validate their reference-type parameters for `null` at entry and
+fail fast -- returning a sentinel (`false`, `null`, or an error
+`ReturnCode`) -- instead of risking a `NullReferenceException` deep inside
+the body.
+
+```csharp
+private static bool TryCompleteCommand(
+    CompletionRequest request /* in */
+    )
+{
+    if (request == null)
+        return false;
+
+    // ...the body can now use 'request' without re-checking...
+}
+```
+
+**Rationale**: A `NullReferenceException` thrown several frames into a
+method is opaque -- the stack trace points at the dereference site, not at
+the caller that passed `null`. An explicit guard at the top turns a
+"mystery NRE" into a predictable, traceable outcome and documents the
+method's contract (which parameters are required). In a system where
+callers span plugins, AppDomain boundaries, and script-driven dispatch,
+inputs cannot be assumed well-formed. Pairs with pattern 19 (the guard is
+where the extracted local gets its null-check).
+
+</details>
+
+---
+
+<details>
+<summary><strong>19. Extract, Null-Check, and Cache Before Dereferencing</strong></summary>
+
+When a method will dereference a parameter -- or any shared field or
+property -- more than trivially, it must first copy that reference into a
+local variable, null-check the local, and then use the local everywhere.
+Do not repeatedly dereference `request.Interpreter`, `request.Matches`,
+etc. inline.
+
+```csharp
+// NO -- repeated dereference, null contract scattered (or absent):
+if (request.Interpreter.IsExpressionCommand(request.CommandName, ...))
+    request.Interpreter.ListFunctions(..., ref request.Error);
+
+// YES -- extract once, check once, use the local:
+Interpreter interpreter = request.Interpreter;
+
+if (interpreter == null)
+    return false;
+
+if (interpreter.IsExpressionCommand(request.CommandName, ...))
+    interpreter.ListFunctions(..., ref request.Error);
+```
+
+**Rationale**: Three reasons.
+
+1. **Readability.** `interpreter.X` reads far better than
+   `request.Interpreter.X` repeated down a method, and the null contract
+   lives in exactly one obvious place instead of being implied at every
+   use (or, worse, nowhere).
+2. **Correctness.** A field or property may be mutable, lazily computed, or
+   touched from multiple threads; re-reading it can yield a different value
+   (or `null`) between uses. Caching once gives the method a stable,
+   self-consistent view for its whole duration.
+3. **It localizes the check.** Extraction is the natural home for the
+   null-check from pattern 18, so the two conventions reinforce each other.
+
+</details>
+
+---
+
+<details>
+<summary><strong>20. <code>String.Format</code> Over the <code>+</code> Operator</strong></summary>
+
+Build composite strings with `String.Format("{0}{1}", a, b)` rather than
+the `+` concatenation operator.
+
+```csharp
+// NO:
+argument = Characters.Comment + list[0];
+newName = name + Characters.Space + "(command)";
+
+// YES:
+argument = String.Format("{0}{1}", Characters.Comment, list[0]);
+newName = String.Format("{0}{1}(command)", name, Characters.Space);
+```
+
+**Rationale**:
+
+- **Less null/coercion fuss.** Every operand reaches the result the same
+  way -- through `{0}`-style substitution -- so there is no need to reason
+  about how `+` coerces each operand or what a `null` operand does mid-chain.
+- **Avoids the `char` arithmetic footgun.** With `+`, two `char` operands
+  do *integer* addition (`'a' + 'b'` is `195`, not `"ab"`); mixing `char`
+  and `string` silently switches between numeric and textual behavior.
+  `String.Format` always formats, never adds.
+- **Simpler.** One call instead of a chain of `+` with mixed `char`/`string`
+  operands.
+- **Bulk auditability.** String construction becomes findable and reviewable
+  as a class -- grep for `String.Format`, or for the format strings
+  themselves -- which matters for audits, localization sweeps, and
+  refactors. `+`-built strings are scattered and hard to enumerate.
+
+</details>
+
+---
+
+<details>
+<summary><strong>21. Named Constants, Not Magic Numbers or Literals</strong></summary>
+
+Non-trivial literal values -- counts, limits, indices, sentinel and format
+strings -- are declared as named `private const` (or `static readonly`)
+members in the `Private Constants` region, each with its own doc comment,
+rather than written inline at the point of use.
+
+```csharp
+private const int MaximumAutoComplete = 30;
+private const int MaximumArgumentCount = 2;
+private const int CommandNameIndex = 0;
+private const int SubCommandNameIndex = 1;
+private const string TooManyMatches = "... <MORE THAN {0} MATCHES> ...";
+```
+
+**Rationale**: A bare `2` or `30` at a call site carries no meaning and no
+searchability; `MaximumArgumentCount` carries both. The constant is a
+single point of change, the name documents intent at every use, the value
+is greppable, and the constant's own doc comment is the natural home for
+the *why* of the number. Inline literals are also where off-by-one bugs and
+"two places that must stay in sync" bugs hide.
+
+</details>
+
+---
+
+<details>
+<summary><strong>22. Region Ordering and Naming</strong></summary>
+
+Every type partitions its members into `#region` blocks drawn from a fixed,
+standard vocabulary, in a consistent order. Ad-hoc or semantic groupings are
+**not** introduced as new top-level regions; they nest *inside* the
+appropriate standard region. A nested helper type gets its own
+`Private <Name> Helper Class` region.
+
+Canonical top-level order:
+
+```
+(Private <Name> Helper Class)   // nested helper type(s), if any
+Private Constants
+Private Data
+Public Constructors
+Public Methods / Private Methods / I<Interface> Members
+IDisposable Members
+IDisposable "Pattern" Members
+Destructor
+```
+
+**Rationale**: With a fixed region vocabulary and order, a reader opening
+any of thousands of files knows where to look -- constants at the top,
+disposal at the bottom, interface implementations grouped by interface.
+Inventing a new top-level region name (e.g. `Completion Strategies`) erodes
+that predictability. The fix is to nest it: in `CompletionOps.cs` the
+`Completion Strategies` grouping lives *inside* `Private Methods`, which
+preserves both the uniform top-level skeleton and the semantic sub-grouping.
+A nested helper type, by contrast, does warrant its own region (the
+`CompletionRequest` type sits in `Private CompletionRequest Helper Class`).
+
+</details>
+
+---
+
+<details>
+<summary><strong>23. Minimal Visibility</strong></summary>
+
+Every type and member uses the **narrowest access modifier that satisfies
+an actual, demonstrated need**. The default is `private`; `internal`, then
+`protected`, then `public` are each a step that must be earned. If something
+has no need for wider visibility, it does not get it.
+
+```csharp
+// Private, sealed nested helper type; its methods are private static.
+private sealed class CompletionRequest { ... }
+private static bool TryComplete(CompletionRequest request) { ... }
+```
+
+**Rationale**: A smaller surface is easier to reason about, refactor, and
+secure -- the compiler guarantees nothing outside the intended scope can
+touch the member, so invariants hold by construction. It also makes intent
+legible: because the default is `private`, a reader who sees `public` or
+`internal` can trust it was a deliberate choice rather than an oversight.
+
+**Subtlety**: accessibility composes. A `public` field inside a `private`
+nested type is still reachable only from the enclosing class, because the
+type's own `private`-ness caps it. Making the *type* private is the
+visibility control; the field modifiers inside it are bounded by that.
+
+Any widening beyond the minimum is a deviation, and is documented per
+convention 24.
+
+</details>
+
+---
+
+<details>
+<summary><strong>24. Document Every Deviation</strong></summary>
+
+Any departure from a standard convention or a best practice -- a
+wider-than-default access modifier, a literal that genuinely cannot be
+named, a skipped null-check, an unusual region, a non-obvious algorithm --
+is documented at the site with a `// NOTE:` or `// HACK:` comment that
+explains *why*.
+
+**Rationale**: The conventions in this document, and the architectural
+patterns above them, are the assumed baseline. A reader trusts that
+baseline, so the only thing that needs explaining is where the code steps
+off it. An undocumented deviation is indistinguishable from a bug; a
+documented one carries its own justification and review trail. This is the
+governing rule behind the `HACK` comment doctrine (pattern 11): the comment
+is not an apology for bad code -- it is the record that a deviation was
+deliberate, and the place its rationale lives.
+
+</details>
+
+---
+
+<details>
+<summary><strong>25. Comprehensive XML Documentation</strong></summary>
+
+Every type and member -- public *or* private, including fields, constants,
+properties, delegates, and nested types -- carries an XML documentation
+comment. Documentation tags each occupy their own line (a `<summary>` is
+never collapsed onto a single line with its text); every method documents
+each parameter with a `<param>` block and, when non-void, its `<returns>`;
+doc text wraps within the file's column limit and stays ASCII.
+
+```csharp
+/// <summary>
+/// Gets a localized string resource for the plugin.
+/// </summary>
+/// <param name="name">
+/// The name of the string resource to retrieve.
+/// </param>
+/// <returns>
+/// The requested string resource, or null upon failure.
+/// </returns>
+public override string GetString( ... ) { ... }
+```
+
+**Rationale**: The documentation is the contract. Because *every* member is
+documented -- not just the public API -- a reader never has to
+reverse-engineer intent from a method body, and tooling can surface help for
+any symbol across AppDomain and plugin boundaries. Keeping each tag on its
+own line makes the comments diffable, greppable, and mergeable, and gives
+them a uniform shape the eye can skim. Leaving a member undocumented is
+itself a deviation (convention 24).
+
+</details>
+
+---
+
+<details>
+<summary><strong>26. Bounds-Check Before Indexing</strong></summary>
+
+Before indexing a collection or array, verify the index is in range
+(`index < collection.Count`) -- exactly as a reference is null-checked
+before it is dereferenced. The two guards travel together.
+
+```csharp
+StringList newArguments = request.NewArguments;
+
+if ((newArguments != null) && (CommandNameIndex < newArguments.Count))
+    newArguments[CommandNameIndex] = ...;
+```
+
+**Rationale**: An out-of-range index is the array-shaped sibling of a null
+dereference -- an exception thrown far from its cause. Guarding the index at
+the point of use, alongside the null-check of convention 18 and the
+extract-and-cache of convention 19, keeps the failure local and the contract
+explicit. It matters most where the index is a named constant (e.g.
+`CommandNameIndex`) and the collection's length is data-dependent: the
+constant says nothing about whether the collection is actually that long.
+
+</details>
+
+---
+
+<details>
+<summary><strong>27. Parameter-Direction Markers</strong></summary>
+
+Multi-line parameter lists annotate each parameter with a trailing
+`/* in */`, `/* out */`, or `/* in, out */` comment indicating its data-flow
+direction, aligned one space past the longest parameter declaration.
+
+```csharp
+public override ReturnCode Initialize(
+    Interpreter interpreter, /* in */
+    IClientData clientData,  /* in */
+    ref Result result        /* out */
+    )
+```
+
+**Rationale**: C# offers only `ref`/`out` keywords, and `ref` conflates "I
+read this" with "I write this." The markers record the *intended* data flow
+for every parameter -- plain by-value inputs, `out` results, and `ref`
+parameters used purely as outputs alike -- so a signature is self-describing
+at a glance: which arguments are consumed, which are produced, which are
+both, without reading the body. The column alignment lets the markers be
+scanned as a single vertical strip.
+
+</details>
+
+---
+
 ## Script-Level Patterns
 
-The patterns above describe the C# internals. The Eagle script libraries
+The patterns and conventions above describe the C# internals and house coding style. The Eagle script libraries
 (`lib/Eagle1.0/`, `lib/Test1.0/`, `Library/Tests/`) demonstrate equally
 distinctive patterns at the scripting level.
 
 ---
 
 <details>
-<summary><strong>18. Dual Tcl/Eagle Compatibility Scripting</strong></summary>
+<summary><strong>28. Dual Tcl/Eagle Compatibility Scripting</strong></summary>
 
 The entire script library is designed to run in both vanilla Tcl and
 Eagle. Bootstrap procedures like `isEagle` detect the runtime, and the
@@ -429,7 +755,7 @@ loading that file. This is the script equivalent of `#if` guards.
 ---
 
 <details>
-<summary><strong>19. Procedure Factories with Hidden Instrumentation</strong></summary>
+<summary><strong>29. Procedure Factories with Hidden Instrumentation</strong></summary>
 
 `s_proc` (stub procedure) and `f_proc` (flexible procedure) are
 factories that create procedures with optional debugger instrumentation
@@ -449,7 +775,7 @@ implementation backs their procedure.
 ---
 
 <details>
-<summary><strong>20. Self-Destructing Procedures</strong></summary>
+<summary><strong>30. Self-Destructing Procedures</strong></summary>
 
 The `[apply]` compatibility shim for Tcl 8.4 creates a temporary
 procedure with a unique name, executes it, then the procedure body
@@ -471,7 +797,7 @@ proc ::apply_shim_$suffix {lambda args} {
 ---
 
 <details>
-<summary><strong>21. Multi-Level Upvar for Cross-Frame Variable Access</strong></summary>
+<summary><strong>31. Multi-Level Upvar for Cross-Frame Variable Access</strong></summary>
 
 Eagle scripts routinely use `upvar 1` (one level up) and `upvar 2` (two
 levels up) to link variables across call frames without passing them as
@@ -490,7 +816,7 @@ as if the procedure boundary didn't exist.
 ---
 
 <details>
-<summary><strong>22. Thread-Safe Script State via Variable Locks</strong></summary>
+<summary><strong>32. Thread-Safe Script State via Variable Locks</strong></summary>
 
 The test framework uses `vwaitLocked` to safely manage shared script
 state across threads. Global arrays like `::test_puts_state` and
@@ -509,7 +835,7 @@ entries after processing.
 ---
 
 <details>
-<summary><strong>23. Test Constraint System</strong></summary>
+<summary><strong>33. Test Constraint System</strong></summary>
 
 The test framework uses a constraint system where each test declares
 prerequisites like `{eagle command.object compile.CONFIGURATION
@@ -534,7 +860,7 @@ and .NET type availability.
 ---
 
 <details>
-<summary><strong>24. Unknown Command Handler as Object Dispatch</strong></summary>
+<summary><strong>34. Unknown Command Handler as Object Dispatch</strong></summary>
 
 Eagle's `unknown` command handler can intercept unrecognized commands
 and attempt to resolve them as .NET type names. When
@@ -550,7 +876,7 @@ a first-class command.
 ---
 
 <details>
-<summary><strong>25. Test Hook Architecture</strong></summary>
+<summary><strong>35. Test Hook Architecture</strong></summary>
 
 The test framework provides optional hook points at every stage of test
 execution: `beforeRunTest`, `beforeTest`, `afterTest`, `testSuccess`,
@@ -570,7 +896,7 @@ registration required.
 ---
 
 <details>
-<summary><strong>26. Multi-Runtime Command Line Building</strong></summary>
+<summary><strong>36. Multi-Runtime Command Line Building</strong></summary>
 
 `getRuntimeCommandLine` in `exec.eagle` builds different command lines
 depending on whether the target is Mono, .NET Core, or .NET Framework.
@@ -586,7 +912,7 @@ a single test script.
 ---
 
 <details>
-<summary><strong>27. Self-Referential Introspection</strong></summary>
+<summary><strong>37. Self-Referential Introspection</strong></summary>
 
 Eagle scripts routinely use `[info level [info level]]` to discover
 their own procedure name at runtime, `[info script]` to find their own
@@ -602,7 +928,7 @@ context.
 ---
 
 <details>
-<summary><strong>28. Runtime C# Compilation from Script (<code>csharp.eagle</code>)</strong></summary>
+<summary><strong>38. Runtime C# Compilation from Script (<code>csharp.eagle</code>)</strong></summary>
 
 `csharp.eagle` provides a complete C# compilation subsystem accessible
 from Eagle scripts. The `compileCSharp` procedure accepts C# source code
@@ -637,7 +963,7 @@ testing custom type handlers and callback delegates.
 ---
 
 <details>
-<summary><strong>29. Remote Package Repository Client (<code>pkgt.eagle</code>)</strong></summary>
+<summary><strong>39. Remote Package Repository Client (<code>pkgt.eagle</code>)</strong></summary>
 
 `pkgt.eagle` (Package Toolset) provides tools for downloading,
 extracting, and managing Eagle packages from remote repositories. It
@@ -674,7 +1000,7 @@ miss behavior.
 ---
 
 <details>
-<summary><strong>30. Shell Unknown Handler as .NET Type Dispatch</strong></summary>
+<summary><strong>40. Shell Unknown Handler as .NET Type Dispatch</strong></summary>
 
 Eagle's `unknown` command handler (`init.eagle`) forms a multi-level
 resolution chain:
@@ -706,7 +1032,7 @@ skips the intermediate `unknown` call frame so that the resolved
 command executes in the original caller's context, preserving variable
 scope and call frame semantics.
 
-When `eagle_shellUnknown` is enabled (see pattern 31), the resolution
+When `eagle_shellUnknown` is enabled (see pattern 41), the resolution
 chain becomes: shell dispatch → .NET type resolution → package fallback.
 The shell handler saves the original `::unknown` as `::savedUnknown` and
 falls back to it on failure, creating a layered resolution system where
@@ -720,7 +1046,7 @@ each handler can chain to the next.
 ---
 
 <details>
-<summary><strong>31. Transparent OS Shell Bridge (<code>eagle_shellUnknown</code>)</strong></summary>
+<summary><strong>41. Transparent OS Shell Bridge (<code>eagle_shellUnknown</code>)</strong></summary>
 
 The `eagle_shellUnknown` system transforms Eagle's interactive prompt
 into a transparent OS shell. When enabled via `eagle_enableShellUnknown`,
