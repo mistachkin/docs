@@ -231,6 +231,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 | [`[regsub]`](#cmd-regsub) | Regular expression substitution | [Strings](#strings) |
 | [`[rename]`](#cmd-rename) | Rename or delete identifiers | [Core and Miscellaneous](#core-and-miscellaneous) |
 | [`[return]`](#cmd-return) | Return from procedure or script | [Control Flow](#control-flow) |
+| [`[scan]`](#cmd-scan) | Parse string (inverse of format) | [Strings](#strings) |
 | [`[scope]`](#cmd-scope) | Variable scope operations | [Variables](#variables) |
 | [`[seek]`](#cmd-seek) | Set channel position | [I/O and Channels](#io-and-channels) |
 | [`[set]`](#cmd-set) | Set variable value | [Variables](#variables) |
@@ -668,6 +669,7 @@ All variable commands belong to ObjectGroup: "variable"
 - **incr** - Increment variable value
   - `incr varName ?increment?`
   - Increments the integer value stored in *varName* by *increment* (default is 1). The variable must contain a valid integer value, or an error is raised.
+  - **Deviation (by design — variable must exist):** unlike Tcl (which creates the variable, treating it as 0, when it does not exist), Eagle's `[incr]` requires *varName* to already exist and raises `can't read "varName": no such variable` otherwise. This is deliberate — auto-creating a variable is treated as a usability footgun (the same rationale behind Eagle's `[namespace]` avoiding the "dangers of creative writing"). Initialize first: `set counter 0; incr counter`.
   - **Arguments**:
     - *varName* - Name of the variable to increment
     - *increment* - Amount to add (can be negative); default is 1
@@ -1126,9 +1128,10 @@ Many list commands accept index arguments. Valid index formats include:
 <a id="cmd-lindex"></a>
 - **lindex** - Get list element by index
   - `lindex list ?index ...?`
-  - Returns the element at the specified *index* in *list*. If multiple indices are provided, each successive index navigates into nested lists.
+  - Returns the element at the specified *index* in *list*. If multiple indices are provided as separate arguments, each successive index navigates into nested lists (`lindex $l i j` is equivalent to `lindex [lindex $l i] j`). This matches Tcl.
   - **Out of range**: Returns an empty string if the index is out of range (no error).
-  - **Returns**: The selected element, or empty string if index is out of range.
+  - **Index list (Eagle extension; differs from Tcl)**: When a *single* index argument is itself a list of indices (e.g. `{i j k}`), Eagle returns a *projection* — the list of elements at those indices, each resolved against the *top-level* list, i.e. `{[lindex $l i] [lindex $l j] [lindex $l k]}`. **Tcl treats a list-of-indices argument as identical to multiple index arguments (nested descent), so this is intentionally different in Eagle.** For nested descent that is portable to Tcl, use the multiple-argument form (`lindex $l i j`), not a single list argument. An *empty* index list (`lindex $l {}`) is treated as an invalid index (it errors), rather than returning the whole list as Tcl does — consistent with rejecting an empty/meaningless index uniformly.
+  - **Returns**: The selected element (or, for the index-list form, the projected list of elements); empty string if index is out of range.
   - **Example**:
     ```tcl
     set mylist {a b c d e}
@@ -1137,8 +1140,13 @@ Many list commands accept index arguments. Valid index formats include:
     lindex $mylist end-1   ;# Returns: "d"
 
     set nested {{1 2} {3 4} {5 6}}
-    lindex $nested 1 0     ;# Returns: "3"
+    lindex $nested 1 0     ;# Returns: "3"   (nested descent; multi-argument form)
+
+    # Index-list argument is an Eagle PROJECTION (NOT nested descent):
+    lindex $nested {0 2}   ;# Eagle: "{1 2} {5 6}"   (elements 0 and 2)
+                           ;# Tcl:   ""              (nested: lindex "1 2" 2)
     ```
+  - **See also**: [`[lset]`](#cmd-lset) — note that `lset` does *not* accept an index-list in a single argument (a projection has no "set" counterpart); use one index argument per level.
 
 ---
 
@@ -1306,6 +1314,7 @@ Many list commands accept index arguments. Valid index formats include:
 - **lset** - Set list element
   - `lset varName index ?index...? value`
   - Modifies the list stored in *varName* by replacing the element at the specified index with *value*. Multiple indices navigate into nested lists. The variable is modified in place.
+  - **Deviation (by design — modify only, never create/grow):** `[lset]` requires *varName* to already exist and the index to be in range. Unlike Tcl, Eagle does **not** auto-create the variable, does **not** accept the zero-index `lset varName value` form, and does **not** auto-append when the index equals the list length (`lset l end+1 v` / `lset l <len> v` → `list index out of range`, not a silent grow). These are anti-footgun choices; use `[set]` to create and `[lappend]`/`[linsert]` to grow. (The `lset varName {} value` empty-index "wholesale replace" of an existing variable is supported.)
   - **Returns**: The new value of the list.
   - **Example**:
     ```tcl
@@ -1642,6 +1651,34 @@ String commands belong to ObjectGroup: "string"
 
     # Using -literal: no substitution processing
     regsub -literal {.} a.b {$1}           ;# Returns: "a$1b"
+    ```
+
+---
+
+<a id="cmd-scan"></a>
+- **scan** - Parse a string using conversion specifiers (inverse of [format])
+  - `scan string format ?varName varName ...?`
+  - Parses *string* according to *format*, the inverse of the `[format]` command. Each `%` conversion specifier extracts one value. With *varName* arguments, the values are assigned to those variables and the count of successful conversions is returned (or `-1` if the input is exhausted before any conversion matches). With no *varName* arguments (inline mode), the scanned values are returned as a list.
+  - **Conversion specifiers**:
+    - `%d`, `%i` - Decimal / auto-base integer
+    - `%o`, `%x`, `%X` - Octal / hexadecimal integer
+    - `%u` - Unsigned decimal integer
+    - `%b` - Binary integer
+    - `%c` - Single character (returns its integer code)
+    - `%e`, `%f`, `%g` - Floating-point
+    - `%s` - Whitespace-delimited string
+    - `%[...]`, `%[^...]` - Character set (or its complement)
+    - `%n` - Store the count of characters scanned so far
+    - `%%` - Literal percent sign
+  - **Modifiers**: a maximum field width, `*` to suppress assignment of a conversion, and XPG3 positional specifiers (e.g. `%2$d`) are supported.
+  - **Returns**: the number of conversions assigned (variable form), or the list of scanned values (inline form).
+  - **Eagle note**: an integral `%f` result is rendered without a trailing `.0` (e.g. `314`, not `314.0`), consistent with Eagle's number formatting.
+  - **Example**:
+    ```tcl
+    scan "12 34" "%d %d" a b      ;# a=12, b=34; returns 2
+    scan "ff" %x n                ;# n=255
+    scan "rgb(1,2,3)" "rgb(%d,%d,%d)" r g b
+    scan "hello world" "%s %s"    ;# inline mode: returns "hello world"
     ```
 
 ---
@@ -2295,9 +2332,11 @@ Dictionaries in Eagle are value types represented as lists with an even number o
 
   These sub-commands modify a dictionary stored in a variable. The variable is updated in place and the new dictionary value is returned.
 
+  **Deviation (by design — variable must exist):** the mutating `dict` sub-commands (`set`, `unset`, `incr`, `append`, `lappend`) require *dictionaryVariable* to already exist; unlike Tcl, Eagle does **not** auto-create the variable, and raises `can't read "...": no such variable` otherwise. This is the same anti-footgun rationale as `[incr]`. Initialize first (e.g. `set d {}` or `set d [dict create]`). (Note: *keys within* an already-existing dictionary are still created/traversed as needed.)
+
   ---
 
-  - `dict set dictionaryVariable key ?key ...? value` - Sets a value in the dictionary variable. Multiple keys create or traverse nested dictionaries. Creates the variable if it doesn't exist.
+  - `dict set dictionaryVariable key ?key ...? value` - Sets a value in the dictionary variable. Multiple keys create or traverse nested dictionaries (within the already-existing variable; see the deviation note above).
 
   ---
 
@@ -5355,6 +5394,8 @@ Expression commands belong to ObjectGroup: "expression"
 <summary><strong>Mathematical Functions</strong></summary>
 
 Mathematical functions are used within expressions (via `[expr]`) to perform calculations. Functions are called using the syntax `func(arg1, arg2, ...)` within an expression.
+
+**Deviation (by design — floating-point error model):** for a floating-point argument outside a function's real domain, Eagle returns the IEEE-754 value `NaN` rather than raising Tcl's `domain error: argument not in valid range` — e.g. `sqrt(-1)`, `log(-1)`, `log10(-5)`, `acos(2)`, `asin(2)`, `pow(-8, 1.0/3)`, `fmod(x, 0)` all yield `NaN`. Relatedly, because Eagle's numbers use a `Decimal`-based model (which has no infinity/NaN), `expr {1.0/0.0}` raises a divide-by-zero error where Tcl yields `Inf`. To opt into IEEE-754 division semantics, force a true double operand with `double(...)`: `expr {1 / double(0)}` → `∞`, `expr {-1 / double(0)}` → `-∞`, `expr {0 / double(0)}` → `NaN` (infinities render with Eagle's `∞` / `-∞` symbol, which re-parses). This is Eagle's intended "general NaN policy"; use `isnan(x)` / `fpclassify` to test results, and see also the no-automatic-BigInteger-promotion and 32-bit `int()` behaviors.
 
 ---
 

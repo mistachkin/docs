@@ -101,13 +101,19 @@ regexp ?switches? exp string ?matchVar? ?subMatchVar subMatchVar ...?
    (the default for single-argument pattern creation), the pattern is
    always compiled to IL.
 
-2. **Input windowing** — If `-start` or `-length` is specified, the
-   input string is windowed to the relevant substring before matching.
-   The `-start` option supports Eagle's `end-n` index notation.
+2. **Search start and input windowing** — `-start index` sets where the
+   search begins (supporting Eagle's `end-n` index notation) WITHOUT
+   windowing the input, so the `^` / `$` anchors still bind to the true
+   string boundaries (only the search start position moves).  `-length n`
+   additionally limits matching to the window `[start, start + n)`; within
+   that explicit window the `^` / `$` anchors bind to the window.
 
 3. **Match loop** — The command enters a `while(true)` loop:
-   - Call `regEx.Match(input, matchIndex)` on the first iteration, or
-     `match.NextMatch()` on subsequent iterations.
+   - On the first iteration call `regEx.Match(input, matchIndex)` (start
+     index only, so `^`/`$` bind to the true boundaries) — or, when
+     `-length` was given, `regEx.Match(input, matchIndex, matchLength)` to
+     honor the explicit window; on subsequent iterations call
+     `match.NextMatch()`.
    - If `match.Success` is false, break.
    - Process the match (store in variables or collect for `-inline`).
    - If `-all` is not set, break after the first match.

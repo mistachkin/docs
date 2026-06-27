@@ -362,13 +362,10 @@ simple string substitution:
 | `%c` | (culture-specific) | Preferred date and time |
 | `%d` | `dd` | Day of month (01–31) |
 | `%D` | `MM/dd/yy` | Short date (`%m/%d/%y`) |
-| `%e` | `%d` | Day of month (space-padded) |
 | `%h` | `MMM` | Same as `%b` |
 | `%H` | `HH` | Hour, 24-hour (00–23) |
 | `%i` | `yyyy.MM.ddTHH:mm:ss.fff` | ISO 8601 with milliseconds |
 | `%I` | `hh` | Hour, 12-hour (01–12) |
-| `%k` | `%H` | Hour, 24-hour (no padding) |
-| `%l` | `%h` | Hour, 12-hour (no padding) |
 | `%m` | `MM` | Month (01–12) |
 | `%M` | `mm` | Minute (00–59) |
 | `%n` | `\n` | Newline |
@@ -394,9 +391,12 @@ Each delegate receives the `DateTime`, `TimeZone`, `CultureInfo`, and
 | Tcl | Delegate | Meaning |
 |-----|----------|---------|
 | `%C` | `GetCentury` | Century (year / 100) |
+| `%e` | `GetDayOfMonthSpacePadded` | Day of month, space-padded to width 2 (` 1`–`31`) |
 | `%g` | `GetTwoDigitYearIso8601` | 2-digit ISO 8601 week-based year |
 | `%G` | `GetFourDigitYearIso8601` | 4-digit ISO 8601 week-based year |
 | `%j` | `GetDayOfYear` | Day of year (001–366) |
+| `%k` | `GetHourOfDaySpacePadded` | Hour, 24-hour, space-padded to width 2 (` 0`–`23`) |
+| `%l` | `GetHourOfHalfDaySpacePadded` | Hour, 12-hour, space-padded to width 2 (` 1`–`12`) |
 | `%Q` | `GetStardate` | Star Trek stardate (Tcl-compatible algorithm from Kevin B. Kenny) |
 | `%s` | `GetSecondsSinceEpoch` | Seconds since epoch (calls `TimeOps.DateTimeToSeconds`) |
 | `%u` | `GetWeekdayNumberOneToSeven` | Weekday number, Monday=1 through Sunday=7 |

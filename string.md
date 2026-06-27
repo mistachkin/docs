@@ -391,9 +391,24 @@ string trimleft string ?chars?
 string trimright string ?chars?
 ```
 
-Remove characters from the ends of the string. Without `chars`, removes
-whitespace. Maps to .NET's `String.Trim()`, `String.TrimStart()`, and
-`String.TrimEnd()`.
+Remove characters from the ends of the string. With `chars`, removes any
+of those characters. Without `chars`, removes whitespace.
+
+**Default whitespace set (deviation — by design).** When `chars` is
+omitted, the trimmed set is the six **ASCII** whitespace characters —
+space, horizontal tab (`\t`), line feed (`\n`), vertical tab (`\v`), form
+feed (`\f`), and carriage return (`\r`). Implementation calls
+`String.Trim(chars[])` / `TrimStart` / `TrimEnd` with this *explicit* ASCII
+set; it deliberately does **not** use the parameterless `String.Trim()`,
+which would also strip the full set of Unicode whitespace (e.g. U+00A0
+no-break space, U+2003). Consequently:
+
+- Unlike Tcl 8.4 (whose default set is only `" \t\n\r"`), Eagle also trims
+  `\v` and `\f`.
+- Unlike Tcl 8.6 (which trims all Unicode whitespace), Eagle leaves
+  non-ASCII whitespace (such as U+00A0) untouched.
+
+To trim Unicode whitespace, pass an explicit `chars` argument.
 
 ### Prefix/suffix testing
 
