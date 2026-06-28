@@ -1203,6 +1203,14 @@ debug unmount fileName
 **Purpose:** Work with Eagle script bundles — signed, optionally
 encrypted containers of scripts.
 
+> **Why bundles, and how they work:** these sub-commands are the
+> command-line surface of the script-bundle subsystem. For *why* bundles
+> exist (authentic, tamper-evident, encrypted, sandboxed script
+> distribution), the full SQLite `Scripts` table schema, the per-row RSA
+> signature/key-ring trust model, isolation/security/rule-set metadata,
+> and the mount → verify → evaluate lifecycle, see
+> [`sql.md` § 8 "Script Bundle Databases"](sql.md#8-script-bundle-databases).
+
 - `bundle` — extract and list scripts from a bundle file, with optional
   base64-encoded password and pattern filter
 - `mount` — mount a bundle file into the interpreter's bundle manager,

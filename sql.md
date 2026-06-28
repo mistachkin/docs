@@ -666,6 +666,66 @@ Script bundles are SQLite databases that contain digitally signed Eagle
 scripts. They serve as secure, portable containers for distributing
 script packages.
 
+### 8.0 Why Script Bundles Matter
+
+Eagle is frequently embedded inside larger applications — often in
+security-sensitive roles — where the scripts it runs are themselves
+*trust-bearing*: they may drive licensing decisions, configuration,
+automation, or privileged operations. In that setting, **loose script
+files on disk are a liability**: anyone (or any process, or any
+supply-chain step) can read, modify, substitute, or inject them, and the
+host has no built-in way to know whether the script it is about to
+evaluate is authentic and unmodified.
+
+The bundle subsystem solves this by giving scripts the guarantees that
+code signing gives compiled binaries — and several that it does not:
+
+- **Authenticity & integrity (tamper-evidence).** Every row is
+  RSA-signed over *all* of its columns — the script text *and* its
+  metadata — and that signature is verified against the interpreter's
+  trusted script key rings **immediately before the script is
+  evaluated**. A modified, unsigned, or untrusted script is refused, not
+  silently run.
+- **Confidentiality.** The entire database can be encrypted with the
+  SQLite Encryption Extension (SEE), so the script text is not even
+  readable without the mount password.
+- **Controlled execution (defense in depth).** Each script carries its
+  own `IsolationLevel`, `SecurityLevel`, `SecurityFlags`, and `RuleSet`,
+  so a bundle declares *how* and *where* each script may run — in a safe
+  interpreter, in an isolated child interpreter or AppDomain, with only
+  an explicitly allowed set of commands and policies. Trust is not
+  all-or-nothing.
+- **Provenance & auditability.** The `Vendor`, `PublicKeyToken`,
+  `HashAlgorithm`, and `TimeStamp` columns record *who* produced and
+  signed each script, *with what key*, and *when*.
+- **Portability & convenience.** An entire library of scripts — plus
+  their package-index files — ships as a single file that is trivial to
+  copy, embed, version, and deploy, instead of a sprawling tree of loose
+  files.
+
+In short, a bundle is the script-level analogue of a signed, encrypted,
+sandboxed software package: it lets a host execute third-party or vendor
+scripts *only* when it can prove they are authentic, unmodified, and
+confined to a declared security envelope. This is the same trust chain
+Eagle uses for its licensing/signing infrastructure; see
+[`safe.md`](safe.md) for the surrounding security model.
+
+**Operational lifecycle (high level).** A bundle is produced by writing
+each script as a row in the `Scripts` table and signing that row (over
+all columns) with an RSA key pair from a trusted key ring; the database
+may then be encrypted with SEE and distributed as a single file. At run
+time the database is mounted **read-only** (optionally copied into memory
+first), and its fully-qualified path becomes a *virtual file system*
+whose members are the embedded scripts, addressed by their POSIX
+`FullName`. Scripts with a **positive** `Sequence` are evaluated in order
+by `EvaluateBundleFile`; scripts with a **negative** `Sequence` are
+package-index / package files reached through
+`[package scan -normal -host -bundle --]` or
+`[interp readorgetscriptfile]`. Every script's signature is re-verified
+against the trusted key rings just before evaluation, and its
+`IsolationLevel` / `SecurityLevel` / `SecurityFlags` / `RuleSet`
+constrain how and where it runs.
+
 ### 8.1 The Scripts Table Schema
 
 The bundle database schema is defined in `scratch/eagle/sql/scripts.sql`:
@@ -681,7 +741,9 @@ CREATE TABLE IF NOT EXISTS Scripts(
     SecurityLevel TEXT NULL,           -- None, Safe, or Sdk
     SecurityFlags TEXT NULL,           -- ScriptSecurityFlags
     RuleSet TEXT NULL,                 -- Command/policy filtering rules
-    BlockType TEXT NULL,               -- Reserved (must be None)
+    BlockType TEXT NULL,               -- XmlBlockType: normally Automatic,
+                                       -- Text, Base64, or Uri; reserved for
+                                       -- future use, currently must be None
     FullName TEXT NOT NULL,            -- POSIX path, e.g. /some/script.eagle
     "Group" TEXT NOT NULL,             -- Logical group name
     Description TEXT NOT NULL,         -- Human-readable description
@@ -796,9 +858,19 @@ BundleManager.Unmount(interpreter, fileName, errorOnNotMounted)
 BundleManager.ListMounts(interpreter, pattern, noCase)
 ```
 
-- Databases are mounted **read-only** — the schema comments explicitly
-  state that databases should not be opened in read-write mode
+- Databases are mounted **read-only** — and deliberately so. If SQLite
+  opened the file read-write it might rewrite an internal header field
+  (e.g. the "last opened with version"), which would alter the file's
+  bytes and **invalidate the per-row signatures**; read-only mounting
+  preserves them.
+- Databases may optionally be **copied into memory** before mounting
+  (useful for read-only media, or to avoid leaving the plaintext on disk
+  once decrypted).
+- The mounted database's fully-qualified path becomes its **own virtual
+  file system**, within which embedded scripts are located by their
+  `FullName`.
 - Databases may be **encrypted** using the SQLite Encryption Extension
+  (SEE); the mount password is required to open them.
 - Passwords are stored as `byte[]` in the mount dictionary
 - File names use platform-appropriate path comparison
   (`PathOps.Comparer`)
