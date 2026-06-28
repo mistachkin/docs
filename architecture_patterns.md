@@ -1330,9 +1330,10 @@ name before the value is trusted.
 <details>
 <summary><strong>52. <code>#if DEAD_CODE</code> -- Preserve, Don't Delete</strong></summary>
 
-Superseded or experimental implementations are not deleted; they are retained,
-compiled out, under `#if DEAD_CODE` (occasionally `#if false`), sitting beside the
-current code that replaced them.
+Superseded or experimental implementations are not always deleted; sometimes,
+they are retained, compiled out, under `#if DEAD_CODE` (occasionally `#if false`),
+sitting beside the current code that replaced them.  Generally, careful examination
+of the code in question will reveal why it was retained inline.
 
 **Rationale**: in a codebase that prizes maximum compatibility and reversibility,
 the previous implementation is documentation -- it records what was tried, why it
@@ -1340,8 +1341,8 @@ was replaced, and a ready fallback if a regression later surfaces. A
 never-defined symbol guarantees the block never ships and never breaks a build,
 while keeping it in plain view in the source rather than only in version-control
 history. It is the code-block form of the document-every-deviation doctrine
-(convention 24); these blocks are intentionally skipped when documenting members
-(they are not part of any shipping build).
+(convention 24); these blocks are intentionally included when documenting members
+as it is possible they may be used in the future.
 
 </details>
 
