@@ -120,6 +120,11 @@ use-after-dispose exceptions in plugin cleanup code. The six phases
 ensure that plugins are torn down before the resources they depend on,
 and system commands before user commands.
 
+The phases are implemented as discrete `DisposePhase1`..`DisposePhase5`
+methods (phase 0 work runs first within the disposal entry point), and the
+disposal logic distinguishes the interpreter it actually created from a
+caller-owned parent so it never disposes a parent the caller still holds.
+
 </details>
 
 ---
@@ -136,6 +141,14 @@ color and positioning, a file host needs streams, a null host needs
 nothing. Composition via interfaces lets each host implement exactly the
 capabilities it supports. The `HostFlags` enum (60+ flags) provides
 runtime capability queries: `DoesSupport(HostFlags.Color)`.
+
+**Concrete hosts**: `Default` (the abstract base implementing the common
+surface), `Console` (full interactive console), `File` (stream-backed),
+`Diagnostic`, `Null` and `Fake` (do-nothing/stub hosts for tests and headless
+use), `Shell`, and `Wrapper` (forwards every interface member to a wrapped
+inner host -- the same forwarding-wrapper technique as pattern 44). Each picks exactly the
+sub-interfaces and `HostFlags` it needs; the do-nothing hosts implement the
+full surface but return inert results.
 
 </details>
 
@@ -1095,14 +1108,256 @@ works" on any platform, with correct quoting for the detected shell.
 
 ---
 
+## Additional Patterns (C# Internals)
+
+> The patterns below were surfaced or confirmed during the full-codebase XML
+> documentation pass -- after which every type and member in `Eagle/Library/`
+> (public *and* private) carries a doc comment. They are pervasive C# internals
+> patterns that complement the architecture and conventions above. Numbering
+> continues past the script-level section so the existing cross-references stay
+> stable.
+
+---
+
+<details>
+<summary><strong>42. The <code>*Ops</code> Static Helper Organization</strong></summary>
+
+The core library's primary unit of decomposition is the static "operations"
+class: roughly eighty `XxxOps` types -- `MarshalOps`, `ScriptOps`, `PathOps`,
+`RuntimeOps`, `FormatOps`, `StringOps`, `ConversionOps`, `EnumOps`, `HelpOps`,
+`FileOps`, `SocketOps`, `ObjectOps`, `EntityOps`, and many more -- each owning one
+domain and exposing only static methods. Several are among the largest files in
+the tree (MarshalOps, ScriptOps, PathOps, RuntimeOps each run to thousands of
+lines and hundreds of members).
+
+**Rationale**: Eagle has one giant stateful object (`Interpreter`) surrounded by a
+constellation of stateless operation bundles. Grouping domain logic into static
+`*Ops` classes keeps `Interpreter` from absorbing everything, gives each concern a
+single obvious home, and lets the engine call `PathOps.X(...)` or
+`MarshalOps.Y(...)` without threading helper instances through every call. A
+method's membership in `FooOps` is itself documentation -- it declares the
+concern (path handling, marshalling, formatting) the method belongs to.
+
+</details>
+
+---
+
+<details>
+<summary><strong>43. The <code>ReturnCode</code> + <code>ref Result</code> Calling Convention</strong></summary>
+
+The engine's universal method contract: an operation returns a `ReturnCode`
+(`Ok`, `Error`, `Return`, `Break`, `Continue`) and writes its output -- or its
+error message -- into a `ref Result`. Success and failure frequently use distinct
+sinks (`ref Result result` for the value, a separate `ref Result error` for the
+message); a common boolean-returning variant pairs a `bool` with a
+`ref Result error`. The convention runs through `Engine`, `Interpreter`, every
+command's `Execute`, and the `*Ops` classes.
+
+```csharp
+public override ReturnCode Execute(
+    Interpreter interpreter, /* in */
+    IClientData clientData,  /* in */
+    ArgumentList arguments,  /* in */
+    ref Result result        /* out */
+    )
+```
+
+**Rationale**: Tcl-style evaluation has five completion codes, not two, and every
+step must carry both a value and a human-readable error through one channel. A C#
+`return` of a single typed value cannot express that. `ReturnCode` + `ref Result`
+makes the full completion state explicit and identical at every call site -- and
+it is precisely what pattern 7's implicit `Result` conversions exist to feed.
+
+</details>
+
+---
+
+<details>
+<summary><strong>44. The <code>IWrapper</code> Entity Wrapper Layer</strong></summary>
+
+Every first-class entity the interpreter tracks -- commands, sub-commands,
+procedures, lambdas, functions, operators, plugins, packages, aliases, objects,
+object types, callbacks, traces, and modules -- is held through a thin
+`IWrapper`-derived forwarding wrapper (the `Eagle._Wrappers` namespace) rather
+than directly. The wrapper forwards the entity's interface to the wrapped instance
+while adding token identity, hidden/active state, reference counts, and lifetime
+bookkeeping.
+
+**Rationale**: the interpreter needs uniform per-entity metadata -- a stable
+token, a hidden flag, usage counts, a kill switch -- for entities of wildly
+different types authored by different parties (including plugins). Keeping that
+metadata on a wrapper rather than on the entities themselves gives each registry
+one consistent handle type, and lets the engine hide, disable, or reference-count
+any entity without the entity's cooperation.
+
+</details>
+
+---
+
+<details>
+<summary><strong>45. Ensemble Commands and Sub-Command Dispatch</strong></summary>
+
+Multi-function commands (`[debug]`, `[object]`, `[interp]`, `[file]`, `[string]`,
+`[array]`, `[package]`, ...) are *ensembles*: the command holds a `subCommands`
+`EnsembleDictionary` mapping each sub-command name to its handler, plus optional
+`allowedSubCommands` / `disallowedSubCommands` `IPolicyEnsemble` lists that gate
+which sub-commands a given interpreter may invoke.
+
+**Rationale**: this turns a large command into a data-driven table instead of a
+hand-written mega-`switch`, lets policy restrict individual sub-commands (for
+example in a safe interpreter) without touching dispatch logic, and gives every
+ensemble uniform introspection and uniform "unknown/ambiguous sub-command" error
+reporting. It is the command-level counterpart to the host-capability composition
+of pattern 5.
+
+</details>
+
+---
+
+<details>
+<summary><strong>46. <code>IClientData</code> -- Opaque Context Threading</strong></summary>
+
+Callbacks, commands, policies, traces, and host operations receive an
+`IClientData` -- an opaque carrier of arbitrary caller context -- alongside their
+typed parameters. A family of concrete carriers (`ClientData`, `AnyClientData`,
+and many domain-specific `*ClientData` types) wraps specific payloads, and a
+`GetData`/`SetData` surface reads them back.
+
+**Rationale**: the engine invokes user and plugin code through fixed delegate and
+interface signatures; those signatures cannot grow a typed parameter for every
+caller's needs. `IClientData` is the sanctioned escape hatch that threads caller
+state through an otherwise fixed contract without resorting to `static` state. It
+is the managed mirror of Tcl's native `ClientData` and of the interop-identity
+handle in pattern 9.
+
+</details>
+
+---
+
+<details>
+<summary><strong>47. Three-Tier Method Layering (Public / Private / Core)</strong></summary>
+
+Many operations are a small layered stack: a `public`/`internal` entry method that
+validates arguments and acquires locks, a `PrivateX` method that holds the actual
+logic and assumes its preconditions, and sometimes an even lower `XCore` or a
+dedicated dispatcher beneath that. The large `*Ops` classes and `Interpreter` use
+this shape repeatedly.
+
+**Rationale**: it separates the guarded, documented public contract from the inner
+implementation, so validation and locking live in exactly one place while the core
+can be reused by several entry points -- and called recursively -- without
+re-checking preconditions or re-entering a lock. It is the structural complement
+to conventions 18 and 19 (validate and extract once, at the boundary).
+
+</details>
+
+---
+
+<details>
+<summary><strong>48. Optional Cache Instrumentation (<code>ICacheCounts</code> / <code>CACHE_STATISTICS</code>)</strong></summary>
+
+The cache-bearing collections -- `CacheDictionary`, the various `*Cache*`
+dictionaries, and the parse/argument caches -- implement `ICacheCounts` and carry
+hit/miss/insert counters that are compiled in only under `#if CACHE_STATISTICS`.
+
+**Rationale**: cache effectiveness must be measurable to be tuned, but
+per-access counters are not free. Gating them behind a build symbol yields a
+zero-overhead production build and a fully instrumented diagnostic build from a
+single source -- pattern 12 (conditional compilation as architecture) applied at
+the level of an individual data structure.
+
+</details>
+
+---
+
+<details>
+<summary><strong>49. Uniform Stringification (<code>IToString</code> / <code>ToString(ToStringFlags)</code>)</strong></summary>
+
+Beyond `Object.ToString()`, the value-like and collection types implement an
+`IToString`/`IStringList` surface with `ToString(ToStringFlags, ...)` overloads
+that take explicit formatting flags (and often a separator or pattern). The list
+containers render in canonical Tcl list format.
+
+**Rationale**: a scripting engine needs one canonical, flag-controlled way to turn
+any internal value into a script-visible string -- independent of, and richer
+than, the default .NET `ToString()`. This is the *producing* side of the result
+pipeline whose *consuming* side is the implicit `Result` conversion saturation of
+pattern 7.
+
+</details>
+
+---
+
+<details>
+<summary><strong>50. The <code>Maybe*</code> Conditional-Action Naming Convention</strong></summary>
+
+A method whose name begins with `Maybe` performs its action only when a runtime
+condition warrants it, and is otherwise a deliberate no-op: `MaybeSet`,
+`MaybeAdd`, `MaybeAddRange`, `MaybeDispose` (and the related `TryDispose`),
+`MaybeEnableOrDisable`, `MaybeNewWrapperWith`. The prefix is a contract: "this may
+do nothing, and that is a normal, expected outcome."
+
+**Rationale**: a great deal of engine code is idempotent or best-effort -- set a
+value if it is not already set, dispose an object if it is disposable, add an item
+if it is non-null. Encoding the conditionality in the name, instead of making
+every caller wrap the call in an `if`, keeps call sites clean and tells the reader
+at a glance that the no-op path is intended rather than a bug. It is the
+counterpart to the `Try*` idiom, distinguished by "did nothing" being success.
+
+</details>
+
+---
+
+<details>
+<summary><strong>51. Named Sentinels Instead of Magic <code>-1</code></strong></summary>
+
+Out-of-band results -- "not found", "no index", "invalid count or length" -- are
+named constants drawn from the `_Constants` types (`Index.Invalid`,
+`Count.Invalid`, `Length.Invalid`, and their peers), not bare `-1` literals. They
+are returned and compared by name throughout the engine.
+
+**Rationale**: a bare `-1` says nothing about which axis it is invalid on or why;
+`Index.Invalid` says both, is greppable, and gives the sentinel a single point of
+definition. This is convention 21 (named constants over magic numbers) applied to
+the specific, ubiquitous case of sentinel values, and it travels with the null-
+and bounds-guards of conventions 18 and 26 -- the guard tests for the sentinel by
+name before the value is trusted.
+
+</details>
+
+---
+
+<details>
+<summary><strong>52. <code>#if DEAD_CODE</code> -- Preserve, Don't Delete</strong></summary>
+
+Superseded or experimental implementations are not deleted; they are retained,
+compiled out, under `#if DEAD_CODE` (occasionally `#if false`), sitting beside the
+current code that replaced them.
+
+**Rationale**: in a codebase that prizes maximum compatibility and reversibility,
+the previous implementation is documentation -- it records what was tried, why it
+was replaced, and a ready fallback if a regression later surfaces. A
+never-defined symbol guarantees the block never ships and never breaks a build,
+while keeping it in plain view in the source rather than only in version-control
+history. It is the code-block form of the document-every-deviation doctrine
+(convention 24); these blocks are intentionally skipped when documenting members
+(they are not part of any shipping build).
+
+</details>
+
+---
+
 ## References
 
 - **Source code**: `Eagle/Library/` -- the complete Eagle core library
-- **Key C# files**: `Interpreter.cs` (~125,000 lines), `Engine.cs`,
+- **Key C# files**: `Interpreter.cs` (by far the largest file), `Engine.cs`,
   `Default.cs`, `Console.cs`, `ShellOps.cs`, `InteractiveOps.cs`,
-  `ScriptOps.cs`, `HelpOps.cs`, `SyntaxOps.cs`, `DelegateOps.cs`,
-  `DataOps.cs`, `ObjectOps.cs`, `CommandOptions.cs`, `NativeConsole.cs`,
-  `AnsiConsole.cs`, `LineEditor.cs`
+  `ScriptOps.cs`, `MarshalOps.cs`, `HelpOps.cs`, `SyntaxOps.cs`,
+  `DelegateOps.cs`, `DataOps.cs`, `ObjectOps.cs`, `CommandOptions.cs`,
+  `NativeConsole.cs`, `AnsiConsole.cs`, `LineEditor.cs`
+- **API documentation**: every type and member in `Eagle/Library/` carries an
+  XML documentation comment (see convention 25); the generated XML doc file is
+  the authoritative per-symbol reference and complements the patterns here.
 - **Key script files**: `lib/Eagle1.0/init.eagle`, `test.eagle`,
   `object.eagle`, `platform.eagle`, `exec.eagle`, `auxiliary.eagle`,
   `lib/Test1.0/constraints.eagle`, `prologue.eagle`, `epilogue.eagle`
