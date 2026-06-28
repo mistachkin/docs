@@ -103,7 +103,7 @@ The following commands are Eagle-specific extensions not found in standard Tcl 8
 `[exec]` (30+ Eagle options), `[for]` (optional *end* script), `[regexp]`/`[regsub]` (Eagle-specific switches), `[vwait]` (timeout option), `[load]`/`[unload]` (.NET assembly support).
 
 **Standard Tcl 8.6 commands not implemented in Eagle:**
-`fileevent`, `scan`.
+`binary`, `fileevent`.
 
 ---
 

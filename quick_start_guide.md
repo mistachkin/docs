@@ -615,4 +615,4 @@ Since Eagle is Tcl-compatible, general Tcl resources are helpful for learning th
 - [Tcl 8.6 Manual Pages (Command Reference)](https://www.tcl-lang.org/man/tcl8.6/TclCmd/contents.htm)
 - [Tcl Tutorial Index (Tcler's Wiki)](https://wiki.tcl-lang.org/page/Tcl+Tutorial+Index)
 
-**Note**: Eagle is Tcl-compatible, not Tcl-identical. Some Tcl features are intentionally different or missing in Eagle (e.g., no `fileevent`, no `scan`). When in doubt, verify against the Eagle documentation.
+**Note**: Eagle is Tcl-compatible, not Tcl-identical. Some Tcl features are intentionally different or missing in Eagle (e.g., no `fileevent`). When in doubt, verify against the Eagle documentation.

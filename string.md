@@ -933,7 +933,7 @@ string map -maximum 2 {a X} "aaaa"
 | `[regexp]` / `[regsub]` | Full regex operations; `string match -mode RegExp` is simpler; see [`regexp.md`](regexp.md) |
 | `[split]` / `[join]` | List-oriented string operations |
 | `[append]` / `[lappend]` | Variable-modifying string/list operations |
-| `scan` | Not available in Eagle — use `[regexp]` or `[string is]` instead |
+| `[scan]` | Parse a string against a format specification (the inverse of `[format]`); see `core_language.md` |
 | `[encoding]` | Encoding operations; `[string bytelength]` uses encodings |
 | `binary` | Binary string operations |
 | `[info]` | `[info complete]` tests if a string is a complete Tcl command |

@@ -784,7 +784,7 @@ considerations:
 | `[string map]` | Fixed-string substitution; faster than `[regsub]` for literal replacements |
 | `[string first]` / `[string last]` | Find substrings by position; no regex support |
 | `[split]` | Split strings on literal characters; for regex-based splitting, combine `regexp -all -inline` with list processing |
-| `scan` | **(Not available in Eagle)** — use `[regexp]` with capture groups instead |
+| `[scan]` | Parse a string against a format specification (the inverse of `[format]`); see `core_language.md` |
 
 ## 17. References
 
