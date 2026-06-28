@@ -200,7 +200,7 @@ Parses a date/time string and returns seconds since the epoch.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `-format` | string | (none) | Tcl format string for parsing |
-| `-base` | clockValue | (none) | Base time for relative expressions (Tcl compatibility; not fully used) |
+| `-base` | clockValue | (none) | Base clock value supplying the date components absent from the input (e.g., a time-only string takes its date from the base) |
 | `-epoch` | DateTime | Unix epoch | Custom epoch for output conversion |
 | `-gmt` | boolean | false | Interpret result as UTC |
 
@@ -215,6 +215,27 @@ Parses a date/time string and returns seconds since the epoch.
    as local time and then converted to UTC via `ToUniversalTime()`.
 3. Convert `DateTime` to seconds since the epoch via
    `TimeOps.DateTimeToSeconds()`.
+
+**`-base` and missing date components:** when `-base` is supplied, the date
+components that are *absent* from the input are taken from the base clock
+value, contiguously from the day upward (matching Tcl): the day comes from the
+input only if present; the month only if month and day are present; the year
+only if year, month, and day are present -- otherwise that component comes from
+the base.  The time-of-day always comes from the input (an absent time means
+midnight).  With `-format`, the date components present in the input are
+determined from the format's conversion specifiers.
+
+**Free-form (no `-format`) limitations:** absolute forms -- ISO dates,
+`MM/DD/YYYY`, time-only, month-name, and epoch seconds -- parse correctly, but
+two behaviors of Tcl's legacy free-form parser are not supported:
+
+- a missing **year** is taken from the current date rather than from `-base`
+  when a month and day are present (use the `-format` path for full `-base`
+  behavior); and
+- **relative / free-form English** strings such as `now`, `+1 day`, `tomorrow`,
+  `yesterday`, `2 days ago`, or `next monday` are not accepted by `[clock scan]`
+  (it returns an "unable to convert date-time string" error).  Use an absolute
+  format, or compute the offset with arithmetic on `[clock seconds]`.
 
 ### Validation and calendar
 

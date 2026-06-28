@@ -26,9 +26,11 @@ There are four key areas of complexity:
    `ends`, `tolower`, `toupper`, and `totitle` sub-commands accept
    `-culture` (a `CultureInfo` value) for culture-sensitive string
    processing. The `compare` and `equal` sub-commands also accept
-   `-options` (`CompareOptions` flags). Case conversion uses .NET
-   reflection to invoke `String.ToLower(CultureInfo)` and similar
-   methods.
+   `-options` (`CompareOptions` flags). By default `tolower`, `toupper`,
+   and `totitle` are locale-independent (invariant culture), matching
+   Tcl; `-culture` selects a specific culture and `-invariant false`
+   opts into the current thread culture (each invoked via .NET
+   reflection, e.g. `String.ToLower(CultureInfo)`).
 
 3. **Extended `[string map]`** — Beyond Tcl's simple key-value mapping,
    Eagle's `[string map]` supports `-regexp` (regex-based matching),
@@ -375,10 +377,13 @@ Convert case, optionally within a range (`first` to `last`).
 | Option | Type | Description |
 |--------|------|-------------|
 | `-culture` | CultureInfo | Culture for case conversion |
+| `-invariant` | boolean | Use invariant (locale-independent) casing; the default. `-invariant false` uses the current thread culture |
 
-When `-culture` is provided, uses .NET reflection to invoke
-`String.ToLower(CultureInfo)` or `String.ToUpper(CultureInfo)` for
-culture-specific casing (e.g., Turkish dotless-i rules).
+Case conversion is locale-independent (invariant culture) by default,
+matching Tcl. When `-culture` is provided, Eagle uses .NET reflection to
+invoke `String.ToLower(CultureInfo)` or `String.ToUpper(CultureInfo)` for
+culture-specific casing (e.g., Turkish dotless-i rules); `-invariant false`
+selects the current thread culture instead.
 
 `totitle` converts the first character to uppercase and the rest to
 lowercase, optionally within the specified range.

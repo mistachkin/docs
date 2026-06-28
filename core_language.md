@@ -1165,7 +1165,7 @@ Many list commands accept index arguments. Valid index formats include:
     # Returns: {a X Y b c}
 
     linsert {a b c} end X
-    # Returns: {a b X c}
+    # Returns: {a b c X}
     ```
 
 ---
@@ -5380,7 +5380,7 @@ Expression commands belong to ObjectGroup: "expression"
     ```tcl
     fpclassify 1.0              ;# Returns: normal
     fpclassify 0.0              ;# Returns: zero
-    fpclassify [expr {1.0/0}]   ;# Returns: infinite
+    fpclassify [expr {double(1)/0}] ;# Returns: infinite
     fpclassify NaN              ;# Returns: nan
     ```
 
@@ -5614,8 +5614,8 @@ Operators are used within expressions to perform calculations, comparisons, and 
 | `+` | Plus | Unary positive or binary addition |
 | `-` | Minus | Unary negation or binary subtraction |
 | `*` | Multiply | Multiplication |
-| `/` | Divide | Division |
-| `%` | Modulus | Integer modulus (remainder) |
+| `/` | Divide | Integer division floors toward negative infinity (matches Tcl); floating-point division is exact |
+| `%` | Modulus | Integer remainder; the result takes the sign of the divisor (floored modulo, matches Tcl) |
 | `**` | Exponent | Exponentiation (x raised to power y) |
 
 ---

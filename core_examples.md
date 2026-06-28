@@ -4987,7 +4987,7 @@ expr {int(sqrt(pow(3, 2) + pow(4, 2)))}
 ```tcl
 fpclassify 1.0               ;# Returns: normal
 fpclassify 0.0               ;# Returns: zero
-fpclassify [expr {1.0/0}]    ;# Returns: infinite
+fpclassify [expr {double(1)/0}] ;# Returns: infinite
 fpclassify NaN                ;# Returns: nan
 ```
 
