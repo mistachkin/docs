@@ -245,7 +245,7 @@ two behaviors of Tcl's legacy free-form parser are not supported:
 clock isvalid dateString
 ```
 
-Returns `1` if `dateString` can be parsed as a valid `DateTime`, `0`
+Returns `True` if `dateString` can be parsed as a valid `DateTime`, `False`
 otherwise. No options — it uses the interpreter's default culture and
 parsing styles.
 
@@ -473,14 +473,14 @@ Most sub-commands accept an `-epoch` option that overrides the default:
 
 ```tcl
 # Seconds since a custom epoch
-clock seconds [clock scan "2020-01-01"]
+clock seconds "2020-01-01"
 
 # Format relative to a custom epoch
-clock format 86400 -epoch [clock scan "2020-01-01"]
+clock format 86400 -epoch "2020-01-01"
 # Shows the date one day after 2020-01-01
 
 # Build number relative to project start
-clock buildnumber -epoch [clock scan "2023-06-15"]
+clock buildnumber -epoch "2023-06-15"
 ```
 
 ### How epoch conversions work
@@ -565,7 +565,7 @@ fake time first, falling back to the real system time if none is set.
 
 ```tcl
 clock duration -flags Human "2020-01-01" "2023-06-15"
-# Returns something like: "3 years, 5 months, 14 days"
+# Returns something like: "approximately 3, 166"
 ```
 
 The method supports extensive customization via `DurationFlags` and
@@ -678,11 +678,11 @@ puts "Operation took $elapsed microseconds"
 
 ```tcl
 # Seconds since project start
-set projectStart [clock scan "2023-06-15"]
+set projectStart "2023-06-15"
 clock seconds $projectStart
 
 # Build number relative to project epoch
-clock buildnumber -epoch [clock scan "2023-01-01"]
+clock buildnumber -epoch "2023-01-01"
 ```
 
 ### Pattern 5: Duration between dates
@@ -690,7 +690,7 @@ clock buildnumber -epoch [clock scan "2023-01-01"]
 ```tcl
 # Human-readable duration
 clock duration -flags Human "2020-01-01" "2025-03-12"
-# -> "5 years, 2 months, 11 days" (approximate)
+# -> "approximately 5, 72"
 
 # TimeSpan duration
 clock duration "2025-01-01" "2025-03-12"
@@ -704,8 +704,8 @@ clock monthdays 2
 # -> 28 (or 29 in a leap year)
 
 # Validate a date string
-clock isvalid "2025-02-29"  ;# -> 0 (2025 is not a leap year)
-clock isvalid "2024-02-29"  ;# -> 1 (2024 is a leap year)
+clock isvalid "2025-02-29"  ;# -> False (2025 is not a leap year)
+clock isvalid "2024-02-29"  ;# -> True (2024 is a leap year)
 ```
 
 ### Pattern 7: Windows FILETIME conversion

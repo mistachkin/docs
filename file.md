@@ -121,7 +121,7 @@ components correctly.
 
 ```tcl
 file join /usr local bin          ;# /usr/local/bin
-file join /base /absolute/path    ;# /absolute/path (absolute resets)
+file join /base /absolute/path    ;# /base/absolute/path (does not reset; Tcl differs)
 ```
 
 #### `file split name`

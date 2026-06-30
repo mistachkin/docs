@@ -214,8 +214,8 @@ sql foreach ?options? connection string ?{params} ...? body
 ```
 
 Like `execute`, but evaluates `body` for each result row. The current
-row data is available in the row variable (default:
-`sql(ResultSet.Row)`). Supports `[break]`, `[continue]`, and `[return]` from
+row data is available in the row variable (default: `row`, an array
+keyed by 1-based row number). Supports `[break]`, `[continue]`, and `[return]` from
 the body script.
 
 The key difference from `execute`: the default rows variable name is
@@ -530,9 +530,9 @@ value types.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `-rowsvar <varName>` | string | `sql(ResultSet.Rows)` | Variable for result rows (execute) |
-| `-rowvar <varName>` | string | `sql(ResultSet.Row)` | Variable for current row (foreach) |
-| `-timevar <varName>` | string | `sql(ResultSet.Time)` | Variable for timing data |
+| `-rowsvar <varName>` | string | `rows` | Variable for result rows (execute) |
+| `-rowvar <varName>` | string | `row` | Variable for current row (foreach) |
+| `-timevar <varName>` | string | `time` | Variable for timing data |
 | `-pairs` | flag | false | Return results as name-value pairs |
 | `-names` | flag | false | Include column names in results |
 | `-nested` | flag | false | Allow nested result sets |
@@ -1088,9 +1088,13 @@ proc transferFunds {dbFile fromId toId amount} {
 ```tcl
 set conn [sql open -type SQLite "Data Source=app.db"]
 
-sql foreach $conn "SELECT id, name, email FROM users" {
-    puts "User $sql(ResultSet.Row)(id): \
-        $sql(ResultSet.Row)(name) <$sql(ResultSet.Row)(email)>"
+# The row variable is an array keyed by the (1-based) row number; with
+# -format Dictionary each element is a column-name/value dictionary.
+sql foreach -execute Reader -format Dictionary $conn \
+        "SELECT id, name, email FROM users" {
+    set n [lindex [array names row] 0]
+    puts "User [dict get $row($n) id]: \
+        [dict get $row($n) name] <[dict get $row($n) email]>"
 }
 
 sql close $conn

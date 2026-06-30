@@ -684,7 +684,7 @@ Returns the name of the main executable.
 Implementation: `PathOps.GetUnixPath(PathOps.GetExecutableName())`
 
 ```tcl
-info nameofexecutable   ;# /usr/local/bin/eagle.exe
+info nameofexecutable   ;# /usr/local/share/dotnet/dotnet  (host/muxer on .NET Core)
 ```
 
 #### `[info programextension]` **(Eagle)**
@@ -854,10 +854,11 @@ info engine Name false true       ;# All attributes as dictionary
 
 #### `info patchlevel ?refresh?`
 
-Returns the Eagle patch level (full version string).
+Returns the Tcl-compatibility patch level (not Eagle's build version;
+use `info engine PatchLevel` for the build version).
 
 ```tcl
-info patchlevel   ;# "1.0.9999.12345"
+info patchlevel   ;# "8.4.21"
 ```
 
 #### `info tclversion ?refresh?`

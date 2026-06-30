@@ -310,13 +310,15 @@ expression pattern. Combined with `-subspec` or `-eval`, this provides
 powerful regex-based string transformation:
 
 ```tcl
-# Regex mode: wrap each word in brackets
+# Regex mode: wrap the first matched word in brackets (\0 = whole match)
 string map -regexp -subspec {{\w+} {[\0]}} "hello world"
-# Result: "[hello] [world]"
+# Result: "[hello] world" (regexp mode replaces only the first match)
 
-# Eval mode: compute replacement via script
+# Eval mode is intended to compute the replacement via a script. CAVEAT:
+# -eval currently does not evaluate the replacement (the script never
+# runs), so the input is returned unchanged.
 string map -regexp -eval {{\d+} {expr {& * 2}}} "a1b2c3"
-# Result: "a2b4c6"
+# Result: "a1b2c3" (unchanged)
 ```
 
 **Multipass mode** (`-multipass`): Applies the mapping repeatedly until
@@ -325,7 +327,7 @@ transformations where one replacement creates new matches:
 
 ```tcl
 # Single pass:
-string map {ab cd cd ef} "abcd"  ;# Result: "cdcd"
+string map {ab cd cd ef} "abcd"  ;# Result: "cdef"
 
 # Multipass:
 string map -multipass {ab cd cd ef} "abcd"  ;# Result: "efef"
@@ -483,8 +485,8 @@ string is ?not? class ?options? string
 | `-any` | bool | Pass if ANY character matches (vs all) |
 | `-via` | bool | Treat `[string]` as a variable name |
 | `-count` | int | Expected character count |
-| `-good` | varName | Store passing characters/values |
-| `-bad` | varName | Store failing characters/values |
+| `-good` | varName | Set to the entire input when the check passes |
+| `-bad` | varName | Set to the entire input when the check fails |
 | `-failindex` | varName | Store index of first failing character |
 
 The `not` modifier can be specified either as a positional argument
@@ -603,21 +605,29 @@ ASCII range, unlike `alnum`/`alpha`/`digit` which use Unicode-aware
 ### The `-any` vs default behavior
 
 By default, per-character classes require **all** characters to match.
-With `-any`, only **one** character needs to match:
+With `-any true`, only **one** character needs to match. Note that
+options follow the class name (not before it) and `-any` takes a
+boolean value:
 
 ```tcl
-string is digit "abc123"       ;# 0 (not all are digits)
-string is -any digit "abc123"  ;# 1 (at least one digit)
+string is digit "abc123"            ;# 0 (not all are digits)
+string is digit -any true "abc123"  ;# 1 (at least one digit)
 ```
 
 ### The `-good` and `-bad` options
 
-These Eagle-specific options store the matching and non-matching
-portions:
+These Eagle-specific options each name a variable that receives the
+**entire** input string based on the outcome: `-good` is set when the
+check passes and `-bad` is set when it fails. Only one of the two is
+set per call; they do not separate the matching characters from the
+non-matching characters:
 
 ```tcl
 string is digit -good g -bad b "a1b2c3"
-# g = "123", b = "abc"
+# returns 0; b = "a1b2c3" (check failed), g is left unset
+
+string is digit -good g -bad b "123"
+# returns 1; g = "123" (check passed), b is left unset
 ```
 
 ## 5. The `StringComparison` and `CompareOptions` System
@@ -804,21 +814,22 @@ string is not list "unbalanced {"   ;# 1
 string is digit -failindex idx "abc123"
 # idx = 0 (first non-digit character)
 
-# Separate good and bad characters
+# -good/-bad capture the whole input based on pass/fail (not a split)
 string is alpha -good g -bad b "Hello World! 123"
-# g = "HelloWorld", b = " ! 123"
+# returns 0; b = "Hello World! 123" (check failed), g is left unset
 ```
 
 ### Pattern 4: Regex-based string map
 
 ```tcl
-# Replace using regex patterns
+# Replace using regex patterns (regexp mode replaces only the first match)
 string map -regexp {{\d+} N {[A-Z]+} UPPER} "Item42 CODE99"
-# Result: "ItemN UPPERN"
+# Result: "N CODE99"
 
-# Eval mode: compute replacements dynamically
+# Eval mode is intended to compute replacements dynamically, but -eval
+# currently does not evaluate the script, so the input is unchanged.
 string map -regexp -eval {{\d+} {expr {& + 1}}} "a1b2c3"
-# Result: "a2b3c4"
+# Result: "a1b2c3" (unchanged)
 
 # Multipass mapping
 string map -multipass {A B B C} "AAA"
@@ -905,7 +916,7 @@ string map -maximum 2 {a X} "aaaa"
 | `[string is]` classes | ~18 | 64 (18 per-character + 46 whole-string) |
 | `string is -not` | Not available | Negation option |
 | `string is -any` | Not available | Any-character matching |
-| `string is -good / -bad` | Not available | Separate good/bad results |
+| `string is -good / -bad` | Not available | Capture whole input on pass/fail |
 | `string is -nocomplain` | Not available | Suppress errors |
 | `string is -via` | Not available | Variable name indirection |
 | `string is -count` | Not available | Expected count validation |

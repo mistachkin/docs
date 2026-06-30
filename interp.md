@@ -228,7 +228,7 @@ denial-of-service attacks:
 | Sub-command | What it limits | Default |
 |-------------|---------------|---------|
 | `recursionlimit` | Maximum call stack depth | Interpreter default |
-| `iterationlimit` | Maximum loop iterations (for, while, foreach) | 0 (unlimited) |
+| `iterationlimit` | Maximum loop iterations (for, while, foreach) | `1000` in safe interps (`0` = unlimited otherwise) |
 | `proclimit` | Maximum number of procedures | 0 (unlimited) |
 | `varlimit` | Maximum variables and array elements | 0 (unlimited) |
 | `namespacelimit` | Maximum namespaces | 0 (unlimited) |
@@ -236,12 +236,15 @@ denial-of-service attacks:
 | `resultlimit` | Maximum result size (bytes) | 0 (unlimited) |
 | `callbacklimit` | Maximum callbacks in queue | 0 (unlimited) |
 | `eventlimit` | Maximum events in queue | 0 (unlimited) |
-| `execlimit` | Maximum operation/command/unknown counts | 0 (unlimited) |
+| `execlimit` | Maximum operation/command/unknown counts | `200000`/`100000`/`1000` in safe interps (`0` = unlimited otherwise) |
 | `readylimit` | Maximum ready operations | 0 (unlimited) |
 | `childlimit` | Maximum child interpreters | 0 (unlimited) |
 
-A limit of 0 means unlimited. The parent should set appropriate limits
-based on the use case.
+A limit of 0 means unlimited. Safe interpreters are created with nonzero
+defaults for most of these limits (the `iterationlimit` and `execlimit`
+values above are those safe defaults; see [`safe.md`](safe.md) for the
+full safe-interpreter limit table). The parent should set appropriate
+limits based on the use case.
 
 ### 3.6. Execution timeout and watchdog
 
@@ -682,21 +685,24 @@ regardless of policies:
 
 | Operation | Error message |
 |-----------|--------------|
-| Add commands | "permission denied: safe interpreter cannot add commands" |
-| Expose hidden commands | "permission denied: safe interpreter cannot expose commands" |
-| Hide commands | "permission denied: safe interpreter cannot hide commands" |
-| Modify safety | "permission denied: safe interpreter cannot modify safety" |
-| Modify standardization | "permission denied: safe interpreter cannot modify standardization" |
-| Mark as trusted | "permission denied: safe interpreter cannot mark trusted" |
-| Add policies | "permission denied: safe interpreter cannot add policy" |
-| Remove policies | "permission denied: safe interpreter cannot remove policy" |
-| Share objects | "permission denied: safe interpreter cannot share objects" |
-| Share interpreters | "permission denied: safe interpreter cannot share interpreters" |
-| Add stub commands | "permission denied: safe interpreter cannot add stub commands" |
-| Manage sub-commands | "permission denied: safe interpreter cannot manage sub-commands" |
+| Add commands | `permission denied: safe interpreter cannot use command "interp addcommands"` |
+| Expose hidden commands | `permission denied: safe interpreter cannot use command "interp expose"` |
+| Hide commands | `permission denied: safe interpreter cannot use command "interp hide"` |
+| Modify safety | `permission denied: safe interpreter cannot use command "interp makesafe"` |
+| Modify standardization | `permission denied: safe interpreter cannot use command "interp makestandard"` |
+| Mark as trusted | `permission denied: safe interpreter cannot use command "interp marktrusted"` |
+| Add policies | `permission denied: safe interpreter cannot use command "interp policy"` |
+| Remove policies | `permission denied: safe interpreter cannot use command "interp nopolicy"` |
+| Share objects | `permission denied: safe interpreter cannot use command "interp shareobject"` |
+| Share interpreters | `permission denied: safe interpreter cannot use command "interp shareinterp"` |
+| Add stub commands | `permission denied: safe interpreter cannot use command "interp stub"` |
+| Manage sub-commands | `permission denied: safe interpreter cannot use command "interp subcommand"` |
 
-These checks are implemented as hard-coded `interpreter.InternalIsSafe()`
-guards in the source code — they cannot be bypassed by policies.
+In a safe interpreter, the `[interp]` sub-command policy denies these
+operations first, producing the `cannot use command` messages above.
+These checks are also implemented as hard-coded
+`interpreter.InternalIsSafe()` guards in the source code — they cannot be
+bypassed by policies.
 
 ### What a safe interpreter CAN do (by default)
 

@@ -1204,7 +1204,7 @@ lremove {{a b c} {d e f}} 1 0   ;# Returns: {{a b c} {e f}}
 ```tcl
 lrepeat 3 a           ;# Returns: {a a a}
 lrepeat 2 x y z       ;# Returns: {x y z x y z}
-lrepeat 0 a b         ;# Returns: {}
+lrepeat 0 a b         ;# Error: must have a count of at least 1
 ```
 
 ```tcl
@@ -3105,7 +3105,7 @@ namespace origin add               ;# Returns: ::mathlib::add
 
 ## Objects (.NET Interop) Examples
 
-> **See also:** [`object.md`](object.md) — Deep-dive analysis of all 44 sub-commands, the opaque handle system, FixupReturnValue pipeline, method overload resolution, and practical .NET interop patterns.
+> **See also:** [`object.md`](object.md) — Deep-dive analysis of all 43 sub-commands, the opaque handle system, FixupReturnValue pipeline, method overload resolution, and practical .NET interop patterns.
 
 <a id="ex-object"></a>
 <details>
@@ -3125,7 +3125,7 @@ object create -alias -objectname myList System.Collections.ArrayList
 
 ```tcl
 # Create with constructor overload (specify parameter types)
-set dt [object create -parametertypes {int int int} System.DateTime 2024 1 15]
+set dt [object create -parametertypes {System.Int32 System.Int32 System.Int32} System.DateTime 2024 1 15]
 ```
 
 #### Invoking Members
@@ -3259,13 +3259,18 @@ object invoke $list Add two
 object invoke $list Add three
 
 object foreach item $list {
+  # Each $item is an opaque handle (e.g. System#String#1208), not the value
+}
+
+# Use -tostring to iterate the element string values
+object foreach -tostring item $list {
   # Prints: one, two, three
 }
 ```
 
 ```tcl
-# Collect results with lmap
-set doubled [object lmap item $list {
+# Collect results with lmap (-tostring yields element values, not handles)
+set doubled [object lmap -tostring item $list {
   string toupper $item
 }]
 ;# Returns: {ONE TWO THREE}
@@ -5325,9 +5330,9 @@ clock scan 2024-01-15
 ```
 
 ```tcl
-# Parse relative expressions
-clock scan tomorrow
-clock scan "+1 week" -base [clock seconds]
+# Parse concrete date/time strings (relative expressions are not supported)
+clock scan "2024-01-15 14:30:00"
+clock scan 2024-01-15 -base [clock seconds]
 ```
 
 #### Validation and Date Queries (Eagle extensions)

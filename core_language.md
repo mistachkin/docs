@@ -389,9 +389,9 @@ Quick reference to all Eagle commands with links to their detailed documentation
     }
     set a [list]
     list [deepdown] $a
-    # Returns: {{1 3 5} {0 2 4}}
+    # Returns: {{1 3 5} {2 4}}
     # {1 3 5} = deepdown's local 'a' (level 1 appends)
-    # {0 2 4} = global 'a' (level 0 appends)
+    # {2 4} = global 'a' (level 0 appends)
     ```
   - **See also**: [`[uplevel]`](#cmd-uplevel), [`[invoke]`](#cmd-invoke)
 
@@ -642,6 +642,7 @@ All variable commands belong to ObjectGroup: "variable"
 - **getf** - Get variable with flags (obsolete, diagnostic)
   - `getf varName`
   - Retrieves a variable's value along with internal flag information. This is an obsolete diagnostic command primarily used for interpreter debugging.
+  - **Availability**: Not compiled into standard builds (requires the `OBSOLETE` build symbol); invoking it otherwise reports "invalid command name".
   - **Returns**: The variable value with associated flags.
   - **Deprecation note**: This command is retained for backward compatibility and internal diagnostics. Use `[set]` for normal variable access.
   - **See also**: [`[setf]`](#cmd-setf), [`[unsetf]`](#cmd-unsetf), [`[set]`](#cmd-set)
@@ -969,6 +970,7 @@ All variable commands belong to ObjectGroup: "variable"
 - **setf** - Set variable with flags (obsolete, diagnostic)
   - `setf varFlags varName ?newValue?`
   - Sets a variable with specific internal flags. This is an obsolete diagnostic command used for interpreter debugging.
+  - **Availability**: Not compiled into standard builds (requires the `OBSOLETE` build symbol); invoking it otherwise reports "invalid command name".
   - **Returns**: The value of the variable.
   - **Deprecation note**: This command is retained for backward compatibility and internal diagnostics. Use `[set]` for normal variable operations.
   - **See also**: [`[getf]`](#cmd-getf), [`[unsetf]`](#cmd-unsetf), [`[set]`](#cmd-set)
@@ -999,6 +1001,7 @@ All variable commands belong to ObjectGroup: "variable"
 - **unsetf** - Unset variable with flags (obsolete, diagnostic)
   - `unsetf varFlags ?varName varName ...?`
   - Unsets variables with specific internal flags. This is a diagnostic command for advanced interpreter manipulation.
+  - **Availability**: Not compiled into standard builds (requires the `OBSOLETE` build symbol); invoking it otherwise reports "invalid command name".
   - **Returns**: An empty string.
   - **Deprecation note**: This command is retained for backward compatibility and internal diagnostics. Use `[unset]` for normal variable removal.
   - **See also**: [`[getf]`](#cmd-getf), [`[setf]`](#cmd-setf), [`[unset]`](#cmd-unset)
@@ -1222,11 +1225,11 @@ Many list commands accept index arguments. Valid index formats include:
 <a id="cmd-lremove"></a>
 - **lremove** - Remove list elements by index (Eagle extension)
   - `lremove list index ?index...?`
-  - Returns a new list with the elements at the specified indices removed. Multiple indices can be specified; they are processed in a way that accounts for shifting positions.
+  - Returns a new list with the element at the specified *index* removed. When multiple indices are given they form a nested-descent path (like `[lindex]`): successive indices navigate into nested sublists and the single element at that path is removed.
   - **Returns**: A new list with elements removed.
   - **Example**:
     ```tcl
-    lremove {a b c d e} 1 3    ;# Returns: {a c e}
+    lremove {a b c d e} 1      ;# Returns: {a c d e}
     ```
   - **See also**: [`[lreplace]`](#cmd-lreplace), [`[lrange]`](#cmd-lrange)
 
@@ -1241,7 +1244,7 @@ Many list commands accept index arguments. Valid index formats include:
     ```tcl
     lrepeat 3 a           ;# Returns: {a a a}
     lrepeat 2 x y z       ;# Returns: {x y z x y z}
-    lrepeat 0 a b         ;# Returns: {}
+    lrepeat 0 a b         ;# Error: must have a count of at least 1
     ```
 
 ---
@@ -1345,9 +1348,8 @@ Many list commands accept index arguments. Valid index formats include:
   - **Modifier Options**:
     - `-nocase` - Case-insensitive comparison
     - `-unique` - Remove duplicate elements
-    - `-indices` - Return indices of elements in sorted order (not the elements)
     - `-index indexList` - Sort by a specific element within sublists
-    - `-stride n` - Treat list as groups of *n* elements
+    - `-random` - Sort into random order (shuffle)
   - **Returns**: The sorted list.
   - **Example**:
     ```tcl
@@ -1650,7 +1652,7 @@ String commands belong to ObjectGroup: "string"
     # Returns: "a1b2c3" (each number replaced by its length)
 
     # Using -literal: no substitution processing
-    regsub -literal {.} a.b {$1}           ;# Returns: "a$1b"
+    regsub -literal {.} a.b {$1}           ;# Returns: "$1.b"
     ```
 
 ---
@@ -1688,7 +1690,7 @@ String commands belong to ObjectGroup: "string"
 
 - **split** - Split string into list
   - `split string ?splitChars? ?options?`
-  - Splits *string* into a list of elements. By default, splits on any whitespace and removes empty elements.
+  - Splits *string* into a list of elements. By default, splits on any whitespace; empty elements are preserved.
   - **Arguments**:
     - *splitChars* - Characters to split on (each character is a separator); default is whitespace
     - If *splitChars* is empty string, splits into individual characters
@@ -2289,7 +2291,7 @@ Dictionaries in Eagle are value types represented as lists with an even number o
 
   ---
 
-  - `dict exists dictionaryValue key ?key ...?` - Returns 1 if the specified key path exists in the dictionary, 0 otherwise. Multiple keys traverse nested dictionaries. Never raises an error for missing keys.
+  - `dict exists dictionaryValue key ?key ...?` - Returns True if the specified key path exists in the dictionary, False otherwise. Multiple keys traverse nested dictionaries. Never raises an error for missing keys.
 
   ---
 
@@ -2312,8 +2314,8 @@ Dictionaries in Eagle are value types represented as lists with an even number o
   set d [dict create name Alice age 30 city Boston]
   dict get $d name          ;# Returns: Alice
   dict get $d               ;# Returns entire dictionary
-  dict exists $d age        ;# Returns: 1
-  dict exists $d country    ;# Returns: 0
+  dict exists $d age        ;# Returns: True
+  dict exists $d country    ;# Returns: False
   dict size $d              ;# Returns: 3
   dict keys $d              ;# Returns: {name age city}
   dict values $d            ;# Returns: {Alice 30 Boston}
@@ -2322,8 +2324,8 @@ Dictionaries in Eagle are value types represented as lists with an even number o
   # Nested dictionaries
   set d [dict create a {x 1 y 2} b {x 3 y 4}]
   dict get $d a x           ;# Returns: 1
-  dict exists $d a x        ;# Returns: 1
-  dict exists $d a z        ;# Returns: 0
+  dict exists $d a x        ;# Returns: True
+  dict exists $d a z        ;# Returns: False
   ```
 
   ---
@@ -2332,7 +2334,7 @@ Dictionaries in Eagle are value types represented as lists with an even number o
 
   These sub-commands modify a dictionary stored in a variable. The variable is updated in place and the new dictionary value is returned.
 
-  **Deviation (by design — variable must exist):** the mutating `dict` sub-commands (`set`, `unset`, `incr`, `append`, `lappend`) require *dictionaryVariable* to already exist; unlike Tcl, Eagle does **not** auto-create the variable, and raises `can't read "...": no such variable` otherwise. This is the same anti-footgun rationale as `[incr]`. Initialize first (e.g. `set d {}` or `set d [dict create]`). (Note: *keys within* an already-existing dictionary are still created/traversed as needed.)
+  **Deviation (by design — variable must exist):** the mutating `dict` sub-commands (`set`, `unset`, `incr`, `append`, `lappend`, `update`, `with`) require *dictionaryVariable* to already exist; unlike Tcl, Eagle does **not** auto-create the variable, and raises `variable not found in call frame` otherwise. This is the same anti-footgun rationale as `[incr]`. Initialize first (e.g. `set d {}` or `set d [dict create]`). (Note: *keys within* an already-existing dictionary are still created/traversed as needed.)
 
   ---
 
@@ -2521,7 +2523,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
     - `-blocking boolean` - Blocking (true) or non-blocking (false) mode. Non-blocking mode allows `[gets]` and `[read]` with `-noblock` to return immediately with available data.
     - `-encoding name` - Character encoding (e.g., `utf-8`, `ascii`, `unicode`). Use `binary` or set to null for raw binary I/O.
     - `-translation mode` - Line ending translation mode. Can be a single value for both input and output, or a two-element list `{inputMode outputMode}`:
-      - `auto` - Accept any line ending on input; use platform-native on output
+      - `auto` - CRLF-oriented: a lone LF is not treated as a line ending on input, and output uses CRLF
       - `binary` - No translation (raw bytes)
       - `cr` - Carriage return only
       - `crlf` - Carriage return + line feed (Windows)
@@ -2532,7 +2534,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
     ```tcl
     fconfigure $fh -encoding utf-8 -translation lf
     fconfigure $sock -blocking 0           ;# Non-blocking socket I/O
-    fconfigure $fh -translation {auto lf}  ;# Accept any input, output LF
+    fconfigure $fh -translation {auto lf}  ;# CRLF-oriented input, output LF
     puts [fconfigure $fh -encoding]        ;# Query encoding
     ```
 
@@ -3068,8 +3070,8 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
 <a id="cmd-nproc"></a>
 - **nproc** - Create procedure with named arguments (Eagle extension)
   - `nproc name args body`
-  - Creates a procedure that accepts named arguments (keyword arguments). Arguments are passed as `-name value` pairs.
-  - **Arguments specification**: List of argument names. All arguments can be passed by name using `-argname value` syntax.
+  - Creates a procedure that accepts named arguments (keyword arguments). Arguments are passed as `name value` pairs.
+  - **Arguments specification**: List of argument names. All arguments can be passed by name using `argname value` syntax.
   - **Example**:
     ```tcl
     nproc connect {host port timeout} {
@@ -3077,8 +3079,8 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
           "Connecting to " $host : $port \
           " with timeout " $timeout]
     }
-    connect -host localhost -port 8080 \
-        -timeout 60
+    connect host localhost port 8080 \
+        timeout 60
     ```
   - **See also**: [`[proc]`](#cmd-proc), [`[napply]`](#cmd-napply)
 
@@ -3101,7 +3103,7 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
     apply $double 5                        ;# Returns: 10
 
     # Lambda with namespace context
-    apply {{} {variable counter; incr counter}} {} ::myns
+    apply {{} {variable counter; incr counter} ::myns}
     ```
   - **Annotations**: The lambda body may contain annotations (e.g.,
     `<<fast>>`, `<<atomic>>`, `<<inline>>`) that control execution
@@ -3112,10 +3114,10 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
 <a id="cmd-napply"></a>
 - **napply** - Apply lambda with named arguments (Eagle extension)
   - `napply lambdaExpr ?arg1 arg2 ...?`
-  - Like `[apply]`, but accepts named arguments using `-name value` syntax.
+  - Like `[apply]`, but accepts named arguments using `name value` syntax.
   - **Example**:
     ```tcl
-    napply {{x y} {expr {$x + $y}}} -x 3 -y 4    ;# Returns: 7
+    napply {{x y} {expr {$x + $y}}} x 3 y 4    ;# Returns: 7
     ```
   - **See also**: [`[apply]`](#cmd-apply), [`[nproc]`](#cmd-nproc)
 
@@ -4125,7 +4127,7 @@ The `[interp]` command manages child interpreters, providing sandboxing, isolati
 
   ---
 
-  - `interp exists ?path?` - Returns 1 if interpreter *path* exists, 0 otherwise.
+  - `interp exists ?path?` - Returns True if interpreter *path* exists, False otherwise.
 
   ---
 
@@ -4138,7 +4140,7 @@ The `[interp]` command manages child interpreters, providing sandboxing, isolati
   **Example**:
   ```tcl
   set child [interp create -safe myChild]
-  interp exists myChild       ;# Returns: 1
+  interp exists myChild       ;# Returns: True
   interp children             ;# Returns: myChild
   interp delete myChild
   ```
@@ -4255,7 +4257,7 @@ The `[interp]` command manages child interpreters, providing sandboxing, isolati
 
   #### Security Configuration
 
-  - `interp issafe ?path?` - Returns 1 if interpreter *path* is safe, 0 otherwise.
+  - `interp issafe ?path?` - Returns True if interpreter *path* is safe, False otherwise.
 
   ---
 
@@ -4267,7 +4269,7 @@ The `[interp]` command manages child interpreters, providing sandboxing, isolati
 
   ---
 
-  - `interp isstandard ?path?` - Returns 1 if interpreter is standard.
+  - `interp isstandard ?path?` - Returns True if interpreter is standard, False otherwise.
 
   ---
 
@@ -4283,11 +4285,11 @@ The `[interp]` command manages child interpreters, providing sandboxing, isolati
 
   ---
 
-  - `interp isolated ?path?` - Returns 1 if interpreter is isolated.
+  - `interp isolated ?path?` - Returns True if interpreter is isolated, False otherwise.
 
   ---
 
-  - `interp issdk ?path? ?sdkType?` - Returns 1 if interpreter is SDK mode.
+  - `interp issdk ?path? ?sdkType?` - Returns True if interpreter is SDK mode, False otherwise.
 
   ---
 
@@ -4640,7 +4642,7 @@ Eagle provides built-in test commands for unit testing. These commands integrate
 <a id="cmd-test1"></a>
 - **test1** - Basic test command (Eagle-specific)
   - `test1 name description ?constraints? body result`
-  - Defines and executes a simple test case. This is the positional-argument form; the `[test]` stub dispatches to [`test1`] when it sees exactly 5 or 6 arguments.
+  - Defines and executes a simple test case. This is the positional-argument form; the `[test]` stub dispatches to [`test1`] when the first argument after the description does not begin with a hyphen (otherwise it uses [`test2`]).
   - **Arguments**: this command takes exactly 5 or 6 arguments. When 6 are supplied the third is *constraints*; when 5 are supplied the *constraints* argument is omitted (treated as `null`).
     - *name* - Unique identifier for the test (e.g., "myproc-1.1")
     - *description* - Human-readable description of what is being tested
@@ -5574,8 +5576,8 @@ Mathematical functions are used within expressions (via `[expr]`) to perform cal
 - **pi()** - Pi (ObjectGroup: "constant")
   - Returns the mathematical constant π (≈ 3.14159...)
 
-- **epsilon()** - Machine epsilon (Eagle extension, ObjectGroup: "constant")
-  - Returns the smallest positive number such that 1.0 + epsilon ≠ 1.0
+- **epsilon()** - Smallest positive Double value (Eagle extension, ObjectGroup: "constant")
+  - Returns the smallest positive Double value (.NET Double.Epsilon, ≈ 5E-324)
 
 - **typeof(x)** - Get type name (Eagle extension, ObjectGroup: "introspection")
   - Returns the type name of the value x
@@ -5603,7 +5605,7 @@ Mathematical functions are used within expressions (via `[expr]`) to perform cal
 <details>
 <summary><strong>Expression Operators</strong></summary>
 
-Operators are used within expressions to perform calculations, comparisons, and logical operations. Eagle supports both infix notation (`a + b`) and prefix function-call notation (`+(a, b)`).
+Operators are used within expressions to perform calculations, comparisons, and logical operations. Eagle supports infix notation (`a + b`); unary operators may also be written in prefix form (`-(5)`).
 
 ---
 
@@ -5654,8 +5656,8 @@ Operators are used within expressions to perform calculations, comparisons, and 
 | `&&` | LogicalAnd | Logical AND (short-circuit evaluation) |
 | `\|\|` | LogicalOr | Logical OR (short-circuit evaluation) |
 | `^^` | LogicalXor | Logical XOR (Eagle extension) |
-| `->` | LogicalImp | Logical implication (Eagle extension) |
-| `<->` | LogicalEqv | Logical equivalence (Eagle extension) |
+| `=>` | LogicalImp | Logical implication (Eagle extension) |
+| `<=>` | LogicalEqv | Logical equivalence (Eagle extension) |
 
 ---
 
@@ -5667,8 +5669,8 @@ Operators are used within expressions to perform calculations, comparisons, and 
 | `&` | BitwiseAnd | Bitwise AND |
 | `\|` | BitwiseOr | Bitwise OR |
 | `^` | BitwiseXor | Bitwise XOR |
-| `~&` | BitwiseEqv | Bitwise equivalence (Eagle extension) |
-| `~\|` | BitwiseImp | Bitwise implication (Eagle extension) |
+| `<->` | BitwiseEqv | Bitwise equivalence (Eagle extension) |
+| `->` | BitwiseImp | Bitwise implication (Eagle extension) |
 
 ---
 
@@ -5725,11 +5727,11 @@ Operators are used within expressions to perform calculations, comparisons, and 
 11. `&`
 12. `^`
 13. `|`
-14. `~&`, `~|`
+14. `->`, `<->`
 15. `&&`
 16. `||`
 17. `^^`
-18. `->`, `<->`
+18. `=>`, `<=>`
 19. `? :`
 20. `:=`
 
@@ -5789,7 +5791,6 @@ Time commands belong to ObjectGroup: "time"
     - **Options**:
       - `-format string` - Format string with % specifiers (see below)
       - `-gmt boolean` - Use GMT/UTC instead of local time
-      - `-locale name` - Use specified locale
     - **Format specifiers**: `%Y` (year), `%m` (month), `%d` (day), `%H` (hour), `%M` (minute), `%S` (second), `%A` (weekday name), `%B` (month name), `%Z` (timezone), and many more.
 
   **Example**:
@@ -5809,14 +5810,11 @@ Time commands belong to ObjectGroup: "time"
       - `-format string` - Expected format of the input string
       - `-base clockValue` - Base time for relative expressions
       - `-gmt boolean` - Input is in GMT/UTC
-    - Supports natural language expressions like "tomorrow", "next week", "+3 days".
 
   **Example**:
   ```tcl
   clock scan "2024-01-15"
   clock scan "Jan 15, 2024 2:30pm" -format "%b %d, %Y %I:%M%p"
-  clock scan "tomorrow"
-  clock scan "+1 week" -base [clock seconds]
   ```
 
   ---
@@ -5908,7 +5906,7 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
 
   ---
 
-  - `after idle arg ?arg ...?` - Schedules *script* to execute when the interpreter becomes idle.
+  - `after idle arg ?arg ...?` - Schedules *script* to execute when the interpreter next becomes idle during `[vwait]` (these handlers are not drained by `[update]`).
 
   **Example**:
   ```tcl
@@ -5949,7 +5947,7 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
 
   #### Status and Configuration (Eagle extensions)
 
-  - `[after active]` - Returns 1 if any after events are pending.
+  - `[after active]` - Returns True if after-event processing is currently active, False otherwise (False at the top level even when events are pending).
 
   ---
 
@@ -5988,8 +5986,8 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
   # Queue some callbacks
   callback enqueue set x 1
   callback enqueue puts "deferred message"
-  callback count            ;# Returns: 2
-  callback list             ;# Returns: {set puts}
+  callback count            ;# Returns: 0 (callbacks drain almost immediately)
+  callback list             ;# Returns: {} (callbacks already drained)
 
   # Execute all queued callbacks
   callback execute          ;# Runs both callbacks, empties queue
@@ -6006,7 +6004,7 @@ Eagle's event loop allows asynchronous operations, timed callbacks, and idle pro
 <a id="cmd-update"></a>
 - **update** - Process events
   - `update ?mask?`
-  - Processes pending events (after callbacks, idle handlers, etc.) and returns. Without this, scheduled events won't fire until the script completes or enters `[vwait]`.
+  - Processes pending events (after timer callbacks, etc.) and returns. Note that `after idle` handlers are *not* drained by `[update]` or `[update idletasks]`; only `[vwait]` runs them. Without this, scheduled events won't fire until the script completes or enters `[vwait]`.
   - *mask* - Optional event types to process: `idletasks` (only idle events)
 
   **Example**:

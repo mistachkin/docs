@@ -242,7 +242,7 @@ set sb [object create System.Text.StringBuilder]
 set sb [object create System.Text.StringBuilder "Initial text"]
 
 # With explicit parameter types for overload resolution
-set dt [object create -parametertypes {int int int} \
+set dt [object create -parametertypes {System.Int32 System.Int32 System.Int32} \
     System.DateTime 2024 1 15]
 
 # With alias (creates a command)
@@ -364,7 +364,7 @@ object invoke $sb Length 10         ;# Set property
 
 # By-ref / out parameter
 object invoke System.Int32 TryParse "42" result
-# $result now contains the parsed integer handle
+# $result now contains the parsed value
 
 # With explicit parameter types
 object invoke -parametertypes {string int} $obj Method "hello" 42
@@ -456,7 +456,7 @@ handles from the interpreter. Accepts multiple objects.
    - Calls `IDisposable.Dispose()` on the wrapped .NET object
 4. Removes the command alias (if one exists)
 5. Removes from `ObjectDictionary`
-6. Returns `{disposed N removed M}` counts
+6. Returns `disposed N removed M` counts (no braces; a count of 1 is omitted, e.g. `removed`, `disposed removed`, `disposed 2 removed 2`)
 
 **Disposal control flags:**
 
@@ -543,13 +543,18 @@ object invoke $list Add "one"
 object invoke $list Add "two"
 object invoke $list Add "three"
 
-# Iterate
+# Iterate (each element is a fresh opaque handle, e.g. System#String#NNNN)
 object foreach item $list {
-    puts "Item: $item"
+    puts "Item: $item"    ;# prints handles, not "one"/"two"/"three"
 }
 
-# Collect transformed results
-set upper [object lmap item $list {
+# Use -tostring to get the element string values
+object foreach -tostring item $list {
+    puts "Item: $item"    ;# prints: Item: one, Item: two, Item: three
+}
+
+# Collect transformed results (-tostring converts elements to strings)
+set upper [object lmap -tostring item $list {
     string toupper $item
 }]
 ;# Returns: {ONE TWO THREE}
@@ -955,7 +960,7 @@ object cleanup ?options?
 | `-synchronous` | switch | Synchronous cleanup |
 | `-nocomplain` | switch | Ignore errors |
 
-Returns `{disposed N removed M}`.
+Returns `disposed N removed M`.
 
 ```tcl
 # Clean up all unreferenced objects
@@ -1252,7 +1257,7 @@ try {
 set dt [object create System.DateTime 2024 1 15]
 
 # Explicit parameter types when ambiguous
-set dt [object create -parametertypes {int int int} \
+set dt [object create -parametertypes {System.Int32 System.Int32 System.Int32} \
     System.DateTime 2024 1 15]
 
 # Force specific constructor index
@@ -1267,13 +1272,13 @@ object invoke $list Add "alpha"
 object invoke $list Add "beta"
 object invoke $list Add "gamma"
 
-# Iterate
-object foreach item $list {
+# Iterate (each element is a fresh opaque handle; use -tostring for values)
+object foreach -tostring item $list {
     puts "Item: $item"
 }
 
-# Collect transformed results
-set upper [object lmap item $list {
+# Collect transformed results (-tostring converts elements to strings)
+set upper [object lmap -tostring item $list {
     string toupper $item
 }]
 

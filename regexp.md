@@ -13,10 +13,13 @@ the full power of the .NET regex engine.
 
 There are three key areas of complexity:
 
-1. **Default behavior difference** — Eagle defaults to
-   `RegexOptions.Singleline`, meaning `.` matches newlines. This is the
-   **opposite** of Tcl's default where `.` does not match newlines. This
-   is the single most important behavioral difference to understand.
+1. **Default dot/newline behavior** — Eagle defaults to
+   `RegexOptions.Singleline`, meaning `.` matches newlines. This *matches*
+   Tcl's default (Tcl treats newline as an ordinary character, so `.`
+   matches it there too); it is the **opposite** of .NET's *own* default,
+   where `.` does not match `\n`. Eagle enables `Singleline` on purpose to
+   stay Tcl-compatible. Use `-linestop` (or `-line`) to make `.` stop
+   matching newlines — in Eagle exactly as in Tcl.
 
 2. **Substitution translation layer** — `[regsub]` must translate
    Tcl-style substitution syntax (`&`, `\0`–`\9`, `\\`) into .NET's
@@ -51,9 +54,11 @@ Expressions, or ARE). Eagle instead delegates to .NET's
 `System.Text.RegularExpressions.Regex` class. While both engines support
 Perl-compatible regex syntax, there are semantic differences:
 
-- **Different default dot behavior** — .NET's `RegexOptions.Singleline`
-  makes `.` match `\n`; Tcl's default does not. Eagle defaults to
-  Singleline, which is the opposite of Tcl's default.
+- **Default dot behavior (kept Tcl-compatible)** — .NET's *own* default is
+  that `.` does not match `\n` (only `RegexOptions.Singleline` makes it
+  match). Eagle enables `Singleline` by default so `.` matches `\n` just
+  like Tcl, whose default also treats newline as an ordinary character;
+  `-linestop`/`-line` turn this off in both.
 - **No ARE-specific features** — Tcl's ARE supports features like
   collating elements, character class shortcuts (`[[:alpha:]]`), and
   embedded flags (`(?b)`, `(?q)`). The .NET engine has its own feature
@@ -154,10 +159,12 @@ of `RegexOptions.Singleline` and `RegexOptions.Multiline`:
 | `-lineanchor` | (unchanged) | ON |
 | `-line` | OFF | ON |
 
-**Critical difference from Tcl**: In Tcl, the default is that `.` does
-**not** match `\n` (equivalent to Eagle's Singleline OFF). Eagle's default
-is `RegexOptions.Singleline` ON, meaning `.` **does** match `\n`. To get
-Tcl's default behavior in Eagle, use `-linestop` or `-line`.
+**Note on Tcl compatibility**: In Tcl, newline is not special by default,
+so `.` **does** match `\n` — the same as Eagle's default (`Singleline`
+ON). It is .NET's *own* default that has `.` not match `\n` (Eagle's
+`Singleline` OFF, reached via `-linestop`). So Eagle's default already
+behaves like Tcl; use `-linestop` or `-line` when you want `.` to stop at
+newlines.
 
 ### The `-global` vs `-all` distinction
 
@@ -605,16 +612,16 @@ correctly with `-all` without entering an infinite loop.
 
 ## 13. Practical Patterns
 
-### Pattern 1: Tcl-compatible matching (fix the dot behavior)
+### Pattern 1: Controlling whether `.` matches newlines
 
 ```tcl
-# Eagle default: . matches newlines (Singleline mode)
+# Eagle default: . matches newlines (Singleline mode) -- same as Tcl's default
 regexp {.+} "line1\nline2"  ;# Matches: "line1\nline2" (entire string)
 
-# To get Tcl's default behavior, use -linestop:
+# To make . STOP at newlines (like .NET's own default), use -linestop:
 regexp -linestop {.+} "line1\nline2"  ;# Matches: "line1" (stops at \n)
 
-# Or use -line for full Tcl-like line-sensitive mode:
+# Or use -line for full line-sensitive mode (. stops at \n; ^/$ per line):
 regexp -line {^.+$} "line1\nline2"  ;# Matches line-by-line
 ```
 
@@ -724,7 +731,7 @@ regsub -all -eval {\d+} "item1 has 5 widgets and 12 gadgets" {
 | Feature | Tcl | Eagle |
 |---------|-----|-------|
 | Regex engine | Henry Spencer ARE | .NET `System.Text.RegularExpressions` |
-| Default `.` behavior | Does **not** match `\n` | **Matches** `\n` (`Singleline` on) |
+| Default `.` behavior | **Matches** `\n` (newline not special) | **Matches** `\n` (`Singleline` on; same as Tcl) |
 | Named groups | `(?:...)` only (ARE has no named captures) | `(?<name>...)` with `\N<name>` substitution |
 | Compile to native code | Not available | `-compiled` (IL generation) |
 | ECMAScript mode | Not available | `-ecma` |

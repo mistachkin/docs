@@ -10,7 +10,7 @@ that simulates namespace support using only the global namespace) and
 parent-child hierarchy, reference counting, and per-namespace variable
 frames). This dual approach allows scripts that simply wrap code in
 `[namespace eval]` to work immediately, while providing full namespace
-functionality when explicitly enabled.
+functionality which is enabled by default.
 
 Key differentiators from Tcl:
 
@@ -101,8 +101,8 @@ mylib::greet World   ;# Works — resolved via qualified name lookup
 **Flags**: `CommandFlags.Safe | CommandFlags.Standard | CommandFlags.Initialize | CommandFlags.NoAdd`
 
 Namespace2 provides real namespace support with `INamespace` objects.
-The `NoAdd` flag means it is not added to the interpreter by default —
-it must be explicitly activated via `namespace enable true`.
+By default, full namespaces are enabled — `namespace enable` returns `True`.
+Use `namespace enable false` to revert to the Namespace1 stub.
 
 When active:
 
@@ -299,7 +299,7 @@ manual traversal.
 
 ```tcl
 namespace eval a { namespace eval b { namespace eval c {} } }
-namespace descendants ::a    ;# {::a::b ::a::b::c}
+namespace descendants ::a    ;# {::a ::a::b ::a::b::c}
 ```
 
 #### `namespace info name` **(Eagle)**
@@ -929,7 +929,7 @@ namespace eval app {
 
 # Enumerate hierarchy
 namespace children ::app       ;# {::app::ui ::app::core}
-namespace descendants ::app    ;# {::app::ui ::app::core}
+namespace descendants ::app    ;# {::app ::app::ui ::app::core}
 ```
 
 ### Pattern 5 — Per-namespace unknown handler

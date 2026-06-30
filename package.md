@@ -67,7 +67,9 @@ group.
 Eagle's `[package]` supports the core Tcl sub-commands (`require`,
 `provide`, `ifneeded`, `forget`, `names`, `versions`, `vcompare`,
 `vsatisfies`, `unknown`) with compatible semantics. Tcl scripts that
-use standard package management patterns work unchanged.
+use standard package management patterns work unchanged. The one
+exception is `vsatisfies`: Eagle drops Tcl's same-major-version
+requirement, making it more permissive (see §3.5).
 
 ### Eagle extensions
 
@@ -342,11 +344,15 @@ removal.
 package withdraw package ?version?
 ```
 
-Marks a package as unloaded by setting `package.Loaded = null`, but
-preserves the package's registration and `ifNeeded` scripts. The
-package can be loaded again via `[package require]`. This is a
-temporary unload — the distinction from `forget` is that withdraw
-preserves the package entry while forget deletes it.
+With a `version` argument, marks the package as unloaded by setting
+`package.Loaded = null`, but preserves the package's registration and
+`ifNeeded` scripts (the version must match the loaded version, otherwise
+a `conflicting versions withdrawn` error is raised). Without a `version`
+argument, `package withdraw <name>` is a **getter**: it returns the
+currently-loaded version and leaves the package loaded — it does not
+unload anything. The package can be loaded again via `[package require]`.
+This is a temporary unload — the distinction from `forget` is that
+withdraw preserves the package entry while forget deletes it.
 
 ### Version utilities
 
@@ -360,6 +366,12 @@ package vsort version1 version2
 
 Standard Tcl version operations. `vcompare` returns `-1`, `0`, or `1`.
 `vsatisfies` returns a boolean. `vsort` sorts two versions.
+
+**Eagle's `vsatisfies` differs from Tcl.** Eagle returns true whenever
+`version1` is greater than or equal to `version2`, dropping Tcl's
+requirement that the two share the same major version. For example,
+`package vsatisfies 2.0 1.0` returns `True` in Eagle but `0` in Tcl
+8.4/8.5/8.6 (Tcl rejects the cross-major bump).
 
 **Fallback behavior**: If version strings fail to parse as .NET
 `Version` objects, `vcompare` raises an error while `vsort` falls back to string

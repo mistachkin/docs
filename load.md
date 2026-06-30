@@ -689,8 +689,8 @@ Key behaviors:
 
 | Option | Effect |
 |--------|--------|
-| `-keeplibrary` | Keep the assembly loaded but remove the plugin package |
-| `-nocomplain` | Suppress error if plugin not found |
+| `-keeplibrary` | Keep the assembly loaded but remove the plugin package (accepted but currently a no-op) |
+| `-nocomplain` | Suppress error if plugin not found (accepted but currently a no-op) |
 | `-nocase` | Case-insensitive type name matching |
 | `-match <MatchMode>` | Pattern matching mode (default: `DefaultUnloadMatchMode`) |
 | `-clientdata <object>` | Custom client data for the unload operation |
@@ -1017,8 +1017,8 @@ unload ?options? fileName ?packageName? ?interp?
 
 | Option | Description |
 |--------|-------------|
-| `-keeplibrary` | Keep the assembly loaded but remove the plugin package |
-| `-nocomplain` | Suppress error if the plugin was never loaded |
+| `-keeplibrary` | Keep the assembly loaded but remove the plugin package (accepted but currently a no-op) |
+| `-nocomplain` | Suppress error if the plugin was never loaded (accepted but currently a no-op) |
 | `-nocase` | Case-insensitive type/plugin name matching |
 | `-match <MatchMode>` | Pattern matching mode for type/name comparison (default: `DefaultUnloadMatchMode`) |
 | `-clientdata <object>` | Custom client data for the unload operation |
@@ -1109,7 +1109,7 @@ unload /path/to/MyPlugin.dll
 # Unload a specific plugin type from a multi-plugin assembly
 unload /path/to/MultiPlugin.dll MyNamespace.SpecificPlugin
 
-# Unload without errors if not loaded
+# -nocomplain is accepted but currently a no-op (still errors if not loaded)
 unload -nocomplain /path/to/MaybeLoadedPlugin.dll
 
 # Unload with case-insensitive matching

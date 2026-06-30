@@ -55,10 +55,10 @@ interp eval myChild {
 }
 
 # These would fail inside the safe interpreter:
-# [exec rm -rf /]        → command not found (hidden)
-# [file delete important] → command not found (hidden)
-# [socket localhost 80]   → command not found (hidden)
-# [object invoke System.IO.File Delete "important"] → command not found (hidden)
+# [exec rm -rf /]        → permission denied: safe interpreter cannot use command "exec"
+# [file delete important] → permission denied: safe interpreter cannot use command "file delete"
+# [socket localhost 80]   → permission denied: safe interpreter cannot use command "socket"
+# [object invoke System.IO.File Delete "important"] → permission denied: safe interpreter cannot use type from "System.IO.File"
 ```
 
 ---

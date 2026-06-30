@@ -73,13 +73,13 @@ category. Sub-commands marked **(Eagle)** have no Tcl equivalent.
 
 #### `array exists arrayName`
 
-Returns `1` if `arrayName` is an array variable, `0` otherwise.
+Returns `True` if `arrayName` is an array variable, `False` otherwise.
 Follows variable links via `EntityOps.FollowLinks()`.
 
 ```tcl
 array set data {a 1 b 2}
-array exists data    ;# 1
-array exists nosuch  ;# 0
+array exists data    ;# True
+array exists nosuch  ;# False
 ```
 
 #### `array size arrayName`
@@ -172,7 +172,7 @@ Returns a list of array element names, optionally filtered.
 | Mode | Description |
 |------|-------------|
 | `-exact` | Exact string comparison |
-| `-substring` | Substring matching |
+| `-substring` | Prefix (StartsWith) match |
 | `-glob` | Glob pattern matching (default) |
 | `-regexp` | Regular expression matching |
 
@@ -243,7 +243,7 @@ of raising an error.
 
 | Sub-command | Description |
 |-------------|-------------|
-| `array default exists arrayName` | Returns `1` if a default value is set |
+| `array default exists arrayName` | Returns `True` if a default value is set |
 | `array default get arrayName` | Returns the default value (error if none) |
 | `array default set arrayName value` | Sets the default value |
 | `array default unset arrayName` | Clears the default value |
@@ -260,7 +260,7 @@ incr counts(apples)     ;# Now 2
 incr counts(bananas)    ;# Works: default 0, incremented to 1
 
 array default get counts    ;# 0
-array default exists counts ;# 1
+array default exists counts ;# True
 array default unset counts
 ```
 
