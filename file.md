@@ -245,8 +245,19 @@ evaluation.
 
 #### `file type name`
 
-Returns the type of `name`: `[file]`, `directory`, `link`, or raises an error
-if the path does not exist.
+Returns the type of `name`: `file` or `directory`, or raises an error if the path
+does not exist. There is **no `link` type**: a symbolic link (or Windows reparse
+point) is reported as its resolved **target's** type, and a *dangling* link (target
+missing) is reported as `file`.
+
+> **Symbolic links resolve to their target's type.** Unlike Tcl (which has a `link`
+> type and treats a dangling link as nonexistent), Eagle classifies every entry as a
+> `file` or a `directory` by following the link: a link to a directory is
+> `isdirectory` → true / `type` → `directory`; a link to a file — or a *dangling*
+> link — is `isfile` → true / `type` → `file`. `file exists` is true whenever the
+> *link itself* is present, even if its target is not. So `[file isdirectory]` is the
+> reliable "is a real directory here?" test across a possible link; `exists` /
+> `isfile` / `type` will call a dangling link a `file`.
 
 #### `file size name`
 
