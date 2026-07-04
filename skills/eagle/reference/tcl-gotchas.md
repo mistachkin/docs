@@ -132,6 +132,26 @@ append noVar x   -> x        lappend noVar a   -> a
 Deliberate anti-footgun for `incr`/`dict set`. Initialize first:
 `set d [dict create]; dict set d k v` → `k v`.
 
+### 8. No `link` file type; a dangling symlink reads as a `file`
+
+```
+exec ln -s /no/such/target /tmp/dangling
+file exists /tmp/dangling        EAGLE: True    8.5/8.6: 0       (Tcl follows the link)
+file type /tmp/dangling          EAGLE: file    8.5/8.6: link
+file isfile /tmp/dangling         EAGLE: True    8.5/8.6: 0
+file isdirectory /tmp/dangling    EAGLE: False   8.5/8.6: 0
+```
+
+Eagle has **no `link` file type** — an entry is either a directory or a file. A symlink is
+reported as its *target's* type, and a **dangling** symlink (target missing) falls back to
+`file`: so `exists`, `type`, and `isfile` all say file / `True`, and only `isdirectory`
+returns `False` (it genuinely is not a directory). Tcl instead has a distinct `link` type
+and treats a dangling link as nonexistent (`exists` / `isfile` / `isdirectory` all `0`).
+Consequence: across a possible symlink, **`[file isdirectory]` is the reliable
+discriminator** ("does this resolve to a directory?"); `exists` / `isfile` / `type` will
+not distinguish a dangling (or any) link from a real file. Guard on the predicate your next
+step depends on, not on mere presence.
+
 ---
 
 ## Looks like a gotcha, but ISN'T (Eagle matches Tcl — do not "fix")
