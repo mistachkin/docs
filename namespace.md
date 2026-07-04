@@ -10,7 +10,9 @@ that simulates namespace support using only the global namespace) and
 parent-child hierarchy, reference counting, and per-namespace variable
 frames). This dual approach allows scripts that simply wrap code in
 `[namespace eval]` to work immediately, while providing full namespace
-functionality which is enabled by default.
+functionality that can be turned on per interpreter. **Whether it is on by
+default is build/embedding-dependent — verify with `[namespace enable]`, do not
+assume** (see §3).
 
 Key differentiators from Tcl:
 
@@ -90,10 +92,14 @@ Namespace1 exists for source code compatibility with scripts that use
 This allows scripts like:
 
 ```tcl
-namespace eval mylib {
-    proc greet {name} { return "Hello, $name!" }
-}
-mylib::greet World   ;# Works — resolved via qualified name lookup
+# `namespace eval` here is only an organizational wrapper: with namespaces
+# disabled the eval does not qualify, so the proc lands in the GLOBAL namespace.
+namespace eval mylib { proc greet {name} { return "Hello, $name!" } }
+greet World          ;# Works (call it unqualified; `mylib::greet` would NOT resolve)
+
+# A qualified command name works too — the "::" is just literal characters:
+proc mylib::greet {name} { return "Hello, $name!" }
+mylib::greet World   ;# Works — a flat command literally named "mylib::greet"
 ```
 
 ### Namespace2 — Full implementation
@@ -101,8 +107,12 @@ mylib::greet World   ;# Works — resolved via qualified name lookup
 **Flags**: `CommandFlags.Safe | CommandFlags.Standard | CommandFlags.Initialize | CommandFlags.NoAdd`
 
 Namespace2 provides real namespace support with `INamespace` objects.
-By default, full namespaces are enabled — `namespace enable` returns `True`.
-Use `namespace enable false` to revert to the Namespace1 stub.
+**Whether it is active by default is build/embedding-dependent — verify with
+`namespace enable` rather than assume.** It has been observed returning `True` on
+some builds and `False` on others (e.g. a netcoreapp2.0 build reported `False`
+here, while other builds and CI report `True`). `namespace enable true` activates
+it; `namespace enable false` reverts to the Namespace1 stub. The disabled default
+preserves backward compatibility with pre-namespace scripts (§2).
 
 When active:
 

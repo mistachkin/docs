@@ -181,14 +181,28 @@ export · forget · import · info · inscope · mappings · name · origin · p
 qualifiers · rename · tail · unknown · which
 ```
 
-> **Dual implementation.** Eagle ships a compatibility stub (Namespace1) and a
-> full implementation (Namespace2), toggled by `namespace enable`. In this build
-> full namespaces are **enabled by default** — `namespace enable` returns
-> `True`, and `current`/`children`/`descendants` reflect the real hierarchy
-> without any opt-in. `namespace enable false` reverts to the stub (where
-> `current` is always `::`, `children` of a script-made namespace errors as "not
-> found", etc.). See [`../../../../namespace.md`](../../../../namespace.md) for the
-> architecture.
+> **Dual implementation, and the default is build-dependent — verify it.** Eagle
+> ships a compatibility stub (Namespace1) and a full implementation (Namespace2),
+> toggled per interpreter by `namespace enable ?enabled? ?force?` (native Tcl is
+> always full and has no such sub-command). **Don't assume the default** — query
+> it: `namespace enable` returned `True` when this skill was first checked, but
+> `False` on a netcoreapp2.0 build here, and `True` on CI (which surprised a
+> caller into a bug). The disabled mode exists for backward compatibility with
+> scripts written before Eagle gained real namespaces.
+>
+> The two modes resolve names differently — the runtime trap:
+> - **disabled:** `namespace eval` is ~a no-op; procs/vars land **global**;
+>   an unqualified name inside `namespace eval` resolves globally (`current` is
+>   always `::`, `children` of a script-made namespace is empty).
+> - **enabled:** real scoping (`::Foo::bar`, `::Foo::v`); an unqualified name
+>   inside `namespace eval` is **namespace-relative**, so a global needs `$::name`
+>   (or `[global name]`). `namespace eval ::X { run $argv }` works *only* while
+>   disabled — write `run $::argv`.
+>
+> Toggling is non-destructive (namespace objects persist across a disable/enable).
+> Eagle-only sub-commands: `enable`, `descendants` (recursive `children`),
+> `mappings` (name-remap table, e.g. `::Eagle`→`::`, for .NET embedding), `rename`,
+> `name`. Architecture: [`../../../../namespace.md`](../../../../namespace.md).
 
 > **No `namespace path`** (a Tcl 8.5 feature). It is not in the list above:
 > `namespace path {}` → `bad option "path": must be children, code, current,

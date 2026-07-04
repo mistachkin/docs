@@ -152,6 +152,24 @@ discriminator** ("does this resolve to a directory?"); `exists` / `isfile` / `ty
 not distinguish a dangling (or any) link from a real file. Guard on the predicate your next
 step depends on, not on mere presence.
 
+### 9. Namespace support is toggleable — default varies, qualify your globals
+
+```
+namespace enable      EAGLE: build-dependent (False here, True on CI)   Tcl: no such sub-command (always on)
+```
+
+Unlike Tcl (always-on namespaces, no way to disable), Eagle runs namespaces
+**disabled** — a compatibility stub where `namespace eval` is ~a no-op, so procs/vars
+land **global** and unqualified names resolve globally — or **enabled** (real scoping),
+toggled per interpreter with `namespace enable ?enabled? ?force?`. **The default is
+build-dependent** (verified `False` on a netcoreapp2.0 build, `True` on the build this
+skill was first checked and on CI), so query it, don't assume. The runtime bite: when
+**enabled**, an unqualified name inside `namespace eval` is namespace-relative, so a
+global needs `$::name` (or `[global name]`) — `namespace eval ::X { run $argv }` works
+only while disabled; write `run $::argv`. Toggling is non-destructive; Eagle also adds
+`descendants`/`mappings`/`rename`/`name` sub-commands Tcl lacks. Full treatment:
+[`commands/procs-namespaces.md`](commands/procs-namespaces.md).
+
 ---
 
 ## Looks like a gotcha, but ISN'T (Eagle matches Tcl — do not "fix")
