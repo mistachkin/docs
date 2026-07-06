@@ -8248,6 +8248,10 @@ most common options found across commands:
 - Prevents automatic invocation
 - Used in: object create, library call
 
+**-help**
+- Skips invocation and returns help/documentation for the matching member(s)
+- Used in: object create, object invoke, library call
+
 **-noargs**
 - Prevents automatic argument processing
 - Used in: object create, library call
@@ -11983,6 +11987,7 @@ Automatic commands support extensive options (shared with `[library call]` and `
 | Option | Description |
 |--------|-------------|
 | `-noinvoke` | Don't invoke, just resolve the method |
+| `-help` | Don't invoke; return help for the matching member(s) |
 | `-noargs` | Don't pass arguments to the method |
 | `-nocase` | Case-insensitive method name matching |
 | `-strictmember` | Require exact method match |

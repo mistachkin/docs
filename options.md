@@ -631,6 +631,7 @@ members via reflection. They are concentrated in `[object invoke]`,
 | `-nobyref` | 5 | Disable by-reference parameter handling |
 | `-noargs` | 5 | Don't pass arguments to<br>the method/constructor |
 | `-noinvoke` | 5 | Resolve the member without invoking it<br>(metadata inspection) |
+| `-help` | 3 | Resolve the member without invoking it and<br>return help for the matching overload(s) |
 | `-limit` | 9 | Maximum number of method/constructor<br>overloads to consider |
 | `-index` | 8 | Select a specific overload<br>by zero-based index |
 
@@ -2046,6 +2047,7 @@ Includes [object handle management](#fixupreturnvalue-options) options
 | `-nocreate` | -- | Don't create an opaque<br>object handle |
 | `-nodispose` | -- | Don't mark the object<br>for automatic disposal |
 | `-noinvoke` | -- | Don't invoke the constructor<br>(type resolution only) |
+| `-help` | -- | Don't invoke; return help for the<br>matching constructor overload(s) |
 | `-noargs` | -- | Don't pass constructor arguments |
 | `-limit` | int | Maximum number of constructor<br>overloads to consider |
 | `-index` | int | Select a specific constructor<br>overload by index |
@@ -2157,6 +2159,7 @@ This command's options are composed from three groups: InvokeOnly (unique to
 | `-argumentflags` | ByRefArgumentFlags | By-reference argument<br>handling flags |
 | `-marshalflags` | MarshalFlags | Marshaling behavior flags |
 | `-noinvoke` | -- | Don't invoke the member<br>(resolution only) |
+| `-help` | -- | Don't invoke; return help for the<br>matching member(s) |
 | `-noargs` | -- | Don't pass arguments to the member |
 | `-arrayasvalue` | -- | Treat array results as values |
 | `-arrayaslink` | -- | Link array results<br>to Eagle variables |

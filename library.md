@@ -282,6 +282,7 @@ set handle [library call $getStdHandle -11]
 | `-tostring` | Convert the return value via `.ToString()` |
 | `-nobyref` | Disable by-reference argument handling |
 | `-invoke` | Force invocation (default behavior) |
+| `-help` | Skip invocation; return help for the matching function member(s) (rarely available, since a native function is seldom present in the XML documentation) |
 | `-debug` | Enable debug output for argument resolution |
 | `-trace` | Enable tracing of method calls |
 

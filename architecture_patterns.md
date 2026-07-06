@@ -1153,6 +1153,28 @@ message); a common boolean-returning variant pairs a `bool` with a
 `ref Result error`. The convention runs through `Engine`, `Interpreter`, every
 command's `Execute`, and the `*Ops` classes.
 
+**The `error` vs `result` distinction is a contract, not a style choice.** The
+parameter *name* encodes a guarantee about when the sink may be written:
+
+- **`ref Result error`** is written *only on failure*. On success it is left
+  **unchanged** -- a strong guarantee the caller may rely on: after an `Ok`
+  return, whatever the caller placed there (typically `null`) is still there.
+  This is exactly what lets the boolean-returning variant read cleanly --
+  `if (!TryThing(..., ref error)) return error;` -- because `error` carries
+  meaning precisely when, and only when, the call did not succeed.
+- **`ref Result result`** *may* be written on success and/or failure, and is
+  **not necessarily written at all**. It is the value sink: a successful call
+  usually sets it, a failing call may set it (to a partial value or a message),
+  and some paths leave it untouched. The caller must treat its prior contents as
+  undefined once the call returns, and must not infer success or failure from
+  whether it changed.
+
+The operational rule follows directly: read `result` only after confirming the
+`ReturnCode` you expect, and read `error` only after a non-`Ok` return. Choosing
+`error` over `result` in a signature is therefore a deliberate promise that
+success will not disturb the parameter -- semantic, not cosmetic, and picking the
+wrong one silently weakens (or falsely implies) that promise.
+
 ```csharp
 public override ReturnCode Execute(
     Interpreter interpreter, /* in */

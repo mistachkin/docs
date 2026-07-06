@@ -201,6 +201,7 @@ an opaque object handle.
 | `-aliasreference` | switch | Alias holds an object reference |
 | `-nocreate` | switch | Don't create (return constructor info only) |
 | `-noinvoke` | switch | Don't invoke constructor |
+| `-help` | switch | Don't invoke; return help for the matching constructor overload(s) |
 | `-noargs` | switch | Ignore constructor arguments |
 | `-nodispose` | switch | Mark handle as non-disposable |
 | `-noforcedelete` | switch | Don't force-delete on removal |
@@ -229,10 +230,18 @@ an opaque object handle.
 4. Call `FindMethodsAndFixupArguments()` to find matching constructors
    and convert script arguments to .NET types
 5. Select the best match (by index, limit, or automatic ordering)
-6. If `-noinvoke` is not set, invoke the constructor
+6. If neither `-noinvoke` nor `-help` is set, invoke the constructor
 7. Pass result through `FixupReturnValue` to create handle and
    optional alias
 8. Fix up any by-ref argument variables
+
+The **`-help`** option resolves the constructor overloads exactly as a real call
+would (honoring the arguments, `-index`, `-parametertypes`, and so on) but, rather
+than invoking, returns their documentation as a logical list of help data -- one
+or more entries, one per matching overload, each carrying that member's summary,
+parameters, returns, and any other elements -- drawn from the assembly's XML
+documentation file. It is the documentation-returning twin of `-noinvoke`, and the
+same option is accepted by `[object invoke]` and `[library call]`.
 
 ```tcl
 # Basic creation
@@ -298,6 +307,7 @@ interaction after object creation.
 | `-noforcedelete` | switch | Don't force-delete return handle |
 | `-tostring` | switch | Convert return value to string |
 | `-noinvoke` | switch | Don't invoke (return member info only) |
+| `-help` | switch | Don't invoke; return help for the matching member(s) |
 | `-noargs` | switch | Ignore arguments |
 | `-nobyref` | switch | Skip by-ref handling |
 | `-nonestedmember` | switch | Don't navigate nested members (e.g., `Prop.SubProp`) |
@@ -391,8 +401,14 @@ Eagle's argument conversion pipeline. Useful when you need exact control
 over the reflection call.
 
 Has the same options as `[object invoke]` except `-invokeraw` is ignored
-(since you're already using it) and `-invoke` redirects back to
-`[object invoke]`.
+(since you're already using it), `-invoke` redirects the entire call back to
+`[object invoke]`, and `-invokeall` redirects it to `[object invokeall]`.
+
+> **Cross-reference:** the `-invoke` and `-invokeall` redirects re-dispatch the
+> whole sub-command (a recursive call with the sub-command name replaced), so
+> `[object invokeraw -invoke ...]` accepts everything `[object invoke]` does --
+> including `-help`. That is why `[object invokeraw]` does not list `-help`
+> itself: it reaches it through `-invoke`.
 
 ```tcl
 # Direct invocation without type conversion
@@ -409,6 +425,14 @@ object invokeall ?options? object memberAndArgs ?memberAndArgs ...?
 Each `memberAndArgs` is a list where the first element is the member
 name and the rest are arguments.
 
+**Return value:** by default `[object invokeall]` returns a two-element list
+`{overallCode errorCount}` -- the overall completion code (`Ok` when every member
+invocation succeeded, `Error` when any failed) and the number of failed
+invocations (e.g. `{Ok 0}`). `-keepresults` instead returns a flat list of
+`{code result}` pairs, one per member (e.g. `{Ok 0 Ok 0}`); `-lastresult` returns
+only the final member's result. Each member is dispatched internally through
+`[object invoke]`.
+
 **Additional options (beyond invoke):**
 
 | Option | Type | Purpose |
@@ -417,8 +441,14 @@ name and the rest are arguments.
 | `-lastresult` | switch | Return only the last result |
 | `-keepresults` | switch | Keep all results as a list |
 | `-nocomplain` | switch | Ignore invocation errors |
-| `-invoke` | switch | Use `[object invoke]` for each call |
-| `-invokeraw` | switch | Use `[object invokeraw]` for each call |
+| `-invoke` | switch | Redirect the entire call to `[object invoke]` |
+| `-invokeraw` | switch | Redirect the entire call to `[object invokeraw]` |
+
+> **Cross-reference:** `-invoke` and `-invokeraw` here are *not* per-element mode
+> switches -- when present, they re-dispatch the whole sub-command (a recursive
+> call with the sub-command name replaced), so `[object invokeall -invoke ...]`
+> runs as a single `[object invoke ...]` and accepts everything it does,
+> including `-help`. `-invokeall` itself is ignored (you are already using it).
 
 ```tcl
 # Multiple method calls
@@ -431,7 +461,50 @@ set result [object invokeall -chained $obj \
     {GetBuilder} {Append Hello} {ToString}]
 ```
 
-### 3.5 `[object dispose]` — Dispose and Release
+### 3.5 Choosing How a Member Call Dispatches
+
+A member call is routed to one of `[object invoke]`, `[object invokeraw]`, or
+`[object invokeall]` through **three independent axes**, listed in increasing
+precedence:
+
+| Axis | Set via | Effect |
+|------|---------|--------|
+| **1. Sub-command name** | typing `[object invoke]`, `[object invokeraw]`, or `[object invokeall]` | The variant you name directly. |
+| **2. Alias default** | `-alias` (optionally with `-aliasraw` / `-aliasall`) at `[object create]` or `[object invoke]` time | What the *created command* dispatches to: plain `-alias` uses `invoke`, `-aliasraw` uses `invokeraw`, `-aliasall` uses `invokeall` (recorded on the alias as the `ByRefArgumentFlags.AliasRaw` / `AliasAll` flags). |
+| **3. Per-call override** | `-invoke` / `-invokeraw` / `-invokeall` on an individual call | Re-dispatches that *single* call to the named variant, overriding axes 1 and 2. |
+
+The same `-invoke` / `-invokeraw` / `-invokeall` vocabulary drives both the
+sub-command redirect (on `[object invoke]` and friends) and the alias override,
+so it only has to be learned once.
+
+**Worked example** (verified by test `object-3.3`):
+
+```tcl
+set x [object create -alias System.Int32]            ;# alias uses [object invoke]  (the default)
+set y [object create -alias -aliasall System.Int32]  ;# alias uses [object invokeall]
+
+$x ToString                               ;# -> 0        (single invoke)
+$y ToString                               ;# -> {Ok 0}   (invokeall reports {overallCode errorCount})
+
+$x -invokeall ToString ToString ToString  ;# per-call override -> {Ok 0}
+$y -invoke ToString X                     ;# per-call override -> 0  (a single invoke)
+
+$x ToString ToString ToString             ;# error: a single invoke cannot take three arguments
+$y ToString ToString ToString             ;# -> {Ok 0}  (invokeall runs all three members)
+```
+
+A few consequences worth noting:
+
+- **Axis 3 always wins.** An `-aliasall` command still performs a single invoke
+  for a call made with `-invoke`, and an ordinary invoke alias runs a whole
+  `invokeall` for a call made with `-invokeall`.
+- As an axis-3 override, `-invoke` / `-invokeraw` / `-invokeall` on
+  `[object invokeall]` or `[object invokeraw]` are *whole-command* redirects (see
+  those sub-commands), not per-member mode switches.
+- The alias options themselves are documented under `[object create]`; the flags
+  they set live in the `ByRefArgumentFlags` enum.
+
+### 3.6 `[object dispose]` — Dispose and Release
 
 ```tcl
 object dispose ?options? object ?object ...?
