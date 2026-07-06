@@ -69,6 +69,7 @@ _None._
 - **array random** (5): `-strict`, `-pair`, `-valueonly`, `-matchname`, `-matchvalue`
 - **base64 decode** (1): `-encoding`
 - **base64 encode** (1): `-encoding`
+- **callback dequeue** (12): `-alias`, `-aliasall`, `-aliasraw`, `-aliasreference`, `-create`, `-nodispose`, `-noforcedelete`, `-objectflags`, `-objectname`, `-tcl`, `-tostring`, `-type`
 - **clock clicks** (2): `-milliseconds`, `-microseconds`
 - **clock days** (3): `-format`, `-epoch`, `-gmt`
 - **clock duration** (1): `-flags`
@@ -78,6 +79,7 @@ _None._
 - **clock scan** (4): `-format`, `-base`, `-epoch`, `-gmt`
 - **debug break** (5): `-interpreter`, `-ignoreenabled`, `-complain`, `-nocomplain`, `-noerror`
 - **debug emergency** (4): `-interpreter`, `-ignoreenabled`, `-nocomplain`, `-noerror`
+- **debug exception** (12): `-alias`, `-aliasall`, `-aliasraw`, `-aliasreference`, `-nocreate`, `-nodispose`, `-noforcedelete`, `-objectflags`, `-objectname`, `-tcl`, `-tostring`, `-type`
 - **debug hook** (2): `-type`, `-unset`
 - **debug iqueue** (2): `-dump`, `-clear`
 - **debug log** (2): `-level`, `-category`
@@ -89,6 +91,7 @@ _None._
 - **debug variable** (4): `-searches`, `-elements`, `-links`, `-empty`
 - **debugger dsubst** (3): `-nobackslashes`, `-nocommands`, `-novariables`
 - **debugger overr** (2): `-code`, `-result`
+- **exec** (52): `-background`, `-commandline`, `-debug`, `-dequote`, `-directory`, `-domainname`, `-escaperanges`, `-escapesubstring`, `-eventflags`, `-exitcode`, `-forprocessor`, `-ignorestderr`, `-keepnewline`, `-killonerror`, `-logtag`, `-nocapture`, `-nocaptureinput`, `-nocaptureoutput`, `-nocarriagereturns`, `-noellipsis`, `-noevents`, `-noexitcode`, `-nointerpreter`, `-nonormalize`, `-nopreviousprocessid`, `-nosleep`, `-objectflags`, `-overridecapture`, `-password`, `-preprocessarguments`, `-processid`, `-quoteall`, `-setall`, `-shell`, `-startcallback`, `-stderr`, `-stderrcallback`, `-stderrlogpath`, `-stdin`, `-stdinobject`, `-stdout`, `-stdoutcallback`, `-stdoutlogpath`, `-success`, `-tags`, `-timeout`, `-trace`, `-trimall`, `-unicode`, `-userinterface`, `-username`, `-windowstyle`
 - **exit** (6): `-message`, `-force`, `-fail`, `-nodispose`, `-nocomplain`, `-current`
 - **fconfigure query** (3): `-blocking`, `-encoding`, `-translation`
 - **fconfigure set** (4): `-blocking`, `-buffer`, `-encoding`, `-translation`
@@ -137,6 +140,7 @@ _None._
 - **interp sub command** (1): `-flags`
 - **interp subst** (3): `-nobackslashes`, `-nocommands`, `-novariables`
 - **kill** (4): `-all`, `-force`, `-whatIf`, `-verbose`
+- **library call** (40): `-alias`, `-aliasall`, `-aliasraw`, `-aliasreference`, `-argumentflags`, `-arrayaslink`, `-arrayasvalue`, `-autocreate`, `-autoflush`, `-autoindex`, `-autolimit`, `-autostatus`, `-bindingflags`, `-byrefobjectflags`, `-create`, `-datetimeformat`, `-datetimekind`, `-datetimestyles`, `-debug`, `-default`, `-flags`, `-help`, `-index`, `-limit`, `-marshalflags`, `-noargs`, `-nobyref`, `-nocase`, `-nodispose`, `-noforcedelete`, `-noinvoke`, `-objectflags`, `-objectname`, `-strictargs`, `-strictmember`, `-tcl`, `-tostring`, `-trace`, `-type`, `-verbose`
 - **library declare** (15): `-alias`, `-module`, `-functionname`, `-address`, `-returntype`, `-parametertypes`, `-callingconvention`, `-assemblyname`, `-modulename`, `-typename`, `-bestfitmapping`, `-charset`, `-setlasterror`, `-throwonunmappablechar`, `-delegatename`
 - **library load** (5): `-modulename`, `-locked`, `-maybetrustedonly`, `-trustedonly`, `-flags`
 - **library resolve** (2): `-module`, `-functionname`
@@ -149,6 +153,28 @@ _None._
 - **namespace2 export** (1): `-clear`
 - **namespace2 import** (1): `-force`
 - **namespace2 which** (2): `-command`, `-variable`
+- **object alias** (8): `-aliasall`, `-aliasname`, `-aliasraw`, `-aliasreference`, `-nocase`, `-objecttypes`, `-stricttype`, `-verbose`
+- **object certificate** (5): `-cache`, `-chain`, `-revocationflag`, `-revocationmode`, `-verificationflags`
+- **object cleanup** (7): `-nocomplain`, `-nodispose`, `-noremove`, `-pattern`, `-referencecount`, `-references`, `-synchronous`
+- **object create** (40): `-alias`, `-aliasall`, `-aliasraw`, `-aliasreference`, `-argumentflags`, `-arrayaslink`, `-arrayasvalue`, `-bindingflags`, `-byrefobjectflags`, `-debug`, `-default`, `-flags`, `-help`, `-index`, `-limit`, `-marshalflags`, `-methodtypes`, `-noargs`, `-nobyref`, `-nocase`, `-nocreate`, `-nodispose`, `-noforcedelete`, `-noinvoke`, `-nomutatebindingflags`, `-objectflags`, `-objectname`, `-objecttypes`, `-objectvalueflags`, `-parametermarshalflags`, `-parametertypes`, `-reorderflags`, `-strictargs`, `-strictmember`, `-stricttype`, `-tcl`, `-tostring`, `-trace`, `-type`, `-verbose`
+- **object declare** (6): `-declaremode`, `-declarenocase`, `-declarenonpublic`, `-declarepattern`, `-stricttype`, `-verbose`
+- **object dispose** (3): `-nocomplain`, `-nodispose`, `-synchronous`
+- **object foreach** (15): `-alias`, `-aliasall`, `-aliasraw`, `-aliasreference`, `-collect`, `-nocase`, `-nocreate`, `-nodispose`, `-noforcedelete`, `-objectflags`, `-objectname`, `-synchronous`, `-tcl`, `-tostring`, `-type`
+- **object get** (16): `-alias`, `-aliasall`, `-aliasraw`, `-aliasreference`, `-nocase`, `-nocreate`, `-nodispose`, `-noforcedelete`, `-objectflags`, `-objectname`, `-objecttypes`, `-stricttype`, `-tcl`, `-tostring`, `-type`, `-verbose`
+- **object import** (6): `-clr`, `-container`, `-eagle`, `-importmode`, `-importnocase`, `-importpattern`
+- **object invoke** (53): `-alias`, `-aliasall`, `-aliasraw`, `-aliasreference`, `-argumentflags`, `-arrayaslink`, `-arrayasvalue`, `-bindingflags`, `-byrefobjectflags`, `-create`, `-datetimeformat`, `-datetimekind`, `-datetimestyles`, `-debug`, `-default`, `-flags`, `-help`, `-identity`, `-index`, `-invokeall`, `-invokeraw`, `-limit`, `-marshalflags`, `-membertypes`, `-membervalueflags`, `-methodtypes`, `-noargs`, `-nobyref`, `-nocase`, `-nodispose`, `-noforcedelete`, `-noinvoke`, `-nonestedmember`, `-nonestedobject`, `-objectflags`, `-objectname`, `-objecttype`, `-objecttypes`, `-objectvalueflags`, `-parametermarshalflags`, `-parametertypes`, `-proxytype`, `-reorderflags`, `-returntype`, `-strictargs`, `-strictmember`, `-stricttype`, `-tcl`, `-tostring`, `-trace`, `-type`, `-typeidentity`, `-verbose`
+- **object invokeall** (57): `-alias`, `-aliasall`, `-aliasraw`, `-aliasreference`, `-argumentflags`, `-arrayaslink`, `-arrayasvalue`, `-bindingflags`, `-byrefobjectflags`, `-chained`, `-create`, `-datetimeformat`, `-datetimekind`, `-datetimestyles`, `-debug`, `-default`, `-flags`, `-help`, `-identity`, `-index`, `-invoke`, `-invokeraw`, `-keepresults`, `-lastresult`, `-limit`, `-marshalflags`, `-membertypes`, `-membervalueflags`, `-methodtypes`, `-noargs`, `-nobyref`, `-nocase`, `-nocomplain`, `-nodispose`, `-noforcedelete`, `-noinvoke`, `-nonestedmember`, `-nonestedobject`, `-objectflags`, `-objectname`, `-objecttype`, `-objecttypes`, `-objectvalueflags`, `-parametermarshalflags`, `-parametertypes`, `-proxytype`, `-reorderflags`, `-returntype`, `-strictargs`, `-strictmember`, `-stricttype`, `-tcl`, `-tostring`, `-trace`, `-type`, `-typeidentity`, `-verbose`
+- **object invokeraw** (43): `-alias`, `-aliasall`, `-aliasraw`, `-aliasreference`, `-argumentflags`, `-arrayaslink`, `-arrayasvalue`, `-bindingflags`, `-byrefobjectflags`, `-create`, `-datetimeformat`, `-datetimekind`, `-datetimestyles`, `-debug`, `-default`, `-flags`, `-help`, `-invoke`, `-invokeall`, `-marshalflags`, `-methodtypes`, `-noargs`, `-nobyref`, `-nocase`, `-nodispose`, `-noforcedelete`, `-noinvoke`, `-nonestedobject`, `-objectflags`, `-objectname`, `-objecttype`, `-objecttypes`, `-objectvalueflags`, `-parametermarshalflags`, `-parametertypes`, `-proxytype`, `-returntype`, `-stricttype`, `-tcl`, `-tostring`, `-trace`, `-type`, `-verbose`
+- **object isdisposed** (4): `-cannotcheck`, `-caughtexception`, `-force`, `-nocomplain`
+- **object isnull** (6): `-cannotcheck`, `-caughtexception`, `-force`, `-nocomplain`, `-objectdisposed`, `-valuedisposed`
+- **object isoftype** (8): `-assignable`, `-marshalflags`, `-nocase`, `-nocomplain`, `-objecttypes`, `-objectvalueflags`, `-stricttype`, `-verbose`
+- **object load** (30): `-alias`, `-aliasall`, `-aliasraw`, `-aliasreference`, `-create`, `-declare`, `-declaremode`, `-declarenocase`, `-declarenonpublic`, `-declarepattern`, `-fromobject`, `-import`, `-importmode`, `-importnocase`, `-importnonpublic`, `-importpattern`, `-loadtype`, `-maybetrustedonly`, `-maybeverifiedonly`, `-namespace`, `-nodispose`, `-noforcedelete`, `-objectflags`, `-objectname`, `-reflectiononly`, `-tcl`, `-tostring`, `-trustedonly`, `-type`, `-verifiedonly`
+- **object members** (17): `-attributes`, `-bindingflags`, `-flags`, `-marshalflags`, `-matchnameonly`, `-membertypes`, `-mode`, `-nameonly`, `-nocase`, `-objecttypes`, `-objectvalueflags`, `-pattern`, `-qualified`, `-signatures`, `-stricttype`, `-type`, `-verbose`
+- **object search** (11): `-fullname`, `-marshalflags`, `-noassembly`, `-nocase`, `-noexception`, `-nonamespace`, `-noshowname`, `-objecttypes`, `-objectvalueflags`, `-stricttype`, `-verbose`
+- **object type** (3): `-typemode`, `-typenocase`, `-typepattern`
+- **object unaliasnamespace** (4): `-aliasmode`, `-aliasnocase`, `-aliaspattern`, `-bycontainer`
+- **object undeclare** (4): `-bycontainer`, `-declaremode`, `-declarenocase`, `-declarepattern`
+- **object unimport** (4): `-bycontainer`, `-importmode`, `-importnocase`, `-importpattern`
 - **object verify all** (1): `-verifyflags`
 - **open** (11): `-stdin`, `-stdout`, `-stderr`, `-channelid`, `-buffersize`, `-nullencoding`, `-autoflush`, `-rawendofstream`, `-streamflags`, `-options`, `-share`
 - **package absent** (1): `-exact`
@@ -161,6 +187,7 @@ _None._
 - **parse options** (11): `-flags`, `-optionsvar`, `-indexes`, `-allowinteger`, `-strict`, `-verbose`, `-nocase`, `-novalue`, `-noset`, `-noready`, `-simple`
 - **parse script** (11): `-engineflags`, `-substitutionflags`, `-filename`, `-currentline`, `-startindex`, `-characters`, `-nested`, `-syntax`, `-strict`, `-roundtrip`, `-noready`
 - **puts** (4): `-encoding`, `-usecount`, `-useobject`, `-nonewline`
+- **read** (17): `-alias`, `-aliasall`, `-aliasraw`, `-aliasreference`, `-create`, `-encoding`, `-noblock`, `-nodispose`, `-noforcedelete`, `-nonewline`, `-objectflags`, `-objectname`, `-objecttype`, `-returntype`, `-tcl`, `-tostring`, `-useobject`
 - **regexp** (23): `-about`, `-options`, `-all`, `-debug`, `-ecma`, `-compiled`, `-explicit`, `-reverse`, `-expanded`, `-indexes`, `-indices`, `-global`, `-inline`, `-skip`, `-limit`, `-line`, `-lineanchor`, `-linestop`, `-nocase`, `-noempty`, `-noculture`, `-start`, `-length`
 - **regsub** (21): `-options`, `-all`, `-count`, `-ecma`, `-compiled`, `-explicit`, `-quote`, `-nostrict`, `-reverse`, `-eval`, `-command`, `-literal`, `-verbatim`, `-extra`, `-expanded`, `-line`, `-lineanchor`, `-linestop`, `-nocase`, `-noculture`, `-start`
 - **rename** (5): `-nodelete`, `-hidden`, `-hiddenonly`, `-kind`, `-newnamevar`
@@ -176,6 +203,7 @@ _None._
 - **socket** (19): `-timeouttype`, `-addressfamily`, `-keepalive`, `-server`, `-buffer`, `-timeout`, `-sendtimeout`, `-receivetimeout`, `-availabletimeout`, `-readtimeout`, `-writetimeout`, `-myaddr`, `-myport`, `-async`, `-channelid`, `-nodelay`, `-nobuffer`, `-noexclusive`, `-trace`
 - **source** (7): `-encoding`, `-withinfo`, `-time`, `-password`, `-library`, `-bundle`, `-bundleflags`
 - **split** (4): `-string`, `-stricttype`, `-verbose`, `-nocase`
+- **sql execute** (44): `-alias`, `-aliasall`, `-aliasraw`, `-aliasreference`, `-allownull`, `-behavior`, `-blobbehavior`, `-changed`, `-commandtype`, `-create`, `-culture`, `-datetimebehavior`, `-datetimeformat`, `-datetimekind`, `-datetimestyles`, `-dbnullvalue`, `-errorvalue`, `-execute`, `-format`, `-limit`, `-names`, `-nested`, `-nocreate`, `-nodispose`, `-nofixup`, `-noforcedelete`, `-nullvalue`, `-numberformat`, `-objectflags`, `-objectname`, `-objecttype`, `-pairs`, `-returntype`, `-rowsvar`, `-rowvar`, `-tcl`, `-time`, `-timeout`, `-timevar`, `-tostring`, `-transaction`, `-valueflags`, `-valueformat`, `-verbatim`
 - **sql open** (15): `-type`, `-type1`, `-type2`, `-variable`, `-assemblyfilename`, `-typename`, `-typefullname`, `-valueflags`, `-trustedonly`, `-maybetrustedonly`, `-publickeytoken1`, `-publickeytoken2`, `-stricttype`, `-verbose`, `-nocase`
 - **sql transaction** (2): `-isolation`, `-variable`
 - **string ends** (3): `-culture`, `-nocase`, `-comparison`
@@ -187,7 +215,7 @@ _None._
 - **string map** (9): `-multipass`, `-regexp`, `-subspec`, `-eval`, `-maximum`, `-countvar`, `-comparison`, `-regexpoptions`, `-nocase`
 - **string match** (2): `-mode`, `-nocase`
 - **string starts** (3): `-culture`, `-nocase`, `-comparison`
-- **string to upper** (1): `-culture`
+- **string to case** (2): `-culture`, `-invariant`
 - **subst** (3): `-nobackslashes`, `-nocommands`, `-novariables`
 - **switch** (7): `-exact`, `-integer`, `-substring`, `-glob`, `-regexp`, `-subst`, `-nocase`
 - **tcl cancel** (1): `-unwind`
@@ -214,4 +242,6 @@ _None._
 - **uri get** (14): `-timeouttype`, `-retries`, `-timeout`, `-callback`, `-callbackflags`, `-inline`, `-noinline`, `-trusted`, `-yesprotocol`, `-noprotocol`, `-obsolete`, `-encodingtype`, `-encoding`, `-webclientdata`
 - **uri post** (17): `-timeouttype`, `-retries`, `-timeout`, `-method`, `-data`, `-callback`, `-callbackflags`, `-inline`, `-noinline`, `-raw`, `-trusted`, `-yesprotocol`, `-noprotocol`, `-obsolete`, `-encodingtype`, `-encoding`, `-webclientdata`
 - **vwait** (12): `-handle`, `-eventwaitflags`, `-variableflags`, `-thread`, `-limit`, `-timeout`, `-clear`, `-force`, `-nocomplain`, `-leaveresult`, `-resetcancel`, `-locked`
+- **xml deserialize** (16): `-alias`, `-aliasall`, `-aliasraw`, `-aliasreference`, `-encoding`, `-nocase`, `-nocreate`, `-nodispose`, `-noforcedelete`, `-objectflags`, `-objectname`, `-stricttype`, `-tcl`, `-tostring`, `-type`, `-verbose`
 - **xml for each** (3): `-file`, `-namespaces`, `-xpaths`
+- **xml serialize** (4): `-encoding`, `-nocase`, `-stricttype`, `-verbose`

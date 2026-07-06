@@ -205,6 +205,148 @@ proc scanCommands { eagleSrc registered } {
 }
 
 #
+# NOTE: Tier 2 option resolution.  Many commands (e.g. [object invoke]) have a
+#       CommandOptions.cs case that merely delegates, for example:
+#
+#         case CommandOptionType.Object_Invoke:
+#             return ObjectOps.GetObjectOptions(ObjectOptionType.Invoke);
+#
+#       The real options live in ObjectOps.cs, assembled by a graph of
+#       GetXxxOptions() builders that compose one another and toggle the
+#       "Ignored" flag.  The procs below follow that indirection and resolve
+#       each delegating command to its actual, non-ignored option set.
+#
+
+#
+# NOTE: Parses every "GetXxxOptions()" builder in an *Ops.cs file into a recipe
+#       dict: calls (composed builders), inline (optionName -> ignored 0/1), and
+#       the ignore / unignore "Ignored" flag toggles.
+#
+proc parseOpsBuilders { text } {
+  set methods [list]
+  set idx 0
+  while {[regexp -start $idx -indices -- \
+      {static\s+OptionDictionary\s+(Get[A-Za-z0-9]+Options)\s*\(} $text full name]} {
+    lappend methods [list [string range $text [lindex $name 0] [lindex $name 1]] \
+        [lindex $full 0]]
+    set idx [expr {[lindex $full 1] + 1}]
+  }
+
+  set recipes [dict create]
+  set count [llength $methods]
+
+  for {set i 0} {$i < $count} {incr i} {
+    lassign [lindex $methods $i] nm start
+    if {$i + 1 < $count} {
+      set end [expr {[lindex [lindex $methods [expr {$i + 1}]] 1] - 1}]
+    } else {
+      set end [expr {[string length $text] - 1}]
+    }
+    set body [string range $text $start $end]
+
+    set calls [list]
+    foreach {f c} [regexp -all -inline -- {(Get[A-Za-z0-9]+Options)\s*\(\s*\)} $body] {
+      if {$c ne $nm} { lappend calls $c }
+    }
+
+    set inline [dict create]
+    foreach {f flags oname} [regexp -all -inline -- \
+        {new\s+Option\s*\(([^"]*?)"(-[^"]+)"} $body] {
+      dict set inline $oname [expr {[string match *Ignored* $flags] ? 1 : 0}]
+    }
+
+    set ignore [list]
+    foreach {f o} [regexp -all -inline -- \
+        {options\["(-[^"]+)"\]\.Flags\s*\|=\s*OptionFlags\.Ignored} $body] {
+      lappend ignore $o
+    }
+
+    set unignore [list]
+    foreach {f o} [regexp -all -inline -- \
+        {options\["(-[^"]+)"\]\.Flags\s*&=\s*~OptionFlags\.Ignored} $body] {
+      lappend unignore $o
+    }
+
+    dict set recipes $nm [dict create \
+        calls $calls inline $inline ignore $ignore unignore $unignore]
+  }
+
+  return $recipes
+}
+
+#
+# NOTE: Resolves one builder to a dict of optionName -> ignored (0/1), following
+#       composed builders recursively (memoized via cacheVar).
+#
+proc resolveBuilder { method recipesVar cacheVar } {
+  upvar 1 $recipesVar recipes $cacheVar cache
+
+  if {[dict exists $cache $method]} { return [dict get $cache $method] }
+
+  set result [dict create]
+  dict set cache $method $result; # NOTE: Cycle guard.
+
+  if {[dict exists $recipes $method]} {
+    set r [dict get $recipes $method]
+
+    foreach call [dict get $r calls] {
+      dict for {o ign} [resolveBuilder $call recipes cache] { dict set result $o $ign }
+    }
+
+    dict for {o ign} [dict get $r inline] { dict set result $o $ign }
+
+    foreach o [dict get $r ignore] {
+      if {[dict exists $result $o]} { dict set result $o 1 }
+    }
+    foreach o [dict get $r unignore] {
+      if {[dict exists $result $o]} { dict set result $o 0 }
+    }
+  }
+
+  dict set cache $method $result
+  return $result
+}
+
+#
+# NOTE: Parses the "GetObjectOptions(ObjectOptionType)" dispatch switch into a
+#       dict: ObjectOptionType value -> builder method name.
+#
+proc parseOpsDispatch { text } {
+  set map [dict create]
+  foreach {f ot builder} [regexp -all -inline -- \
+      {case\s+ObjectOptionType\.(\w+):\s*return\s+(Get[A-Za-z0-9]+Options)\s*\(\s*\)} $text] {
+    dict set map $ot $builder
+  }
+  return $map
+}
+
+#
+# NOTE: Parses CommandOptions.cs cases that delegate to
+#       "ObjectOps.GetObjectOptions(ObjectOptionType.X)" into a list of
+#       {CommandOptionType ObjectOptionType} pairs.
+#
+proc parseOpsDelegations { text } {
+  set list [list]
+  foreach {f ct ot} [regexp -all -inline -- \
+      {case\s+CommandOptionType\.(\w+):\s*return\s+ObjectOps\.GetObjectOptions\s*\(\s*ObjectOptionType\.(\w+)\s*\)} \
+      $text] {
+    lappend list [list $ct $ot]
+  }
+  return $list
+}
+
+#
+# NOTE: "Object_Invoke" -> "object invoke".
+#
+proc commandFromEnum { ct } {
+  set out [list]
+  foreach p [split $ct _] { lappend out [string tolower $p] }
+  return [join $out " "]
+}
+
+###############################################################################
+
+#
 # NOTE: Returns a dict of "derived command path" -> list of option names from
 #       CommandOptions.cs (e.g. "clock now" -> {-gmt -base ...}).
 #
@@ -242,6 +384,51 @@ proc scanOptions { eagleSrc } {
       dict set result [join [camelWords $nm]] $opts
     }
   }
+
+  #
+  # NOTE: Tier 2 -- resolve options for commands whose CommandOptions.cs case
+  #       delegates to ObjectOps.GetObjectOptions(); their option names are not
+  #       present in CommandOptions.cs itself.
+  #
+  global cmdSubs
+
+  set opsPath [file join $eagleSrc Library Components Private ObjectOps.cs]
+
+  if {[file exists $opsPath]} {
+    set opsText [stripComments [readAll $opsPath]]
+    set recipes [parseOpsBuilders $opsText]
+    set dispatch [parseOpsDispatch $opsText]
+    set cache [dict create]
+
+    foreach pair [parseOpsDelegations $text] {
+      lassign $pair ct ot
+      if {![dict exists $dispatch $ot]} continue
+
+      set cmd [commandFromEnum $ct]
+
+      #
+      # NOTE: Skip internal option-type variants (e.g. "object invokeonly",
+      #       "object fixupreturnvalue") that are not real sub-commands.
+      #
+      set words [split $cmd " "]
+      if {[llength $words] == 2} {
+        lassign $words c s
+        if {![info exists cmdSubs($c)] || [lsearch -exact $cmdSubs($c) $s] < 0} {
+          continue
+        }
+      }
+
+      set avail [list]
+      dict for {o ign} [resolveBuilder [dict get $dispatch $ot] recipes cache] {
+        if {!$ign} { lappend avail $o }
+      }
+
+      if {[llength $avail] > 0} {
+        dict set result $cmd [uniqueOrdered [lsort $avail]]
+      }
+    }
+  }
+
   return $result
 }
 
