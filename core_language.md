@@ -5620,6 +5620,8 @@ Operators are used within expressions to perform calculations, comparisons, and 
 | `%` | Modulus | Integer remainder; the result takes the sign of the divisor (floored modulo, matches Tcl) |
 | `**` | Exponent | Exponentiation (x raised to power y) |
 
+**Deviation (by design — fixed-width 64-bit integers, no bignum promotion):** unlike Tcl 8.5+ (which auto-promotes to arbitrary-precision `bignum` integers when a result overflows the machine word), Eagle follows the Tcl 8.4 language baseline and does **not** promote — integer arithmetic uses fixed-width 64-bit (`wide`) integers that wrap (two's-complement) on overflow. For example, `[expr {9223372036854775807 + 1}]` yields `-9223372036854775808`, and `[expr {2 ** 64}]` yields `0`. Opt into arbitrary precision explicitly with the `entier(x)` function: `[expr {entier(9223372036854775807) + 1}]` yields `9223372036854775808`. Keeping the common path fixed-width makes it fast and predictable while leaving the (rarer) big-integer path a visible, deliberate choice.
+
 ---
 
 #### Comparison Operators (ObjectGroup: "comparison")
@@ -5632,6 +5634,8 @@ Operators are used within expressions to perform calculations, comparisons, and 
 | `>` | GreaterThan | Greater than comparison |
 | `<=` | LessThanOrEqualTo | Less than or equal comparison |
 | `>=` | GreaterThanOrEqualTo | Greater than or equal comparison |
+
+**Deviation (by design — boolean results render as `True`/`False`):** operators that yield a boolean result — the comparison operators above, the string-comparison operators (`eq`, `ne`, …), the logical operators (`!`, `&&`, `||`, …), and the list-membership operators (`in`, `ni`) — return the capitalized strings `True` and `False`, not Tcl's `1` and `0`. For example, `[expr {1 == 1}]` is `True` and `[expr {5 < 3}]` is `False`. Eagle still *accepts* every Tcl boolean spelling as input (`1`/`0`, `yes`/`no`, `true`/`false`, `on`/`off`), and `[string is boolean]` recognizes all of them — only the rendered result differs. Use such a result directly in a boolean context (`if`, `while`, `for`, `&&` — all of which accept `True`/`False`) rather than string-comparing it against the literal `1`.
 
 ---
 
