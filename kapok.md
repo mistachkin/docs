@@ -61,6 +61,52 @@ The plugin architecture is organized into several component layers:
 
 ---
 
+## Common patterns
+
+*Test-verified quick start (from `Plugins/Commercial/Enterprise/Kapok/Tests/basic.eagle` and `Configurations/`). The operator API is `kapok access` (key management) + `kapok evaluate` (sandboxed eval); `Configurations/openAI_configuration.eagle` is the real config.*
+
+Load:
+
+```eagle
+package require Kapok.Enterprise   ;# [kapok]
+package require Eagle.OpenAI       ;# + Eagle.CIDR, Eagle.Signing, Licensing.Enterprise
+```
+
+Provision an API key (order matters; wrap each in `catch`): `unban` -> `grant`/`revoke` -> `promote`/`demote` -> `real`/`fake` -> `restrict`/`unrestrict`:
+
+```eagle
+catch {kapok access unban   $apiKey};  catch {kapok access grant   $apiKey}
+catch {kapok access promote $apiKey};  catch {kapok access real    $apiKey}
+catch {kapok access restrict $apiKey {{id 1 type Include kind Command \
+    mode {Include Exact} regExOptions None patterns clock}}}
+```
+
+Throttle + access-gated sandbox evaluation (the core flow):
+
+```eagle
+kapok access throttle $apiKey $address           ;# per-host quota; throws when exceeded
+set ruleSet [getDictionaryValue [kapok access $apiKey] ruleSet]
+set cmd [list kapok evaluate -unsafe true -apikeyid $apiKey]
+if {[string length $ruleSet] > 0} then {lappend cmd -ruleset $ruleSet}
+eval [linsert $cmd end -- $script]
+```
+
+CIDR allow/deny lists (`Configurations/cidr_{allow,deny}.eagle`):
+
+```eagle
+package require Eagle.CIDR
+maybeLoadCidrs $dir cidr_deny.eagle  openAI_deny_cidrs  false false
+maybeLoadCidrs $dir cidr_allow.eagle openAI_allow_cidrs false false
+```
+
+Client submitting a prompt (receives a signed, sandbox-verified script):
+
+```eagle
+uri upload -trusted -inline -retries 0 \
+    -data [list nop false fake true apiKey $apiKey prompt $prompt] -- \
+    $scriptBaseUri$scriptRelativeUri
+```
+
 ## Command Summary
 
 | Command | Type | Sub-commands | Command Flags | Description |

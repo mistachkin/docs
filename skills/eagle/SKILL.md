@@ -62,7 +62,7 @@ Tcl" claim, confirm with `tcl-oracle.sh` and name the version(s).
 | Sandbox untrusted code | [`reference/safe-interp.md`](reference/safe-interp.md) |
 | Use script-library procedures | [`reference/library.md`](reference/library.md) |
 | Write/run tests | [`reference/testing.md`](reference/testing.md) |
-| Load / understand plugins | [`reference/plugins.md`](reference/plugins.md) |
+| Load plugins; use an Enterprise plugin's commands (Harpy/Badge/Kapok/Zeus/Demo/HotKey) | [`reference/plugins.md`](reference/plugins.md) |
 | Files / channels / run a process | [`reference/commands/io-files.md`](reference/commands/io-files.md) |
 | Databases (ADO.NET / SQLite) | [`reference/commands/data-net.md`](reference/commands/data-net.md) |
 | Strings / regex / format | [`reference/commands/strings.md`](reference/commands/strings.md) |

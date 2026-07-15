@@ -969,6 +969,29 @@ Many plugins implement `GetString()` to return resource strings from
 embedded assembly resources, with optional package-relative path
 translation and encrypted string transformation.
 
+**Using enterprise plugins from scripts:**
+- Load with `package require <Plugin>.Enterprise` (e.g. `Licensing.Enterprise`,
+  `Zeus.Enterprise`, `Badge.Enterprise`, `Kapok.Enterprise`); the command *is* the
+  plugin. Higher-level helpers live in script-library sub-packages
+  (`Zeus.Cryptography`; `Eagle.OpenAI`/`Eagle.CIDR`/`Eagle.Signing` for Kapok).
+- Command results are **string tokens** (`SignedOk`, `VerifiedOk`, `ExportedOk`,
+  `PASSED`), not booleans or exit codes — compare them literally.
+- **Runtime state is per-AppDomain and/or per-plugin-instance, not process-global.**
+  Loaded key rings, policy, `security` enforcement, and licensed features are
+  scoped that way (a `static` field is one copy per AppDomain). Mutating them
+  within an AppDomain/instance carries into later operations there, so save and
+  restore around temporary changes. Loading a plugin `-isolated` gives it its own
+  AppDomain — and therefore its own independent key rings and policy — which is how
+  per-tenant isolation is achieved.
+- A shared certificate/signing backbone (from Harpy) underpins the others:
+  `<<CERTIFICATE-1.0>>` embedded blocks, `keyring merge`,
+  `certificate signfile`/`verifyfile`, and `debug secureeval -trusted` to run a
+  signed script in a safe interpreter.
+
+Each plugin's canonical reference has a **Common patterns** quick-start with
+test-verified snippets: [Harpy](harpy.md), [Badge](badge.md), [Kapok](kapok.md),
+[Zeus](zeus.md), [Demo](demo.md), [HotKey](hotKey.md).
+
 ## 10. Complete `[load]` Options Reference
 
 ```tcl

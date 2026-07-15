@@ -44,6 +44,33 @@ The plugin (`Demo.Enterprise`) requires the interpreter host to be (or derive fr
 
 ---
 
+## Common patterns
+
+*Test-verified quick start (from `Plugins/Commercial/Enterprise/Demo/Tests/basic.eagle` and `Scripts/`). Demo swaps in a custom **host** on load and restores it on unload; the current host must be the Console or Wrapper host (run under the shell), or `Initialize` fails with `unsupported host type`.*
+
+Load and play a script as simulated interactive input:
+
+```eagle
+package require Demo.Enterprise
+demo startup -path [file join $path data demo0.eagle]   ;# lines appear at the % prompt and run
+demo shutdown                                            ;# restore normal input (always end this way)
+```
+
+Presentation mode (pause + beep before each line):
+
+```eagle
+demo startup -pause true -beep true -path $fileName
+```
+
+Timed / externally-stopped playback:
+
+```eagle
+demo startup -path $fileName; demo playmilliseconds 1000
+after 2000 [list demo stop]
+```
+
+Demo is also the canonical **reference for building a host-swapping plugin**: declare `PluginFlags.Host`, then in `Initialize` validate the current host type and do `savedHost = interpreter.Host; interpreter.Host = demoHost;`, and in `Terminate`/`Dispose` restore it guarded by `ReferenceEquals(current, demoHost)` (dispose only a host you created).
+
 ## Command Summary
 
 | Command | Type | Sub-commands | Command Flags | Description |

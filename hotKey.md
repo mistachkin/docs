@@ -50,6 +50,46 @@ The plugin requires an interpreter that supports Eagle threading. During initial
 
 ---
 
+## Common patterns
+
+*Test-verified quick start (from `Plugins/Commercial/Enterprise/HotKey/Tests/basic.eagle`). Real global registration needs Windows + `compile.NATIVE` + `compile.THREADING`; you must `hotkey startup`/`wait` before use and `shutdown` after. Only `add` is permitted in a safe interpreter.*
+
+Load:
+
+```eagle
+package require HotKey.Enterprise   ;# [hotkey]
+```
+
+Bind a global key to a script and run it:
+
+```eagle
+hotkey startup; hotkey wait $timeoutMs        ;# start & await the manager thread
+set id [hotkey add F15 None {lappend result F15}]
+hotkey register $id                            ;# arm the native hook
+hotkey evaluate $id                            ;# force-run (or press the key)
+hotkey result   $id                            ;# last return value
+hotkey unregister $id
+```
+
+Inspect / remove:
+
+```eagle
+hotkey list; hotkey get $id true; hotkey remove $id; hotkey clear
+```
+
+Persist definitions (`save` emits a loadable script of `hotkey add ...` lines):
+
+```eagle
+set script [hotkey save]; hotkey clear; hotkey load $script
+hotkey autoload   ;# load *.eagle definitions from the config directory
+```
+
+Find by key combo:
+
+```eagle
+hotkey find -all true -keys F3
+```
+
 ## Command Summary
 
 | Command | Type | Sub-commands | Command Flags | Description |

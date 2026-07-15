@@ -70,6 +70,50 @@ The plugin also provides a script library package:
 
 ---
 
+## Common patterns
+
+*Test-verified quick start (from `Plugins/Commercial/Enterprise/Zeus/Tests/basic.eagle`). Salt must be >= 8 bytes; encrypt/decrypt must use identical password/salt/iterationCount/hashAlgorithmName (`""` = default).*
+
+Load:
+
+```eagle
+package require Zeus.Enterprise     ;# [zeus]
+package require Zeus.Cryptography   ;# encryptScript / decryptScript / sourceEncrypted / ...
+```
+
+RFC 2898 (PBKDF2) script encryption round-trip:
+
+```eagle
+set enc [encryptScript {puts stdout hi} "" password test1234 1000 ""]
+decryptScript [eval $enc] "" password test1234 1000 ""   ;# -> {puts stdout hi}
+isEncryptedScript $enc true                              ;# strict "<<ENCRYPTED-1.0>>" check
+```
+
+Ship & run a protected `.eagle` file (config from the `zeus(...)` array; local or `https://`):
+
+```eagle
+set zeus(password) password; set zeus(salt) test1234
+set zeus(iterationCount) 1000; set zeus(hashAlgorithmName) ""
+sourceEncrypted $encryptedFile
+sourceEncrypted https://eagle.to/scripts/encrypted.eagle
+```
+
+Register an obfuscated, source-hidden procedure:
+
+```eagle
+set p [zeus register -flags +NamedArguments { one two } { ... }]
+[$p] 1 2            ;# call (token is a command)
+zeus unregister $p
+```
+
+Hook a CLR method with an Eagle callback:
+
+```eagle
+set callback [zeus callback [zeus register { value } { return [list "HOOKED" $value] }]]
+set hook [zeus hook -callback $callback -methodtype Some.Type -methodname TheMethod -bindingflags +NonPublic]
+unset hook          ;# disposing the hook handle un-hooks it
+```
+
 ## Command Summary
 
 | Command | Type | Sub-commands | Command Flags | Description |

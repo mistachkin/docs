@@ -34,7 +34,10 @@ pitfalls** when working with Eagle.
 | File | What it contains | When you use it |
 |------|------------------|-----------------|
 | `why_eagle.md` | Feature overview, language comparisons, security model, and use-case guidance | When explaining Eagle's advantages, comparing it to other languages, or making a case for adoption |
+| `whitepaper.md` | "Two Languages, On Purpose" — the dual-language architecture thesis: a scripting layer over typed .NET (extends Ousterhout's scripting essay) | When making the design/philosophy case for Eagle's two-language model, or explaining *why* it pairs a script engine with the CLR |
+| `paper_love_and_software.md` | Essay by Joe Mistachkin — "If You Want a Project to Be Good, You Have to Love Working on It" | When you want the author's philosophy on software quality and craftsmanship |
 | `quick_start_guide.md` | Getting started guide: obtaining Eagle, running the shell, language basics, .NET interop intro | When new users need to get up and running or when explaining Eagle basics |
+| `embedding.md` | How to embed Eagle in a C# application: the `Interpreter`/`ReturnCode`/`Result` model, creating/evaluating/disposing interpreters, exchanging data (variables, linked variables), adding custom commands/functions/plugins, calling .NET from scripts and injecting live C# objects, custom hosts, sandboxing untrusted scripts, cancellation/timeouts/resource limits, the threading model, AppDomain isolation, and deployment/NuGet | When you need to host Eagle inside a .NET application, drive the interpreter from C#, extend it with native commands, or sandbox untrusted scripts programmatically |
 | `core_language.md` | Eagle command catalog (built-ins), organized by category; includes advanced topics | When you need command syntax, options, behavior, or Eagle-only extensions |
 | `core_examples.md` | Contains 500+ worked examples for every command and sub-command, organized by category | When you need usage examples, idiomatic patterns, or practical demonstrations |
 | `core_script_library.md` | Contains 580+ library procedures (script-level utilities), organized by package and source file | When you need helper procedures, test utilities, file helpers, platform detection, etc. |
@@ -45,6 +48,12 @@ pitfalls** when working with Eagle.
 | `library.md` | Deep-dive analysis of the `[library]` command: P/Invoke-style FFI, dynamic delegate creation via Reflection.Emit, module lifecycle/reference counting, marshalling, architecture and certificate verification | When you need to understand how Eagle calls native C functions, the dynamic delegate type creation mechanism, or module lifecycle management |
 | `interp.md` | Deep-dive analysis of the `[interp]` command: interpreter lifecycle, safe interpreter security model, command hiding, policy-based access control, resource limits, execution timeouts, and cross-interpreter communication | When you need to understand interpreter management, the safe interpreter security model, policy callbacks, resource limits, or how to sandbox untrusted code |
 | `load.md` | Deep-dive analysis of the `[load]`/`[unload]` commands: .NET plugin loading infrastructure, security verification chain (strong name, Authenticode, public key token), AppDomain isolation, built-in plugins, enterprise plugins (Harpy, Badge, HotKey, Zeus, Demo, Featherlight, Aquila, Kapok), and plugin lifecycle management | When you need to understand how Eagle loads/unloads .NET plugins, the security verification pipeline, AppDomain isolation, PluginFlags, or the enterprise plugin ecosystem |
+| `harpy.md` | **Harpy** (Eagle Enterprise Edition) — security & licensing: license certificates, script signing/verification, execution policies (`[harpy]`) | When you need Harpy's sub-commands, the certificate/signing model, or license verification |
+| `badge.md` | **Badge** (EEE) — signed script certificate resources + a runtime string-override mechanism (`[badge]`) | When you need `[badge]` sub-commands or embedded signed-script certificate management |
+| `kapok.md` | **Kapok** (EEE) — web server with sandboxed script evaluation, API-key token access control, and request throttling (`[kapok]`) | When you need the `[kapok]` web-server commands, sandboxed evaluation, or rate limiting |
+| `zeus.md` | **Zeus** (EEE) — managed environment, cryptographic operations, CLR method hooking, and script encryption (`[zeus]`) | When you need `[zeus]` sub-commands, method hooking, RFC 2898 key derivation, or script encryption |
+| `demo.md` | **Demo** (EEE) — the worked example of a host-swapping plugin (`[demo]`) | When you need a reference host-swapping plugin implementation or the `[demo]` commands |
+| `hotKey.md` | **HotKey** (EEE) — system-wide (global) hot-key registration that runs scripts, plus a WinForms management UI (`[hotkey]`) | When you need the `[hotkey]` commands or the global hot-key / GUI subsystem |
 | `sql.md` | Deep-dive analysis of the `[sql]` command: ADO.NET database access, `-variable` options with DbTraceCallback for automatic resource cleanup, script bundle databases (signed SQLite-based script containers), query execution pipeline, parameter binding, result formatting, transaction management, and performance profiling | When you need to understand database operations, automatic connection/transaction cleanup, the script bundle system, parameterized queries, or provider type resolution |
 | `regexp.md` | Deep-dive analysis of the `[regexp]`/`[regsub]` commands: .NET `System.Text.RegularExpressions` integration, default `Singleline` behavior (dot matches newlines, like Tcl — opposite of .NET's own default), Tcl-to-.NET substitution translation (`TranslateSubSpec`), three replacement modes (normal, `-eval`, `-command`/TIP #463), `-extra` extended substitutions (`\P`, `\I`, `\S`, `\M#`, `\N<name>`), pattern mutation prefixes (`***=`, `***:`), and all Eagle-specific options | When you need to understand regex behavior differences from Tcl, substitution translation, the three regsub modes, named group references, or the many Eagle-specific regex options |
 | `uri.md` | Deep-dive analysis of the `[uri]` command: 18 sub-commands for URI construction/parsing/validation, HTTP download/upload (sync and async), four per-interpreter web callbacks (`PreWebClientCallback`, `NewWebClientCallback`, `WebTransferCallback`, `WebErrorCallback`), custom `WebClient`-derived classes (`TagAndTimeoutWebClient`, `ScriptWebClient`), async transfers with `CommandCallback` script evaluation, retry infrastructure, offline mode, and security protocol management | When you need to understand HTTP operations, async downloads/uploads with callbacks, custom WebClient configuration, the web callback chain, retry logic, or URI utility operations |
@@ -56,6 +65,7 @@ pitfalls** when working with Eagle.
 | `namespace.md` | Deep-dive analysis of the `[namespace]` command: 22 sub-commands, dual-implementation architecture (Namespace1 compatibility stub vs. Namespace2 full implementation), `INamespace` object model with parent-child hierarchy and reference counting, name resolution algorithm (`GetBase` → `GetDescendant` traversal), call frame integration (`VariableFrame`, `ResolveData` per frame), import/export mechanism via `IAlias` with `NamespaceImport` flag, per-namespace unknown handler, namespace mappings for name remapping, pluggable `IResolve` resolver per namespace, `[namespace enable]`/`[rename]`/`descendants`/`[info]`/`mappings` Eagle extensions, and `[scope attach]`/`detach`/`export`/`import` integration | When you need to understand namespace management, the dual-implementation architecture, name resolution, call frame binding, import/export, per-namespace unknown handlers, or scope-namespace interoperability |
 | `array.md` | Deep-dive analysis of the `[array]` command: 17 sub-commands, 8 polymorphic storage backends (`ElementDictionary`, environment, `System.Array`, thread, database, network, registry, tests), `[array copy]` with `-deep` option, `[array default]` (TIP #508) for missing-key defaults, `[array random]` with 5 options (`-strict`, `-pair`, `-valueonly`, `-matchname`, `-matchvalue`), `[array for]`/`[foreach]`/`[lmap]` iteration, per-element flags via `VariableFlagsDictionary`, `VariableFlags` enum (Array, ReadOnly, Virtual, System, Dirty, BreakOnGet/Set/Unset), `ArraySearch` stateful iteration, trace integration (`FireArraySetTraces`), and thread-safe locking | When you need to understand array operations, storage backends, default values, deep copy, random access, iteration patterns, per-element flags, or variable trace integration |
 | `host.md` | Deep-dive analysis of the `[host]` command: 33 primary sub-commands + 8 nested `[host screen]` sub-commands, 15-interface host hierarchy (`IHost` aggregating `IInteractiveHost`, `IStreamHost`, `IColorHost`, `IBoxHost`, `IPositionHost`, `ISizeHost`, `IReadHost`, `IWriteHost`, `IDebugHost`, `IThreadHost`, `IFileSystemHost`, `IProcessHost`, `IInformationHost`, `IDisplayHost`), `Default` → `Shell` → `Core` → `Console` class hierarchy, console lifecycle safety interlocks (`closeCount`/`referenceCount`/`mustBeOpenCount` atomic counters, `SystemConsoleMustBeOpen()` guards, read/write level tracking, `CheckActiveReadsAndWrites()`, kiosk mode lock, `ConsoleOps.IsShared()` cross-AppDomain detection), Windows-native screen buffer management (push/pop stack via `CreateConsoleScreenBuffer`/`SetConsoleActiveScreenBuffer` P/Invoke, standard handle redirection, `BreakpointDictionary`-style `IntPtrDictionary` storage), `HostFlags` (60+ capability flags), `HostCreateFlags` (30+ creation flags), `HostSizeType` for buffer/window sizing, `OutputStyle` for formatting modes, `[host writebox]` with theme/color/position control, `[host font]` Windows console font, and `[host color]`/`[host namedcolor]` themed color management | When you need to understand the host system, console lifecycle, safety interlocks, screen buffer management, color/box/position/size control, capability flags, stream redirection, or any of the 41 host sub-commands |
+| `interpreter_host.md` | Formal specification of the interpreter **host subsystem** — the `IHost` abstraction between the engine and its environment (complements the `[host]` command) | When you need the host-interface architecture, a custom host implementation, or the engine↔environment boundary (vs. the `[host]` command in `host.md`) |
 | `object.md` | Deep-dive analysis of the `[object]` command: 44 sub-commands, opaque handle system (`ObjectDictionary` → `ObjectWrapper` → `ObjectData`), `FixupReturnValue` pipeline, `FindMethodsAndFixupArguments` method overload resolution (~1,500 lines), `ObjectFlags` (40+ flags: `NoDispose`/`AutoDispose`/`Alias`/`Locked`/`ForceNew`/`AllowExisting`), `MarshalFlags` (30+ flags: `StrictMatchCount`/`StrictMatchType`/`ReorderMatches`/`HandleByValue`), `ByRefArgumentFlags`, reference counting (`ReferenceCount`/`TemporaryReferenceCount` with `ObjectReferenceType`), command alias dispatch, assembly trust/strong-name verification, type aliases, namespace imports, and comprehensive practical patterns | When you need to understand .NET interop architecture, object lifecycle, handle management, method resolution, marshalling, assembly loading, or any of the 44 object sub-commands |
 | `debug.md` | Deep-dive analysis of the `[debug]` command: 65+ sub-commands, dual-context suspend/resume debugger architecture (every property stored as Current/Saved pair with reference-counted suspend/resume), `BreakpointType` enum (40+ flags covering token, command, variable, cancel, error, exit, procedure, expression phases with composite presets: Common, Standard, Express, Default), `DebugEmergencyLevel` lifecycle control (create/dispose/reset/enable/disable/break with feature flags for tokens, isolated interpreters, verbosity), `HeaderFlags` display control (25+ information sections), `InteractiveLoopData` breakpoint context, `BreakpointDictionary` two-level file→location lookup, `[debug break]` demand breakpoints, `[debug secureeval]` sandboxed child evaluation with timeout/trust/event controls, `[debug invoke]` call-frame-level execution, `[debug watch]` variable watchpoints (`BreakOnGet`/`BreakOnSet`/`BreakOnUnset`), `[debug token]` file/line breakpoints, `[debug trace]` with 20+ configuration options, script bundling (`bundle`/`mount`/`unmount`), and re-entry prevention mechanisms | When you need to understand the debugger architecture, breakpoint management, variable watchpoints, emergency recovery, secure evaluation, trace configuration, script bundling, or any of the 65+ debug sub-commands |
 | `safe.md` | Safe interpreter security model: five-layer defense-in-depth (command hiding, option flags, sub-command allow-lists, policy callbacks, resource limits), 16 resource limit categories, cross-interpreter aliases for capability delegation, .NET type access control, script signature verification, enterprise lockdown mode, comparison with Tcl Safe Tcl, and practical use cases (plugin sandboxing, config evaluation, multi-tenant execution) | When you need to understand how to sandbox untrusted code, the safe interpreter security guarantees, how policies work, resource limits, cross-interpreter communication, or how Eagle's model compares to Tcl |
@@ -64,6 +74,8 @@ pitfalls** when working with Eagle.
 | `garuda.md` | The Eagle Native Package for Tcl (Garuda) reference | When you need to integrate with Eagle via a native Tcl environment |
 | `integrations.md` | Eagle's four official integration sub-projects: MSBuild, WiX, PowerShell, MonoDevelop | When you need to use Eagle from MSBuild builds, WiX installers, PowerShell, or MonoDevelop |
 | `updater.md` | Eagle Updater (Hippogriff) architecture and design analysis | When you need to understand the update mechanism, its security model, or its configuration |
+| `build_system.md` | Eagle Build System (POSIX) reference — building, testing, and installing Eagle on Linux/macOS with the official `Makefile`, plus the native (Garuda/Spilornis) build | When you build/test/install Eagle from source on POSIX systems, or need the build-time configuration |
+| `index.md` | Documentation index / landing page for the whole doc set (mirrors `README.md`) | When you want a top-level table of contents for the documentation |
 | `AGENTS.md` | You are here | How to navigate and answer accurately |
 
 ---
@@ -220,6 +232,28 @@ compiled assemblies, or understanding the plugin security model:
   - `load -viaresource "Plugin.dll.compressed"` — load from embedded resource
   - `load -publickeytoken "..." Plugin.dll` — require specific publisher
   - `unload -nocomplain -match Glob Plugin.dll *Enterprise*` — flexible unloading
+
+#### Enterprise (EEE) plugins
+The eight **Eagle Enterprise Edition** plugins live in
+`Eagle/Plugins/Commercial/Enterprise/`. **By default they require a valid license
+certificate to load; however, they are now also open source.** Six have a
+dedicated command reference:
+
+- [`harpy.md`](harpy.md) — **Harpy**: security & licensing (certificates, script
+  signing/verification, execution policies)
+- [`badge.md`](badge.md) — **Badge**: signed script certificate resources and a
+  string-override mechanism
+- [`kapok.md`](kapok.md) — **Kapok**: web server with sandboxed script evaluation,
+  token access control, and throttling
+- [`zeus.md`](zeus.md) — **Zeus**: managed environment, cryptography, CLR method
+  hooking, and script encryption
+- [`demo.md`](demo.md) — **Demo**: the worked example of a host-swapping plugin
+- [`hotKey.md`](hotKey.md) — **HotKey**: global hot-key registration with a
+  WinForms management UI
+
+For the loading/verification infrastructure itself (the security chain, AppDomain
+isolation, and `PluginFlags`), see [`load.md`](load.md). Aquila and Featherlight
+are also enterprise plugins but do not yet have dedicated command docs.
 
 #### Database operations (ADO.NET)
 If the task involves database access, SQL queries, transactions, or
@@ -643,6 +677,21 @@ where, rather than duplicating full reference content.
   - `load -ruleset $rs fileName` to filter commands/policies
   - `load -nocommands -nofunctions fileName` for selective entity loading
   - `unload fileName` / `unload -nocomplain fileName` for plugin removal
+
+### Recipe: Use an enterprise (EEE) plugin's commands
+- The eight Eagle Enterprise Edition plugins live in
+  `Eagle/Plugins/Commercial/Enterprise/`; **each requires a license certificate
+  by default, but is now also open source.**
+- For the loading/verification model itself, see [`load.md`](load.md).
+- For a specific plugin's commands, go to its dedicated reference (each has a
+  Command Summary and `#cmd-NAME` anchors):
+  - **Harpy** — security & licensing (`[harpy]`) → [`harpy.md`](harpy.md)
+  - **Badge** — signed script certificates (`[badge]`) → [`badge.md`](badge.md)
+  - **Kapok** — sandboxed web server (`[kapok]`) → [`kapok.md`](kapok.md)
+  - **Zeus** — cryptography / CLR hooking / script encryption (`[zeus]`) → [`zeus.md`](zeus.md)
+  - **Demo** — host-swapping example (`[demo]`) → [`demo.md`](demo.md)
+  - **HotKey** — global hot-keys + WinForms UI (`[hotkey]`) → [`hotKey.md`](hotKey.md)
+- Aquila and Featherlight are enterprise plugins without dedicated command docs yet.
 
 ### Recipe: Execute database queries with auto-cleanup
 - Go to: `core_language.md#cmd-sql`

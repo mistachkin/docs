@@ -89,6 +89,13 @@ fails and the partially-loaded plugin is rolled back. These plugins require a
 license certificate by default but are now also open source, and are therefore
 **documented from source**, not from runtime output.
 
+**Command references** (canonical, in the docs root — how to actually *use* each
+plugin's commands): Harpy → [`../../../harpy.md`](../../../harpy.md) · Badge →
+[`../../../badge.md`](../../../badge.md) · Kapok → [`../../../kapok.md`](../../../kapok.md) ·
+Zeus → [`../../../zeus.md`](../../../zeus.md) · Demo → [`../../../demo.md`](../../../demo.md) ·
+HotKey → [`../../../hotKey.md`](../../../hotKey.md). (Aquila and Featherlight have
+no dedicated command doc yet.)
+
 | Plugin | Directory | One-line purpose |
 |--------|-----------|------------------|
 | **Harpy** | `Enterprise/Harpy/` | Licensing **and** script signing/security: verifies license certificates, loads configuration, and exposes the licensing/certificate services the rest of the suite (and Eagle's script-signing) depends on. A single assembly with tiered plugin classes — `Licensing.Plugins.Default`, `Licensing.Core`, `Licensing.Standard`, `Licensing.Enterprise` — with `PluginFlags.Primary` selecting the tier loaded by default. |

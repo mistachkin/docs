@@ -158,6 +158,42 @@ the variable matters; its value is ignored):
 
 ---
 
+## Common patterns
+
+*Test-verified quick start (from `Plugins/Commercial/Enterprise/Harpy/Tests/basic.eagle` and `Tools/`). Command results are string tokens — `SignedOk`, `VerifiedOk`, `ExportedOk` — compare them literally. Harpy's key rings, policy, and `security` state are **per-AppDomain / per-plugin-instance**, not process-global; load `-isolated` for an independent security domain.*
+
+Load:
+
+```eagle
+package require Licensing.Enterprise   ;# [certificate] [keypair] [keyring] [harpy]
+package require Security.Core          ;# [security] + safe-interp enforcement (optional)
+```
+
+Sign a script file and verify its detached `.harpy` signature (production signer: `Tools/sign.eagle`):
+
+```eagle
+set pub  [keypair open -alias -public $publicKeyFile]
+set priv [keypair open -alias -public -private $privateKeyFile]
+set cert [certificate import -alias -validate $certFile]
+certificate signfile -setid -settimestamp -setkey $cert $priv $scriptFile  ;# -> SignedOk
+certificate verifyfile $cert $pub $scriptFile                              ;# -> VerifiedOk
+```
+
+Check a license certificate's features:
+
+```eagle
+certificate flags -flagtype Feature     -hasflags    QX $cert   ;# grants features Q and X?
+certificate flags -flagtype Restriction -nothasflags E  $cert   ;# restriction E absent?
+```
+
+Run a signed, untrusted script under enforcement (restore `security` state afterward):
+
+```eagle
+security true
+set child [interp create -safe]
+debug secureeval -file true -trusted true -- $child $signedFile   ;# runs only if the .harpy sig verifies
+```
+
 ## Command Summary
 
 | Command | Type | Sub-commands | Command Flags | Description |

@@ -58,6 +58,49 @@ Many sub-commands delegate to the plugin's `Execute` method (the `IExecuteReques
 
 ---
 
+## Common patterns
+
+*Test-verified quick start (from `Plugins/Commercial/Enterprise/Badge/Tests/basic.eagle` and `Tools/verify.eagle`). Badge exposes embedded signed-script resources plus a runtime string-override map; `badge enable false` makes all Badge resources resolve as "no such file".*
+
+Load:
+
+```eagle
+package require Badge.Enterprise        ;# [badge]
+package require Security.Certificates    ;# verified reads / signature policy (optional)
+```
+
+Enumerate resources and toggle interception:
+
+```eagle
+lsort [badge names]
+set saved [badge enable]; badge enable true; ...; badge enable $saved
+```
+
+Shim / replace an embedded resource at runtime:
+
+```eagle
+badge setstring   $name ""      ;# add (errors "key already present" on dup)
+badge resetstring $name $value  ;# idempotent set-or-replace
+badge getstring   $name
+badge removestring $name        ;# errors "key not present" if absent
+```
+
+Mask a resource as missing:
+
+```eagle
+badge nullstring someResource   ;# `badge test someResource` -> "string not found"
+badge clearstrings              ;# restore
+```
+
+Read a resource with signature enforcement:
+
+```eagle
+certificate policy -enabled true
+interp readorgetscriptfile -scriptflags [combineFlags $pluginFlags "+NoXml NoPolicy"] -- "" $name
+```
+
+`Tools/verify.eagle` is a ready-to-run CLI that batch-verifies signatures across an Eagle tree.
+
 ## Command Summary
 
 | Command | Type | Sub-commands | Command Flags | Description |
