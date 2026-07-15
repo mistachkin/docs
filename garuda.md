@@ -134,20 +134,20 @@ Garuda supports both the .NET Framework (v2.0 and v4.0) and .NET Core/.NET 5+
 ### 2.1 High-Level Data Flow
 
 ```tcl
-+---------------------+       +------------------------+       +---------------------+
-|     Tcl Script      |       |   Garuda Native DLL    |       |   Eagle Managed     |
-|                     |       |   (Garuda.c + CLR)     |       |   (NativePackage.cs)|
-|                     |       |                        |       |                     |
-|  [eagle <script>]  ----->  GarudaObjCmd dispatches  ----->  StartupClr/          |
-|                     |       to bridge method         |       ControlClr/          |
-|                     |       via CLR hosting API      |       ShutdownClr          |
-|                     |       |                        |       |                     |
-|  result <----------  <-----  return code + result   <-----  Eagle interpreter    |
-|                     |       |                        |       evaluates script     |
-|                     |       |                        |       |                     |
-|  [garuda subcmd]   ----->  GarudaObjCmd switch      |       |                     |
-|                     |       handles 14 sub-commands  |       |                     |
-+---------------------+       +------------------------+       +---------------------+
++---------------------+       +-------------------------+       +---------------------+
+|     Tcl Script      |       |    Garuda Native DLL    |       |    Eagle Managed    |
+|                     |       |    (Garuda.c + CLR)     |       |  (NativePackage.cs) |
+|                     |       |                         |       |                     |
+|  [eagle <script>]    ------>  GarudaObjCmd dispatches  ------>  StartupClr/         |
+|                     |       |    to bridge method     |       | ControlClr/         |
+|                     |       |   via CLR hosting API   |       | ShutdownClr         |
+|                     |       |                         |       |                     |
+|       result         <------  return code + result     <------  Eagle interpreter   |
+|                     |       |                         |       | evaluates script    |
+|                     |       |                         |       |                     |
+|  [garuda subcmd]     ------>  GarudaObjCmd switch     |       |                     |
+|                     |       | handles 14 sub-commands |       |                     |
++---------------------+       +-------------------------+       +---------------------+
 ```
 
 ### 2.2 Component Diagram

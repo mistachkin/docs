@@ -111,7 +111,8 @@ using _Commands = Eagle._Commands; // base class Default for custom commands
 ## 3. The core types: Interpreter, ReturnCode, Result
 
 **`Interpreter`** (`Eagle._Components.Public`) is the script engine instance. It
-is `sealed`, implements `IDisposable`, and is internally synchronized (see
+is `sealed`, implements `IDisposable`, and is thread-safe — it supports
+concurrent script evaluation, locking only shared state (see
 [§14](#14-threading-model)). Every public member first checks for disposal, so
 using one after its `using` block throws `ObjectDisposedException`.
 
@@ -706,23 +707,38 @@ consume, and abort it deterministically from the outside.
 
 ## 14. Threading model
 
-An `Interpreter` is **thread-safe through internal locking, but it is not a
-parallel executor.** Nearly every public member takes the interpreter's
-synchronization root, so calls from multiple threads are *serialized*, not run
-concurrently. Consequences:
+An `Interpreter` is **thread-safe, and it supports genuine concurrent script
+evaluation** — it is not a global lock that serializes everything. In the
+shipped builds (which define the `THREADING` compile symbol) each thread that
+enters an interpreter gets its **own per-thread execution state**: its own call
+stack and call frames, nesting-level counters, and cancellation/error state.
+Eagle keeps this in per-thread *engine* and *variable* contexts (`EngineContext`,
+`VariableContext`), held in thread-local storage and handed out on demand by the
+interpreter's per-thread context manager. The practical result: **multiple
+threads can evaluate scripts on the same interpreter at the same time, and script
+evaluation and call-frame management are fully concurrent.**
 
-- **You may share one interpreter across threads**, but only one script runs on
-  it at a time; others block on the lock. This is fine for occasional access,
-  not for throughput.
-- **For concurrency, use one interpreter per thread.** Interpreters are
-  independent; give each worker its own. (Creation is not free, so pool them if
-  you create and discard many.)
+What locks — and therefore *may* be serialized — is access to genuinely
+**shared, lockable resources**: global variables, the command/procedure and
+object tables, and other shared interpreter state are guarded by the
+interpreter's synchronization root. So contention appears only where threads
+actually touch the same shared state (e.g. two threads writing the same global
+variable), not around evaluation itself. Consequences:
+
+- **You may drive one interpreter from many threads concurrently.** They run
+  their own scripts in parallel and only queue behind one another when they
+  contend for the same shared resource.
+- **Per-thread interpreters remain a good choice for *isolation*** — separate
+  global namespaces, no shared-state contention, independent lifetimes — but they
+  are not *required* to obtain concurrency. Choose per-thread interpreters for
+  isolation, a shared interpreter when threads should see shared state.
 - **To abort a script from a different thread**, use the thread-safe
-  `Engine.CancelEvaluate` (§13) — do not try to reach into the running
-  interpreter's state directly.
+  `Engine.CancelEvaluate` (§13): `CancelFlags.Global` stops every in-flight
+  evaluation, `CancelFlags.Local` only the calling thread's. Prefer this over
+  reaching into interpreter state directly.
 - The interpreter exposes `TryLock` / `ExitLock` so you can hold its lock across
-  a compound sequence of operations that must be atomic with respect to other
-  threads.
+  a compound sequence that must be atomic with respect to other threads — for
+  example, a read-modify-write of shared (global) state.
 
 If you implement a custom host, observe the host thread-safety rules in
 [interpreter_host.md](interpreter_host.md) (Appendix C): never call back into the
@@ -787,8 +803,9 @@ Do:
   scripts should call into your application.
 - Use a **safe interpreter** plus explicit capability grants (safe-flagged
   commands and/or policies) for untrusted input; add timeouts and limits.
-- Give each concurrent worker its own interpreter; cancel via
-  `Engine.CancelEvaluate` from another thread.
+- Evaluate concurrently on one interpreter when you want shared state (evaluation
+  is concurrent-capable), or give workers their own interpreter for isolation;
+  cancel from another thread via `Engine.CancelEvaluate`.
 - Assign a fresh, unique `[ObjectId]` GUID to every custom command/function/host
   class, and make out-of-tree extension classes `public`.
 
@@ -797,7 +814,8 @@ Avoid:
 - Reusing an interpreter after its `using` block (throws `ObjectDisposedException`).
 - Letting exceptions escape a custom command's `Execute` — catch and convert to a
   `Result`.
-- Sharing one interpreter across threads for throughput (access is serialized).
+- Assuming a shared interpreter must be single-threaded — it need not be; only
+  shared-state access (e.g. the same global variable) serializes, not evaluation.
 - Exposing `[object]` (or other unsafe commands) to untrusted scripts.
 - Assuming Tcl-identical behavior — Eagle is Tcl-*compatible*; verify edge cases.
 
