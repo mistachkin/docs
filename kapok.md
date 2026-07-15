@@ -33,7 +33,7 @@
 
 ## Overview
 
-The **Kapok** plugin is the Eagle Enterprise Edition web server and sandboxed script evaluation subsystem. It provides:
+The **Kapok** plugin is the Eagle Enterprise Edition web server and sandboxed script evaluation subsystem. Like all Eagle Enterprise Edition plugins, it requires a valid license certificate by default, but is now also open source. It provides:
 
 - **Sandboxed script evaluation** — Creates and manages "safe" (sandboxed) interpreters for evaluating client-submitted scripts with restricted command sets, optional ruleset-based filtering, and host-based access control via CIDR matching
 - **API key token management** — A multi-dictionary access control system supporting allow/deny lists, administrator promotion, fake (simulated) access, and per-key ruleset restrictions

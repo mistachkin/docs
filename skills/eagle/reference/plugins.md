@@ -12,9 +12,10 @@ pipeline, AppDomain isolation, and the security-verification chain.
 The runnable examples below were **executed** against Eagle 1.0
 (`info engine version` ⇒ `1.0`, assembly `Version=1.0.9675.37713`) on a Debug
 `netcoreapp3.0` build; see [`verification.md`](verification.md). `;# =>` marks a
-verified result. The commercial and proprietary plugins are *not* loadable
-without a license certificate, so they are documented from source (their plugin
-classes, flags, and directories) rather than from runtime output.
+verified result. The commercial and proprietary plugins require a license
+certificate by default (and are now also open source); without one they are not
+loadable here, so they are documented from source — their plugin classes, flags,
+and directories — rather than from runtime output.
 
 > Eagle reports `info patchlevel` ⇒ `8.4.21` (its Tcl-compatibility level); the
 > *engine* version is separate: `info engine` ⇒ `Eagle`, `info engine version`
@@ -84,7 +85,8 @@ assembly carrying at least `PluginFlags.Primary | User | Commercial`, and each
 `GetCertificateFileName()` / `GetCertificate()` and `LicenseOps`-style
 verification). Without a valid license certificate — the `certificate.exml` /
 `keyRing.License.*` material that ships beside the sources — `Initialize()`
-fails and the partially-loaded plugin is rolled back. They are therefore
+fails and the partially-loaded plugin is rolled back. These plugins require a
+license certificate by default but are now also open source, and are therefore
 **documented from source**, not from runtime output.
 
 | Plugin | Directory | One-line purpose |
@@ -122,7 +124,9 @@ license check runs at `Initialize()` and gates the load.)
 
 ## Proprietary plugins
 
-Source: `eagle/Eagle/Plugins/Proprietary/Vadium/`.
+Source: `eagle/Eagle/Plugins/Proprietary/Vadium/`. These proprietary plugins
+(now largely obsolete) also require a license certificate by default, but are
+now open source as well.
 
 | Plugin | Directory | One-line purpose |
 |--------|-----------|------------------|

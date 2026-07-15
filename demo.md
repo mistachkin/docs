@@ -21,7 +21,7 @@
 
 ## Overview
 
-The **Demo** plugin is the Eagle Enterprise Edition interactive-demonstration subsystem. It is the worked example of a host-swapping plugin: on initialization it replaces the interpreter's console host with a derived **demo host**, then restores the original host on termination. It provides:
+The **Demo** plugin is the Eagle Enterprise Edition interactive-demonstration subsystem. It is the worked example of a host-swapping plugin: on initialization it replaces the interpreter's console host with a derived **demo host**, then restores the original host on termination. Like all Eagle Enterprise Edition plugins, it requires a valid license certificate by default, but is now also open source. It provides:
 
 - **Scripted playback** — A demo host that reads lines from a supplied script file and "types" each line back into the interactive loop one character at a time, with a configurable inter-character delay, so a demonstration appears to be entered live
 - **Playback control** — Start, stop, and shut down playback; query whether playback is currently active

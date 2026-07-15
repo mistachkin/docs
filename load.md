@@ -28,7 +28,8 @@ The plugin system is Eagle's primary extensibility mechanism. It supports:
   rather than files on disk
 - **Rule-set filtering** — controlling which commands and policies from a
   plugin are included, excluded, hidden, or shown
-- **Enterprise plugin ecosystem** — eight commercial plugins providing
+- **Enterprise plugin ecosystem** — eight enterprise plugins (a license
+  certificate is required by default; now also open source) providing
   licensing, certificates, cryptography, UI hosting, and more
 
 **Key source files:**
@@ -797,9 +798,9 @@ _Plugins.Default (base class for all plugins)
 ## 9. Enterprise Plugins
 
 Eagle includes eight enterprise plugins in the
-`Eagle/Plugins/Commercial/Enterprise/` directory. These are commercial,
-licensed plugins that demonstrate the full capabilities of the plugin
-loading system.
+`Eagle/Plugins/Commercial/Enterprise/` directory. By default these plugins
+require a valid license certificate; however, they are now also open source.
+They demonstrate the full capabilities of the plugin loading system.
 
 ### 9.1 Harpy — Licensing and Certificate Management
 
@@ -938,7 +939,7 @@ via `Kapok.Components` and `Kapok.Components.Shared`.
 All enterprise plugins follow these conventions:
 
 **Licensing integration:**
-Every enterprise plugin verifies its license certificate during
+By default, every enterprise plugin verifies its license certificate during
 `Initialize()`:
 
 ```csharp

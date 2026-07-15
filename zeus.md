@@ -36,7 +36,7 @@
 
 ## Overview
 
-The **Zeus** plugin is the Eagle Enterprise Edition managed environment, cryptographic operations, and runtime instrumentation subsystem. It provides:
+The **Zeus** plugin is the Eagle Enterprise Edition managed environment, cryptographic operations, and runtime instrumentation subsystem. Like all Eagle Enterprise Edition plugins, it requires a valid license certificate by default, but is now also open source. It provides:
 
 - **CLR method hooking** — Native code patching that redirects CLR method calls to managed callbacks, supporting x86, x64, ARM, and ARM64 architectures across Windows, macOS, and Linux
 - **Registered procedures** — Tamper-evident script procedures whose names are SHA-512 hashes of their body, arguments, and flags, making any modification detectable at execution time

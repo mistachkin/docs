@@ -31,7 +31,7 @@
 
 ## Overview
 
-The **Badge** plugin is the Eagle Enterprise Edition script certificate and resource string management subsystem. It provides:
+The **Badge** plugin is the Eagle Enterprise Edition script certificate and resource string management subsystem. Like all Eagle Enterprise Edition plugins, it requires a valid license certificate by default, but is now also open source. It provides:
 
 - **Signed script certificates** — Embedded resource strings (script files and their cryptographic signatures) that the Eagle script engine uses to verify script authenticity
 - **String override mechanism** — A runtime dictionary that can augment or override embedded resource strings, enabling dynamic certificate and script management

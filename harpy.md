@@ -66,7 +66,7 @@
 
 ## Overview
 
-The **Harpy** plugin is the Eagle Enterprise Edition security and licensing subsystem. It provides:
+The **Harpy** plugin is the Eagle Enterprise Edition security and licensing subsystem. Like all Eagle Enterprise Edition plugins, it requires a valid license certificate by default, but is now also open source. It provides:
 
 - **Script signing and verification** — RSA and DSA digital signatures for scripts, files, and strings
 - **Certificate management** — XML-based license certificates with expiration, revocation, and feature flags

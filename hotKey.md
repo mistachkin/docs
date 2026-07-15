@@ -25,7 +25,7 @@
 
 ## Overview
 
-The **HotKey** plugin is the Eagle Enterprise Edition global hot-key and graphical management subsystem. It provides:
+The **HotKey** plugin is the Eagle Enterprise Edition global hot-key and graphical management subsystem. Like all Eagle Enterprise Edition plugins, it requires a valid license certificate by default, but is now also open source. It provides:
 
 - **Global hot-keys** — System-wide keyboard shortcuts (modifier + virtual-key combinations) registered with the operating system; when activated, each hot-key evaluates an associated Eagle script
 - **Hot-key manager** — A dedicated WinForms message-loop thread that owns the hidden window receiving hot-key messages, tracks all defined hot-keys, and dispatches their scripts
