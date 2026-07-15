@@ -777,9 +777,9 @@ code from `::eagle_debugger(stubProcedureBody)` or
 `::eagle_debugger(flexibleProcedureBody)`, enabling transparent
 debugging hooks without modifying the original procedure definitions.
 
-`f_proc` also chooses between `[proc]` and `[nproc]` (native procedure)
-based on runtime capabilities -- the caller doesn't know which
-implementation backs their procedure.
+`f_proc` also chooses between `[proc]` and `[nproc]` (procedure with
+named arguments) based on runtime capabilities -- the caller doesn't
+know which implementation backs their procedure.
 
 **Where**: `lib/Eagle1.0/test.eagle` (lines 60-107)
 
