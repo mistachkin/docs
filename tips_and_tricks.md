@@ -98,12 +98,12 @@ set sb [object create -alias System.Text.StringBuilder]
 $sb Append "Hello"
 set text [$sb ToString]
 
-# The longer form is NOT "worse" — it is the right call when the extra words BUY
-# unambiguity, e.g. pinning an overload with -parametertypes:
-object invoke -parametertypes {System.Int32 System.Int32} $obj Add 2 3
+# When an overload is genuinely ambiguous, add EXACTLY the words that resolve it.
+# Options work on the alias form too — they are merged into the underlying call:
+$sb -parametertypes {System.String} Append 65   ;# appends "65" (string), not 'A' (char)
 ```
 
-The alias form wins not because it is shorter, but because it stayed unambiguous while shedding a construct. And `-parametertypes` is not ceremony — it is the *minimum* needed to say which overload you mean. Both obey the same rule.
+Shedding the `object invoke $sb` wrapper and adding `-parametertypes` are the same rule applied in both directions: drop the construct that carries no meaning, and add exactly the words that remove ambiguity — no more, no less.
 
 In practice, "unambiguous" pushes you to:
 

@@ -662,9 +662,19 @@ set root [object invoke System.Math Sqrt 144.0]    ;# static method -> 12
 set now  [object invoke System.DateTime Now]       ;# static property
 ```
 
-Without `-alias`, the same instance calls are written the long way —
-`object invoke $sb Append "Hello"` — which is handy when you want to pass extra
-`[object invoke]` options (e.g. `-parametertypes` for overload resolution).
+The alias form is **not** limited to option-free calls — it accepts the same
+`[object invoke]` options as the long form. Place them right after the handle
+command; the alias's own arguments and your call-site arguments (options
+included) are combined by the interpreter's argument merge
+(`Interpreter.MergeArguments`) into a well-formed list for the underlying
+`object invoke`. For example, to pin an overload:
+
+```tcl
+$sb -parametertypes {System.String} Append 65   ;# appends the string "65", not the char 'A'
+# equivalent to:  object invoke -parametertypes {System.String} $sb Append 65
+```
+
+Choose between the two forms by readability, not capability.
 
 `[object]` is powerful (43 sub-commands: `create`, `invoke`, `load`, `members`,
 `dispose`, and more) and is therefore **unsafe by default** — it is not
@@ -1177,6 +1187,10 @@ Do:
   cancel from another thread via `Engine.CancelEvaluate`.
 - Assign a fresh, unique `[ObjectId]` GUID to every custom command/function/host
   class, and make out-of-tree extension classes `public`.
+- In the scripts you embed, prefer the **simplest command sequence that is
+  totally unambiguous** — add explicitness only where it buys unambiguity (e.g.
+  `-parametertypes` to pin an overload). See *Minimal Sufficient Explicitness* in
+  [tips_and_tricks.md](tips_and_tricks.md).
 
 Avoid:
 
