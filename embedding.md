@@ -646,17 +646,25 @@ There are two complementary directions.
 
 Scripts can create and drive arbitrary .NET objects via the `[object]` command
 ensemble. Objects are represented by **opaque handle strings** (e.g.
-`System#Text#StringBuilder#1`):
+`System#Text#StringBuilder#1`). Creating one with **`-alias`** also registers a
+command named after the handle, so you can invoke members on it directly —
+`$sb Append ...` instead of the more verbose `object invoke $sb Append ...`:
 
 ```tcl
-set sb [object create System.Text.StringBuilder]
-object invoke $sb Append "Hello"
-object invoke $sb Append ", world"
-set text [object invoke $sb ToString]     ;# "Hello, world"
+# -alias returns the handle AND registers it as a command, so $sb is callable.
+set sb [object create -alias System.Text.StringBuilder]
+$sb Append "Hello"
+$sb Append ", world"
+set text [$sb ToString]                            ;# "Hello, world"
 
-set root [object invoke System.Math Sqrt 144.0]   ;# static method -> 12
-set now  [object invoke System.DateTime Now]      ;# static property
+# Static members are invoked on the type name directly.
+set root [object invoke System.Math Sqrt 144.0]    ;# static method -> 12
+set now  [object invoke System.DateTime Now]       ;# static property
 ```
+
+Without `-alias`, the same instance calls are written the long way —
+`object invoke $sb Append "Hello"` — which is handy when you want to pass extra
+`[object invoke]` options (e.g. `-parametertypes` for overload resolution).
 
 `[object]` is powerful (43 sub-commands: `create`, `invoke`, `load`, `members`,
 `dispose`, and more) and is therefore **unsafe by default** — it is not
@@ -680,7 +688,9 @@ scriptThread.SetVariableValue("svc", result.ToString());
 At the raw interpreter level the equivalent is `Interpreter.AddObject(...)`
 (create an opaque handle for a CLR value), after which you typically
 `SetVariableValue` the handle string into a script variable. The script then
-uses `object invoke $svc SomeMethod ...`.
+uses `object invoke $svc SomeMethod ...` — or, if you add it with an alias
+(`ScriptThread.AddObject(svc, /*alias*/ true, ref result)`), simply
+`$svc SomeMethod ...`, just like an `object create -alias` handle.
 
 ### The controlled alternative: wrap the object in a command
 

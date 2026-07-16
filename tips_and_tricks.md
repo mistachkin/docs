@@ -6,6 +6,7 @@ This guide covers Eagle's unique capabilities and highest-value patterns. Each s
 
 ## Table of Contents
 
+- [Scripting Philosophy: Minimal Sufficient Explicitness](#scripting-philosophy-minimal-sufficient-explicitness)
 - [String Handling](#string-handling)
   - [appendArgs: The Right Way to Concatenate Strings](#appendargs-the-right-way-to-concatenate-strings)
 - [.NET Interop Patterns](#net-interop-patterns)
@@ -68,6 +69,47 @@ This guide covers Eagle's unique capabilities and highest-value patterns. Each s
   - [The Debugger is a Command](#the-debugger-is-a-command)
   - [Scope: Persistent Closures Without the Mess](#scope-persistent-closures-without-the-mess)
   - [Safe Interpreter: Run Untrusted Code in a Sandbox](#safe-interpreter-run-untrusted-code-in-a-sandbox)
+
+---
+
+## Scripting Philosophy: Minimal Sufficient Explicitness
+
+A guiding principle for writing Eagle scripts — and scripts in general: **for a given task, use the simplest command sequence that is totally unambiguous.**
+
+The priority is a strict order, not a blend:
+
+1. **Correct** — non-negotiable.
+2. **Unambiguous** — the meaning is fixed by the sequence itself, not by ambient interpreter state, a shifting default, a redefinable alias or `[unknown]` handler, or an implicit coercion.
+3. **Simple / direct** — the fewest moving parts and the most obvious mechanism.
+4. **Short** — a frequent *consequence* of (2) and (3), never a goal on its own.
+
+The headline is deliberately **not** "shortest." Shortest is a proxy that betrays the goal: code-golf minimizes characters by *maximizing* reliance on defaults and implicit behavior — the opposite of unambiguous. The real invariant is **minimal *sufficient* explicitness**: the fewest constructs that make the intent unambiguous — no fewer (which forces a reader, or a future maintainer, to recover the meaning from surrounding state), and no more (ceremony that buries the intent in noise).
+
+**The operational test is determinism of meaning:** would this sequence do *exactly the same thing* regardless of surrounding context, current interpreter state, or a future redefinition? Prefer the sequences where the answer is yes.
+
+This is the author-side complement to Eagle's engine design. Eagle is deliberately strict and explicit — it refuses "auto-magic" (no bignum promotion, no auto-creation of variables, `entier()`/`double()` are explicit, safe-by-default). That refusal to hide behavior is exactly what lets a well-chosen script sequence mean precisely what it says; this principle is the author's half of the same contract.
+
+Both forms of an `[object]` call below are idiomatic — which one is "simplest unambiguous" depends on the task:
+
+```tcl
+# Prefer the alias form: the handle is a uniquely-named, first-class command, so
+# it is unambiguous AND direct — the shorter form wins the tie.
+set sb [object create -alias System.Text.StringBuilder]
+$sb Append "Hello"
+set text [$sb ToString]
+
+# The longer form is NOT "worse" — it is the right call when the extra words BUY
+# unambiguity, e.g. pinning an overload with -parametertypes:
+object invoke -parametertypes {System.Int32 System.Int32} $obj Add 2 3
+```
+
+The alias form wins not because it is shorter, but because it stayed unambiguous while shedding a construct. And `-parametertypes` is not ceremony — it is the *minimum* needed to say which overload you mean. Both obey the same rule.
+
+In practice, "unambiguous" pushes you to:
+
+- Avoid sequences whose result depends on ambient state — a current default that could change, a command that could be shadowed, an implicit type conversion.
+- Add explicitness *exactly* where ambiguity would otherwise creep in (an explicit option, an explicit type, `entier()`), and nowhere else.
+- Reach for the most direct mechanism the task allows — a built-in command over a hand-rolled equivalent, a single clear expression over nested substitutions — when it is equally unambiguous.
 
 ---
 
