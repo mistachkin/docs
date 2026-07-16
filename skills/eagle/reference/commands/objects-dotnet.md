@@ -157,6 +157,16 @@ $sb Append zzz                           ;# the handle IS now a command
 puts [$sb ToString]                      ;# => zzz
 ```
 
+The alias accepts the **same options** as `[object invoke]` — put them right
+after the alias; they are merged with the pre-filled handle before dispatch, so
+`-parametertypes` (overload resolution) and every other option work directly.
+These two are identical:
+
+```tcl
+mySB -parametertypes {System.String} Append 65
+object invoke -parametertypes {System.String} mySB Append 65
+```
+
 `-alias` on an `[object invoke]` result aliases only **newly created** handles
 (a method returning the same object reuses its existing, un-aliased handle):
 

@@ -118,6 +118,18 @@ object invoke System#Text#StringBuilder#1 Append "Hello"
 System#Text#StringBuilder#1 Append "Hello"
 ```
 
+The alias command accepts the **same options** as `[object invoke]` — put them
+right after the alias. The alias's pre-filled arguments (the handle) and the
+call-site arguments, options included, are combined by `Interpreter.MergeArguments`
+into a well-formed list before dispatch, so `-parametertypes` and every other
+option behave identically to the long form:
+
+```tcl
+# Pin an overload through the alias — identical to the long form below:
+System#Text#StringBuilder#1 -parametertypes {System.String} Append 65
+object invoke -parametertypes {System.String} System#Text#StringBuilder#1 Append 65
+```
+
 Aliases support namespace mapping via `[object aliasnamespaces]` — assembly
 names can be mapped to Eagle namespace prefixes.
 
