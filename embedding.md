@@ -240,10 +240,136 @@ using (Interpreter interpreter = Interpreter.Create(
 }
 ```
 
-For advanced construction (custom `IHost`, rule sets, profiles, owner objects,
-a specific `AppDomain`, pre-registered policies/traces), there are settings-based
-overloads that take an `IInterpreterSettings`; populate that object once and pass
-it in. Reach for those only when the flag-based overloads are not enough.
+For anything beyond the flag-based overloads — a custom `IHost`, a rule set,
+profiles, owner objects, a specific `AppDomain`, pre-registered policies/traces —
+use the settings-based path described next.
+
+### Full configuration with `InterpreterSettings`
+
+`InterpreterSettings` (`Eagle._Components.Public`) is a single object that carries
+**every** interpreter-creation parameter. Rather than choosing among a dozen
+`Create` overloads, you populate one settings object and hand it to:
+
+```csharp
+public static Interpreter Create(
+    IInterpreterSettings interpreterSettings, bool strict, ref Result result);
+```
+
+`strict` matters only when `interpreterSettings` is `null`: `true` makes creation
+fail with `"invalid interpreter settings"`; `false` falls back to a default
+interpreter. When you pass a real settings object, `strict` is ignored.
+
+There is no public constructor — build one with a static factory, then set the
+properties you need:
+
+```csharp
+Result error = null;
+
+IInterpreterSettings settings = InterpreterSettings.CreateDefault();
+settings.Args            = args;
+settings.Culture         = "en-US";
+settings.CreateFlags     = CreateFlags.Default;
+settings.HostCreateFlags = HostCreateFlags.Default;
+settings.LibraryPath     = @"%EAGLE%\lib\Eagle1.0";
+settings.Text            = "puts stdout {pre-initialization script}";
+// ... Host, Profile, Policies, Traces, AppDomain, Owner, RuleSet, etc.
+
+Result result = null;
+using (Interpreter interpreter = Interpreter.Create(settings, /*strict*/ true, ref result))
+{
+    ...
+}
+```
+
+The settings object exposes the entire creation surface as get/set properties:
+
+- **Flags:** `CreateFlags`, `HostCreateFlags`, `InitializeFlags`, `ScriptFlags`,
+  `InterpreterFlags`, `InterpreterTestFlags`, `PluginFlags`.
+- **Startup:** `Args`, `Culture`, `Text` (a pre-initialization script),
+  `LibraryPath`, `AutoPathList`.
+- **Environment / objects:** `Host` (a custom `IHost`, §11), `AppDomain`,
+  `Profile`, `Owner`, `ApplicationObject`, `PolicyObject`, `ResolverObject`,
+  `UserObject`.
+- **Security:** `RuleSet` (below), `Policies`, `Traces`.
+
+Convenience factories and mutators cover common shapes: `CreateDefault()`,
+`CreateDefault(ruleSet, args)`, `CreateSafe(...)`, plus instance helpers such as
+`MakeSafe()`, `MakeStandard()`, `EnableSecurity()`, `ResetEverything()`,
+`UseDefaultsForFlags()`, and `UseFlagsFromInterpreter(existing)` /
+`UseObjectsFromInterpreter(existing)` to clone configuration from a live
+interpreter.
+
+#### Loading settings from persistent storage
+
+The reason `InterpreterSettings` is so powerful for an embedder is that a whole
+interpreter configuration can be **saved to and reloaded from disk** — as XML or
+INI, auto-detected — so the shape of your interpreters lives in a config file
+rather than in hard-coded flags:
+
+```csharp
+// Save the configured settings (XML if the name ends in .xml, INI if .ini).
+InterpreterSettings.SaveTo("app.settings.xml", /*expand*/ false, settings, ref error);
+
+// Reload later (CreateFrom wraps LoadFrom and returns a new settings object).
+IInterpreterSettings loaded = InterpreterSettings.CreateFrom(
+    "app.settings.xml", /*cultureInfo*/ null, /*merge*/ false, /*expand*/ true, ref error);
+
+Interpreter interpreter = Interpreter.Create(loaded, /*strict*/ true, ref result);
+```
+
+The persistence entry points are `InterpreterSettings.SaveTo(...)`,
+`InterpreterSettings.LoadFrom(...)` (from a file, a `Stream`, or a live
+interpreter), and the `CreateFrom(...)` convenience wrapper. `merge` controls
+whether loaded values are merged onto an existing settings object; `expand`
+expands environment-variable references (e.g. `%EAGLE%`) in path-like values. The
+schema round-trips `Culture`, `Profile`, `Text`, `LibraryPath`, `RuleSet`,
+`Args`, and every flag group; see `Library/Tests/data/settings.xml` and
+`settings.ini` for complete, working examples.
+
+This is what lets an application ship — or let an operator edit — a settings file
+that fully determines how new interpreters are built (safe vs. full, which
+library path, which pre-init script, which rule set) without recompiling.
+
+### Access control with rule sets
+
+A **rule set** (`RuleSet` / `IRuleSet`, `Eagle._Components.Public`) is an ordered
+list of allow/deny **rules** that whitelist or blacklist entities — commands,
+sub-commands, procedures, variables, packages, plugins, policies — by name
+pattern. Attaching one to `InterpreterSettings.RuleSet` constrains what the new
+interpreter (and the scripts running in it) may use, in addition to and
+independently of the safe/unsafe command split (§12).
+
+Build one from its textual form (a Tcl list of rule dicts) or imperatively, then
+attach it to the settings:
+
+```csharp
+Result error = null;
+
+// Allow commands starting with "o" EXCEPT "open"; also allow "puts" and "set".
+IRuleSet rules = RuleSet.Create(
+    "{id 1 type Include kind Command mode {Include Glob}  regExOptions None patterns o*}" +
+    "{id 2 type Exclude kind Command mode {Exclude Exact} regExOptions None patterns open}" +
+    "{id 3 type Include kind Command mode {Include Exact} regExOptions None patterns puts}" +
+    "{id 4 type Include kind Command mode {Include Exact} regExOptions None patterns set}",
+    /*cultureInfo*/ null, ref error);
+
+// ...or start empty and add rules imperatively:
+// IRuleSet rules = RuleSet.Create(ref error);
+// rules.BuildAndAddRule(RuleType.Include, IdentifierKind.Command,
+//     MatchMode.Glob | MatchMode.Include, "string*", ref error);
+
+IInterpreterSettings settings = InterpreterSettings.CreateDefault(rules, args);
+```
+
+Each rule carries an `id`, a `type` (`Include` / `Exclude`), a `kind`
+(`IdentifierKind` — `Command`, `SubCommand`, `Procedure`, `Variable`, `Package`,
+`Plugin`, `Policy`, `Trace`, …), a `mode` (`MatchMode` — `Exact` / `Glob` /
+`RegExp`, plus `Include`/`Exclude`/`NoCase` meta-flags), and one or more
+`patterns`. Because a rule set serializes to text, it travels inside a settings
+file (the `RuleSet` element) and is reconstructed on load — so the exact
+allow/deny policy for an interpreter can live in configuration too. The same rule
+set is exposed at the script level as the `-ruleset` option of `[interp create]`
+and `[load]`.
 
 **Disposal.** Always use a `using` block (or call `Dispose()` deterministically).
 An interpreter owns resources — child interpreters, loaded plugins/AppDomains,
@@ -610,6 +736,173 @@ code path touches `System.Console`. The host subsystem is specified in detail in
 `Eagle/Sample/Hosts/` and `Eagle/Sample/Forms/` (a WinForms host) for working
 implementations.
 
+### Worked example: embedding in a WinForms application
+
+The shipped sample under `Eagle/Sample/Forms/` and `Eagle/Sample/Hosts/` embeds a
+live interpreter in a Windows Forms window and streams all interpreter output
+into an on-screen text box. Its architecture is worth copying, because it solves
+the awkward part cleanly: the **custom host creates and owns the form** (rather
+than the form owning the host), so `Utility.CopyAndWrapHost` can build it through
+the standard `(IHostData, IHost, bool)` constructor and get the interpreter from
+`hostData.Interpreter`.
+
+**1. The window** — a plain `Form` with an input box, a read-only output box, and
+a Run button. It exposes a thread-safe `AppendOutput` and raises an event when
+Run is clicked; it knows nothing about Eagle:
+
+```csharp
+using System;
+using System.Windows.Forms;
+
+public sealed class LogForm : Form
+{
+    private readonly TextBox input  = new TextBox {
+        Multiline = true, Dock = DockStyle.Top, Height = 120, ScrollBars = ScrollBars.Vertical };
+    private readonly TextBox output = new TextBox {
+        Multiline = true, Dock = DockStyle.Fill, ReadOnly = true, ScrollBars = ScrollBars.Vertical };
+    private readonly Button run     = new Button { Text = "Run", Dock = DockStyle.Bottom };
+
+    // Raised on the UI thread when the user clicks Run; carries the script text.
+    public event Action<string> Execute;
+
+    public LogForm()
+    {
+        Text = "Eagle";
+        Controls.Add(output); Controls.Add(input); Controls.Add(run);
+
+        run.Click += delegate {
+            Action<string> handler = Execute;
+            if (handler != null) handler(input.Text);
+        };
+    }
+
+    // Scripts may write from a worker thread (see §14) — marshal onto the UI thread.
+    public void AppendOutput(string value, bool newLine)
+    {
+        if (output.IsDisposed) return;
+
+        if (output.InvokeRequired)
+            output.BeginInvoke((MethodInvoker)delegate { Emit(value, newLine); });
+        else
+            Emit(value, newLine);
+    }
+
+    private void Emit(string value, bool newLine)
+    {
+        output.AppendText(value);
+        if (newLine) output.AppendText(Environment.NewLine);
+    }
+}
+```
+
+**2. The host** — derive from `_Hosts.Wrapper` (which delegates every `IHost`
+member to a wrapped base host) and override just the output methods, appending to
+the form and falling back to the base host if the form is gone. In its
+constructor it creates the window and wires the Run button to evaluate on the
+interpreter. This is the condensed shape of `Eagle/Sample/Hosts/Class10.cs`:
+
+```csharp
+using System;
+using System.Windows.Forms;
+using Eagle._Attributes;
+using Eagle._Components.Public;
+using Eagle._Interfaces.Public;
+using _Hosts = Eagle._Hosts;
+
+[ObjectId("00000000-0000-0000-0000-000000000000")] // change me
+public sealed class TextBoxHost : _Hosts.Wrapper
+{
+    private readonly Interpreter interpreter;
+    private readonly LogForm form;
+
+    public TextBoxHost(IHostData hostData, IHost baseHost, bool baseHostOwned)
+        : base(hostData, baseHost, baseHostOwned)
+    {
+        this.interpreter = (hostData != null) ? hostData.Interpreter : null;
+
+        this.form = new LogForm();
+        this.form.Execute += OnExecute;   // evaluate when the user clicks Run
+        this.form.Show();
+    }
+
+    public Form Form { get { return form; } }
+
+    private void OnExecute(string script)
+    {
+        Result result = null;
+        int errorLine = 0;
+
+        ReturnCode code = interpreter.EvaluateScript(script, ref result, ref errorLine);
+        form.AppendOutput(String.Format("[{0}] {1}", code, result), true);
+    }
+
+    private bool Append(string value, bool newLine)
+    {
+        if (form == null || form.IsDisposed) return false;
+        form.AppendOutput(value, newLine);
+        return true;
+    }
+
+    // Normal script output ([puts], results). base.* is the fallback if the
+    // form write fails, so console output still works when the window is gone.
+    public override bool Write(string value)          { return Append(value, false) || base.Write(value); }
+    public override bool WriteLine(string value)      { return Append(value, true)  || base.WriteLine(value); }
+
+    // Diagnostic output (DebugOps / Complain).
+    public override bool WriteDebugLine(string value) { return Append(value, true)  || base.WriteDebugLine(value); }
+    public override bool WriteErrorLine(string value) { return Append(value, true)  || base.WriteErrorLine(value); }
+}
+```
+
+**3. Startup** — create the interpreter, wrap its host with `CopyAndWrapHost`
+(which constructs `TextBoxHost` and thereby opens the window), run the message
+loop, then restore the original host. This mirrors the `CopyAndWrapHost` wiring in
+`Eagle/Sample/Forms/TclForm.cs`:
+
+```csharp
+[STAThread]
+static void Main()
+{
+    Application.EnableVisualStyles();
+
+    Result result = null;
+    using (Interpreter interpreter = Interpreter.Create(null, ref result))
+    {
+        if (interpreter == null)
+        {
+            MessageBox.Show(Utility.FormatResult(ReturnCode.Error, result));
+            return;
+        }
+
+        // Wrap the interpreter's current host with TextBoxHost; its constructor
+        // opens the window and starts routing interpreter output into it.
+        IHost host = null;
+        if (Utility.CopyAndWrapHost(
+                interpreter, typeof(TextBoxHost), ref host, ref result) != ReturnCode.Ok)
+        {
+            MessageBox.Show(result);
+            return;
+        }
+
+        interpreter.Host = host;
+
+        Application.Run(((TextBoxHost)host).Form);          // run until the window closes
+
+        Utility.UnwrapAndDisposeHost(interpreter, ref result); // restore the base host
+    }
+}
+```
+
+Now `puts` (and diagnostics) from any script appear in the output box, the Run
+button evaluates the input box, and the final result/return code is appended too.
+The one non-obvious requirement is **thread-safety**: a script may write from a
+worker thread (§14), so every control update is marshaled onto the UI thread with
+`Control.Invoke` / `BeginInvoke`, exactly as `AppendOutput` above and the sample's
+`CommonOps.AppendText` do. The full, production-quality version — system-tray
+integration, safe close/clear, and the complete thread-marshaling helpers — is in
+`Eagle/Sample/Forms/HostForm.cs`, `Eagle/Sample/Hosts/Class10.cs`, and
+`Eagle/Sample/Forms/TclForm.cs`.
+
 ---
 
 ## 12. Sandboxing untrusted scripts
@@ -763,9 +1056,75 @@ the Enterprise plugins. (Isolation requires the `ISOLATED_PLUGINS` build symbol;
 the standard packaged builds include it.) See the [`[load]` reference](load.md)
 for flags and lifecycle.
 
+### Creating an interpreter in an isolated AppDomain with `InterpreterHelper`
+
+Where **.NET Remoting and AppDomains are available** — that is, on .NET Framework
+or Mono, *not* .NET Core / netstandard, which have neither — you can create an
+interpreter that **lives in a separate AppDomain** and drive it through a
+transparent cross-AppDomain proxy. The public helper for this is
+`InterpreterHelper` (`Eagle._Components.Public`), a `ScriptMarshalByRefObject`
+(hence `MarshalByRefObject`), `IDisposable` wrapper around an interpreter. It is
+very powerful precisely because it moves the whole interpreter into an isolated,
+disposable domain.
+
+You create the AppDomain, describe the interpreter with an `InterpreterSettings`
+(§5), and ask `InterpreterHelper` to build the helper — and its interpreter —
+*inside* that domain:
+
+```csharp
+// 1. Create (and later unload) the AppDomain yourself.
+AppDomain appDomain = AppDomain.CreateDomain("eagle-sandbox");
+
+// 2. Describe the interpreter you want (typically a safe one; see §5, §12).
+Result error = null;
+IInterpreterSettings settings = InterpreterSettings.CreateSafe(/* ... */);
+
+// 3. Build the helper INSIDE that AppDomain. The returned object is a
+//    transparent proxy; its interpreter is constructed and runs in "appDomain".
+Result result = null;
+using (InterpreterHelper helper = InterpreterHelper.Create(
+        appDomain, settings, /*strict*/ true, ref result))
+{
+    if (helper == null) { /* result (or helper.Result) holds the error */ }
+
+    Interpreter interpreter = helper.Interpreter;   // proxy into the other domain
+
+    // Evaluate normally — the call is remoted into "appDomain"; the script
+    // executes there, isolated from your primary domain.
+    interpreter.EvaluateScript("puts {hello from an isolated domain}", ref result);
+}
+
+// 4. Unload the AppDomain yourself when finished (Dispose does NOT do this).
+AppDomain.Unload(appDomain);
+```
+
+Key points, all consequences of the cross-AppDomain design:
+
+- **`InterpreterHelper.Create(AppDomain, IInterpreterSettings, bool strict, ref Result)`**
+  is the public factory. It uses `AppDomain.CreateInstanceAndUnwrap` to construct
+  the helper *inside* the supplied domain, so the wrapped `Interpreter` is created
+  there too. It does **not** create the AppDomain — you do, and you unload it.
+- **`helper.Interpreter`** returns the interpreter (a transparent proxy when the
+  helper lives in another domain). **`helper.Result`** returns the creation result
+  — read it rather than the `ref result` when creating across domains, because a
+  `ref` parameter does not survive a remoting round-trip.
+- **`helper.RemoveInterpreter()`** detaches the interpreter so *you* own its
+  lifetime; after that, disposing the helper will not dispose the interpreter.
+- **Disposal:** `helper.Dispose()` disposes the wrapped interpreter but does
+  **not** unload the AppDomain — always `AppDomain.Unload(...)` the domain
+  yourself when done.
+- **Marshaling:** everything crossing the boundary must be serializable or itself
+  `MarshalByRefObject`; `Interpreter` and its callback/client-data types already
+  are. This only works in builds where `Interpreter` is marshal-by-ref — the
+  `ISOLATED_INTERPRETERS` / `ISOLATED_PLUGINS` builds — which in turn require a
+  Remoting-capable runtime (.NET Framework / Mono).
+
 For an embedder, the takeaway: if you must host genuinely untrusted or
-crash-prone extension code, combine a **safe interpreter** (§12) with an
-**isolated AppDomain** so a failure or escape is contained and disposable.
+crash-prone extension code, combine a **safe interpreter** (§12) — ideally built
+from an `InterpreterSettings` with a restrictive **rule set** (§5) — with an
+**isolated AppDomain** via `InterpreterHelper`, so an untrusted script is bounded
+by command-level, rule-level, and process-domain barriers at once, and the entire
+domain can be unloaded to reclaim it.
 
 ---
 
