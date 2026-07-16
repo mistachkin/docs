@@ -3302,7 +3302,7 @@ Object commands belong to ObjectGroup: "managedEnvironment"
   #### Creating Objects
 
   - `object create ?options? typeName ?arg ...?` - Creates a new instance of the specified .NET type. Arguments are passed to the constructor.
-    - **Options**: `-alias` (create named alias), `-objectname name` (specify alias name), `-type typeList` (specify parameter types for overload resolution)
+    - **Options**: `-alias` (create named alias), `-objectname name` (specify alias name), `-parametertypes typeList` (constructor parameter types for overload resolution; use full .NET type names, e.g. `System.Int32`)
     - **Returns**: An opaque object handle (e.g., `object#1`)
 
   **Example**:
@@ -3311,12 +3311,12 @@ Object commands belong to ObjectGroup: "managedEnvironment"
   set sb [object create \
       System.Text.StringBuilder Initial]
 
-  # Create with alias
-  object create -alias \
-      System.Collections.ArrayList myList
+  # Create with alias (named via -objectname)
+  object create -alias -objectname myList \
+      System.Collections.ArrayList
 
   # Create with constructor overload selection
-  set dt [object create -type {int int int} \
+  set dt [object create -parametertypes {System.Int32 System.Int32 System.Int32} \
       System.DateTime 2024 1 15]
   ```
 
@@ -3329,7 +3329,7 @@ Object commands belong to ObjectGroup: "managedEnvironment"
     - **Properties (get)**: `object invoke $obj PropertyName`
     - **Properties (set)**: `object invoke $obj PropertyName value`
     - **Static members**: Use the type name instead of an object handle
-    - **Options**: `-type typeList` (parameter types), `-alias` (alias the result)
+    - **Options**: `-parametertypes typeList` (parameter types for overload resolution; full .NET type names), `-alias` (alias the result)
 
   **Error Conditions:**
   - `"invalid object or type"` -- object handle not found
