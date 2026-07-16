@@ -422,16 +422,16 @@ The `[expr]` command evaluates mathematical and logical expressions. Always brac
 # Arithmetic
 expr {2 + 3}           ;# Returns: 5
 expr {10 / 3}          ;# Returns: 3 (integer division)
-expr {10.0 / 3}        ;# Returns: 3.3333333333333335
+expr {10.0 / 3}        ;# Returns: 3.3333333333333333333333333333
 expr {2 ** 10}         ;# Returns: 1024
 expr {entier(2) ** 70} ;# Returns: 1180591620717411303424
 
 # Comparisons
-expr {5 > 3}              ;# Returns: 1
-expr {"hello" eq "hello"} ;# Returns: 1
+expr {5 > 3}              ;# Returns: True
+expr {"hello" eq "hello"} ;# Returns: True
 
 # Functions
-expr {sqrt(144)} ;# Returns: 12.0
+expr {sqrt(144)} ;# Returns: 12
 expr {abs(-5)}   ;# Returns: 5
 
 # Ternary conditional

@@ -6,6 +6,7 @@ Eagle (Extensible Adaptable Generalized Logic Engine) is a Tcl-compatible script
 
 * [Why Eagle?](why_eagle.md)
 * [Eagle Quick Start Guide](quick_start_guide.md)
+* [The Eagle Tutorial (for Tcl Programmers)](tutorial.md)
 * [Embedding Eagle in a C# Application](embedding.md)
 * [Eagle Build System (POSIX)](build_system.md)
 * [Eagle Core Language](core_language.md)

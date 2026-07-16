@@ -257,17 +257,16 @@ The `-literal` and `-verbatim` options modify this mode:
 
 #### Mode 2: Script evaluation (`RegsubEvaluateMatchCallback`, `-eval`)
 
-With `-eval`, the substitution string is treated as a script body. For
+The `-eval` option takes a **script as its value** (not the `subSpec`). For
 each match, the script is parsed as a Tcl list, each element is
 translated through `TranslateSubSpec` (so `&` and `\0`–`\9` expand to
 matched text), and the resulting list is evaluated as a script. The
 script's return value becomes the replacement text.
 
 ```tcl
-# Double every number found
-regsub -all -eval {\d+} "a1b22c333" {
-    expr {[string range & 0 end] * 2}
-}
+# Double every number found. The script is the -eval VALUE; the subSpec
+# positional is required by the syntax but ignored in -eval mode (pass {}).
+regsub -all -eval {expr {& * 2}} {\d+} "a1b22c333" {}
 # Result: "a2b44c666"
 ```
 
@@ -276,6 +275,8 @@ In `-eval` mode:
 - `&` expands to the full match text within each word.
 - `\1`–`\9` expand to capture group text.
 - The translated words are re-assembled and evaluated.
+- A `subSpec` positional is required by the command syntax but **ignored** in
+  `-eval` mode (pass an empty `{}`).
 
 #### Mode 3: Command prefix (`RegsubCommandMatchCallback`, `-command`)
 

@@ -1772,7 +1772,7 @@ whose existence is checked at the call site:
 proc invokeWithHook { phase args } {
     set hookName [appendArgs $phase _hook]
     if {[llength [info commands $hookName]] > 0} then {
-        if {[catch {uplevel 1 [list $hookName {*}$args]} result]} then {
+        if {[catch {uplevel 1 [linsert $args 0 $hookName]} result]} then {
             # log the failure but do not abort
         }
     }

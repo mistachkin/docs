@@ -1756,13 +1756,13 @@ String commands belong to ObjectGroup: "string"
 
   ---
 
-  - `string equal ?options? string1 string2` - Returns 1 if strings are equal, 0 otherwise.
+  - `string equal ?options? string1 string2` - Returns True if strings are equal, False otherwise.
   - **Common options**: `-nocase` (case-insensitive), `-length n` (compare only first n characters)
 
   **Example**:
   ```tcl
   string compare abc abd              ;# Returns: -1
-  string equal -nocase Hello HELLO    ;# Returns: 1
+  string equal -nocase Hello HELLO    ;# Returns: True
   ```
 
   ---
@@ -1777,7 +1777,7 @@ String commands belong to ObjectGroup: "string"
 
   ---
 
-  - `string match ?options? pattern string` - Returns 1 if *string* matches the glob *pattern*, 0 otherwise.
+  - `string match ?options? pattern string` - Returns True if *string* matches the glob *pattern*, False otherwise.
     - Glob patterns: `*` (any chars), `?` (one char), `[chars]` (character class), `\x` (escape)
 
   ---
@@ -1792,8 +1792,8 @@ String commands belong to ObjectGroup: "string"
   ```tcl
   string first l Hello                ;# Returns: 2
   string last l Hello                 ;# Returns: 3
-  string match *.txt file.txt         ;# Returns: 1
-  string match {[A-Z]*} Hello         ;# Returns: 1
+  string match *.txt file.txt         ;# Returns: True
+  string match {[A-Z]*} Hello         ;# Returns: True
   ```
 
   ---
@@ -1870,17 +1870,17 @@ String commands belong to ObjectGroup: "string"
 
   #### Prefix/Suffix Testing (Eagle extensions)
 
-  - `string starts ?options? prefix string` - Returns 1 if *string* starts with *prefix*, 0 otherwise.
+  - `string starts ?options? prefix string` - Returns True if *string* starts with *prefix*, False otherwise.
 
   ---
 
-  - `string ends ?options? suffix string` - Returns 1 if *string* ends with *suffix*, 0 otherwise.
+  - `string ends ?options? suffix string` - Returns True if *string* ends with *suffix*, False otherwise.
   - **Options**: `-nocase` for case-insensitive comparison.
 
   **Example**:
   ```tcl
-  string starts Hello "Hello, World"   ;# Returns: 1
-  string ends -nocase .TXT file.txt    ;# Returns: 1
+  string starts Hello "Hello, World"   ;# Returns: True
+  string ends -nocase .TXT file.txt    ;# Returns: True
   ```
 
   ---
@@ -2111,13 +2111,13 @@ String commands belong to ObjectGroup: "string"
 
   **Example**:
   ```tcl
-  string is integer 123            ;# Returns: 1
-  string is integer 12.3           ;# Returns: 0
-  string is double 3.14            ;# Returns: 1
-  string is list {a b c}           ;# Returns: 1
-  string is list "a {b"            ;# Returns: 0 (unbalanced brace)
-  string is boolean yes            ;# Returns: 1
-  string is -strict alpha ""       ;# Returns: 0 (empty with -strict)
+  string is integer 123            ;# Returns: True
+  string is integer 12.3           ;# Returns: False
+  string is double 3.14            ;# Returns: True
+  string is list {a b c}           ;# Returns: True
+  string is list "a {b"            ;# Returns: False (unbalanced brace)
+  string is boolean yes            ;# Returns: True
+  string is -strict alpha ""       ;# Returns: False (empty with -strict)
   ```
 
 ---
@@ -2164,7 +2164,7 @@ Arrays in Eagle are associative arrays (hash tables) that map string keys to str
   **Example**:
   ```tcl
   array set data {name Alice age 30 city Boston}
-  array exists data            ;# Returns: 1
+  array exists data            ;# Returns: True
   array size data              ;# Returns: 3
   array names data             ;# Returns: {name age city} (order may vary)
   array get data a*            ;# Returns: {age 30}
@@ -3102,8 +3102,10 @@ Procedures are Eagle's primary mechanism for code reuse and abstraction.
     set double {{x} {expr {$x * 2}}}
     apply $double 5                        ;# Returns: 10
 
-    # Lambda with namespace context
-    apply {{} {variable counter; incr counter} ::myns}
+    # Lambda with namespace context (the namespace and variable must exist
+    # first -- Eagle does not auto-create them)
+    namespace eval myns {variable counter 5}
+    apply {{} {variable counter; incr counter} ::myns}    ;# Returns: 6
     ```
   - **Annotations**: The lambda body may contain annotations (e.g.,
     `<<fast>>`, `<<atomic>>`, `<<inline>>`) that control execution
@@ -4587,8 +4589,8 @@ The `[package]` command manages Eagle packages - reusable collections of procedu
   ```tcl
   package vcompare 1.0 2.0        ;# Returns: -1
   package vcompare 2.1 2.1        ;# Returns: 0
-  package vsatisfies 2.5 2.0      ;# Returns: 1 (2.5 satisfies >=2.0)
-  package vsatisfies 1.5 2.0      ;# Returns: 0
+  package vsatisfies 2.5 2.0      ;# Returns: True (2.5 satisfies >=2.0)
+  package vsatisfies 1.5 2.0      ;# Returns: False
   ```
 
   ---
@@ -8806,18 +8808,18 @@ expr {decimal(123.45)}  ;# Eagle extension
 
 ```tcl
 # String equality (preferred over == for strings)
-expr {"hello" eq "hello"}    ;# 1
-expr {"Hello" eq "hello"}    ;# 0
+expr {"hello" eq "hello"}    ;# True
+expr {"Hello" eq "hello"}    ;# False
 
 # String inequality
-expr {"abc" ne "def"}        ;# 1
+expr {"abc" ne "def"}        ;# True
 
 # Numeric comparison (type coercion)
-expr {"42" == 42}            ;# 1 (string converted to number)
+expr {"42" == 42}            ;# True (string converted to number)
 
 # Use eq/ne for pure string comparison
-expr {" 42" eq "42"}         ;# 0 (different strings)
-expr {" 42" == 42}           ;# 1 (both convert to 42)
+expr {" 42" eq "42"}         ;# False (different strings)
+expr {" 42" == 42}           ;# True (both convert to 42)
 ```
 
 ---
@@ -8828,21 +8830,21 @@ The `in` and `ni` operators test whether a string element is contained in a list
 
 ```tcl
 # Basic list membership
-expr {"apple" in {apple banana cherry}}     ;# 1 (found)
-expr {"grape" in {apple banana cherry}}     ;# 0 (not found)
+expr {"apple" in {apple banana cherry}}     ;# True (found)
+expr {"grape" in {apple banana cherry}}     ;# False (not found)
 
 # List non-membership
-expr {"apple" ni {apple banana cherry}}     ;# 0 (it IS in the list)
-expr {"grape" ni {apple banana cherry}}     ;# 1 (not in the list)
+expr {"apple" ni {apple banana cherry}}     ;# False (it IS in the list)
+expr {"grape" ni {apple banana cherry}}     ;# True (not in the list)
 
 # String comparison - no numeric conversion
-expr {"1" in {1 2 3}}        ;# 1 (string "1" matches element "1")
-expr {"01" in {1 2 3}}       ;# 0 (string "01" does not match "1")
-expr {"0x1" in {1 2 3}}      ;# 0 (no numeric conversion)
+expr {"1" in {1 2 3}}        ;# True (string "1" matches element "1")
+expr {"01" in {1 2 3}}       ;# False (string "01" does not match "1")
+expr {"0x1" in {1 2 3}}      ;# False (no numeric conversion)
 
 # Case sensitivity (default is case-sensitive)
-expr {"Apple" in {apple banana cherry}}     ;# 0 (case mismatch)
-expr {"apple" in {apple banana cherry}}     ;# 1 (exact match)
+expr {"Apple" in {apple banana cherry}}     ;# False (case mismatch)
+expr {"apple" in {apple banana cherry}}     ;# True (exact match)
 
 # Common idiom: check before adding to avoid duplicates
 if {$item ni $result} then {
@@ -8875,8 +8877,8 @@ expr {off}         ;# 0
 
 # Boolean operations
 expr {!0}          ;# 1 (logical NOT)
-expr {1 && 0}      ;# 0 (logical AND)
-expr {1 || 0}      ;# 1 (logical OR)
+expr {1 && 0}      ;# False (logical AND)
+expr {1 || 0}      ;# True (logical OR)
 
 # Short-circuit evaluation
 expr {0 && [expensive_proc]}   ;# [expensive_proc] not called
@@ -9899,10 +9901,10 @@ if {[catch {long_operation} result]} then {
 # [a-z] - Matches any character in the range
 # \x    - Matches the literal character x
 
-string match *.txt file.txt           ;# 1
-string match file?.txt file1.txt     ;# 1
-string match {file[123].txt} file2.txt    ;# 1
-string match {*\**} has*star         ;# 1 (literal *)
+string match *.txt file.txt           ;# True
+string match file?.txt file1.txt     ;# True
+string match {file[123].txt} file2.txt    ;# True
+string match {*\**} has*star         ;# True (literal *)
 ```
 
 ---

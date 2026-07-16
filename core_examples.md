@@ -1390,7 +1390,7 @@ base64 decode SGVsbG8=          ;# Returns: Hello
 set original "Eagle scripting!"
 set encoded [base64 encode $original]
 set decoded [base64 decode $encoded]
-expr {$original eq $decoded}    ;# Returns: 1
+expr {$original eq $decoded}    ;# Returns: True
 ```
 
 ```tcl
@@ -1787,14 +1787,14 @@ string compare abd abc                ;# Returns: 1
 ```
 
 ```tcl
-string equal Hello Hello              ;# Returns: 1
-string equal Hello hello              ;# Returns: 0
-string equal -nocase Hello HELLO      ;# Returns: 1
+string equal Hello Hello              ;# Returns: True
+string equal Hello hello              ;# Returns: False
+string equal -nocase Hello HELLO      ;# Returns: True
 ```
 
 ```tcl
 # Compare only first N characters
-string equal -length 3 Hello Help      ;# Returns: 1
+string equal -length 3 Hello Help      ;# Returns: True
 ```
 
 #### String Searching
@@ -1812,9 +1812,9 @@ string first l Hello 3                ;# Returns: 3
 
 ```tcl
 # Glob matching
-string match *.txt file.txt           ;# Returns: 1
-string match {[A-Z]*} Hello           ;# Returns: 1
-string match -nocase hello HELLO      ;# Returns: 1
+string match *.txt file.txt           ;# Returns: True
+string match {[A-Z]*} Hello           ;# Returns: True
+string match -nocase hello HELLO      ;# Returns: True
 ```
 
 ```tcl
@@ -1866,57 +1866,57 @@ string trim "###text###" "#"          ;# Returns: text
 #### Prefix/Suffix Testing (Eagle extensions)
 
 ```tcl
-string starts Hello "Hello, World"        ;# Returns: 1
-string starts Bye "Hello, World"          ;# Returns: 0
-string ends .txt readme.txt              ;# Returns: 1
-string ends -nocase .TXT file.txt        ;# Returns: 1
+string starts Hello "Hello, World"        ;# Returns: True
+string starts Bye "Hello, World"          ;# Returns: False
+string ends .txt readme.txt              ;# Returns: True
+string ends -nocase .TXT file.txt        ;# Returns: True
 ```
 
 #### String Classification
 
 ```tcl
 # Standard Tcl character classes
-string is alpha Hello                 ;# Returns: 1
-string is alpha Hello123              ;# Returns: 0
-string is alnum Hello123              ;# Returns: 1
-string is digit 123                   ;# Returns: 1
-string is space "  \t\n"             ;# Returns: 1
-string is upper HELLO                ;# Returns: 1
-string is lower hello                ;# Returns: 1
-string is ascii Hello                ;# Returns: 1
-string is print Hello                ;# Returns: 1
-string is graph Hello                ;# Returns: 1
-string is punct ".,;!"              ;# Returns: 1 (quotes needed: semicolon)
-string is control "\x01\x02"        ;# Returns: 1
-string is wordchar hello_123        ;# Returns: 1
-string is xdigit 1a2F               ;# Returns: 1
+string is alpha Hello                 ;# Returns: True
+string is alpha Hello123              ;# Returns: False
+string is alnum Hello123              ;# Returns: True
+string is digit 123                   ;# Returns: True
+string is space "  \t\n"             ;# Returns: True
+string is upper HELLO                ;# Returns: True
+string is lower hello                ;# Returns: True
+string is ascii Hello                ;# Returns: True
+string is print Hello                ;# Returns: True
+string is graph Hello                ;# Returns: True
+string is punct ".,;!"              ;# Returns: True (quotes needed: semicolon)
+string is control "\x01\x02"        ;# Returns: True
+string is wordchar hello_123        ;# Returns: True
+string is xdigit 1a2F               ;# Returns: True
 ```
 
 ```tcl
 # Numeric type testing
-string is integer 123                  ;# Returns: 1
-string is integer 12.3                ;# Returns: 0
-string is wideinteger 9999999999      ;# Returns: 1 (64-bit)
-string is entier 12345678901234567890 ;# Returns: 1 (arbitrary precision)
-string is double 3.14                 ;# Returns: 1
-string is boolean yes                 ;# Returns: 1
+string is integer 123                  ;# Returns: True
+string is integer 12.3                ;# Returns: False
+string is wideinteger 9999999999      ;# Returns: True (64-bit)
+string is entier 12345678901234567890 ;# Returns: True (arbitrary precision)
+string is double 3.14                 ;# Returns: True
+string is boolean yes                 ;# Returns: True
 ```
 
 ```tcl
 # Eagle extension — additional numeric classes
-string is decimal 3.14                ;# Returns: 1
-string is byte 255                    ;# Returns: 1
-string is byte 256                    ;# Returns: 0
-string is single 3.14                ;# Returns: 1 (single-precision float)
-string is hexadecimal FF00           ;# Returns: 1
-string is real 3.14159               ;# Returns: 1
-string is number 42                  ;# Returns: 1
+string is decimal 3.14                ;# Returns: True
+string is byte 255                    ;# Returns: True
+string is byte 256                    ;# Returns: False
+string is single 3.14                ;# Returns: True (single-precision float)
+string is hexadecimal FF00           ;# Returns: True
+string is real 3.14159               ;# Returns: True
+string is number 42                  ;# Returns: True
 ```
 
 ```tcl
 # Strict mode (empty string fails)
-string is alpha ""                     ;# Returns: 1
-string is alpha -strict ""            ;# Returns: 0
+string is alpha ""                     ;# Returns: True
+string is alpha -strict ""            ;# Returns: False
 ```
 
 ```tcl
@@ -1927,55 +1927,55 @@ string is integer -failindex idx 12x4
 
 ```tcl
 # List and dict validation
-string is list {a b c}               ;# Returns: 1
-string is list "a {b"                 ;# Returns: 0
-string is element hello              ;# Returns: 1
-string is dict {a 1 b 2}            ;# Returns: 1 (Eagle extension)
+string is list {a b c}               ;# Returns: True
+string is list "a {b"                 ;# Returns: False
+string is element hello              ;# Returns: True
+string is dict {a 1 b 2}            ;# Returns: True (Eagle extension)
 ```
 
 ```tcl
 # Eagle extension — file and path validation
-string is file /tmp/data.txt         ;# Returns: 1 if file exists
-string is directory /tmp             ;# Returns: 1 if directory exists
-string is path /some/path            ;# Returns: 1 if valid path syntax
+string is file /tmp/data.txt         ;# Returns: True if file exists
+string is directory /tmp             ;# Returns: True if directory exists
+string is path /some/path            ;# Returns: True if valid path syntax
 ```
 
 ```tcl
 # Eagle extension — format validation classes
-string is guid 550e8400-e29b-41d4-a716-446655440000    ;# Returns: 1
-string is uri https://example.com                       ;# Returns: 1
-string is version 1.2.3                                 ;# Returns: 1
-string is versionrange 1.0-2.0                          ;# Returns: 1
-string is inetaddr 192.168.1.1                          ;# Returns: 1
-string is cidr 192.168.1.0/24                           ;# Returns: 1
-string is datetime 2024-01-15                           ;# Returns: 1
-string is timespan 01:30:00                             ;# Returns: 1
-string is xml <root/>                                   ;# Returns: 1
-string is base64 SGVsbG8=                               ;# Returns: 1
+string is guid 550e8400-e29b-41d4-a716-446655440000    ;# Returns: True
+string is uri https://example.com                       ;# Returns: True
+string is version 1.2.3                                 ;# Returns: True
+string is versionrange 1.0-2.0                          ;# Returns: True
+string is inetaddr 192.168.1.1                          ;# Returns: True
+string is cidr 192.168.1.0/24                           ;# Returns: True
+string is datetime 2024-01-15                           ;# Returns: True
+string is timespan 01:30:00                             ;# Returns: True
+string is xml <root/>                                   ;# Returns: True
+string is base64 SGVsbG8=                               ;# Returns: True
 ```
 
 ```tcl
 # Eagle extension — interpreter/object validation
-string is command puts                ;# Returns: 1 if command exists
-string is object $handle              ;# Returns: 1 if valid object handle
-string is type System.String          ;# Returns: 1 if valid .NET type
-string is encoding utf-8              ;# Returns: 1 if valid encoding
-string is identifier myCmd            ;# Returns: 1 if valid identifier
-string is interpreter $interp         ;# Returns: 1 if valid interpreter
+string is command puts                ;# Returns: True if command exists
+string is object $handle              ;# Returns: True if valid object handle
+string is type System.String          ;# Returns: True if valid .NET type
+string is encoding utf-8              ;# Returns: True if valid encoding
+string is identifier myCmd            ;# Returns: True if valid identifier
+string is interpreter $interp         ;# Returns: True if valid interpreter
 ```
 
 ```tcl
 # Eagle extension — boolean specifics
-string is true yes                    ;# Returns: 1
-string is false no                    ;# Returns: 1
-string is none ""                     ;# Returns: 1 (Eagle extension)
+string is true yes                    ;# Returns: True
+string is false no                    ;# Returns: True
+string is none ""                     ;# Returns: True (Eagle extension)
 ```
 
 ```tcl
 # Eagle extension — ASCII-restricted classes
-string is asciialnum Hello123         ;# Returns: 1 (ASCII only)
-string is asciialpha Hello            ;# Returns: 1 (ASCII letters only)
-string is asciidigit 123              ;# Returns: 1 (ASCII digits only)
+string is asciialnum Hello123         ;# Returns: True (ASCII only)
+string is asciialpha Hello            ;# Returns: True (ASCII letters only)
+string is asciidigit 123              ;# Returns: True (ASCII digits only)
 ```
 
 ```tcl
@@ -1999,7 +1999,7 @@ string classes
 ```tcl
 # Create array from list
 array set data {name Alice age 30 city Boston}
-array exists data           ;# Returns: 1
+array exists data           ;# Returns: True
 array size data             ;# Returns: 3
 ```
 
@@ -2024,7 +2024,7 @@ array size data             ;# Returns: 2
 ```tcl
 # Unset entire array
 array unset data
-array exists data           ;# Returns: 0
+array exists data           ;# Returns: False
 ```
 
 #### Default Values (Eagle extension)
@@ -2039,7 +2039,7 @@ incr counts(bananas)
 ```
 
 ```tcl
-array default exists counts ;# Returns: 1
+array default exists counts ;# Returns: True
 array default get counts    ;# Returns: 0
 array default unset counts
 ```
@@ -2132,12 +2132,12 @@ dict get {a {x y} c d} a x   ;# Returns: y
 
 ```tcl
 # Check key existence
-dict exists {a b c d} a      ;# Returns: 1
-dict exists {a b c d} z      ;# Returns: 0
+dict exists {a b c d} a      ;# Returns: True
+dict exists {a b c d} z      ;# Returns: False
 
 # Nested existence
-dict exists {a {x y} c d} a x  ;# Returns: 1
-dict exists {a {x y} c d} a z  ;# Returns: 0
+dict exists {a {x y} c d} a x  ;# Returns: True
+dict exists {a {x y} c d} a z  ;# Returns: False
 ```
 
 ```tcl
@@ -2636,9 +2636,9 @@ file pathtype relative/path              ;# Returns: relative
 #### File Tests
 
 ```tcl
-file exists /tmp                         ;# Returns: 1
-file isdirectory /tmp                    ;# Returns: 1
-file isfile /tmp                         ;# Returns: 0
+file exists /tmp                         ;# Returns: True
+file isdirectory /tmp                    ;# Returns: True
+file isfile /tmp                         ;# Returns: False
 ```
 
 ```tcl
@@ -2661,7 +2661,7 @@ file pathtype relative/path              ;# Returns: relative
 
 ```tcl
 # Eagle extension — compare paths
-file same /tmp/a /tmp/../tmp/a           ;# Returns: 1
+file same /tmp/a /tmp/../tmp/a           ;# Returns: True
 ```
 
 #### File Information
@@ -3200,8 +3200,8 @@ puts [object invoke $list Item 0]       ;# first
 
 ```tcl
 set sb [object create System.Text.StringBuilder]
-object exists $sb              ;# Returns: 1
-object isnull $sb              ;# Returns: 0
+object exists $sb              ;# Returns: True
+object isnull $sb              ;# Returns: False
 object isdisposed $sb       ;# Returns: 0 (not yet disposed)
 ```
 
@@ -3779,7 +3779,7 @@ debug callback {}                        ;# Clear callback
 ```tcl
 # Create a child interpreter
 set child [interp create myChild]
-interp exists myChild          ;# Returns: 1
+interp exists myChild          ;# Returns: True
 interp children                ;# Returns: myChild
 interp parent myChild          ;# Returns parent interpreter path (e.g., "")
 ```
@@ -3787,7 +3787,7 @@ interp parent myChild          ;# Returns parent interpreter path (e.g., "")
 ```tcl
 # Create safe (sandboxed) interpreter
 set safe [interp create -safe mySafe]
-interp issafe mySafe           ;# Returns: 1
+interp issafe mySafe           ;# Returns: True
 ```
 
 ```tcl
@@ -3893,15 +3893,15 @@ interp delete $safe
 
 ```tcl
 set child [interp create]
-interp issafe $child           ;# Returns: 0 (not safe)
+interp issafe $child           ;# Returns: False (not safe)
 interp makesafe $child       ;# Convert to safe mode
-interp issafe $child         ;# Returns: 1
+interp issafe $child         ;# Returns: True
 ```
 
 ```tcl
 # Standard mode
 interp makestandard $child
-interp isstandard $child     ;# Returns: 1
+interp isstandard $child     ;# Returns: True
 ```
 
 ```tcl
@@ -4105,8 +4105,8 @@ package info http            ;# Detailed info about a package
 package vcompare 1.0 2.0      ;# Returns: -1
 package vcompare 2.1 2.1      ;# Returns: 0
 package vcompare 3.0 2.0      ;# Returns: 1
-package vsatisfies 2.5 2.0    ;# Returns: 1
-package vsatisfies 1.5 2.0    ;# Returns: 0
+package vsatisfies 2.5 2.0    ;# Returns: True
+package vsatisfies 1.5 2.0    ;# Returns: False
 package vsort 2.0 1.0       ;# Sort two versions
 ```
 
@@ -4897,29 +4897,29 @@ tcl exceptions                         ;# Get/set exception handling
 # Basic arithmetic
 expr {2 + 3}            ;# Returns: 5
 expr {10 / 3}           ;# Returns: 3 (integer division)
-expr {10.0 / 3}         ;# Returns: 3.3333333333333335
+expr {10.0 / 3}         ;# Returns: 3.3333333333333333333333333333
 expr {10 % 3}           ;# Returns: 1
 expr {2 ** 10}          ;# Returns: 1024
 ```
 
 ```tcl
 # Comparison operators
-expr {5 > 3}            ;# Returns: 1
-expr {5 == 5}           ;# Returns: 1
-expr {5 != 3}           ;# Returns: 1
+expr {5 > 3}            ;# Returns: True
+expr {5 == 5}           ;# Returns: True
+expr {5 != 3}           ;# Returns: True
 ```
 
 ```tcl
 # String comparison in expressions
-expr {"hello" eq "hello"}    ;# Returns: 1
-expr {"abc" lt "def"}        ;# Returns: 1
+expr {"hello" eq "hello"}    ;# Returns: True
+expr {"abc" lt "def"}        ;# Returns: True
 ```
 
 ```tcl
 # Logical operators
-expr {1 && 0}           ;# Returns: 0
-expr {1 || 0}           ;# Returns: 1
-expr {!0}               ;# Returns: 1
+expr {1 && 0}           ;# Returns: False
+expr {1 || 0}           ;# Returns: True
+expr {!0}               ;# Returns: True
 ```
 
 ```tcl
@@ -4959,8 +4959,8 @@ expr {$x > 0 ? "positive" : "non-positive"}
 
 ```tcl
 # List membership
-expr {"b" in {a b c}}   ;# Returns: 1
-expr {"d" ni {a b c}}   ;# Returns: 1
+expr {"b" in {a b c}}   ;# Returns: True
+expr {"d" ni {a b c}}   ;# Returns: True
 ```
 
 ```tcl
@@ -4971,7 +4971,7 @@ expr {"result" := 42}
 
 ```tcl
 # Function calls
-expr {sqrt(144)}        ;# Returns: 12.0
+expr {sqrt(144)}        ;# Returns: 12
 expr {abs(-5)}          ;# Returns: 5
 expr {max(3, 7, 1)}     ;# Returns: 7
 expr {min(3, 7, 1)}     ;# Returns: 1
@@ -5029,10 +5029,10 @@ expr {tanh(0)}                ;# Returns: 0.0
 
 ```tcl
 expr {exp(1)}                 ;# Returns: 2.71828... (e)
-expr {log(exp(1))}            ;# Returns: 1.0
-expr {log10(1000)}            ;# Returns: 3.0
-expr {pow(2, 10)}             ;# Returns: 1024.0
-expr {sqrt(144)}              ;# Returns: 12.0
+expr {log(exp(1))}            ;# Returns: 1
+expr {log10(1000)}            ;# Returns: 3
+expr {pow(2, 10)}             ;# Returns: 1024
+expr {sqrt(144)}              ;# Returns: 12
 ```
 
 ```tcl
@@ -5173,12 +5173,12 @@ expr {2 ** 8}    ;# Returns: 256
 <summary><strong>Comparison</strong></summary>
 
 ```tcl
-expr {3 == 3}    ;# Returns: 1
-expr {3 != 4}    ;# Returns: 1
-expr {3 < 5}     ;# Returns: 1
-expr {5 > 3}     ;# Returns: 1
-expr {3 <= 3}    ;# Returns: 1
-expr {3 >= 5}    ;# Returns: 0
+expr {3 == 3}    ;# Returns: True
+expr {3 != 4}    ;# Returns: True
+expr {3 < 5}     ;# Returns: True
+expr {5 > 3}     ;# Returns: True
+expr {3 <= 3}    ;# Returns: True
+expr {3 >= 5}    ;# Returns: False
 ```
 
 </details>
@@ -5187,8 +5187,8 @@ expr {3 >= 5}    ;# Returns: 0
 <summary><strong>String Comparison</strong></summary>
 
 ```tcl
-expr {"abc" eq "abc"}  ;# Returns: 1
-expr {"abc" ne "def"}  ;# Returns: 1
+expr {"abc" eq "abc"}  ;# Returns: True
+expr {"abc" ne "def"}  ;# Returns: True
 expr {"abc" lt "def"}  ;# Returns: 1
 expr {"def" gt "abc"}  ;# Returns: 1
 expr {"abc" le "abc"}  ;# Returns: 1
@@ -5202,8 +5202,8 @@ expr {"abc" ge "def"}  ;# Returns: 0
 
 ```tcl
 expr {!0}            ;# Returns: 1
-expr {1 && 1}        ;# Returns: 1
-expr {0 || 1}        ;# Returns: 1
+expr {1 && 1}        ;# Returns: True
+expr {0 || 1}        ;# Returns: True
 ```
 
 ```tcl
@@ -5247,8 +5247,8 @@ expr {1 >>> 1}       ;# Right rotate
 <summary><strong>List Membership</strong></summary>
 
 ```tcl
-expr {"x" in {a b c x y z}}   ;# Returns: 1
-expr {"q" ni {a b c}}         ;# Returns: 1
+expr {"x" in {a b c x y z}}   ;# Returns: True
+expr {"q" ni {a b c}}         ;# Returns: True
 ```
 
 </details>

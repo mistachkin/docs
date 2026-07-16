@@ -460,18 +460,19 @@ nproc connect {host port timeout} {
       " (timeout=" $timeout )]
 }
 
-# Call with named arguments in any order
-connect -host localhost -port 8080 -timeout 60
+# Call with named arguments as bareword "name value" pairs (NOT -name options),
+# in any order:
+connect host localhost port 8080 timeout 60
 ;# Returns: Connecting to localhost:8080 (timeout=60)
 
-connect -timeout 30 -port 443 -host example.com
+connect timeout 30 port 443 host example.com
 ;# Returns: Connecting to example.com:443 (timeout=30)
 ```
 
 #### napply: Lambdas with Named Arguments
 
 ```tcl
-napply {{x y} {expr {$x + $y}}} -x 3 -y 4
+napply {{x y} {expr {$x + $y}}} x 3 y 4
 ;# Returns: 7
 ```
 
@@ -783,9 +784,9 @@ expr {"sum" := 10 + 20 + 30}
 Test whether a string is a member of a list, without numeric type conversion:
 
 ```tcl
-expr {"b" in {a b c}}     ;# Returns: 1
-expr {"d" in {a b c}}     ;# Returns: 0
-expr {"d" ni {a b c}}     ;# Returns: 1 (ni = not in)
+expr {"b" in {a b c}}     ;# Returns: True
+expr {"d" in {a b c}}     ;# Returns: False
+expr {"d" ni {a b c}}     ;# Returns: True (ni = not in)
 ```
 
 ---
@@ -1114,7 +1115,7 @@ Eagle supports safe (sandboxed) interpreters that restrict access to dangerous o
 
 ```tcl
 set safe [interp create -safe mySafe]
-interp issafe mySafe    ;# Returns: 1
+interp issafe mySafe    ;# Returns: True
 ```
 
 #### Aliasing Controlled Access
@@ -1373,7 +1374,7 @@ Eagle provides the `[dict]` command for full dictionary support, compatible with
 ```tcl
 set d [dict create name Alice age 30 city Boston]
 dict get $d name              ;# Returns: Alice
-dict exists $d country        ;# Returns: 0
+dict exists $d country        ;# Returns: False
 dict keys $d                  ;# Returns: {name age city}
 dict set d country USA        ;# Add a new key
 ```

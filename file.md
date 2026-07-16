@@ -207,8 +207,8 @@ These sub-commands test file properties without modifying the filesystem.
 Returns `1` if `name` exists (file or directory), `0` otherwise.
 
 ```tcl
-file exists /etc/passwd   ;# 1 (on Unix)
-file exists nosuchfile    ;# 0
+file exists /etc/passwd   ;# True (on Unix)
+file exists nosuchfile    ;# False
 ```
 
 #### `file isfile name`
@@ -270,7 +270,7 @@ Returns `1` if both paths refer to the same filesystem object (resolves
 symlinks, normalizes paths).
 
 ```tcl
-file same /tmp/../tmp/file /tmp/file   ;# 1
+file same /tmp/../tmp/file /tmp/file   ;# True
 ```
 
 #### `file owned name ?verbose?` **(Eagle, Windows/.NET)**
@@ -319,10 +319,10 @@ Returns a boolean, or with certain flags, returns the reason for invalidity.
 | `Verify` | Use component-based verification |
 
 ```tcl
-file validname "good_file.txt"                    ;# 1
-file validname "bad:file.txt" ForceWindows        ;# 0 (colon invalid)
-file validname "relative/path" Component          ;# 0 (has separator)
-file validname "\\?\C:\long\path" AllowExtended   ;# 1
+file validname "good_file.txt"                    ;# True
+file validname "bad:file.txt" ForceWindows        ;# False (colon invalid)
+file validname "relative/path" Component          ;# False (has separator)
+file validname "\\?\C:\long\path" AllowExtended   ;# True
 ```
 
 #### `file under ?options? parentDir targetPath` **(Eagle)**
@@ -341,8 +341,8 @@ matching for flexible containment checks.
 | `-failonerror` | — | Fail on access errors |
 
 ```tcl
-file under /usr /usr/local/bin          ;# 1
-file under -mode Glob /usr /usr/*/bin   ;# 1
+file under /usr /usr/local/bin          ;# True
+file under -mode Glob /usr /usr/*/bin   ;# True
 ```
 
 ### 3.3 File Information and Metadata
@@ -517,8 +517,8 @@ Returns `1` if the file at `path` is trusted (has a valid Authenticode
 signature or meets the interpreter's trust policy).
 
 ```tcl
-file trusted signed_assembly.dll   ;# 1
-file trusted unsigned.dll          ;# 0
+file trusted signed_assembly.dll   ;# True
+file trusted unsigned.dll          ;# False
 ```
 
 #### `file verified path` **(Eagle)**

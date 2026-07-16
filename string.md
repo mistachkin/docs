@@ -610,8 +610,8 @@ options follow the class name (not before it) and `-any` takes a
 boolean value:
 
 ```tcl
-string is digit "abc123"            ;# 0 (not all are digits)
-string is digit -any true "abc123"  ;# 1 (at least one digit)
+string is digit "abc123"            ;# False (not all are digits)
+string is digit -any true "abc123"  ;# True (at least one digit)
 ```
 
 ### The `-good` and `-bad` options
@@ -788,23 +788,23 @@ string compare -culture de-DE -options IgnoreCase "straße" "STRASSE"
 
 ```tcl
 # Check if a string is a valid IP address
-string is inetaddr "192.168.1.1"    ;# 1
+string is inetaddr "192.168.1.1"    ;# True
 
 # Check if a string is valid CIDR notation
-string is cidr "10.0.0.0/8"        ;# 1
+string is cidr "10.0.0.0/8"        ;# True
 
 # Check if a string is a valid GUID
-string is guid "550e8400-e29b-41d4-a716-446655440000"  ;# 1
+string is guid "550e8400-e29b-41d4-a716-446655440000"  ;# True
 
 # Check if a string is valid XML
-string is xml "<root><child/></root>"  ;# 1
+string is xml "<root><child/></root>"  ;# True
 
 # Check if a variable names an existing command
-string is command "puts"            ;# 1
-string is command "nonexistent"     ;# 0
+string is command "puts"            ;# True
+string is command "nonexistent"     ;# False
 
 # Negate: check that something is NOT a list
-string is not list "unbalanced {"   ;# 1
+string is not list "unbalanced {"   ;# True
 ```
 
 ### Pattern 3: `-good`, `-bad`, and `-failindex`
