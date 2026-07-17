@@ -64,7 +64,7 @@ Every lesson below is written in full.
 |--------|--------------------------|-----------------|
 | **1. Meet Eagle, and running it** | [Intro / Running / Output](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl0.html) | It's .NET; Tcl 8.4 baseline; the shell, `-evaluate`, `-file`; version introspection |
 | **2. Values, variables, True/False** | [Variables & substitution](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl2.html) | Computed booleans render **`True`/`False`**, not `1`/`0` |
-| **3. Numbers and `[expr]`** | [Math 101](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl6.html) / [Computers and Numbers](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl6a.html) | Base-10 `decimal` literals; **integer overflow wraps** (no bignum promotion); `entier()`/`wide()`/`double()`; Eagle-only operators (`^^` `->` `<->` `<<<` `>>>` `:=`) and extra functions (`log2`, `sign`, `isnan`, …) |
+| **3. Numbers and `[expr]`** | [Math 101](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl6.html) / [Computers and Numbers](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl6a.html) | Base-10 `decimal` literals; **integer overflow wraps** (no bignum promotion); `entier()`/`wide()`/`double()`; Eagle-only operators (`^^` `->` `<->` `<<<` `>>>` `:=`), extra functions (`log2`, `sign`, `randstr`, …), and the Unicode `∞`/`π` |
 | **4. `if` and `switch`** | [if](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl7.html) / [switch](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl8.html) | True/False conditions; `switch` matching modes |
 | **5. Loops (and `do`)** | [while](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl9.html) / [for & incr](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl10.html) | `incr` does **not** auto-create a missing variable; Eagle's `do`/`while`-`until` |
 | **6. Procedures and scope** | [proc](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl11.html) / [args](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl12.html) / [scope](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl13.html) | Named arguments (`nproc`/`napply`), `apply`, and the `[scope]` command |
@@ -323,8 +323,8 @@ in [core_language.md](core_language.md), or run `[info operators]` to list them.
 
 ### 3.5 Extra math functions
 
-Alongside the standard functions (`abs`, `sqrt`, `sin`, `pow`, …), Eagle adds many
-more:
+Alongside the standard functions (`abs`, `sqrt`, `sin`, `pow`, …), Eagle adds
+several that Tcl has no equivalent for:
 
 ```tcl
 puts [expr {log2(8)}]        ;# => 3       (log base 2)
@@ -334,19 +334,37 @@ puts [expr {truncate(3.7)}]  ;# => 3       (toward zero)
 puts [expr {pi()}]           ;# => 3.141592653589793
 puts [expr {e()}]            ;# => 2.718281828459045
 
-# IEEE floating-point classification (like C99 <math.h>):
-puts [expr {isnan(acos(2))}]        ;# => True   (acos(2) is Not-a-Number)
-puts [expr {isinf(pow(10, 400))}]   ;# => True   (overflows to infinity)
-
 # Randomness — random() is crypto-strong:
 puts [expr {random()}]       ;# => a random 64-bit integer
 puts [expr {randstr(16)}]    ;# => a random 16-character string
 ```
 
-More follow: `isfinite`, `isnormal`, `issubnormal`, `isunordered`; `round2`/
-`round3` for explicit rounding modes; and even `typeof`, `decimal`, `datetime`,
-and `timespan` for type conversion inside an expression. Run `[info functions]`
-to list all 50-plus.
+Eagle also implements the **IEEE floating-point classification functions from Tcl
+8.7** (TIP 521) — `isnan`, `isinf`, `isfinite`, `isnormal`, `issubnormal`,
+`isunordered` — so even against the 8.4 baseline they're available to you now:
+
+```tcl
+puts [expr {isnan(acos(2))}]        ;# => True   (acos(2) is Not-a-Number)
+puts [expr {isinf(pow(10, 400))}]   ;# => True   (overflows to infinity)
+```
+
+And a genuinely Eagle-only touch: expressions understand the **Unicode symbols**
+`∞` (infinity, U+221E) and `π` (pi, U+03C0) directly, as first-class values —
+preserved verbatim when alone (like the literals in §3.3), numeric in arithmetic:
+
+```tcl
+puts [expr {∞ > 1000000}]    ;# => True
+puts [expr {-∞ < 0}]         ;# => True
+puts [expr {∞ + 1}]          ;# => ∞        (infinity arithmetic)
+puts [expr {isinf(∞)}]       ;# => True
+
+puts [expr {π * 2}]          ;# => 6.283185307179586
+puts [expr {π == pi()}]      ;# => True     (π is the pi() constant)
+```
+
+Other Eagle additions include `round2`/`round3` (explicit rounding modes) and
+`typeof`, `decimal`, `datetime`, and `timespan` for type conversion inside an
+expression. Run `[info functions]` to list them all.
 
 ---
 
