@@ -64,7 +64,7 @@ Every lesson below is written in full.
 |--------|--------------------------|-----------------|
 | **1. Meet Eagle, and running it** | [Intro / Running / Output](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl0.html) | It's .NET; Tcl 8.4 baseline; the shell, `-evaluate`, `-file`; version introspection |
 | **2. Values, variables, True/False** | [Variables & substitution](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl2.html) | Computed booleans render **`True`/`False`**, not `1`/`0` |
-| **3. Numbers and `[expr]`** | [Math 101](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl6.html) / [Computers and Numbers](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl6a.html) | Base-10 `decimal` literals; **integer overflow wraps** (no bignum promotion); `entier()`/`wide()`/`double()`; Eagle-only operators (`^^` `->` `<->` `<<<` `>>>` `:=`), extra functions (`log2`, `sign`, `randstr`, …), and the Unicode `∞`/`π` |
+| **3. Numbers and `[expr]`** | [Math 101](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl6.html) / [Computers and Numbers](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl6a.html) | Base-10 `decimal` literals; **integer overflow wraps** (no bignum promotion); `entier()`/`wide()`/`double()`; Eagle-only operators (`^^` `->` `<->` `<<<` `>>>` `:=`), extra functions (`log2`, `sign`, `randstr`, …), and the Unicode `∞`/`π`/`ℇ` |
 | **4. `if` and `switch`** | [if](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl7.html) / [switch](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl8.html) | True/False conditions; `switch` matching modes |
 | **5. Loops (and `do`)** | [while](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl9.html) / [for & incr](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl10.html) | `incr` does **not** auto-create a missing variable; Eagle's `do`/`while`-`until` |
 | **6. Procedures and scope** | [proc](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl11.html) / [args](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl12.html) / [scope](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl13.html) | Named arguments (`nproc`/`napply`), `apply`, and the `[scope]` command |
@@ -349,8 +349,9 @@ puts [expr {isinf(pow(10, 400))}]   ;# => True   (overflows to infinity)
 ```
 
 And a genuinely Eagle-only touch: expressions understand the **Unicode symbols**
-`∞` (infinity, U+221E) and `π` (pi, U+03C0) directly, as first-class values —
-preserved verbatim when alone (like the literals in §3.3), numeric in arithmetic:
+`∞` (infinity, U+221E), `π` (pi, U+03C0), and `ℇ` (Euler's number, U+2107)
+directly, as first-class values — preserved verbatim when alone (like the literals
+in §3.3), numeric in arithmetic:
 
 ```tcl
 puts [expr {∞ > 1000000}]    ;# => True
@@ -360,6 +361,7 @@ puts [expr {isinf(∞)}]       ;# => True
 
 puts [expr {π * 2}]          ;# => 6.283185307179586
 puts [expr {π == pi()}]      ;# => True     (π is the pi() constant)
+puts [expr {ℇ == e()}]       ;# => True     (ℇ is Euler's number, e())
 ```
 
 Other Eagle additions include `round2`/`round3` (explicit rounding modes) and
