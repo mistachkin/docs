@@ -599,27 +599,97 @@ commands.
 
 ## 9. Custom expr functions and plugins
 
-**Custom `[expr]` functions** implement `IFunction` (which uses
-`IExecuteArgument`, a single-value form) — derive from the function base class in
-`Eagle._Functions` and register with `AddFunction`:
+**Custom `[expr]` functions** are the math-function analogue of custom commands.
+A function implements **`IFunction`**, whose execution interface is
+**`IExecuteArgument`** — and the important difference from a command's `IExecute`
+is the *result type*. A function is an operand inside an expression, so it
+produces a single value and returns it through **`ref Argument value`** rather
+than a command's `ref Result result`:
+
+```csharp
+ReturnCode Execute(
+    Interpreter interpreter,  // the interpreter context
+    IClientData clientData,   // client data supplied at registration
+    ArgumentList arguments,   // arguments[0] is the function name
+    ref Argument value,       // <-- the function's single result value
+    ref Result error);        // set to a message on failure
+```
+
+Derive from the base class `Eagle._Functions.Default` and override it. This is the
+shape of every built-in math function (`sqrt`, `sign`, `log2`, …) — a doubling
+function makes the pattern concrete:
+
+```csharp
+using System;
+using Eagle._Attributes;
+using Eagle._Components.Public;
+using Eagle._Containers.Public;
+using Eagle._Interfaces.Public;
+using _Functions = Eagle._Functions;
+
+[ObjectId("00000000-0000-0000-0000-000000000000")] // fresh, unique GUID
+[FunctionFlags(FunctionFlags.Safe)]                // usable in safe interpreters
+[ObjectGroup("myapp")]
+public sealed class TwiceFunction : _Functions.Default
+{
+    public TwiceFunction(IFunctionData functionData)
+        : base(functionData)
+    {
+        this.Flags |= Utility.GetFunctionFlags(GetType().BaseType) |
+            Utility.GetFunctionFlags(this);
+    }
+
+    public override ReturnCode Execute(
+        Interpreter interpreter, IClientData clientData,
+        ArgumentList arguments, ref Argument value, ref Result error)
+    {
+        if (interpreter == null) { error = "invalid interpreter"; return ReturnCode.Error; }
+        if (arguments == null)   { error = "invalid argument list"; return ReturnCode.Error; }
+
+        // Arity: the function name plus its declared argument count (this.Arguments,
+        // set from AddFunction below). Report the Eagle-standard message on mismatch.
+        if (arguments.Count != (this.Arguments + 1))
+        {
+            error = String.Format("{0} arguments for math function \"{1}\"",
+                arguments.Count > this.Arguments + 1 ? "too many" : "too few", base.Name);
+            return ReturnCode.Error;
+        }
+
+        // Convert the operand (arguments[1]) to a numeric variant, then compute.
+        IVariant v = null;
+        if (Value.GetVariant(interpreter, arguments[1], ValueFlags.AnyVariant,
+                interpreter.CultureInfo, ref v, ref error) != ReturnCode.Ok)
+            return ReturnCode.Error;
+
+        value = Convert.ToDouble(v.Value) * 2.0;   // assign the result (Argument is implicit)
+        return ReturnCode.Ok;
+    }
+}
+```
+
+Register it, and it is usable inside `[expr]` as `twice(...)`:
 
 ```csharp
 long token = 0;
 Result result = null;
 
 interpreter.AddFunction(
-    typeof(MyFunction),   // null -> resolved by naming convention
-    "myfunc",             // name usable as myfunc(...) inside [expr]
-    1,                    // expected argument count
-    null,                 // argument types (null -> any)
+    typeof(TwiceFunction),   // null -> resolved by naming convention
+    "twice",                 // name used as twice(...) inside [expr]
+    1,                       // expected argument count (becomes this.Arguments)
+    null,                    // argument types (null -> any)
     FunctionFlags.None,
-    null,                 // owning plugin
-    null,                 // client data
-    true,                 // strict
+    null,                    // owning plugin
+    null,                    // client data
+    true,                    // strict
     ref token, ref result);
+
+// interpreter.EvaluateExpression("twice(21)", ref result) -> 42
 ```
 
-See `Eagle/Sample/Functions/Class8.cs` for a complete example.
+The built-in functions live in `Eagle/Library/Functions/` (e.g. `Sign.cs`,
+`Log2.cs`); `Eagle/Sample/Functions/Class8.cs` is the documented out-of-tree
+template.
 
 **Plugins** implement `IPlugin` and bundle a set of commands, functions,
 policies, and resources behind a single loadable unit — this is the mechanism

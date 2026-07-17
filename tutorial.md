@@ -64,7 +64,7 @@ Every lesson below is written in full.
 |--------|--------------------------|-----------------|
 | **1. Meet Eagle, and running it** | [Intro / Running / Output](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl0.html) | It's .NET; Tcl 8.4 baseline; the shell, `-evaluate`, `-file`; version introspection |
 | **2. Values, variables, True/False** | [Variables & substitution](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl2.html) | Computed booleans render **`True`/`False`**, not `1`/`0` |
-| **3. Numbers and `[expr]`** | [Math 101](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl6.html) / [Computers and Numbers](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl6a.html) | Base-10 `decimal` literals; **integer overflow wraps** (no bignum promotion); `entier()`/`wide()`/`double()` |
+| **3. Numbers and `[expr]`** | [Math 101](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl6.html) / [Computers and Numbers](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl6a.html) | Base-10 `decimal` literals; **integer overflow wraps** (no bignum promotion); `entier()`/`wide()`/`double()`; Eagle-only operators (`^^` `->` `<->` `<<<` `>>>` `:=`) and extra functions (`log2`, `sign`, `isnan`, …) |
 | **4. `if` and `switch`** | [if](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl7.html) / [switch](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl8.html) | True/False conditions; `switch` matching modes |
 | **5. Loops (and `do`)** | [while](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl9.html) / [for & incr](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl10.html) | `incr` does **not** auto-create a missing variable; Eagle's `do`/`while`-`until` |
 | **6. Procedures and scope** | [proc](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl11.html) / [args](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl12.html) / [scope](https://www.tcl-lang.org/man/tcl8.5/tutorial/Tcl13.html) | Named arguments (`nproc`/`napply`), `apply`, and the `[scope]` command |
@@ -88,8 +88,8 @@ Eagle.
 |--------|----------------|
 | **17. Talking to .NET: the `[object]` command** | Create/invoke .NET types, opaque handles, `-alias`, overload resolution with `-parametertypes`, disposal → [object.md](object.md) |
 | **18. The two-language model** | Dropping to CLR types; the `[library]` P/Invoke FFI; compiling C# from script; the `[tcl]` bridge to a real Tcl runtime |
-| **19. Safety and sandboxing** | Safe interpreters, hidden commands, policy callbacks, resource limits, `[debug secureeval]` → [safe.md](safe.md), [interp.md](interp.md) |
-| **20. Packages and plugins** | `[package]`, `[load]`/`[unload]`, the plugin model, and the Enterprise Edition plugins → [load.md](load.md) |
+| **19. Safety and sandboxing** | Safe interpreters, hidden commands, policy callbacks, resource limits, AppDomain isolation (`interp create -isolated`), `[debug secureeval]` → [safe.md](safe.md), [interp.md](interp.md) |
+| **20. Packages and plugins** | `[package]`, `[load]`/`[unload]`, plugin load-security options (`-trustedonly`/`-publickeytoken`/`-isolated`), and the Enterprise Edition plugins → [load.md](load.md) |
 | **21. Events, `after`, threads, async** | The event loop, timers, background work, and Eagle's concurrency model |
 | **22. Hosts and I/O** | The `[host]` command and the `IHost` abstraction that routes console I/O → [host.md](host.md) |
 | **23. Testing your scripts** | The built-in `[test]` framework (`test1`/`test2`), constraints, and suites |
@@ -290,6 +290,64 @@ what you asked and make you name any change of kind (width or base) explicitly,
 rather than promote or reinterpret values silently. That single idea — *explicit
 over auto-magic* — explains most of Arc 1's remaining surprises.
 
+### 3.4 Operators Tcl doesn't have
+
+Eagle's expression engine includes the Tcl 8.5/8.6 additions you may already know
+(`eq`/`ne`, `in`/`ni`, `**`, `isqrt`, …), and then adds a family of operators with
+**no Tcl equivalent at all**:
+
+```tcl
+# Logical implication / equivalence / exclusive-or (on booleans):
+puts [expr {1 => 0}]         ;# => False   (implication:  !a || b)
+puts [expr {1 <=> 1}]        ;# => True    (equivalence)
+puts [expr {1 ^^ 0}]         ;# => True    (exclusive-or)
+
+# Bitwise implication / equivalence:
+puts [expr {12 -> 10}]       ;# => -5      (~12 | 10)
+puts [expr {12 <-> 10}]      ;# => -7      (~(12 ^ 10))
+
+# Bit ROTATION (vs << >> which shift and drop bits):
+puts [expr {1 <<< 1}]        ;# => 2       (rotate left)
+puts [expr {16 >>> 1}]       ;# => 8       (rotate right)
+
+# String-ordering operators (Tcl has eq/ne; Eagle adds lt gt le ge):
+puts [expr {"abc" lt "abd"}] ;# => True
+
+# In-expression assignment (the target name is a quoted string):
+puts [expr {"y" := 5}]       ;# => 5       (and sets $y to 5)
+```
+
+Because these extensions have no Tcl counterpart, precedence when you mix them can
+surprise you — **parenthesize freely**. The full operator set and precedence are
+in [core_language.md](core_language.md), or run `[info operators]` to list them.
+
+### 3.5 Extra math functions
+
+Alongside the standard functions (`abs`, `sqrt`, `sin`, `pow`, …), Eagle adds many
+more:
+
+```tcl
+puts [expr {log2(8)}]        ;# => 3       (log base 2)
+puts [expr {logx(8, 2)}]     ;# => 3       (log to an arbitrary base)
+puts [expr {sign(-5)}]       ;# => -1      (-1, 0, or 1)
+puts [expr {truncate(3.7)}]  ;# => 3       (toward zero)
+puts [expr {pi()}]           ;# => 3.141592653589793
+puts [expr {e()}]            ;# => 2.718281828459045
+
+# IEEE floating-point classification (like C99 <math.h>):
+puts [expr {isnan(acos(2))}]        ;# => True   (acos(2) is Not-a-Number)
+puts [expr {isinf(pow(10, 400))}]   ;# => True   (overflows to infinity)
+
+# Randomness — random() is crypto-strong:
+puts [expr {random()}]       ;# => a random 64-bit integer
+puts [expr {randstr(16)}]    ;# => a random 16-character string
+```
+
+More follow: `isfinite`, `isnormal`, `issubnormal`, `isunordered`; `round2`/
+`round3` for explicit rounding modes; and even `typeof`, `decimal`, `datetime`,
+and `timespan` for type conversion inside an expression. Run `[info functions]`
+to list all 50-plus.
+
 ---
 
 ## Lesson 4 — `if` and `switch`
@@ -327,6 +385,11 @@ puts [switch 2 {
 
 switch -glob   abc { a*      { puts "starts with a" } }   ;# => starts with a
 switch -regexp abc { {^a.c$} { puts "matched" } }        ;# => matched
+
+puts [switch xyz {
+    abc     {expr 1}
+    default {expr 99}
+}]                                                       ;# => 99   (a default branch)
 ```
 
 Nothing here should surprise you — which is the point. Control flow is one of the
@@ -517,13 +580,25 @@ puts [string map {a A o O} foobar]  ;# => fOObAr
 
 Two Eagle characteristics are worth flagging:
 
-- **`string is` is much richer** — Eagle ships ~64 classifier classes (integer,
-  double, boolean, alpha, and many more), and they render `True`/`False`
-  (Lesson 2):
+- **`string is` is much richer** — Eagle ships ~64 classifier classes. Beyond the
+  standard Tcl ones (`integer`, `double`, `boolean`, `alpha`, …), it adds many
+  practical validators, all rendering `True`/`False` (Lesson 2):
 
   ```tcl
-  puts [string is double 1.5]       ;# => True
+  puts [string is double   1.5]                  ;# => True
+  puts [string is inetaddr 192.168.1.1]          ;# => True
+  puts [string is inetaddr not.an.ip]            ;# => False
+  puts [string is uri      https://example.com]  ;# => True
+  puts [string is path     /usr/bin]             ;# => True
+  puts [string is guid     6b4f29fc-c7e9-4dbc-b838-909ae6708f5d]   ;# => True
+  puts [string is version  1.2.3]                ;# => True
+  puts [string is list     {a b c}]              ;# => True
+  puts [string is dict     {a 1 b 2}]            ;# => True
+  puts [string is base64   aGVsbG8=]             ;# => True
   ```
+
+  Others include `cidr`, `xml`, and `element` — a quick way to validate input
+  without hand-rolling a regex.
 
 - **Comparisons are culture-aware** — `string compare`/`equal`/`match` run on
   .NET's culture and comparison-option machinery (see [string.md](string.md)).
@@ -638,6 +713,21 @@ File and channel operations — `open`, `close`, `gets`, `read`, `puts`, `file`,
 puts [file join a b c]                 ;# => a/b/c
 puts [file tail /x/y/z.txt]            ;# => z.txt
 puts [file extension archive.tar.gz]   ;# => .gz
+```
+
+Opening, writing, and reading channels is likewise unchanged:
+
+```tcl
+set f [open demo.txt w]
+puts $f "line 1"
+puts $f "line 2"
+close $f
+
+set f [open demo.txt r]
+set first [gets $f]                    ;# read one line   => line 1
+set rest  [read $f]                    ;# read the remainder
+close $f
+file delete demo.txt
 ```
 
 The behavior to internalize is `exec`:
@@ -849,10 +939,16 @@ clock scan "now"        ;# Eagle => error: unable to convert date-time string "n
                          ;# Tcl   => (the current time, as an integer)
 ```
 
-Compute relative times from `clock seconds` instead — e.g.
-`[expr {[clock seconds] + 86400}]` for "tomorrow." Eagle also adds
-high-resolution timing (`clock milliseconds`/`microseconds`, `clock start`/`stop`)
-and custom epochs; see [clock.md](clock.md).
+Compute relative times from `clock seconds` instead — "tomorrow" is just now plus
+a day (86400 seconds):
+
+```tcl
+puts [clock format [expr {[clock seconds] + 86400}] -format "%Y-%m-%d"]
+;# => tomorrow's date, e.g. 2026-07-17
+```
+
+Eagle also adds high-resolution timing (`clock milliseconds`/`microseconds`,
+`clock start`/`stop`) and custom epochs; see [clock.md](clock.md).
 
 ---
 
@@ -947,7 +1043,18 @@ Eagle's design thesis is that a **loosely-typed scripting layer** and a
 **strongly-typed .NET layer** are better together than either alone: script the
 flow, drop to typed .NET where you need types, speed, or an existing library.
 Lesson 17 showed the main bridge — `[object]` — which turns any CLR type into
-something a script can use.
+something a script can use. When the script layer can't (or shouldn't) do a job,
+reach for the typed .NET type that can. For instance, `clock` won't parse relative
+dates (Lesson 15), but .NET's `DateTime` does typed date arithmetic directly:
+
+```tcl
+set dt [object create -alias System.DateTime 2020 6 15]
+puts [$dt AddDays 1]        ;# => 06/16/2020 00:00:00   (a .NET DateTime value)
+puts [$dt DayOfWeek]        ;# => Monday
+```
+
+(A value-type result like a `DateTime` comes back as its string form; wrap it in
+another `[object]` handle if you need to keep calling methods on it.)
 
 Eagle offers three further ways to reach other languages and runtimes:
 
@@ -1004,6 +1111,12 @@ Beneath that headline are several independent layers you control:
   a runaway script cannot exhaust the host.
 - **Execution timeouts and cancellation** — abort a long-running script from
   outside.
+- **AppDomain isolation** (`interp create -isolated`) — on runtimes that have
+  AppDomains (.NET Framework and Mono, *not* .NET Core / netstandard), the child
+  runs in its own application domain: its own loaded assemblies and memory, a
+  contained fault boundary, and full teardown when you `interp delete` it.
+  Combine `-isolated` with `-safe` for defense in depth around genuinely
+  untrusted or crash-prone code.
 
 Together these make Eagle a practical multi-tenant sandbox. The full model —
 including `[debug secureeval]` for trusted/signed evaluation — is in
@@ -1033,10 +1146,30 @@ commands, functions, policies, and resources to an interpreter, loaded with
 # unload ?options? fileName ?typeName?
 ```
 
-Loading runs a security-verification pipeline (strong name, Authenticode,
-public-key token), and a plugin can optionally be isolated in its own AppDomain
-(`load -isolated`). The Eagle Enterprise Edition ships several plugins on this
-mechanism (Harpy, Badge, Kapok, Zeus, and more). See [load.md](load.md) for the
+Loading runs a security-verification pipeline, and options let you *require* a
+given assurance — or an isolation boundary — before a plugin is allowed to load:
+
+```tcl
+load -trustedonly              MyPlugin.dll   ;# only if Authenticode-trusted
+load -publickeytoken $hexToken MyPlugin.dll   ;# only if the strong-name key matches
+load -isolated                 MyPlugin.dll   ;# into its own AppDomain
+```
+
+- **`-trustedonly`** requires the assembly to pass trust verification (an
+  Authenticode signature from a trusted publisher); the strong-name counterpart
+  is `-verifiedonly`. **`-maybetrustedonly`** enforces the same in release builds
+  but relaxes it in debug builds, and — unlike `-trustedonly` — is permitted
+  inside safe interpreters.
+- **`-publickeytoken <hex>`** pins the plugin to a specific strong-name signing
+  key: the assembly's public-key token must equal the given value, so you load
+  only assemblies signed by exactly the key you expect.
+- **`-isolated`** loads the plugin into a separate AppDomain — a fault and
+  security boundary torn down cleanly on `[unload]`. Like `interp create
+  -isolated` (Lesson 19), it requires an AppDomain-capable runtime
+  (.NET Framework / Mono), not .NET Core / netstandard.
+
+The Eagle Enterprise Edition ships several plugins on this mechanism (Harpy,
+Badge, Kapok, Zeus, and more). See [load.md](load.md) for the full
 loading/verification model and plugin lifecycle, and each plugin's own doc for
 its commands.
 
@@ -1072,6 +1205,8 @@ which the `[host]` command queries and controls:
 
 ```tcl
 host title "My Application"       ;# set the window/console title
+host size                         ;# => e.g. 80 24   (columns rows)
+host flags                        ;# the host's capability flags (Title, Color, ...)
 ```
 
 Because I/O flows through the host rather than straight to `System.Console`, an
