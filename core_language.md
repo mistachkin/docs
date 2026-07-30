@@ -103,13 +103,13 @@ The following commands are Eagle-specific extensions not found in standard Tcl 8
 `[exec]` (30+ Eagle options), `[for]` (optional *end* script), `[regexp]`/`[regsub]` (Eagle-specific switches), `[vwait]` (timeout option), `[load]`/`[unload]` (.NET assembly support).
 
 **Standard Tcl 8.6 commands not implemented in Eagle:**
-`binary`, `fileevent`.
+`binary`.
 
 ---
 
 ## Command Count Summary
 
-Total Commands: **122** (core library commands, including 8 internal infrastructure classes: `Default`, `Core`, `Alias`, `_Delegate`, `SubDelegate`, `Automatic`, `Ensemble`, `Stub` — see [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure)).
+Total Commands: **123** (core library commands, including 8 internal infrastructure classes: `Default`, `Core`, `Alias`, `_Delegate`, `SubDelegate`, `Automatic`, `Ensemble`, `Stub` — see [Advanced: Core Library Command Infrastructure](#advanced-core-library-command-infrastructure)).
 
 Commands are organized into the following ObjectGroup categories:
 - Conditional: 2 commands
@@ -118,7 +118,7 @@ Commands are organized into the following ObjectGroup categories:
 - Variables: 10 commands
 - Lists: 16 commands
 - Strings: 13 commands
-- Channels (I/O): 12 commands
+- Channels (I/O): 13 commands
 - File System: 5 commands
 - Procedures: 4 commands
 - Script Environment: 5 commands
@@ -177,6 +177,7 @@ Quick reference to all Eagle commands with links to their detailed documentation
 | [`[fconfigure]`](#cmd-fconfigure) | Configure channel options | [I/O and Channels](#io-and-channels) |
 | [`[fcopy]`](#cmd-fcopy) | Copy data between channels | [I/O and Channels](#io-and-channels) |
 | [`[file]`](#cmd-file) | File operations | [File System](#file-system) |
+| [`[fileevent]`](#cmd-fileevent) | Register channel readiness scripts | [I/O and Channels](#io-and-channels) |
 | [`[flush]`](#cmd-flush) | Flush channel buffer | [I/O and Channels](#io-and-channels) |
 | [`[for]`](#cmd-for) | C-style for loop | [Control Flow](#control-flow) |
 | [`[foreach]`](#cmd-foreach) | Iterate over lists | [Control Flow](#control-flow) |
@@ -2522,6 +2523,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
   - **Options**:
     - `-blocking boolean` - Blocking (true) or non-blocking (false) mode. Non-blocking mode allows `[gets]` and `[read]` with `-noblock` to return immediately with available data.
     - `-encoding name` - Character encoding (e.g., `utf-8`, `ascii`, `unicode`). Use `binary` or set to null for raw binary I/O.
+    - `-error` - Query-only socket option. Returns an empty string while an asynchronous connect is pending or after it succeeds; after failure, returns the stable connection error. It is an error to query this option on a non-socket channel.
     - `-translation mode` - Line ending translation mode. Can be a single value for both input and output, or a two-element list `{inputMode outputMode}`:
       - `auto` - CRLF-oriented: a lone LF is not treated as a line ending on input, and output uses CRLF
       - `binary` - No translation (raw bytes)
@@ -2534,6 +2536,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
     ```tcl
     fconfigure $fh -encoding utf-8 -translation lf
     fconfigure $sock -blocking 0           ;# Non-blocking socket I/O
+    set connectError [fconfigure $sock -error]
     fconfigure $fh -translation {auto lf}  ;# CRLF-oriented input, output LF
     puts [fconfigure $fh -encoding]        ;# Query encoding
     ```
@@ -2550,6 +2553,45 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
     - `-size n` - Copy at most *n* bytes (default: copy until EOF)
     - `-command callback` - Asynchronous mode; *callback* is invoked when copy completes
   - **Returns**: Number of bytes copied (synchronous) or empty string (asynchronous).
+
+---
+
+<a id="cmd-fileevent"></a>
+- **fileevent** - Register channel readiness scripts
+  - `fileevent ?-priority priority? channelId readable|writable ?script?`
+  - With no *script*, returns the current binding (or an empty string).
+  - With a non-empty *script*, installs or replaces the binding. The script is
+    evaluated in the interpreter's global event context whenever the channel is
+    ready. Readiness is level-triggered: after a successful callback, the
+    binding is rearmed while it remains installed.
+  - With an empty *script*, removes the binding. Closing the channel removes
+    both its readable and writable bindings and invalidates already queued
+    callbacks.
+  - `-priority priority` is an Eagle extension for set mode. It accepts an
+    `EventPriority` value and defaults to `QueueScript`; it cannot be used for a
+    query or clear operation.
+  - Supported channels are TCP socket channels and seekable file channels.
+    Setting a binding on another stream type reports an error.
+  - A callback error removes that binding and is passed through Eagle's normal
+    background-error handling.
+  - **Returns**: The current script in query mode; otherwise an empty string.
+  - **Example**:
+    ```tcl
+    proc readReply {} {
+      if {[gets $::sock line] >= 0} then {
+        puts "reply: $line"
+      }
+
+      if {[eof $::sock]} then {
+        fileevent $::sock readable {}
+        close $::sock
+        set ::done true
+      }
+    }
+
+    fileevent $sock readable readReply
+    vwait ::done
+    ```
 
 ---
 
@@ -4905,7 +4947,10 @@ Network commands belong to ObjectGroup: "network"
     - **Options**:
       - `-myaddr addr` - Local address to bind to
       - `-myport port` - Local port to bind to
-      - `-async` - Connect asynchronously (non-blocking)
+      - `-async` - Start the connection asynchronously and return the channel
+        immediately. Register a writable `[fileevent]` to detect completion,
+        then query `fconfigure $channel -error`: an empty value means success;
+        a non-empty value describes failure.
     - **Returns**: A channel identifier for the socket.
 
   - `socket -server command ?-myaddr addr? port` - Creates a server socket listening on *port*.
@@ -4929,6 +4974,27 @@ Network commands belong to ObjectGroup: "network"
   }
   set server [socket -server handleClient 8080]
   vwait forever
+  ```
+
+  **Asynchronous client example**:
+  ```tcl
+  set sock [socket -async localhost 8080]
+
+  fileevent $sock writable {
+    fileevent $::sock writable {}
+    set ::connected true
+  }
+
+  vwait ::connected
+
+  set error [fconfigure $sock -error]
+  if {$error ne ""} then {
+    close $sock
+    error $error
+  }
+
+  puts $sock "Hello, server!"
+  flush $sock
   ```
 
 ---
@@ -9971,12 +10037,14 @@ close $fh
 
 #### Socket Communication
 
-**Note**: Eagle supports the `[socket]` command for network communication but does NOT support `fileevent` for asynchronous I/O. Socket operations in Eagle are typically synchronous.
+Eagle supports both synchronous sockets and event-driven asynchronous clients.
+Use `socket -async`, a writable `[fileevent]`, and `fconfigure -error` for
+connect completion. Use a readable `[fileevent]` for incoming data.
 
 ```tcl
 # Client socket (synchronous)
 set sock [socket localhost 8080]
-fconfigure $sock -buffering line -translation auto
+fconfigure $sock -translation auto
 puts $sock Hello
 flush $sock
 gets $sock response
@@ -9987,11 +10055,26 @@ close $sock
 set server [socket -server acceptConnection 8080]
 
 proc acceptConnection {channel clientAddr clientPort} {
-  fconfigure $channel -buffering line -translation auto
+  fconfigure $channel -translation auto
   # Handle synchronously - read request and respond
   gets $channel request
   puts $channel "Echo: $request"
   close $channel
+}
+```
+
+```tcl
+# Client socket (asynchronous connect)
+set sock [socket -async localhost 8080]
+fileevent $sock writable {
+  fileevent $::sock writable {}
+  set ::connected true
+}
+vwait ::connected
+
+if {[set message [fconfigure $sock -error]] ne ""} then {
+  close $sock
+  error $message
 }
 ```
 
@@ -15263,4 +15346,3 @@ Interactive commands are prefixed with `#` (the number sign character). When typ
 | `UtilityPath` | If set, interpreted as the name of the file or directory where the optional native utility library is located. |
 
 </details>
-

@@ -1265,6 +1265,7 @@ Used when exactly 3 arguments: `fconfigure channelId -option`
 |--------|-------|-------------|
 | `-blocking` | -- | Query current blocking mode (returns boolean) |
 | `-encoding` | -- | Query current encoding<br>(returns encoding WebName or null marker) |
+| `-error` | -- | Query the asynchronous connection error for a socket channel;<br>empty while pending or after success, stable and non-empty after failure |
 | `-translation` | -- | Query current translation mode |
 
 Note: In query mode, `-buffer` is not available. Option flags differ from set
@@ -1401,6 +1402,15 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 |--------|-------|-------------|
 | `-full` | -- | Return the complete<br>`FileVersionInfo` string |
 | `-fixed` | -- | Return the fixed version number<br>(major.minor.build.revision) |
+
+</details>
+
+<details>
+<summary><code>[fileevent]</code></summary>
+
+| Option | Value | Description |
+|--------|-------|-------------|
+| `-priority` | EventPriority | Event-manager priority for a newly installed non-empty script;<br>defaults to `QueueScript` and is invalid for query or clear mode |
 
 </details>
 
@@ -2637,7 +2647,7 @@ compatibility.
 | `-writetimeout` | int | Write operation timeout |
 | `-myaddr` | string | Local address to bind to |
 | `-myport` | string | Local port to bind to |
-| `-async` | -- | Asynchronous mode (**unsupported**) |
+| `-async` | -- | Start a client connection asynchronously and return its channel immediately;<br>use writable `[fileevent]` plus `fconfigure -error` for completion |
 | `-channelid` | string | Custom channel identifier |
 | `-nodelay` | -- | Disable Nagle algorithm<br>(TCP_NODELAY); client only |
 | `-nobuffer` | -- | Disable socket buffering;<br>client only |
@@ -3615,4 +3625,3 @@ dotnet exec ... EagleShell.dll -anyFile Makefile.eagle \
 
 For the full build/test target reference and how `SHELL_DLL_ARGS`/`TEST_ARGS`
 are assembled, see [`build_system.md`](build_system.md).
-

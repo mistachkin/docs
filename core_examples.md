@@ -32,7 +32,7 @@ This companion file to [`core_language.md`](core_language.md) provides at least 
 - [Dictionaries](#dictionary-examples)
   - [dict](#ex-dict)
 - [I/O and Channels](#io-examples)
-  - [close](#ex-close), [eof](#ex-eof), [fblocked](#ex-fblocked), [fconfigure](#ex-fconfigure), [fcopy](#ex-fcopy), [flush](#ex-flush), [gets](#ex-gets), [open](#ex-open), [puts](#ex-puts), [read](#ex-read), [seek](#ex-seek), [tell](#ex-tell), [truncate](#ex-truncate)
+  - [close](#ex-close), [eof](#ex-eof), [fblocked](#ex-fblocked), [fconfigure](#ex-fconfigure), [fcopy](#ex-fcopy), [fileevent](#ex-fileevent), [flush](#ex-flush), [gets](#ex-gets), [open](#ex-open), [puts](#ex-puts), [read](#ex-read), [seek](#ex-seek), [tell](#ex-tell), [truncate](#ex-truncate)
 - [File System](#file-system-examples)
   - [cd](#ex-cd), [file](#ex-file), [glob](#ex-glob), [pwd](#ex-pwd)
 - [Procedures](#procedure-examples)
@@ -2386,6 +2386,11 @@ set enc [fconfigure $fh -encoding]
 close $fh
 ```
 
+```tcl
+# Query asynchronous socket connection status
+set connectError [fconfigure $sock -error]
+```
+
 </details>
 
 <a id="ex-fcopy"></a>
@@ -2404,6 +2409,35 @@ close $dst
 ```tcl
 # Copy limited bytes
 fcopy $input $output -size 1024
+```
+
+</details>
+
+<a id="ex-fileevent"></a>
+<details>
+<summary><strong>fileevent</strong></summary>
+
+```tcl
+# Install, query, and remove a readable handler
+fileevent $channel readable {set ::ready true}
+set script [fileevent $channel readable]
+fileevent $channel readable {}
+```
+
+```tcl
+# Level-triggered handlers rearm after successful execution.
+# Clear the handler before consuming or closing the channel when it is one-shot.
+fileevent $sock readable {
+  fileevent $::sock readable {}
+  set ::reply [gets $::sock]
+  set ::done true
+}
+vwait ::done
+```
+
+```tcl
+# Eagle extension: choose the event-manager priority when installing.
+fileevent -priority High $sock readable {set ::urgent true}
 ```
 
 </details>
@@ -4436,6 +4470,15 @@ unset table
 ```tcl
 # Async connection
 # set sock [socket -async localhost 8080]
+# fileevent $sock writable {
+#     fileevent $::sock writable {}
+#     set ::connected true
+# }
+# vwait ::connected
+# if {[set message [fconfigure $sock -error]] ne ""} then {
+#     close $sock
+#     error $message
+# }
 ```
 
 </details>

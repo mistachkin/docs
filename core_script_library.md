@@ -6687,9 +6687,31 @@ proc trackMemory {script} {
 }
 ```
 
-### Timer and Polling Patterns
+### Event and Timer Patterns
 
-**Note**: Eagle does NOT support `fileevent` for asynchronous I/O. Use timer-based polling or synchronous operations instead. Eagle does support `[after]` for scheduling callbacks.
+Eagle supports channel-driven asynchronous I/O with `[fileevent]` for TCP
+sockets and seekable file channels. Timer polling remains useful for conditions
+that are not represented by channel readiness.
+
+#### Channel Readiness
+
+```tcl
+proc waitForLine {channel} {
+  set ::lineChannel $channel
+
+  fileevent $channel readable {
+    fileevent $::lineChannel readable {}
+    set ::lineResult [gets $::lineChannel]
+  }
+
+  vwait ::lineResult
+  return $::lineResult
+}
+```
+
+`[fileevent]` handlers are level-triggered and rearm after successful
+execution. A one-shot handler should clear itself before reading or closing the
+channel. Closing a channel automatically removes its handlers.
 
 #### Timer-Based Operations
 

@@ -83,14 +83,16 @@ set args {1 2 3}
 eval f $args             EAGLE: 1-2-3        # Tcl 8.5+ would write:  f {*}$args
 ```
 
-### 4. No `fileevent`
+### 4. `[fileevent]` is available; `[chan event]` is not
 
 ```
-info commands fileevent  EAGLE: (empty)      8.4/8.5/8.6: fileevent
+info commands fileevent  EAGLE: fileevent    8.4/8.5/8.6: fileevent
+info commands chan       EAGLE: (empty)      8.4: (empty); 8.5/8.6: chan
 ```
 
-Use `[after]` + polling, `[vwait]`, or CLR async (`[object]` over `System.IO` /
-tasks) instead.
+Use `[fileevent $channel readable|writable ?script?]` for socket and seekable
+file channels. Eagle adds `-priority EventPriority` when installing a non-empty
+handler. It does not expose the Tcl 8.5+ `[chan event]` spelling.
 
 ### 5. No `namespace path`
 

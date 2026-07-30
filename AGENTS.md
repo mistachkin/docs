@@ -589,8 +589,9 @@ These are common sources of “looks like Tcl but isn’t” errors.
 - **No `{*}` argument expansion operator.**
   Use `[eval]` + `[list]` patterns for controlled argument expansion.
 
-- **No `fileevent`.**
-  Use polling with `[after]` / event processing, or CLR async patterns.
+- **`fileevent` exists, but `chan event` does not.**
+  Use `[fileevent]` for readable/writable events on socket and seekable file
+  channels. Eagle also adds `-priority` when installing a handler.
 
 - **No `namespace path`.**
   Not supported in Eagle.

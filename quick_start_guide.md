@@ -599,7 +599,7 @@ This demonstrates:
 
 ### Eagle Documentation
 
-- [Eagle Core Language](core_language.md) — Complete command reference with syntax, options, and behavior for all 122 built-in commands.
+- [Eagle Core Language](core_language.md) — Complete command reference with syntax, options, and behavior for all 123 built-in commands.
 - [Eagle Core Examples](core_examples.md) — 500+ worked examples for every command and sub-command.
 - [Eagle Script Library](core_script_library.md) — 580+ library procedures for platform detection, file helpers, object utilities, test framework, and more.
 - [Eagle Tips and Tricks](tips_and_tricks.md) — Eagle-specific features, advanced idioms, and best practices not found in standard Tcl.
@@ -615,4 +615,6 @@ Since Eagle is Tcl-compatible, general Tcl resources are helpful for learning th
 - [Tcl 8.6 Manual Pages (Command Reference)](https://www.tcl-lang.org/man/tcl8.6/TclCmd/contents.htm)
 - [Tcl Tutorial Index (Tcler's Wiki)](https://wiki.tcl-lang.org/page/Tcl+Tutorial+Index)
 
-**Note**: Eagle is Tcl-compatible, not Tcl-identical. Some Tcl features are intentionally different or missing in Eagle (e.g., no `fileevent`). When in doubt, verify against the Eagle documentation.
+**Note**: Eagle is Tcl-compatible, not Tcl-identical. For event-driven channel
+I/O, Eagle supports `[fileevent]`; it does not provide Tcl 8.6's `[chan event]`
+surface. When in doubt, verify against the Eagle documentation.

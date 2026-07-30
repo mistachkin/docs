@@ -1,7 +1,7 @@
 # Commands: I/O, Files & Processes
 
 `open` · `close` · `read` · `gets` · `puts` · `seek` · `tell` · `eof` ·
-`flush` · `fconfigure` · `fblocked` · `fcopy` · `file` · `glob` · `cd` ·
+`flush` · `fconfigure` · `fblocked` · `fcopy` · `file` · `fileevent` · `glob` · `cd` ·
 `pwd` · `socket` · `truncate` · `exec`
 
 All examples below were **executed** against Eagle 1.0 (see
@@ -25,8 +25,8 @@ The full path-manipulation reference is [`../../../../file.md`](../../../../file
 
 `[open]` returns a **channel name** (`file#NNNN`, e.g. `file#1207` — not Tcl's
 `fileN`). Pass it to `puts`/`gets`/`read`/`seek`/`tell`/`eof`/`flush`/
-`fconfigure`/`close`. There is **no `[fileevent]`** (see gotcha #4) — drive
-async work with `[after]`/`[vwait]`.
+`fconfigure`/`fileevent`/`close`. Use `[fileevent]` for readable and writable
+events on socket and seekable file channels; `[vwait]` pumps the queued handler.
 
 A round trip exercising the core verbs:
 
@@ -277,8 +277,9 @@ Basic note — `socket ?options? host port` opens a **client** TCP channel;
 `command chan addr port` per connection. Both return a channel usable with the
 verbs above. Eagle wraps .NET `TcpClient`/`TcpListener` and adds a broad option
 set (`-async`, `-myaddr`, `-myport`, `-timeout`, `-nodelay`, `-keepalive`,
-`-buffer`, `-addressfamily`, ...). With no `[fileevent]`, drive async sockets
-with `-async` + `[vwait]`/`[after]`.
+`-buffer`, `-addressfamily`, ...). For asynchronous connect, install a writable
+`[fileevent]`, wait for it, then query `fconfigure $socket -error`; empty means
+success and a non-empty stable message means failure.
 
 ```tcl
 # client (sketch):
@@ -287,6 +288,21 @@ fconfigure $s -translation crlf
 puts $s "GET / HTTP/1.0"; puts $s ""; flush $s
 set reply [read $s]
 close $s
+```
+
+```tcl
+# asynchronous client connect:
+set s [socket -async 127.0.0.1 8080]
+fileevent $s writable {
+  fileevent $::s writable {}
+  set ::connected true
+}
+vwait ::connected
+
+if {[set message [fconfigure $s -error]] ne ""} then {
+  close $s
+  error $message
+}
 ```
 
 ## `truncate` — Eagle extension (no Tcl equivalent)

@@ -1,7 +1,7 @@
 # Commands: Interpreters & Events
 
 `interp` · `alias` · `ensemble` · `eval` · `nop` · `update` · `vwait` ·
-`after` · `bgerror` · `tcl`
+`after` · `fileevent` · `bgerror` · `tcl`
 
 All examples below were **executed** against Eagle 1.0 (see
 [`../verification.md`](../verification.md)); `;# =>` shows the verified result.
@@ -14,8 +14,9 @@ The deep dives are [`../../../../interp.md`](../../../../interp.md) (child inter
 > 1. `interp` predicates (`exists`, `issafe`, `isstandard`, `isolated`, ...)
 >    return **`True`/`False`**, not `1`/`0`. Use them as conditions; never
 >    string-compare to `"1"` (gotcha #1).
-> 2. The event loop is `after`/`vwait`/`update` — there is **no `fileevent`**
->    (gotcha #4). And `after idle` callbacks are drained by **`vwait`**, not by
+> 2. Channel readiness uses `[fileevent]`; Eagle does not expose Tcl 8.5+'s
+>    `[chan event]` spelling (gotcha #4). Also, `after idle` callbacks are
+>    drained by **`vwait`**, not by
 >    `update` — see [`update`](#update) / [`after`](#after).
 
 ---
@@ -264,9 +265,29 @@ puts "[nop]<-empty"        ;# => <-empty
 
 ## The event loop: `after`, `update`, `vwait`
 
-Eagle's event loop is `after` (schedule) + `update`/`vwait` (pump). There is
-**no `fileevent`** — for async I/O, poll with `after`, or use the CLR
-(`[object]` over `System.IO`/tasks). See gotcha #4.
+Eagle's event loop combines `after` (time scheduling), `fileevent` (channel
+readiness), and `update`/`vwait` (pumping).
+
+### `fileevent`
+
+`fileevent ?-priority priority? channel readable|writable ?script?` queries,
+installs, replaces, or removes a readiness handler. An omitted script queries;
+an empty script removes; a non-empty script installs or replaces. Handlers are
+level-triggered and rearm after successful execution. A handler error removes
+that binding and follows the normal `bgerror` path.
+
+```tcl
+fileevent $sock readable {
+  fileevent $::sock readable {}
+  set ::reply [gets $::sock]
+  set ::done true
+}
+vwait ::done
+```
+
+The Eagle-only `-priority` option applies when installing a non-empty handler
+and defaults to `QueueScript`. Socket channels and seekable file channels are
+supported; closing a channel cancels both bindings and stale queued callbacks.
 
 ### `after`
 
