@@ -36,49 +36,36 @@ detection, signing, copying, and testing targets around the stock build.
 
 ```mermaid
 flowchart TD
-    subgraph Drivers
-        VS["Visual Studio<br/>(Eagle*.sln families)"]
-        MK["Makefile<br/>(dotnet build, POSIX)"]
-        CI["GitHub CI<br/>(.github/workflows/ci.yml)"]
-        FB["flight.bat<br/>(release tooling)"]
+    VS["Visual Studio /<br/>flight.bat"]
+    MK["Makefile<br/>(POSIX)"]
+    CI["GitHub CI"]
+
+    LEG["Legacy csproj family<br/>(per-VS-year 2005–2022)"]
+    SDK["SDK-style csproj family<br/>(*NetStandard2X)"]
+    NAT["Native: Garuda*/Spilornis*<br/>(vcxproj + compile-*.sh)"]
+
+    subgraph ST["Targets/ (shared layer, in import order)"]
+        direction TB
+        PRE["Eagle.Presets.targets"] --> BLD["Eagle.Builds.targets"]
+        BLD --> SET["Eagle.Settings.targets"]
+        SET --> TGT["Eagle.targets<br/>(+ Eagle.tasks,<br/>Eagle.Sample.targets)"]
     end
 
-    subgraph Projects
-        LEG["Legacy csproj family<br/>Eagle / EagleShell / Plugin /<br/>EagleTest / Hippogriff / ... (per-VS-year)"]
-        SDK["SDK-style csproj family<br/>EagleNetStandard2X /<br/>EagleShellNetStandard2X /<br/>PluginNetStandard2X / plugins"]
-        NAT["Native vcxproj<br/>Garuda* / Spilornis*"]
-        SH["POSIX shell scripts<br/>Native/*/Tools/compile-*.sh"]
-    end
+    OUT["bin/&lt;Config&gt;&lt;Suffix&gt;/bin/...<br/>(one shared output tree)"]
 
-    subgraph SharedTargets["Targets/ (shared layer)"]
-        PRE["Eagle.Presets.targets<br/>(early platform presets)"]
-        BLD["Eagle.Builds.targets<br/>(EagleBuildType presets)"]
-        SET["Eagle.Settings.targets<br/>(~130 knob defaults, paths, keys)"]
-        TGT["Eagle.targets<br/>(131 build-time targets)"]
-        TSK["Eagle.tasks<br/>(Eagle-as-MSBuild-task)"]
-        SMP["Eagle.Sample.targets"]
-        USR["*.targets.user<br/>(per-user / per-machine overrides)"]
-    end
-
-    OUT["bin/&lt;Configuration&gt;&lt;EagleConfigurationSuffix&gt;/bin/...<br/>(one shared output tree)"]
-
-    VS --> LEG
-    VS --> SDK
-    MK --> SDK
-    MK --> SH
+    VS --> LEG & SDK
     CI --> MK
+    MK --> SDK & NAT
     CI --> NAT
-    FB --> LEG
-    LEG --> PRE & BLD & SET & TGT
-    SDK --> PRE & BLD & SET & TGT
-    NAT --> PRE & BLD & SET
-    USR -.override.-> PRE & BLD & SET & TGT
-    TGT --> TSK
-    LEG --> OUT
-    SDK --> OUT
-    NAT --> OUT
-    SH --> OUT
+    LEG --> ST
+    SDK --> ST
+    NAT -->|vcxproj only| ST
+    ST -- "copy targets populate" --> OUT
 ```
+
+*(The POSIX `compile-*.sh` scripts bypass MSBuild and deposit their outputs
+directly into the shared output tree; the per-user/per-machine
+`*.targets.user` override chain is diagrammed in §2.6.)*
 
 ### Artifact inventory
 
@@ -175,7 +162,7 @@ defaults; `Eagle.Settings.targets.user` additionally imports a per-machine
 is `== ''`-guarded, precedence is strict:
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["Command line<br/>/property:Name=Value<br/>(global — always wins)"]
     B["Project file<br/>(pre-import property groups)"]
     C["Per-machine<br/>Eagle.Settings.targets.$(USERDOMAIN)"]
@@ -214,10 +201,10 @@ flowchart TD
     B --> C["3. Project identity properties<br/>(Configuration, AssemblyName, GUIDs, ...)"]
     C --> D["4. Import Eagle.Builds.targets<br/>(EagleBuildType presets applied)"]
     D --> E["5. Import Eagle.Settings.targets<br/>(remaining defaults, paths, keys)"]
-    E --> F["6. Convert Eagle settings to MSBuild settings<br/>(AllowUnsafeBlocks, OutputPath, StartupObject, TFV)"]
-    F --> G["7. Feature-conditional References / Compile items<br/>+ DefineConstants ladder"]
+    E --> F["6. Convert Eagle settings to MSBuild<br/>(AllowUnsafeBlocks, OutputPath,<br/>StartupObject, TFV)"]
+    F --> G["7. Feature-conditional References /<br/>Compile items + defines ladder"]
     G --> H["8. Import Microsoft.CSharp.targets"]
-    H --> I["9. Import Eagle.targets<br/>(+ Eagle.Sample.targets in Sample/Plugin projects)"]
+    H --> I["9. Import Eagle.targets<br/>(+ Eagle.Sample.targets in<br/>Sample/Plugin projects)"]
     I --> J["10. Rewrite BuildDependsOn / CleanDependsOn"]
 ```
 
@@ -239,12 +226,12 @@ Instead they import the SDK explicitly at both ends:
 flowchart TD
     A["1. Import Sdk.props (Microsoft.NET.Sdk)"] --> B["2. EagleNetStandard20=true; set EagleDir"]
     B --> C["3. Import Eagle.Presets.targets"]
-    C --> D["4. Identity + SDK properties<br/>(TargetFrameworks, EnableDefaultItems=false, ...)"]
+    C --> D["4. Identity + SDK properties<br/>(TargetFrameworks,<br/>EnableDefaultItems=false, ...)"]
     D --> E["5. Forced-false .NET-Standard overrides<br/>(AppDomains, CasPolicy, Remoting, ...)"]
-    E --> F["6. Project-local *ForNetStandard2X targets<br/>(NET_20/NET_40/NET_461 defines, ResGen)"]
+    E --> F["6. Project-local *ForNetStandard2X<br/>targets (NET_20/NET_40/NET_461<br/>defines, ResGen)"]
     F --> G["7. Import Eagle.Builds.targets"]
     G --> H["8. Import Eagle.Settings.targets"]
-    H --> I["9. Strong-name fixes; WinForms multi-target opt-in;<br/>convert-to-MSBuild settings; defines; items"]
+    H --> I["9. Strong-name fixes; WinForms<br/>multi-target opt-in; convert-to-<br/>MSBuild settings; defines; items"]
     I --> J["10. Import Sdk.targets (Microsoft.NET.Sdk)"]
     J --> K["11. Post-SDK DelaySign=false fix"]
     K --> L["12. Import Eagle.targets"]
@@ -278,14 +265,18 @@ Every project replaces `BuildDependsOn` with:
 `GetDoneFiles; UpdateDoneFiles`.
 
 ```mermaid
-flowchart LR
-    subgraph Before["before core build"]
-        D1["EagleDetectUserBuilds/Settings"] --> D2["EagleDetectBuildTool"] --> D3["EagleDetectOperatingSystem<br/>EagleDetectArchitecture"] --> D4["EagleDetectNetFx* / NetCore* / Wix*<br/>(DefineConstants appended)"]
+flowchart TD
+    subgraph Before["before the core build"]
+        D1["EagleDetectUserBuilds/Settings"]
+        D2["EagleDetectBuildTool"]
+        D3["EagleDetectOperatingSystem<br/>EagleDetectArchitecture"]
+        D4["EagleDetectNetFx*/NetCore*/Wix*<br/>(DefineConstants appended)"]
+        D1 --> D2 --> D3 --> D4
     end
-    Before --> BUILD["$(BuildDependsOn)<br/>(stock compile/link)"]
-    BUILD --> P1["Exe post-processing<br/>(stack, icon, PDB path, manifest, 32-bit copy)"]
+    D4 --> BUILD["$(BuildDependsOn)<br/>(stock compile/link)"]
+    BUILD --> P1["Exe post-processing<br/>(stack, icon, PDB path,<br/>manifest, 32-bit copy)"]
     P1 --> P2["Signing<br/>(strong name, Authenticode)"]
-    P2 --> P3["Copies<br/>(resources, SQLite, packages, shell exe, configs)"]
+    P2 --> P3["Copies<br/>(resources, SQLite, packages,<br/>shell exe, configs)"]
     P3 --> P4["Optional: EagleRunTests"]
     P4 --> S["GetDoneFiles; UpdateDoneFiles<br/>(re-sync .done sentinels)"]
 ```
@@ -450,7 +441,7 @@ projects.  The gate idiom is opt-out (`!= 'false'`) unless noted.
 | `EagleNativePackage` | true | `NATIVE_PACKAGE` | Required for Garuda (CLR hosted from native Tcl) |
 | `EagleNativeUtility` | true | `NATIVE_UTILITY` | Spilornis; off: list split/join perf drop |
 | `EagleNativeUtilityBstr` | true | `NATIVE_UTILITY_BSTR` | Win32 `SysStringLen`; **malfunctions on non-Windows** |
-| `EagleNativeThreadId` | true | `NATIVE_THREAD_ID` | — |
+| `EagleNativeThreadId` | true | `NATIVE_THREAD_ID` | Use native (OS) thread identifiers instead of managed thread identifiers in contexts where thread identity matters (e.g. `GlobalState.GetCurrentThreadId`, system/interpreter-context thread IDs).  Off: native IDs are queried only when required for correctness — explicit `[info]` requests or native Tcl / operating-system integration |
 | `EagleTcl` (+`TclKits`,`TclThreaded`,`TclThreads`,`TclUnicode`,`TclWrapper`) | true (Wrapper false) | `TCL`, `TCL_*` | Tcl/Tk integration family; `TclThreaded` refuses non-threaded Tcl at runtime |
 | `EagleAppDomains` | false | `APPDOMAINS` | AppDomain management |
 | `EagleIsolatedInterpreters` / `EagleIsolatedPlugins` | false / false | `ISOLATED_*` | AppDomain isolation — unavailable on .NET Core |
@@ -659,12 +650,12 @@ writing `project.assets.json` for the same physical `obj/`.
 One job on `ubuntu-latest` / `macos-latest` / `windows-latest`:
 
 ```mermaid
-flowchart LR
-    A["Setup .NET 10<br/>+ per-OS Tcl<br/>(+ mono for sn on macOS)"] --> B["Export DOTNET_SDK_VERSION<br/>(AppHost pack discovery)"]
+flowchart TD
+    A["Setup .NET 10 + per-OS Tcl<br/>(+ mono for sn on macOS)"] --> B["Export DOTNET_SDK_VERSION<br/>(AppHost pack discovery)"]
     B --> C["make build-core"]
-    C --> D["Run eee/Tools/link.eagle<br/>(materialize EEE overlay + Enterprise sln)"]
+    C --> D["Run eee/Tools/link.eagle<br/>(materialize EEE overlay<br/>+ Enterprise sln)"]
     D --> E["make rebuild<br/>(native + managed,<br/>EagleBuildType=NetStandard21)"]
-    E --> F["Windows: msbuild GarudaNetStandard21.vcxproj<br/>macOS: build System.Data.SQLite"]
+    E --> F["Windows: msbuild Garuda<br/>NetStandard21.vcxproj<br/>macOS: build System.Data.SQLite"]
     F --> G["make test<br/>(Library/Tests/all.eagle)"]
     G --> H["Plugin suites<br/>(Harpy/Badge/Zeus/Demo)"]
     H --> I["Upload logs artifact"]
