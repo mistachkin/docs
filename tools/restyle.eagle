@@ -222,7 +222,9 @@ proc detectLang { block } {
   if {[regexp -- {^(\$ |#!|dotnet |make |sudo |cd |git |\./|eagle )} $first]} {
     return sh
   }
-  if {[regexp -- {[─-╿]} $joined]} { return text }
+  # NOTE: Box-drawing characters (U+2500 through U+257F), written as ASCII
+  #       escapes so this script is immune to the script-source encoding.
+  if {[regexp -- {[\u2500-\u257F]} $joined]} { return text }
   return tcl
 }
 
@@ -237,7 +239,19 @@ proc restyleText { text map doBrackets doFences doEmoji statsName } {
 
   if {$doEmoji} {
     set before $text
-    set text [regsub -all -- {[←-⇿⌀-➿⬀-⯿️\u{1F000}-\u{1FAFF}]} $text ""]
+    #
+    # NOTE: The .NET regex engine has no \u{...} brace syntax and matches
+    #       UTF-16 code units, so the supplementary-plane emoji range
+    #       U+1F000 through U+1FAFF is expressed as surrogate pairs.  The
+    #       basic-plane ranges are limited to genuinely decorative blocks
+    #       (miscellaneous symbols and dingbats U+2600-U+27BF, symbols
+    #       and arrows U+2B00-U+2BFF, and the variation selector U+FE0F);
+    #       arrows, box-drawing, and geometric shapes are deliberately
+    #       excluded because the documentation uses them in prose and
+    #       diagrams.  Everything is written as ASCII escapes so this
+    #       script is immune to the script-source encoding.
+    #
+    set text [regsub -all -- {[\u2600-\u27BF\u2B00-\u2BFF\uFE0F]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDEFF]} $text ""]
     if {$text ne $before} { dict incr stats emojiStripped }
   }
 

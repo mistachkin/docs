@@ -2638,11 +2638,13 @@ compatibility.
 | `-addressfamily` | AddressFamily | IPv4, IPv6, or other<br>address family |
 | `-keepalive` | boolean | Enable TCP keep-alive |
 | `-server` | string | Server callback command; presence<br>makes this a server socket |
+| `-maxpendingclients` | int | Maximum accepted clients whose callbacks<br>have not yet started (default 64);<br>server only, must be positive |
 | `-buffer` | int | Socket buffer size in bytes |
 | `-timeout` | int | General operation timeout<br>in milliseconds |
 | `-sendtimeout` | int | Send operation timeout |
 | `-receivetimeout` | int | Receive operation timeout |
-| `-availabletimeout` | int | Timeout for checking<br>data availability |
+| `-availabletimeout` | int | Total data-availability wait budget;<br>depleted in small poll chunks by<br>reads that find no data |
+| `-connecttimeout` | int | Finite deadline for the connection<br>attempt in milliseconds (-1 = unlimited);<br>client only |
 | `-readtimeout` | int | Read operation timeout |
 | `-writetimeout` | int | Write operation timeout |
 | `-myaddr` | string | Local address to bind to |

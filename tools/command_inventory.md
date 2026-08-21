@@ -93,7 +93,7 @@ _None._
 - **debugger overr** (2): `-code`, `-result`
 - **exec** (52): `-background`, `-commandline`, `-debug`, `-dequote`, `-directory`, `-domainname`, `-escaperanges`, `-escapesubstring`, `-eventflags`, `-exitcode`, `-forprocessor`, `-ignorestderr`, `-keepnewline`, `-killonerror`, `-logtag`, `-nocapture`, `-nocaptureinput`, `-nocaptureoutput`, `-nocarriagereturns`, `-noellipsis`, `-noevents`, `-noexitcode`, `-nointerpreter`, `-nonormalize`, `-nopreviousprocessid`, `-nosleep`, `-objectflags`, `-overridecapture`, `-password`, `-preprocessarguments`, `-processid`, `-quoteall`, `-setall`, `-shell`, `-startcallback`, `-stderr`, `-stderrcallback`, `-stderrlogpath`, `-stdin`, `-stdinobject`, `-stdout`, `-stdoutcallback`, `-stdoutlogpath`, `-success`, `-tags`, `-timeout`, `-trace`, `-trimall`, `-unicode`, `-userinterface`, `-username`, `-windowstyle`
 - **exit** (6): `-message`, `-force`, `-fail`, `-nodispose`, `-nocomplain`, `-current`
-- **fconfigure query** (3): `-blocking`, `-encoding`, `-translation`
+- **fconfigure query** (4): `-blocking`, `-encoding`, `-error`, `-translation`
 - **fconfigure set** (4): `-blocking`, `-buffer`, `-encoding`, `-translation`
 - **fcopy** (3): `-size`, `-command`, `-eventflags`
 - **file cleanup** (7): `-type`, `-pattern`, `-nocase`, `-recursive`, `-force`, `-nocomplain`, `-now`
@@ -107,6 +107,7 @@ _None._
 - **file sddl** (1): `-flags`
 - **file under** (5): `-mode`, `-searchoption`, `-pathtype`, `-contains`, `-failonerror`
 - **file version** (2): `-full`, `-fixed`
+- **fileevent** (1): `-priority`
 - **gets** (5): `-encoding`, `-usecount`, `-noblock`, `-keepeol`, `-count`
 - **glob** (7): `-path`, `-directory`, `-types`, `-join`, `-tails`, `-nocomplain`, `-noerror`
 - **hash keyed** (4): `-object`, `-raw`, `-filename`, `-encoding`
@@ -200,7 +201,7 @@ _None._
 - **scope open** (3): `-procedure`, `-shared`, `-args`
 - **scope unlock** (1): `-nocomplain`
 - **scope update** (1): `-global`
-- **socket** (19): `-timeouttype`, `-addressfamily`, `-keepalive`, `-server`, `-buffer`, `-timeout`, `-sendtimeout`, `-receivetimeout`, `-availabletimeout`, `-readtimeout`, `-writetimeout`, `-myaddr`, `-myport`, `-async`, `-channelid`, `-nodelay`, `-nobuffer`, `-noexclusive`, `-trace`
+- **socket** (21): `-timeouttype`, `-addressfamily`, `-keepalive`, `-server`, `-maxpendingclients`, `-buffer`, `-timeout`, `-connecttimeout`, `-sendtimeout`, `-receivetimeout`, `-availabletimeout`, `-readtimeout`, `-writetimeout`, `-myaddr`, `-myport`, `-async`, `-channelid`, `-nodelay`, `-nobuffer`, `-noexclusive`, `-trace`
 - **source** (7): `-encoding`, `-withinfo`, `-time`, `-password`, `-library`, `-bundle`, `-bundleflags`
 - **split** (4): `-string`, `-stricttype`, `-verbose`, `-nocase`
 - **sql execute** (44): `-alias`, `-aliasall`, `-aliasraw`, `-aliasreference`, `-allownull`, `-behavior`, `-blobbehavior`, `-changed`, `-commandtype`, `-create`, `-culture`, `-datetimebehavior`, `-datetimeformat`, `-datetimekind`, `-datetimestyles`, `-dbnullvalue`, `-errorvalue`, `-execute`, `-format`, `-limit`, `-names`, `-nested`, `-nocreate`, `-nodispose`, `-nofixup`, `-noforcedelete`, `-nullvalue`, `-numberformat`, `-objectflags`, `-objectname`, `-objecttype`, `-pairs`, `-returntype`, `-rowsvar`, `-rowvar`, `-tcl`, `-time`, `-timeout`, `-timevar`, `-tostring`, `-transaction`, `-valueflags`, `-valueformat`, `-verbatim`

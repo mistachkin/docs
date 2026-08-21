@@ -22,8 +22,8 @@ scripts/eval-eagle.sh -file recipe.eagle
 
 `[open]` → `[read]` → `[close]`. **Always** `fconfigure` the channel right after
 opening: a fresh Eagle channel defaults to `-encoding iso-8859-1 -translation
-auto` (CRLF-oriented), **not** Tcl's `utf-8`/`lf` — so set them explicitly for
-predictable byte counts and line splitting.
+auto` (which writes CRLF on output), **not** Tcl's `utf-8`/`lf` — so set them
+explicitly for predictable byte counts.
 
 ```tcl
 set path /tmp/recipe-rw.txt

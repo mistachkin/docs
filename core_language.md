@@ -2493,7 +2493,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
 <a id="cmd-close"></a>
 - **close** - Close channel
   - `close channelId`
-  - Closes the specified channel and releases associated resources. For files, buffers are flushed and the file handle is released. For sockets, the connection is terminated.
+  - Closes the specified channel and releases associated resources. For files, buffers are flushed and the file handle is released. For sockets, the connection is terminated (the peer observes end-of-file; this includes channels accepted by a `[socket -server]` callback). If the channel is non-blocking and has queued output pending, `[close]` first waits for that output to be written.
   - **Returns**: An empty string.
 
 ---
@@ -2521,15 +2521,18 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
   - `fconfigure channelId ?optionName? ?value? ?optionName value ...?`
   - Gets or sets configuration options for a channel. Without arguments after *channelId*, returns all options. With just *optionName*, returns that option's value.
   - **Options**:
-    - `-blocking boolean` - Blocking (true) or non-blocking (false) mode. Non-blocking mode allows `[gets]` and `[read]` with `-noblock` to return immediately with available data.
+    - `-blocking boolean` - Blocking (true, the default) or non-blocking (false) mode. On a non-blocking channel, `[gets]` returns -1 (variable form) or an empty string when no complete line is available, `[read]` returns an empty string when no data is available, and `[fblocked]` then reports 1 — no error is raised. Output written to a non-blocking channel is accepted into a bounded background queue and written asynchronously; `[close]` waits for queued output to drain. The Eagle-specific `-noblock` option of `[gets]`/`[read]` is independent of this mode and retains its error-on-no-data contract.
     - `-encoding name` - Character encoding (e.g., `utf-8`, `ascii`, `unicode`). Use `binary` or set to null for raw binary I/O.
     - `-error` - Query-only socket option. Returns an empty string while an asynchronous connect is pending or after it succeeds; after failure, returns the stable connection error. It is an error to query this option on a non-socket channel.
     - `-translation mode` - Line ending translation mode. Can be a single value for both input and output, or a two-element list `{inputMode outputMode}`:
-      - `auto` - CRLF-oriented: a lone LF is not treated as a line ending on input, and output uses CRLF
+      - `auto` - On input, CR, LF, and CR/LF each terminate a line; on output, line feeds are written as CR/LF
       - `binary` - No translation (raw bytes)
       - `cr` - Carriage return only
       - `crlf` - Carriage return + line feed (Windows)
       - `lf` - Line feed only (Unix)
+      - `platform` - Same behavior as `crlf` (Eagle extension)
+      - `protocol` - Output-oriented mode that enforces CR/LF pairs (a lone CR or LF is written as CR/LF); on input no line terminator is recognized (Eagle extension)
+      - `environment` - Resolves to the mode appropriate for the host operating system: `crlf` input and `protocol` output on Windows, `lf` on Unix (Eagle extension)
     - `-buffer boolean` - Enable (true) or disable (false) buffering (Eagle extension).
   - **Returns**: Option value(s) or empty string when setting.
   - **Example**:
@@ -2537,7 +2540,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
     fconfigure $fh -encoding utf-8 -translation lf
     fconfigure $sock -blocking 0           ;# Non-blocking socket I/O
     set connectError [fconfigure $sock -error]
-    fconfigure $fh -translation {auto lf}  ;# CRLF-oriented input, output LF
+    fconfigure $fh -translation {auto lf}  ;# any-EOL input, output LF
     puts [fconfigure $fh -encoding]        ;# Query encoding
     ```
 
@@ -2611,6 +2614,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
   - Reads a single line from *channelId* (up to but not including the newline by default).
   - **Without varName**: Returns the line read, or an empty string at EOF.
   - **With varName**: Stores the line in *varName* and returns the number of characters read (-1 at EOF).
+  - **Non-blocking channels**: On a channel configured with `fconfigure -blocking false`, when no complete line is available yet the variable form returns -1 with an empty *varName* and the direct form returns an empty string — no error is raised; `[fblocked]` then reports 1 and `[eof]` reports 0. Distinguish this from EOF by checking `[fblocked]` or `[eof]`.
   - **Standard Options**:
     - `--` - End of options
   - **Eagle Extension Options**:
@@ -2726,6 +2730,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
   - Reads data from *channelId*.
   - **Without numChars**: Reads all remaining data until EOF.
   - **With numChars**: Reads at most *numChars* characters.
+  - **Non-blocking channels**: On a channel configured with `fconfigure -blocking false`, `[read]` returns whatever data is immediately available (possibly an empty string) instead of waiting; no error is raised, and `[fblocked]` reports 1 after a short or empty read.
   - **Standard Options**:
     - `-nonewline` - Strip trailing newline from result
     - `--` - End of options
@@ -4951,10 +4956,26 @@ Network commands belong to ObjectGroup: "network"
         immediately. Register a writable `[fileevent]` to detect completion,
         then query `fconfigure $channel -error`: an empty value means success;
         a non-empty value describes failure.
+      - `-connecttimeout ms` - Bound the connection attempt with a finite
+        deadline in milliseconds (-1 means unlimited, the default). Applies to
+        both synchronous and `-async` connects; cannot be combined with
+        `-server`.
+    - Many Eagle-specific tuning options (`-keepalive`, `-nodelay`, `-buffer`,
+      `-sendtimeout`, `-receivetimeout`, `-availabletimeout`, and others) are
+      also accepted; see [`options.md`](options.md#socket) for the full table.
     - **Returns**: A channel identifier for the socket.
 
   - `socket -server command ?-myaddr addr? port` - Creates a server socket listening on *port*.
     - When a client connects, *command* is called with: `command channel clientAddr clientPort`
+    - **Options**:
+      - `-maxpendingclients count` - Bound the number of accepted clients whose
+        callback scripts have not yet started for this listener (default 64).
+        When the bound is reached, further accepts are deferred — not dropped —
+        until callbacks begin running. The value must be positive, and the
+        option is only legal together with `-server`.
+      - Connection tuning options given here (`-keepalive`, `-nodelay`,
+        `-buffer`, `-sendtimeout`, `-receivetimeout`, and friends) apply to
+        each accepted client channel.
     - **Returns**: A channel identifier for the listening socket.
 
   **Example**:

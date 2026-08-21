@@ -11,11 +11,11 @@ The full path-manipulation reference is [`../../../../file.md`](../../../../file
 `[exec]` command-line internals are in [`../../../../exec.md`](../../../../exec.md).
 
 > **Channel defaults bite (verified).** A freshly `[open]`ed channel reports
-> `-blocking False -encoding iso-8859-1 -translation auto` — **not** Tcl's
-> Unix defaults of `utf-8` / `lf`. Worse, Eagle's `auto` translation is
-> **CRLF-oriented**: it *writes* `\r\n` and on input only treats `\r\n` as a
-> line terminator, so `[gets]` on a Unix LF-only file reads the **whole file**
-> as one "line". For predictable byte counts and line splitting, set
+> `-blocking True -encoding iso-8859-1 -translation auto` — **not** Tcl's
+> Unix defaults of `utf-8` / `lf`. Input `auto` translation accepts CR, LF,
+> and CR/LF line terminators (Tcl-compatible), but on **output** `auto` still
+> writes `\r\n` — so files written with default settings gain CRLF line
+> endings even on Unix. For predictable byte counts, set
 > `fconfigure $ch -translation lf -encoding utf-8` right after `[open]` (or
 > `-translation binary` for raw bytes). Every channel example below does this.
 
@@ -139,20 +139,24 @@ puts -nonewline $ch "hello world"; flush $ch    ;# bytes now on disk
 ## `fconfigure`
 
 `fconfigure channel ?option? ?value? ...` — query/set channel options.
-Queryable: `-encoding`, `-translation` (and the whole dict via `fconfigure $ch`
-with no option). Settable: `-blocking`, `-buffer`, `-encoding`, `-translation`.
+Queryable: `-blocking`, `-encoding`, `-translation` (and the whole dict via
+`fconfigure $ch` with no option); socket channels also expose the query-only
+`-error`. Settable: `-blocking`, `-buffer`, `-encoding`, `-translation`.
 
 ```tcl
-fconfigure $ch                                  ;# => -blocking False -encoding iso-8859-1 -translation auto
+fconfigure $ch                                  ;# => -blocking True -encoding iso-8859-1 -translation auto
 fconfigure $ch -encoding                         ;# => iso-8859-1
 fconfigure $ch -translation                       ;# => auto
 fconfigure $ch -translation lf -encoding utf-8    ;# set both (common fix)
 ```
 
-> **`-blocking` is set-only.** Querying it alone — `fconfigure $ch -blocking` —
-> errors with `"-blocking" option must be followed by boolean`, even though it
-> shows up in the full `fconfigure $ch` dump. Read it from the dump; set it with
-> a value (`fconfigure $ch -blocking true`).
+> **Non-blocking mode (verified).** `fconfigure $ch -blocking false` gives
+> plain `[gets]`/`[read]` Tcl semantics when no data is ready: `[gets]`
+> returns -1 (variable form) or an empty string, `[read]` returns an empty
+> string, no error is raised, and `[fblocked]` then reports `True`. Output
+> is accepted into a bounded background queue; `[close]` drains it. The
+> Eagle-specific `gets`/`read` option `-noblock` is independent of this mode
+> and still **errors** when no data is available.
 
 ## `fblocked`
 
