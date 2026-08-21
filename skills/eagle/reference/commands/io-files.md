@@ -154,9 +154,12 @@ fconfigure $ch -translation lf -encoding utf-8    ;# set both (common fix)
 > plain `[gets]`/`[read]` Tcl semantics when no data is ready: `[gets]`
 > returns -1 (variable form) or an empty string, `[read]` returns an empty
 > string, no error is raised, and `[fblocked]` then reports `True`. Output
-> is accepted into a bounded background queue; `[close]` drains it. The
-> Eagle-specific `gets`/`read` option `-noblock` is independent of this mode
-> and still **errors** when no data is available.
+> is accepted into a bounded background queue. Per Tcl, a `[close]` while
+> output is still queued **returns immediately** and drains in the
+> background — set `-blocking true` before `[close]` when the data must be
+> on disk/wire as `[close]` returns. The Eagle-specific `gets`/`read`
+> option `-noblock` is independent of this mode and still **errors** when
+> no data is available.
 
 ## `fblocked`
 

@@ -2493,7 +2493,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
 <a id="cmd-close"></a>
 - **close** - Close channel
   - `close channelId`
-  - Closes the specified channel and releases associated resources. For files, buffers are flushed and the file handle is released. For sockets, the connection is terminated (the peer observes end-of-file; this includes channels accepted by a `[socket -server]` callback). If the channel is non-blocking and has queued output pending, `[close]` first waits for that output to be written.
+  - Closes the specified channel and releases associated resources. For files, buffers are flushed and the file handle is released. For sockets, the connection is terminated (the peer observes end-of-file; this includes channels accepted by a `[socket -server]` callback). Per Tcl, if the channel is non-blocking and still has queued output pending, `[close]` returns immediately and the remaining output is written — and the underlying channel really closed — in the background; configure the channel back to `-blocking true` before closing when the data must be flushed before `[close]` returns.
   - **Returns**: An empty string.
 
 ---
@@ -2521,7 +2521,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
   - `fconfigure channelId ?optionName? ?value? ?optionName value ...?`
   - Gets or sets configuration options for a channel. Without arguments after *channelId*, returns all options. With just *optionName*, returns that option's value.
   - **Options**:
-    - `-blocking boolean` - Blocking (true, the default) or non-blocking (false) mode. On a non-blocking channel, `[gets]` returns -1 (variable form) or an empty string when no complete line is available, `[read]` returns an empty string when no data is available, and `[fblocked]` then reports 1 — no error is raised. Output written to a non-blocking channel is accepted into a bounded background queue and written asynchronously; `[close]` waits for queued output to drain. The Eagle-specific `-noblock` option of `[gets]`/`[read]` is independent of this mode and retains its error-on-no-data contract.
+    - `-blocking boolean` - Blocking (true, the default) or non-blocking (false) mode. On a non-blocking channel, `[gets]` returns -1 (variable form) or an empty string when no complete line is available, `[read]` returns an empty string when no data is available, and `[fblocked]` then reports 1 — no error is raised. Output written to a non-blocking channel is accepted into a bounded background queue and written asynchronously. Per Tcl, `[close]` on a non-blocking channel that still has queued output returns immediately and the remaining output (and the real close) completes in the background — set `-blocking true` before closing to force a synchronous flush and close. The Eagle-specific `-noblock` option of `[gets]`/`[read]` is independent of this mode and retains its error-on-no-data contract.
     - `-encoding name` - Character encoding (e.g., `utf-8`, `ascii`, `unicode`). Use `binary` or set to null for raw binary I/O.
     - `-error` - Query-only socket option. Returns an empty string while an asynchronous connect is pending or after it succeeds; after failure, returns the stable connection error. It is an error to query this option on a non-socket channel.
     - `-translation mode` - Line ending translation mode. Can be a single value for both input and output, or a two-element list `{inputMode outputMode}`:
