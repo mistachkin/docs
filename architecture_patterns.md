@@ -146,7 +146,7 @@ runtime capability queries: `DoesSupport(HostFlags.Color)`.
 surface), `Console` (full interactive console), `File` (stream-backed),
 `Diagnostic`, `Null` and `Fake` (do-nothing/stub hosts for tests and headless
 use), `Shell`, and `Wrapper` (forwards every interface member to a wrapped
-inner host -- the same forwarding-wrapper technique as pattern 44). Each picks exactly the
+inner host -- the same forwarding-wrapper technique as pattern 45). Each picks exactly the
 sub-interfaces and `HostFlags` it needs; the do-nothing hosts implement the
 full surface but return inert results.
 
@@ -739,6 +739,49 @@ scanned as a single vertical strip.
 
 ---
 
+<details>
+<summary><strong>28. Properties, Not Public Fields</strong></summary>
+
+State is never exposed as a public field. Every field is `private`; when a
+value must be readable (or writable) from outside its declaring type, it
+is wrapped in a property accessor -- a private backing field plus a full
+property with an explicit `get` (and a `set` only when outside mutation is
+actually required). External code binds to the property, never to the
+storage behind it.
+
+```csharp
+// NO -- external callers bind directly to storage:
+public int timeout;
+
+// YES -- private backing field, all external access via the property:
+private int timeout;
+
+public int Timeout
+{
+    get { return timeout; }
+    set { timeout = value; }
+}
+```
+
+**Rationale**: A property is a stable contract; a field is a storage
+detail. Routing all external access through an accessor keeps the two
+separable -- validation, locking (pattern 16), lazy computation, tracing,
+or immutability enforcement (pattern 3) can be added later without
+touching a single call site. It also matters for binary compatibility:
+changing a field into a property is a breaking ABI change, so exposing the
+property from the start keeps the member stable across all build targets.
+Finally, it preserves the guarantees of minimal visibility (convention
+23) -- the compiler proves that nothing outside the type can bypass
+whatever policy the accessor enforces. Because the codebase honors the
+.NET 2.0 floor, auto-properties are not used; the backing field and full
+property are written out explicitly as a unit. The `internal` static test
+tunables are the one sanctioned non-private field family, and they are
+deliberately kept off the supported public surface.
+
+</details>
+
+---
+
 ## Script-Level Patterns
 
 The patterns and conventions above describe the C# internals and house coding style. The Eagle script libraries
@@ -748,7 +791,7 @@ distinctive patterns at the scripting level.
 ---
 
 <details>
-<summary><strong>28. Dual Tcl/Eagle Compatibility Scripting</strong></summary>
+<summary><strong>29. Dual Tcl/Eagle Compatibility Scripting</strong></summary>
 
 The entire script library is designed to run in both vanilla Tcl and
 Eagle. Bootstrap procedures like `isEagle` detect the runtime, and the
@@ -768,7 +811,7 @@ loading that file. This is the script equivalent of `#if` guards.
 ---
 
 <details>
-<summary><strong>29. Procedure Factories with Hidden Instrumentation</strong></summary>
+<summary><strong>30. Procedure Factories with Hidden Instrumentation</strong></summary>
 
 `s_proc` (stub procedure) and `f_proc` (flexible procedure) are
 factories that create procedures with optional debugger instrumentation
@@ -788,7 +831,7 @@ know which implementation backs their procedure.
 ---
 
 <details>
-<summary><strong>30. Self-Destructing Procedures</strong></summary>
+<summary><strong>31. Self-Destructing Procedures</strong></summary>
 
 The `[apply]` compatibility shim for Tcl 8.4 creates a temporary
 procedure with a unique name, executes it, then the procedure body
@@ -810,7 +853,7 @@ proc ::apply_shim_$suffix {lambda args} {
 ---
 
 <details>
-<summary><strong>31. Multi-Level Upvar for Cross-Frame Variable Access</strong></summary>
+<summary><strong>32. Multi-Level Upvar for Cross-Frame Variable Access</strong></summary>
 
 Eagle scripts routinely use `upvar 1` (one level up) and `upvar 2` (two
 levels up) to link variables across call frames without passing them as
@@ -829,7 +872,7 @@ as if the procedure boundary didn't exist.
 ---
 
 <details>
-<summary><strong>32. Thread-Safe Script State via Variable Locks</strong></summary>
+<summary><strong>33. Thread-Safe Script State via Variable Locks</strong></summary>
 
 The test framework uses `vwaitLocked` to safely manage shared script
 state across threads. Global arrays like `::test_puts_state` and
@@ -848,7 +891,7 @@ entries after processing.
 ---
 
 <details>
-<summary><strong>33. Test Constraint System</strong></summary>
+<summary><strong>34. Test Constraint System</strong></summary>
 
 The test framework uses a constraint system where each test declares
 prerequisites like `{eagle command.object compile.CONFIGURATION
@@ -873,7 +916,7 @@ and .NET type availability.
 ---
 
 <details>
-<summary><strong>34. Unknown Command Handler as Object Dispatch</strong></summary>
+<summary><strong>35. Unknown Command Handler as Object Dispatch</strong></summary>
 
 Eagle's `unknown` command handler can intercept unrecognized commands
 and attempt to resolve them as .NET type names. When
@@ -889,7 +932,7 @@ a first-class command.
 ---
 
 <details>
-<summary><strong>35. Test Hook Architecture</strong></summary>
+<summary><strong>36. Test Hook Architecture</strong></summary>
 
 The test framework provides optional hook points at every stage of test
 execution: `beforeRunTest`, `beforeTest`, `afterTest`, `testSuccess`,
@@ -909,7 +952,7 @@ registration required.
 ---
 
 <details>
-<summary><strong>36. Multi-Runtime Command Line Building</strong></summary>
+<summary><strong>37. Multi-Runtime Command Line Building</strong></summary>
 
 `getRuntimeCommandLine` in `exec.eagle` builds different command lines
 depending on whether the target is Mono, .NET Core, or .NET Framework.
@@ -925,7 +968,7 @@ a single test script.
 ---
 
 <details>
-<summary><strong>37. Self-Referential Introspection</strong></summary>
+<summary><strong>38. Self-Referential Introspection</strong></summary>
 
 Eagle scripts routinely use `[info level [info level]]` to discover
 their own procedure name at runtime, `[info script]` to find their own
@@ -941,7 +984,7 @@ context.
 ---
 
 <details>
-<summary><strong>38. Runtime C# Compilation from Script (<code>csharp.eagle</code>)</strong></summary>
+<summary><strong>39. Runtime C# Compilation from Script (<code>csharp.eagle</code>)</strong></summary>
 
 `csharp.eagle` provides a complete C# compilation subsystem accessible
 from Eagle scripts. The `compileCSharp` procedure accepts C# source code
@@ -976,7 +1019,7 @@ testing custom type handlers and callback delegates.
 ---
 
 <details>
-<summary><strong>39. Remote Package Repository Client (<code>pkgt.eagle</code>)</strong></summary>
+<summary><strong>40. Remote Package Repository Client (<code>pkgt.eagle</code>)</strong></summary>
 
 `pkgt.eagle` (Package Toolset) provides tools for downloading,
 extracting, and managing Eagle packages from remote repositories. It
@@ -1013,7 +1056,7 @@ miss behavior.
 ---
 
 <details>
-<summary><strong>40. Shell Unknown Handler as .NET Type Dispatch</strong></summary>
+<summary><strong>41. Shell Unknown Handler as .NET Type Dispatch</strong></summary>
 
 Eagle's `unknown` command handler (`init.eagle`) forms a multi-level
 resolution chain:
@@ -1045,7 +1088,7 @@ skips the intermediate `unknown` call frame so that the resolved
 command executes in the original caller's context, preserving variable
 scope and call frame semantics.
 
-When `eagle_shellUnknown` is enabled (see pattern 41), the resolution
+When `eagle_shellUnknown` is enabled (see pattern 42), the resolution
 chain becomes: shell dispatch → .NET type resolution → package fallback.
 The shell handler saves the original `::unknown` as `::savedUnknown` and
 falls back to it on failure, creating a layered resolution system where
@@ -1059,7 +1102,7 @@ each handler can chain to the next.
 ---
 
 <details>
-<summary><strong>41. Transparent OS Shell Bridge (<code>eagle_shellUnknown</code>)</strong></summary>
+<summary><strong>42. Transparent OS Shell Bridge (<code>eagle_shellUnknown</code>)</strong></summary>
 
 The `eagle_shellUnknown` system transforms Eagle's interactive prompt
 into a transparent OS shell. When enabled via `eagle_enableShellUnknown`,
@@ -1120,7 +1163,7 @@ works" on any platform, with correct quoting for the detected shell.
 ---
 
 <details>
-<summary><strong>42. The <code>*Ops</code> Static Helper Organization</strong></summary>
+<summary><strong>43. The <code>*Ops</code> Static Helper Organization</strong></summary>
 
 The core library's primary unit of decomposition is the static "operations"
 class: roughly eighty `XxxOps` types -- `MarshalOps`, `ScriptOps`, `PathOps`,
@@ -1143,7 +1186,7 @@ concern (path handling, marshalling, formatting) the method belongs to.
 ---
 
 <details>
-<summary><strong>43. The <code>ReturnCode</code> + <code>ref Result</code> Calling Convention</strong></summary>
+<summary><strong>44. The <code>ReturnCode</code> + <code>ref Result</code> Calling Convention</strong></summary>
 
 The engine's universal method contract: an operation returns a `ReturnCode`
 (`Ok`, `Error`, `Return`, `Break`, `Continue`) and writes its output -- or its
@@ -1195,7 +1238,7 @@ it is precisely what pattern 7's implicit `Result` conversions exist to feed.
 ---
 
 <details>
-<summary><strong>44. The <code>IWrapper</code> Entity Wrapper Layer</strong></summary>
+<summary><strong>45. The <code>IWrapper</code> Entity Wrapper Layer</strong></summary>
 
 Every first-class entity the interpreter tracks -- commands, sub-commands,
 procedures, lambdas, functions, operators, plugins, packages, aliases, objects,
@@ -1217,7 +1260,7 @@ any entity without the entity's cooperation.
 ---
 
 <details>
-<summary><strong>45. Ensemble Commands and Sub-Command Dispatch</strong></summary>
+<summary><strong>46. Ensemble Commands and Sub-Command Dispatch</strong></summary>
 
 Multi-function commands (`[debug]`, `[object]`, `[interp]`, `[file]`, `[string]`,
 `[array]`, `[package]`, ...) are *ensembles*: the command holds a `subCommands`
@@ -1237,7 +1280,7 @@ of pattern 5.
 ---
 
 <details>
-<summary><strong>46. <code>IClientData</code> -- Opaque Context Threading</strong></summary>
+<summary><strong>47. <code>IClientData</code> -- Opaque Context Threading</strong></summary>
 
 Callbacks, commands, policies, traces, and host operations receive an
 `IClientData` -- an opaque carrier of arbitrary caller context -- alongside their
@@ -1257,7 +1300,7 @@ handle in pattern 9.
 ---
 
 <details>
-<summary><strong>47. Three-Tier Method Layering (Public / Private / Core)</strong></summary>
+<summary><strong>48. Three-Tier Method Layering (Public / Private / Core)</strong></summary>
 
 Many operations are a small layered stack: a `public`/`internal` entry method that
 validates arguments and acquires locks, a `PrivateX` method that holds the actual
@@ -1276,7 +1319,7 @@ to conventions 18 and 19 (validate and extract once, at the boundary).
 ---
 
 <details>
-<summary><strong>48. Optional Cache Instrumentation (<code>ICacheCounts</code> / <code>CACHE_STATISTICS</code>)</strong></summary>
+<summary><strong>49. Optional Cache Instrumentation (<code>ICacheCounts</code> / <code>CACHE_STATISTICS</code>)</strong></summary>
 
 The cache-bearing collections -- `CacheDictionary`, the various `*Cache*`
 dictionaries, and the parse/argument caches -- implement `ICacheCounts` and carry
@@ -1293,7 +1336,7 @@ the level of an individual data structure.
 ---
 
 <details>
-<summary><strong>49. Uniform Stringification (<code>IToString</code> / <code>ToString(ToStringFlags)</code>)</strong></summary>
+<summary><strong>50. Uniform Stringification (<code>IToString</code> / <code>ToString(ToStringFlags)</code>)</strong></summary>
 
 Beyond `Object.ToString()`, the value-like and collection types implement an
 `IToString`/`IStringList` surface with `ToString(ToStringFlags, ...)` overloads
@@ -1311,7 +1354,7 @@ pattern 7.
 ---
 
 <details>
-<summary><strong>50. The <code>Maybe*</code> Conditional-Action Naming Convention</strong></summary>
+<summary><strong>51. The <code>Maybe*</code> Conditional-Action Naming Convention</strong></summary>
 
 A method whose name begins with `Maybe` performs its action only when a runtime
 condition warrants it, and is otherwise a deliberate no-op: `MaybeSet`,
@@ -1331,7 +1374,7 @@ counterpart to the `Try*` idiom, distinguished by "did nothing" being success.
 ---
 
 <details>
-<summary><strong>51. Named Sentinels Instead of Magic <code>-1</code></strong></summary>
+<summary><strong>52. Named Sentinels Instead of Magic <code>-1</code></strong></summary>
 
 Out-of-band results -- "not found", "no index", "invalid count or length" -- are
 named constants drawn from the `_Constants` types (`Index.Invalid`,
@@ -1350,7 +1393,7 @@ name before the value is trusted.
 ---
 
 <details>
-<summary><strong>52. <code>#if DEAD_CODE</code> -- Preserve, Don't Delete</strong></summary>
+<summary><strong>53. <code>#if DEAD_CODE</code> -- Preserve, Don't Delete</strong></summary>
 
 Superseded or experimental implementations are not always deleted; sometimes,
 they are retained, compiled out, under `#if DEAD_CODE` (occasionally `#if false`),
