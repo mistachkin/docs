@@ -772,6 +772,8 @@ testing, tooling, and operations.**
 
 ## Further Reading
 
+- [Eagle and Other Scripting Ecosystems](comparison.md) — task-oriented,
+  evidence-based selection guidance and tradeoffs.
 - [Why Eagle?](why_eagle.md) — adoption-oriented overview and tradeoffs.
 - [Eagle Showcase](showcase.md) — concise, runnable demonstrations.
 - [Two Languages, On Purpose](whitepaper.md) — the architectural thesis.

@@ -85,6 +85,10 @@ of the unusual choices in Eagle's codebase.
 
 ## How Eagle Compares
 
+For a current, task-oriented comparison with explicit security boundaries,
+code examples, and balanced ecosystem profiles, see
+[Eagle and Other Scripting Ecosystems](comparison.md).
+
 Each section below compares Eagle with another language ecosystem across
 the three use cases where Eagle is strongest:
 
