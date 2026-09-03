@@ -34,6 +34,7 @@ pitfalls** when working with Eagle.
 | File | What it contains | When you use it |
 |------|------------------|-----------------|
 | `why_eagle.md` | Feature overview, language comparisons, security model, and use-case guidance | When explaining Eagle's advantages, comparing it to other languages, or making a case for adoption |
+| `innovation.md` | Evidence-based audit of Eagle's distinctive algorithms, language and CLR boundaries, security architecture, integration model, testing practices, documentation feedback loop, coding conventions, and first-party ecosystem | When answering “What is unique or innovative about Eagle?” or when a claim must distinguish original implementation, unusual integration, and systematic practice |
 | `whitepaper.md` | "Two Languages, On Purpose" — the dual-language architecture thesis: a scripting layer over typed .NET (extends Ousterhout's scripting essay) | When making the design/philosophy case for Eagle's two-language model, or explaining *why* it pairs a script engine with the CLR |
 | `paper_love_and_software.md` | Essay by Joe Mistachkin — "If You Want a Project to Be Good, You Have to Love Working on It" | When you want the author's philosophy on software quality and craftsmanship |
 | `quick_start_guide.md` | Getting started guide: obtaining Eagle, running the shell, language basics, .NET interop intro | When new users need to get up and running or when explaining Eagle basics |

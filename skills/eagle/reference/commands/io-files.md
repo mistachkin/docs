@@ -154,10 +154,14 @@ fconfigure $ch -translation lf -encoding utf-8    ;# set both (common fix)
 > plain `[gets]`/`[read]` Tcl semantics when no data is ready: `[gets]`
 > returns -1 (variable form) or an empty string, `[read]` returns an empty
 > string, no error is raised, and `[fblocked]` then reports `True`. Output
-> is accepted into a bounded background queue. Per Tcl, a `[close]` while
-> output is still queued **returns immediately** and drains in the
-> background — set `-blocking true` before `[close]` when the data must be
-> on disk/wire as `[close]` returns. The Eagle-specific `gets`/`read`
+> is accepted atomically into a bounded background queue (4 MiB of translated
+> bytes and 4096 ordinary operations per channel). Successful `puts` or
+> `flush` means local admission, not remote receipt. A positive stream write
+> timeout limits each active queued operation, not the total drain; the first
+> background error is retained. Per Tcl, a `[close]` while output is still
+> queued **returns immediately** and drains in the background — set
+> `-blocking true` before `[close]` when the data must be on disk/wire and any
+> retained error must be observed before `[close]` returns. The Eagle-specific `gets`/`read`
 > option `-noblock` is independent of this mode and still **errors** when
 > no data is available.
 
@@ -172,8 +176,12 @@ fblocked $ch          ;# => False   (after a complete read)
 
 ## `fcopy`
 
-`fcopy input output ?-size n? ?-command cb?` — copies bytes between channels;
-synchronous form returns the **byte count** copied.
+`fcopy input output ?-size n? ?-command cb? ?-eventflags flags?` — copies bytes
+between channels and returns the **byte count** copied. The implemented form is
+always synchronous, including for a non-blocking destination.
+
+> **Compatibility note:** `-command` is recognized for Tcl syntax compatibility
+> but is currently unsupported and rejected before channel data I/O begins.
 
 ```tcl
 set in [open /tmp/src r]; set out [open /tmp/dst w]
@@ -284,9 +292,19 @@ Basic note — `socket ?options? host port` opens a **client** TCP channel;
 `command chan addr port` per connection. Both return a channel usable with the
 verbs above. Eagle wraps .NET `TcpClient`/`TcpListener` and adds a broad option
 set (`-async`, `-myaddr`, `-myport`, `-timeout`, `-nodelay`, `-keepalive`,
-`-buffer`, `-addressfamily`, ...). For asynchronous connect, install a writable
-`[fileevent]`, wait for it, then query `fconfigure $socket -error`; empty means
-success and a non-empty stable message means failure.
+`-buffer`, `-addressfamily`, ...). Use `-connecttimeout milliseconds` for one
+finite monotonic budget spanning DNS, setup/bind, and all sequential permitted
+address attempts; `-1`, the compatibility default, is potentially unlimited.
+Finite operations are capped at 64 concurrently per Eagle application domain.
+For asynchronous connect, install a writable `[fileevent]`, wait for it, then
+query `fconfigure $socket -error`; the event means terminal completion, not
+success. An empty error means success and a non-empty stable message means
+failure.
+
+For servers, `-maxpendingclients count` bounds accepted clients whose callbacks
+have not begun (default 64 per listener); Eagle also applies an aggregate bound
+of 256 pending callback dispatches per application domain. These managed
+bounds do not control the operating system's listen backlog under overload.
 
 ```tcl
 # client (sketch):
@@ -299,7 +317,7 @@ close $s
 
 ```tcl
 # asynchronous client connect:
-set s [socket -async 127.0.0.1 8080]
+set s [socket -async -connecttimeout 10000 127.0.0.1 8080]
 fileevent $s writable {
   fileevent $::s writable {}
   set ::connected true

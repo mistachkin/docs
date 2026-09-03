@@ -47,15 +47,17 @@ make run        # start the interactive shell
   repositories); not needed for a plain build.
 - For the optional native build: a **C compiler** (`gcc`/`clang`), **Tcl 8.6**
   development files and stub library (`libtclstub8.6`), `tclsh`, and the
-  `DOTNET_SDK_VERSION` environment variable set to the installed SDK version so
-  the scripts can locate the `hostfxr`/`nethost` headers in the .NET host pack.
+  `DOTNET_SDK_VERSION` environment variable set to an installed .NET AppHost
+  pack version so the scripts can locate the `hostfxr`/`nethost` headers.
 
 > [!IMPORTANT]
 > `DOTNET_SDK_VERSION` is intentionally **not** set in the `Makefile`. Set it in
 > your environment or pass it on the command line (for example
-> `make build DOTNET_SDK_VERSION=10.0.7`). Without it, `build-native` prints a
-> "Skipping build-native" message and exits successfully — the managed build is
-> unaffected.
+> `make build DOTNET_SDK_VERSION=10.0.11`). Despite its historical name, this
+> value is the version-named directory beneath the applicable
+> `Microsoft.NETCore.App.Host.<RID>` pack; it need not match `dotnet --version`.
+> Without it, `build-native` prints a "Skipping build-native" message and exits
+> successfully — the managed build is unaffected.
 
 ## 3. Targets
 
@@ -206,22 +208,24 @@ The optional native build produces two shared libraries:
 `build-native` invokes `Native/Utility/Tools/compile-$(BUILD_NATIVE_CONFIGURATION).sh`
 and then `Native/Package/Tools/compile-$(BUILD_NATIVE_CONFIGURATION).sh` (where
 `BUILD_NATIVE_CONFIGURATION` is `[debug]` by default), with
-`CONFIGURATION_SUFFIX=NetStandard21` exported. Each script:
+`CONFIGURATION_SUFFIX=NetStandard21` exported. Both scripts run the
+`tclsh`-based version-tagging step (`Common/Tools/tagViaBuild.tcl`), compile the
+C sources, and move the resulting library into the managed `BUILD_DIRECTORY`.
+The Garuda script additionally:
 
-1. Locates the .NET host pack for the current OS/architecture under the SDK
-   identified by `DOTNET_SDK_VERSION`, and detects `hostfxr` capabilities.
-2. Runs a `tclsh`-based version-tagging step (`Common/Tools/tagViaBuild.tcl`).
-3. Compiles the C sources with `gcc -g -fPIC -shared`, linking against the Tcl
-   stub library (`-ltclstub8.6`) and the .NET host (`-lnethost`).
-4. Moves the resulting library into the managed `BUILD_DIRECTORY` and copies the
-   companion `*.tcl` files alongside it.
+1. Locates the .NET AppHost pack for the current OS/architecture and selects
+   its version-named directory using `DOTNET_SDK_VERSION`.
+2. Detects the available `hostfxr` capabilities.
+3. Links against the Tcl stub library (`-ltclstub8.6`) and the .NET host
+   (`-lnethost`).
+4. Copies the companion Garuda `*.tcl` files alongside the native library.
 
-On macOS the scripts expect Tcl/Tk from Homebrew (`tcl-tk@8`); on Linux they use
-the system Tcl. See `garuda.md` for the architecture and runtime use of the
-native package.
+On macOS the Garuda script expects Tcl/Tk from Homebrew (`tcl-tk@8`); on Linux
+it uses the system Tcl. See `garuda.md` for the architecture and runtime use of
+the native package.
 
 > [!NOTE]
-> Because the C compiler, Tcl stub library, and a matching `DOTNET_SDK_VERSION`
+> Because the C compiler, Tcl stub library, and selected AppHost pack version
 > must all line up, native builds are environment-sensitive. If `build-native`
 > is skipped or fails, the managed Eagle interpreter and shell still build and
 > run normally — only the native Tcl-integration features are unavailable.
@@ -268,7 +272,7 @@ Override any of these on the `make` command line (for example
 
 | Variable | Purpose |
 |----------|---------|
-| `DOTNET_SDK_VERSION` (unset) | SDK version used to locate native host packs; required for `build-native`. |
+| `DOTNET_SDK_VERSION` (unset) | Version-named directory in the native AppHost pack; required for `build-native`. |
 | `DOTNET` (`dotnet`) | .NET CLI executable. |
 | `DOTNET_FRAMEWORK` (`netcoreapp3.0`) | Target framework folder name in the output path. |
 | `DOTNET_ARGS` (`--roll-forward Major`) | Arguments to `dotnet exec` for `run`/`test`. |

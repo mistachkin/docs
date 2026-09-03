@@ -2521,7 +2521,7 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
   - `fconfigure channelId ?optionName? ?value? ?optionName value ...?`
   - Gets or sets configuration options for a channel. Without arguments after *channelId*, returns all options. With just *optionName*, returns that option's value.
   - **Options**:
-    - `-blocking boolean` - Blocking (true, the default) or non-blocking (false) mode. On a non-blocking channel, `[gets]` returns -1 (variable form) or an empty string when no complete line is available, `[read]` returns an empty string when no data is available, and `[fblocked]` then reports 1 — no error is raised. Output written to a non-blocking channel is accepted into a bounded background queue and written asynchronously. Per Tcl, `[close]` on a non-blocking channel that still has queued output returns immediately and the remaining output (and the real close) completes in the background — set `-blocking true` before closing to force a synchronous flush and close. The Eagle-specific `-noblock` option of `[gets]`/`[read]` is independent of this mode and retains its error-on-no-data contract.
+    - `-blocking boolean` - Blocking (true, the default) or non-blocking (false) mode. On a non-blocking channel, `[gets]` returns -1 (variable form) or an empty string when no complete line is available, `[read]` returns an empty string when no data is available, and `[fblocked]` then reports 1 — no error is raised. Output written to a non-blocking channel is accepted atomically into a bounded background queue (at most 4 MiB of translated bytes and 4096 ordinary operations per channel) and written asynchronously. Successful `[puts]` or `[flush]` means local queue admission, not remote receipt. A positive stream write timeout limits each active queued write or flush, not the total queue drain; the first background failure is retained and reported by a later output operation or synchronous drain. Per Tcl, `[close]` on a non-blocking channel that still has queued output returns immediately and the remaining output (and the real close) completes in the background — set `-blocking true` before closing to force a synchronous flush and close. The Eagle-specific `-noblock` option of `[gets]`/`[read]` is independent of this mode and retains its error-on-no-data contract.
     - `-encoding name` - Character encoding (e.g., `utf-8`, `ascii`, `unicode`). Use `binary` or set to null for raw binary I/O.
     - `-error` - Query-only socket option. Returns an empty string while an asynchronous connect is pending or after it succeeds; after failure, returns the stable connection error. It is an error to query this option on a non-socket channel.
     - `-translation mode` - Line ending translation mode. Can be a single value for both input and output, or a two-element list `{inputMode outputMode}`:
@@ -2554,8 +2554,10 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
   - Copies data from *input* channel to *output* channel efficiently.
   - **Options**:
     - `-size n` - Copy at most *n* bytes (default: copy until EOF)
-    - `-command callback` - Asynchronous mode; *callback* is invoked when copy completes
-  - **Returns**: Number of bytes copied (synchronous) or empty string (asynchronous).
+    - `-command callback` - Recognized for Tcl syntax compatibility but currently unsupported; it is rejected before either channel is read or written
+    - `-eventflags flags` - Eagle extension controlling event processing between copy iterations
+  - The implemented copy is always synchronous, including when the output channel is configured as non-blocking; it waits for the destination writes rather than merely admitting them to its background queue.
+  - **Returns**: Number of bytes copied on success.
 
 ---
 
@@ -2575,6 +2577,13 @@ Channels are Eagle's abstraction for I/O streams. Standard channels include `std
     query or clear operation.
   - Supported channels are TCP socket channels and seekable file channels.
     Setting a binding on another stream type reports an error.
+  - A writable event for a pending `socket -async` channel means connection
+    establishment reached a terminal state, not necessarily success. Always
+    query `fconfigure $channel -error`; a terminal failure also makes a
+    readable binding ready so either waiting direction can observe it.
+  - Readiness is local and level-triggered. It does not acknowledge remote
+    receipt, and the notifier's normal 25 millisecond maximum polling interval
+    is not a hard real-time delivery guarantee.
   - A callback error removes that binding and is passed through Eagle's normal
     background-error handling.
   - **Returns**: The current script in query mode; otherwise an empty string.
@@ -4957,9 +4966,14 @@ Network commands belong to ObjectGroup: "network"
         then query `fconfigure $channel -error`: an empty value means success;
         a non-empty value describes failure.
       - `-connecttimeout ms` - Bound the connection attempt with a finite
-        deadline in milliseconds (-1 means unlimited, the default). Applies to
-        both synchronous and `-async` connects; cannot be combined with
-        `-server`.
+        monotonic deadline in milliseconds (-1 means potentially unlimited,
+        the compatibility default). One positive budget covers DNS and local
+        name resolution, client setup/bind, and all sequential permitted
+        address attempts; it is not restarted per address. Applies to both
+        synchronous and `-async` connects; cannot be combined with `-server`.
+        Finite operations are capped at 64 concurrently per Eagle application
+        domain so an uninterruptible platform resolver cannot retain unbounded
+        workers; cap exhaustion is an explicit error.
     - Many Eagle-specific tuning options (`-keepalive`, `-nodelay`, `-buffer`,
       `-sendtimeout`, `-receivetimeout`, `-availabletimeout`, and others) are
       also accepted; see [`options.md`](options.md#socket) for the full table.
@@ -4972,7 +4986,11 @@ Network commands belong to ObjectGroup: "network"
         callback scripts have not yet started for this listener (default 64).
         When the bound is reached, further accepts are deferred — not dropped —
         until callbacks begin running. The value must be positive, and the
-        option is only legal together with `-server`.
+        option is only legal together with `-server`. Eagle also enforces an
+        application-domain-wide limit of 256 pending callback
+        dispatches across listeners. These managed bounds do not guarantee the
+        operating system's listen backlog; sustained overload may still cause
+        connection refusal according to platform policy.
       - Connection tuning options given here (`-keepalive`, `-nodelay`,
         `-buffer`, `-sendtimeout`, `-receivetimeout`, and friends) apply to
         each accepted client channel.
@@ -4999,7 +5017,7 @@ Network commands belong to ObjectGroup: "network"
 
   **Asynchronous client example**:
   ```tcl
-  set sock [socket -async localhost 8080]
+  set sock [socket -async -connecttimeout 10000 localhost 8080]
 
   fileevent $sock writable {
     fileevent $::sock writable {}
@@ -10064,7 +10082,7 @@ connect completion. Use a readable `[fileevent]` for incoming data.
 
 ```tcl
 # Client socket (synchronous)
-set sock [socket localhost 8080]
+set sock [socket -connecttimeout 10000 localhost 8080]
 fconfigure $sock -translation auto
 puts $sock Hello
 flush $sock
@@ -10086,7 +10104,7 @@ proc acceptConnection {channel clientAddr clientPort} {
 
 ```tcl
 # Client socket (asynchronous connect)
-set sock [socket -async localhost 8080]
+set sock [socket -async -connecttimeout 10000 localhost 8080]
 fileevent $sock writable {
   fileevent $::sock writable {}
   set ::connected true

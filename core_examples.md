@@ -4449,7 +4449,7 @@ unset table
 
 ```tcl
 # Client socket
-# set sock [socket localhost 8080]
+# set sock [socket -connecttimeout 10000 localhost 8080]
 # puts $sock "Hello, server!"
 # flush $sock
 # gets $sock response
@@ -4469,7 +4469,7 @@ unset table
 
 ```tcl
 # Async connection
-# set sock [socket -async localhost 8080]
+# set sock [socket -async -connecttimeout 10000 localhost 8080]
 # fileevent $sock writable {
 #     fileevent $::sock writable {}
 #     set ::connected true

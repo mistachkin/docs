@@ -1249,7 +1249,7 @@ Used when 4+ arguments: `fconfigure channelId -option value ...`
 
 | Option | Value | Description |
 |--------|-------|-------------|
-| `-blocking` | boolean | Set channel blocking mode |
+| `-blocking` | boolean | Set channel blocking mode; non-blocking output uses a bounded<br>4 MiB / 4096-operation background queue, while switching back<br>to blocking waits for admitted output and reports retained errors |
 | `-buffer` | boolean | When true, enable buffering<br>(`channel.NewBuffered()`);<br>when false, disable it<br>(`channel.ResetBuffered()`) |
 | `-encoding` | Encoding | Set the channel's character encoding |
 | `-translation` | list | One or two `StreamTranslation` values<br>controlling line-ending translation<br>(input and/or output) |
@@ -1280,7 +1280,7 @@ mode (e.g., `-encoding` uses `OptionFlags.None` instead of
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-size` | int | Maximum bytes to copy; when negative<br>or absent, copies until end-of-file |
-| `-command` | string | Callback command for async copy;<br>currently **accepted but not implemented** |
+| `-command` | string | Recognized Tcl-compatible async-copy syntax, currently<br>**unsupported** and rejected before channel I/O begins |
 | `-eventflags` | EventFlags | Controls event processing during<br>the copy loop;<br>defaults to `interpreter.EngineEventFlags` |
 
 </details>
@@ -2638,18 +2638,18 @@ compatibility.
 | `-addressfamily` | AddressFamily | IPv4, IPv6, or other<br>address family |
 | `-keepalive` | boolean | Enable TCP keep-alive |
 | `-server` | string | Server callback command; presence<br>makes this a server socket |
-| `-maxpendingclients` | int | Maximum accepted clients whose callbacks<br>have not yet started (default 64);<br>server only, must be positive |
+| `-maxpendingclients` | int | Maximum accepted clients whose callbacks<br>have not yet started (default 64 per listener;<br>aggregate limit 256 per Eagle application domain);<br>server only, must be positive |
 | `-buffer` | int | Socket buffer size in bytes |
 | `-timeout` | int | General operation timeout<br>in milliseconds |
 | `-sendtimeout` | int | Send operation timeout |
 | `-receivetimeout` | int | Receive operation timeout |
 | `-availabletimeout` | int | Total data-availability wait budget;<br>depleted in small poll chunks by<br>reads that find no data |
-| `-connecttimeout` | int | Finite deadline for the connection<br>attempt in milliseconds (-1 = unlimited);<br>client only |
+| `-connecttimeout` | int | One total monotonic DNS, setup, bind, and sequential-address<br>connection budget in milliseconds (-1 = potentially unlimited,<br>the compatibility default); client only; finite operations<br>are capped at 64 per Eagle application domain |
 | `-readtimeout` | int | Read operation timeout |
-| `-writetimeout` | int | Write operation timeout |
+| `-writetimeout` | int | Write operation timeout; for non-blocking output this limits<br>each active queued write or flush, not the total queue drain |
 | `-myaddr` | string | Local address to bind to |
 | `-myport` | string | Local port to bind to |
-| `-async` | -- | Start a client connection asynchronously and return its channel immediately;<br>use writable `[fileevent]` plus `fconfigure -error` for completion |
+| `-async` | -- | Start a client connection asynchronously and return its channel immediately;<br>writable `[fileevent]` means terminal completion, not success;<br>always query `fconfigure -error` |
 | `-channelid` | string | Custom channel identifier |
 | `-nodelay` | -- | Disable Nagle algorithm<br>(TCP_NODELAY); client only |
 | `-nobuffer` | -- | Disable socket buffering;<br>client only |
