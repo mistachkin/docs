@@ -1337,6 +1337,6 @@ trusted/signed locations. This prevents loading tampered Tcl libraries.
 
 ### External References
 - [Tcl C API Reference](https://www.tcl-lang.org/man/tcl8.6/TclLib/contents.htm)
-- [TIP #285 — Cancel Evaluation](http://tip.tcl.tk/285)
-- [TIP #335 — Interpreter Activity](http://tip.tcl.tk/335)
-- [TIP #336 — Error Line](http://tip.tcl.tk/336)
+- [TIP #285 — Cancel Evaluation](http://tip.tcl-lang.org/285)
+- [TIP #335 — Interpreter Activity](http://tip.tcl-lang.org/335)
+- [TIP #336 — Error Line](http://tip.tcl-lang.org/336)

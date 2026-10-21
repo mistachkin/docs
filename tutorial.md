@@ -787,7 +787,7 @@ puts "[info exists v] / [info exists nope]"    ;# => 1 / 0
 ```
 
 The lesson's real content is **namespaces**, where Eagle deliberately removes one
-of Tcl's classic footguns — the ["dangers of creative writing"](https://wiki.tcl.tk/1030).
+of Tcl's classic footguns — the ["dangers of creative writing"](https://wiki.tcl-lang.org/1030).
 
 In Tcl, code inside `namespace eval` that uses an unqualified variable which does
 *not* exist in that namespace silently **falls back to a like-named global** —
