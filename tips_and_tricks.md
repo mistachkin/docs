@@ -1449,8 +1449,8 @@ These work at the interactive shell prompt — just paste and go.
 # Generate a random password (16 chars, ASCII)
 expr {randstr(16)}
 
-# Current date in ISO 8601
-clock format [clock seconds] -iso
+# Current date and time in ISO 8601
+clock format [clock seconds] -iso -full
 
 # Quick GUID
 guid new

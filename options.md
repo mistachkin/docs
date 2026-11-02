@@ -1041,6 +1041,7 @@ via `PerformanceOps.GetCount()`.
 | `-format` | string | Output format string; when present, formats<br>via `FormatOps.TclClockDateTime()`;<br>when absent, returns raw DateTime |
 | `-epoch` | DateTime | Reference epoch;<br>defaults to `TimeOps.UnixEpoch` |
 | `-gmt` | boolean | When true, uses `DateTime.FromFileTimeUtc()`;<br>when false, uses `DateTime.FromFileTime()` |
+| `-strict` | -- | The `-format` string contains only Tcl<br>specifiers and literal text; see<br>[`clock.md`](clock.md#default-mode-vs--strict);<br>an error without `-format` |
 
 </details>
 
@@ -1054,9 +1055,10 @@ via `PerformanceOps.GetCount()`.
 | `-ticks` | -- | Interpret input as .NET ticks<br>instead of Unix seconds |
 | `-epoch` | DateTime | Reference epoch for calculations;<br>defaults to `TimeOps.UnixEpoch` |
 | `-gmt` | boolean | When true, interpret and format as UTC |
-| `-iso` | -- | Return ISO 8601 format |
-| `-full` | -- | With `-iso`, use full ISO format instead of compact |
-| `-isotimezone` | -- | With `-iso`, include timezone designator |
+| `-iso` | -- | Return Eagle's compact ISO-8601-style format<br>(`yyyy.MM.ddTHH:mm:ss.fff`);<br>cannot be used with `-format` |
+| `-full` | -- | With `-iso`, use strict ISO 8601 instead of compact;<br>an error without `-iso` |
+| `-isotimezone` | -- | With `-iso`, include timezone designator;<br>an error without `-iso` |
+| `-strict` | -- | The `-format` string contains only Tcl<br>specifiers and literal text; see<br>[`clock.md`](clock.md#default-mode-vs--strict);<br>an error without `-format` |
 
 </details>
 
@@ -1075,9 +1077,10 @@ via `PerformanceOps.GetCount()`.
 | Option | Value | Description |
 |--------|-------|-------------|
 | `-format` | string | Date format string for parsing input |
-| `-base` | int64 | Legacy Tcl compatibility;<br>accepted but **not used** in Eagle |
+| `-base` | int64 | Base clock value supplying the date<br>components absent from the input;<br>defaults to the current time with `-strict` |
 | `-epoch` | DateTime | Reference epoch for converting parsed<br>DateTime to seconds;<br>defaults to `TimeOps.UnixEpoch` |
 | `-gmt` | boolean | When true, treat input as UTC;<br>when false, treat as local time |
+| `-strict` | -- | The `-format` string contains only Tcl<br>specifiers and literal text; see<br>[`clock.md`](clock.md#default-mode-vs--strict);<br>an error without `-format` |
 
 </details>
 

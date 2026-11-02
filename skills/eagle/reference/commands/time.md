@@ -66,7 +66,7 @@ meaningful as a *difference* — for portable elapsed timing use `clock start` /
 
 ### `clock format` — value → string
 
-`clock format clockValue ?-format str? ?-gmt bool? ?-epoch date? ?-kind k? ?-ticks? ?-iso? ?-full? ?-isotimezone?`
+`clock format clockValue ?-format str? ?-gmt bool? ?-epoch date? ?-kind k? ?-ticks? ?-iso? ?-full? ?-isotimezone? ?-strict?`
 
 The clock value is **seconds since the epoch** (or .NET ticks with `-ticks`).
 `-gmt 1` formats in UTC; the default is local time. Pinning the input to epoch
@@ -126,10 +126,19 @@ and so differ from 8.5/8.6:
 
 ¹ Tcl 8.4's `%s` ignored `-gmt` and added the machine's *local* offset (so the
 value varies by time zone — e.g. `18000` at UTC−5); Eagle honors `-gmt` and
-matches 8.5/8.6 with `0`. `%Z`/`%D` follow the 8.4 form. There is
+matches 8.5/8.6 with `0`. `%Z`/`%D` follow the 8.4 form (full zone name;
+two-digit year) unless `-strict` is given, which makes them the 8.5+ form
+(`EST`; four-digit year). There is
 **no `-locale` option** on `clock format` (despite some prose suggesting one):
-the legal options are `-format -kind -ticks -epoch -gmt -iso -full -isotimezone`;
-culture comes from the interpreter's `CultureInfo`.
+the legal options are `-format -kind -ticks -epoch -gmt -iso -full -isotimezone
+-strict`; culture comes from the interpreter's `CultureInfo`.
+
+**Literal text in `-format`:** without `-strict`, text outside the `%`
+specifiers is a .NET format string, so `-format "Day %j"` prints something
+like `Da25 071` (`y` is the year). Use `-strict` when the format contains literal words:
+`clock format $t -strict -format "Day %j"` → `Day 071`. Options that would
+have no effect are errors (`-format` with `-iso`; `-full`/`-isotimezone`
+without `-iso`; `-strict` without `-format`).
 
 ### `clock scan` — string → seconds
 
@@ -218,7 +227,8 @@ clock format 621355968000000000 -ticks -gmt 1 -format %Y-%m-%d
                                                   ;# => 1970-01-01
 ```
 
-`-iso` uses dotted-date, millisecond precision; `-iso -full` uses dashed-date,
+`-iso` uses dotted-date, millisecond precision (so it is ISO-8601-*style*, not
+strict ISO 8601); `-iso -full` is strict ISO 8601, with dashed-date,
 100-ns precision with a trailing `Z` for UTC. `-ticks` reinterprets the input as
 .NET ticks (`621355968000000000` is the tick count for 1970-01-01), so it pairs
 with `clock now`.

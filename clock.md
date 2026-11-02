@@ -20,7 +20,10 @@ There are three key areas of complexity:
    `FormatOps`: static string-pair mappings for simple substitutions,
    and `ClockTransformCallback` delegates for specifiers that require
    runtime computation (e.g., `%s` for epoch seconds, `%j` for day of
-   year, `%Z` for timezone name, `%Q` for stardate).
+   year, `%Z` for timezone name, `%Q` for stardate).  By default, all
+   other text is passed through to .NET unchanged, so existing .NET
+   format strings keep working; the `-strict` option instead treats it
+   as literal text, exactly like Tcl (see §4).
 
 2. **Custom epoch support** — Unlike Tcl, which hardcodes the Unix
    epoch (1970-01-01), Eagle supports configurable epochs via the
@@ -72,6 +75,14 @@ patterns. This is not a simple string replacement — some specifiers
 like `%s` (seconds since epoch), `%j` (day of year), `%V` (ISO 8601
 week number), and `%Z` (timezone name) require runtime computation
 because .NET's `DateTime.ToString()` has no direct equivalents.
+
+The translated string is still a .NET custom format string, so any text
+outside the `%` specifiers is, by default, interpreted by .NET: letters
+such as `d`, `f`, `h`, `m`, `s`, `y`, and `z` are .NET format characters.
+`clock format $t -format "Day %j"` therefore does **not** print `Day`.
+Pass `-strict` to `[clock format]`, `[clock scan]`, or `[clock filetime]`
+when the format string is pure Tcl (see
+[Default mode vs. `-strict`](#default-mode-vs--strict)).
 
 ### Additional sub-commands
 
@@ -169,9 +180,15 @@ human-readable string.
 | `-epoch` | DateTime | Unix epoch | Custom epoch for conversion |
 | `-kind` | DateTimeKind | (interpreter default) | `Utc`, `Local`, or `Unspecified` |
 | `-ticks` | flag | — | Interpret clockValue as .NET ticks instead of seconds |
-| `-iso` | flag | — | Use ISO 8601 format |
-| `-full` | flag | — | Use full ISO 8601 format (with `-iso`) |
-| `-isotimezone` | flag | — | Include timezone in ISO output |
+| `-iso` | flag | — | Use Eagle's compact ISO-8601-style format, `yyyy.MM.ddTHH:mm:ss.fff` (dotted date, so **not** strictly ISO 8601); cannot be combined with `-format` |
+| `-full` | flag | — | With `-iso`, use strict ISO 8601, `yyyy-MM-ddTHH:mm:ss.fffffffK` |
+| `-isotimezone` | flag | — | With `-iso`, append the numeric offset (e.g. ` +0000`); redundant with `-full` |
+| `-strict` | flag | — | The `-format` string contains only Tcl specifiers and literal text (see §4); requires `-format` |
+
+Options that would have no effect are errors rather than being silently
+ignored: `-format` with `-iso`, `-full` or `-isotimezone` without `-iso`,
+and `-strict` without `-format` (e.g. `-full cannot be used without -iso
+option`).
 
 **Processing flow:**
 
@@ -180,12 +197,14 @@ human-readable string.
    - With `-ticks`: `TimeOps.TicksToDateTime(ticks, kind)`.
    - Without `-ticks`: `TimeOps.SecondsToDateTime(seconds, epoch)`.
 3. Apply timezone: if not UTC, convert to local time.
-4. Format output:
+4. Check the option combination (`CheckFormatOptions`), as described above.
+5. Format output:
    - If `-iso`: `FormatOps.Iso8601DateTime(dateTime, isoTimezone)`.
    - If `-iso -full`: `FormatOps.Iso8601FullDateTime(dateTime)`.
    - If `-format` is blank/whitespace: return blank (Tcl compatibility).
    - Otherwise: `FormatOps.TclClockDateTime(culture, timezone, format,
-     dateTime, epoch)`.
+     dateTime, epoch, tclOnly)`, where `tclOnly` is true when `-strict`
+     is present.
 
 ### Parsing
 
@@ -200,15 +219,20 @@ Parses a date/time string and returns seconds since the epoch.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `-format` | string | (none) | Tcl format string for parsing |
-| `-base` | clockValue | (none) | Base clock value supplying the date components absent from the input (e.g., a time-only string takes its date from the base) |
+| `-base` | clockValue | (none; the current time with `-strict`) | Base clock value supplying the date components absent from the input (e.g., a time-only string takes its date from the base) |
 | `-epoch` | DateTime | Unix epoch | Custom epoch for output conversion |
 | `-gmt` | boolean | false | Interpret result as UTC |
+| `-strict` | flag | — | The `-format` string contains only Tcl specifiers and literal text (see §4); requires `-format` |
 
 **Processing flow:**
 
 1. Parse `dateString` via `Value.GetDateTime2()`:
    - If `-format` is provided, translate it via
-     `FormatOps.TranslateDateTimeFormats()` before parsing.
+     `FormatOps.TranslateDateTimeFormats()` before parsing.  Only the
+     static mappings are used when parsing (no delegates).  With
+     `-strict`, literal text in the format (e.g. `{%Y-%m-%d day}`) must
+     appear verbatim in the input; without it, that text is interpreted
+     as .NET format characters.
    - Otherwise, use .NET's default `DateTime.Parse()`.
 2. Apply timezone: if `-gmt true`, the input is parsed as UTC (no
    conversion needed); if `-gmt false` (default), the input is parsed
@@ -223,7 +247,19 @@ input only if present; the month only if month and day are present; the year
 only if year, month, and day are present -- otherwise that component comes from
 the base.  The time-of-day always comes from the input (an absent time means
 midnight).  With `-format`, the date components present in the input are
-determined from the format's conversion specifiers.
+determined from the format's conversion specifiers -- and, without `-strict`,
+also from any .NET date characters in it (`y`, `M`, and `d`/`dd`), so that
+`clock scan 2023-11-14 -format yyyy-MM-dd -base 0` keeps the parsed date.
+
+**Without `-base`:** with `-strict`, the base defaults to the current time
+(UTC with `-gmt true`), exactly as in Tcl -- e.g. `clock scan 2023 -format %Y
+-strict` yields *today's* date, because a lone year is not contiguous from the
+day.  Without `-strict`, the .NET defaults are kept so that .NET format strings
+behave as before: a wholly absent date is the current date, an absent year is
+the current year, and an absent month or day is `1` (so `clock scan 2023
+-format %Y` yields January 1, 2023).  With `-gmt true`, "current" means the
+current **UTC** date, so `clock scan 22:13 -gmt true` falls on today's UTC date
+even when the local date differs.
 
 **Free-form (no `-format`) limitations:** absolute forms -- ISO dates,
 `MM/DD/YYYY`, time-only, month-name, and epoch seconds -- parse correctly, but
@@ -329,6 +365,7 @@ intervals since 1601-01-01) to a formatted date string.
 | `-format` | string | (none) | Output format string |
 | `-epoch` | DateTime | Unix epoch | Custom epoch for formatting |
 | `-gmt` | boolean | false | Use UTC (`FromFileTimeUtc`) vs local (`FromFileTime`) |
+| `-strict` | flag | — | The `-format` string contains only Tcl specifiers and literal text (see §4) |
 
 ### Performance timing
 
@@ -363,16 +400,70 @@ introduce artificial jitter that defeats the purpose of precise timing.
 
 Eagle's format translation converts Tcl's `%`-specifier format strings
 into .NET-compatible output. This is handled by
-`FormatOps.TranslateDateTimeFormats()`, which applies two passes:
+`FormatOps.TranslateDateTimeFormats()`, which scans the format string
+**once, from left to right**.  At each position it tries, in order:
 
-1. **Static mappings** (`tclClockFormats`) — Simple string replacements.
-2. **Dynamic delegates** (`tclClockDelegates`) — Runtime-computed values
-   via `ClockTransformCallback` functions.
+1. **Static mappings** (`tclClockFormats`) — replaced by a .NET format
+   fragment.
+2. **Dynamic delegates** (`tclClockDelegates`) — replaced by a
+   runtime-computed value via a `ClockTransformCallback` function.
+3. **Tcl-only mappings** (`tclOnlyClockFormats` and
+   `tclOnlyClockDelegates`) — consulted *first*, but only with `-strict`:
+   `%D`, `%z`, and `%Z`, whose Tcl meaning conflicts with .NET or differs
+   from Eagle's established output.
+
+Anything that matches none of these is either copied through unchanged
+(default) or escaped as literal text (`-strict`).  Because each piece of
+the input is translated exactly once, the output of one replacement can
+never be re-translated by another: `%%Y` yields `%Y`, and `%%%Y` yields a
+percent sign followed by the year.
+
+### Default mode vs. `-strict`
+
+The `-strict` option (on `[clock format]`, `[clock scan]`, and
+`[clock filetime]`) declares that the format string contains **only** Tcl
+specifiers and literal text.  It changes the following:
+
+| Behavior | Default | `-strict` |
+|----------|---------|-----------|
+| Text outside recognized specifiers | Passed to .NET as-is, so .NET format characters (`yyyy`, `MM`, `d`, `h`, `s`, `f`, `z`, ...) are interpreted | Each character is backslash-escaped, so it is emitted (or matched, when parsing) verbatim, as in Tcl |
+| Unrecognized specifiers (`%q`), trailing `%` | Passed to .NET as-is | Emitted verbatim, as in Tcl |
+| `%z` | Passed to .NET, where it is the offset in whole hours (e.g. `-5`, `+0`) | Tcl numeric offset (e.g. `-0500`, `+0000`) |
+| `%Z` | Full time zone name (e.g. `Eastern Standard Time`); `UTC` with `-gmt true` | Tcl abbreviation (e.g. `EST`); `GMT` with `-gmt true` |
+| `%D` | `MM/dd/yy` (two-digit year, as in Tcl 8.4) | `MM/dd/yyyy` (four-digit year, as in Tcl 8.5+) |
+| `[clock scan]` without `-base` | .NET date defaults (see §3) | Base is the current time, as in Tcl |
+
+The default exists so that .NET format strings keep working — existing
+scripts may pass `-format M/d/yyyy` or a value from the interpreter's
+`DateTimeFormat`.  Prefer `-strict` in new code that uses Tcl-style
+formats containing any literal text:
+
+```tcl
+set t 1741804200
+
+clock format $t -gmt true -format "Day %j of %Y"
+# -> "Da25 071 o0 2025"   ("y" is the year, "f" a fraction of a second)
+
+clock format $t -gmt true -strict -format "Day %j of %Y"
+# -> "Day 071 of 2025"
+
+clock format $t -gmt true -format yyyy-MM-dd          ;# .NET format
+# -> "2025-03-12"
+
+clock format $t -gmt true -strict -format yyyy-MM-dd
+# -> "yyyy-MM-dd"         (literal text under -strict)
+
+clock scan "2025-03-12 day" -gmt true -strict -format "%Y-%m-%d day"
+# -> 1741737600
+```
+
+Format strings made only of specifiers and punctuation (e.g.
+`%Y-%m-%dT%H:%M:%S`) give the same result in both modes.
 
 ### Static format mappings
 
 These specifiers have direct .NET equivalents and are translated by
-simple string substitution:
+replacing them with a .NET format fragment:
 
 | Tcl | .NET | Meaning |
 |-----|------|---------|
@@ -382,7 +473,7 @@ simple string substitution:
 | `%B` | `MMMM` | Full month name |
 | `%c` | (culture-specific) | Preferred date and time |
 | `%d` | `dd` | Day of month (01–31) |
-| `%D` | `MM/dd/yy` | Short date (`%m/%d/%y`) |
+| `%D` | `MM/dd/yy` | Short date (`%m/%d/%y`); `MM/dd/yyyy` with `-strict` |
 | `%h` | `MMM` | Same as `%b` |
 | `%H` | `HH` | Hour, 24-hour (00–23) |
 | `%i` | `yyyy.MM.ddTHH:mm:ss.fff` | ISO 8601 with milliseconds |
@@ -401,6 +492,7 @@ simple string substitution:
 | `%y` | `yy` | 2-digit year |
 | `%Y` | `yyyy` | 4-digit year |
 | `%%` | `\%` | Literal percent sign |
+| `GMT` | `\G\M\T` | The literal text `GMT` (otherwise `M` would be read as the month in default mode) |
 
 ### Dynamic format delegates
 
@@ -425,30 +517,64 @@ Each delegate receives the `DateTime`, `TimeZone`, `CultureInfo`, and
 | `%V` | `GetWeekOfYearIso8601` | ISO 8601 week number (uses `CalendarWeekRule.FirstFourDayWeek`) |
 | `%w` | `GetWeekdayNumberZeroToSix` | Weekday number, Sunday=0 through Saturday=6 |
 | `%W` | `GetWeekOfYearMondayIsFirstDay` | Week number (Monday as first day of week) |
-| `%Z` | `GetTimeZoneName` | Timezone name (DST-aware, from `TimeZone` object) |
+| `%Z` | `GetTimeZoneName` | Timezone name (DST-aware, from `TimeZone` object); `UTC` with `-gmt true` |
+
+Delegate values are returned as quoted .NET literals, so they are never
+re-interpreted as format characters.
+
+The following mappings are only used with `-strict`, and take precedence
+over the ones above.  `%z` is already a valid .NET format string (the offset
+in whole hours), and the default `%D` and `%Z` output must not change for
+existing scripts:
+
+| Tcl | Mapping | Meaning |
+|-----|---------|---------|
+| `%D` | `MM/dd/yyyy` | Short date with a four-digit year (`%m/%d/%Y`), as in Tcl 8.5+ |
+| `%z` | `GetNumericTimeZone` | Numeric offset from UTC, `+hhmm` / `-hhmm` (`+0000` with `-gmt true`) |
+| `%Z` | `GetTimeZoneAbbreviation` | Time zone abbreviation (e.g. `EST`, `CEST`, `JST`); `GMT` with `-gmt true` |
+
+### Time zone abbreviations
+
+The .NET Framework does not expose time zone abbreviations, so
+`GetTimeZoneAbbreviation` looks up the zone's `StandardName` or
+`DaylightName` in the static `timeZoneAbbreviations` dictionary in
+`FormatOps`.  It holds both the Windows names (e.g. `W. Europe Standard
+Time`, `GMT Daylight Time`) and the English ICU names reported on other
+platforms (e.g. `Central European Standard Time`, `British Summer Time`),
+mapped to the IANA (tzdata) abbreviations that Tcl uses.
+
+Zones that tzdata gives no alphabetic abbreviation (e.g. `America/Sao_Paulo`,
+`Asia/Singapore`, `Asia/Dubai`) are deliberately absent; for them, and for any
+other name not in the dictionary (including localized names), the result is
+the tzdata-style numeric offset that Tcl also prints: hours, plus minutes when
+non-zero (e.g. `-03`, `+08`, `+0545`).  ICU reports `Pacific/Honolulu` only by
+its offset (`GMT-10:00`); because no other zone at that offset lacks a name of
+its own, the dictionary maps that offset name to `HST`, as in Tcl.
 
 ### Translation flow
 
 ```tcl
-clock format $seconds -format "%Y-%m-%d %H:%M:%S %Z (day %j)"
+clock format $seconds -strict -format "%Y-%m-%d %H:%M:%S %Z (day %j)"
 |
-+-- FormatOps.TclClockDateTime(culture, timezone, format, dateTime, epoch)
++-- FormatOps.TclClockDateTime(culture, timezone, format, dateTime, epoch,
+|                              tclOnly=true)
 |   |
 |   +-- TranslateDateTimeFormats(culture, timezone, format, dateTime, epoch,
-|                                useFormats=true, useDelegates=true)
+|                                useFormats=true, useDelegates=true,
+|                                tclOnly=true)
 |       |
-|       +-- Pass 1: Static mappings
-|       |   %Y -> yyyy, %m -> MM, %d -> dd, %H -> HH, %M -> mm, %S -> ss
-|       |
-|       +-- Pass 2: Dynamic delegates
-|           %Z -> GetTimeZoneName(dateTime, timezone, culture, epoch)
-|                 -> "Eastern Standard Time"
-|           %j -> GetDayOfYear(dateTime, timezone, culture, epoch)
-|                 -> "042"
+|       +-- One left-to-right scan; at each position:
+|           %Y -> yyyy, %m -> MM, %d -> dd, ...    (static mappings)
+|           %Z -> "EST"                             (delegate, quoted)
+|           %j -> "042"                             (delegate, quoted)
+|           " ", "(", "d", "a", "y", ")" -> \ \(\d\a\y\)   (escaped, -strict)
 |
 +-- dateTime.ToString(translatedFormat, culture)
-    -> "2025-02-11 14:30:00 Eastern Standard Time (day 042)"
+    -> "2025-02-11 14:30:00 EST (day 042)"
 ```
+
+Without `-strict`, `%Z` would be `Eastern Standard Time`, and the literal `day` above would be handed to .NET as
+format characters and print as something like `11a25`.
 
 ### The `%Q` stardate specifier
 
@@ -655,13 +781,21 @@ set ts [clock scan "2025-01-15"]
 ```tcl
 set now [clock seconds]
 
-# Standard ISO 8601
+# Eagle's compact ISO-8601-style format (dotted date: not strict ISO 8601)
 clock format $now -iso
 # -> "2025.03.12T14:30:00.000"
 
-# Full ISO 8601 with timezone
-clock format $now -iso -full -isotimezone
-# -> "2025-03-12T14:30:00.0000000-05:00"
+# The same, with the numeric offset
+clock format $now -iso -isotimezone
+# -> "2025.03.12T14:30:00.000 -0400"
+
+# Strict ISO 8601 (includes the offset; -isotimezone is redundant here)
+clock format $now -iso -full
+# -> "2025-03-12T14:30:00.0000000-04:00"
+
+# Strict ISO 8601 to the second, with no fractional part
+clock format $now -strict -format "%Y-%m-%dT%H:%M:%S%z"
+# -> "2025-03-12T14:30:00-0400"
 ```
 
 ### Pattern 3: High-resolution elapsed timing
@@ -730,23 +864,34 @@ clock format $ticks -ticks -format "%Y-%m-%d %H:%M:%S"
 
 ### Pattern 9: Format specifiers requiring delegates
 
+These formats contain literal words, so they use `-strict` (see §4);
+without it, letters like `y`, `f`, and `h` are .NET format characters.
+
 ```tcl
 set now [clock seconds]
 
 # Day of year
-clock format $now -format "Day %j of %Y"
+clock format $now -strict -format "Day %j of %Y"
 # -> "Day 071 of 2025"
 
 # ISO 8601 week number
-clock format $now -format "Week %V of %G"
+clock format $now -strict -format "Week %V of %G"
 # -> "Week 11 of 2025"
 
 # Timezone name
 clock format $now -format "%Y-%m-%d %H:%M:%S %Z"
 # -> "2025-03-12 14:30:00 Eastern Daylight Time"
 
+# Timezone abbreviation, as in Tcl (requires -strict)
+clock format $now -strict -format "%Y-%m-%d %H:%M:%S %Z"
+# -> "2025-03-12 14:30:00 EDT"
+
+# Numeric timezone offset (Tcl style; requires -strict)
+clock format $now -strict -format "%Y-%m-%dT%H:%M:%S%z"
+# -> "2025-03-12T14:30:00-0400"
+
 # Seconds since epoch (embedded in format)
-clock format $now -format "Epoch: %s"
+clock format $now -strict -format "Epoch: %s"
 ```
 
 ### Pattern 10: MSBuild-compatible build number
@@ -779,11 +924,15 @@ set buildInfo [clock buildnumber]
 | `[clock monthdays]` | Not available | Calendar day-in-month query |
 | `-epoch` option | Not available | Custom epoch on most sub-commands |
 | `-ticks` option | Not available | .NET tick interpretation in `[format]` |
-| `-iso` / `-full` | Not available | ISO 8601 formatting modes |
+| `-iso` / `-full` | Not available | Compact ISO-8601-style (`-iso`) and strict ISO 8601 (`-iso -full`) output |
 | `-kind` option | Not available | `DateTimeKind` control |
+| Literal text in `-format` | Always literal | Literal with `-strict`; otherwise interpreted as .NET format characters |
+| `-strict` option | Not available | Treat `-format` as pure Tcl (`[format]`, `scan`, `filetime`), including Tcl's `-base` default for `scan` |
+| `%z` (numeric offset) | Available | With `-strict`; otherwise the .NET `%z` (whole hours) |
 | `%Q` (stardate) | Available | Available (Tcl-compatible algorithm) |
 | `%V` (ISO week) | Available | Via `ClockTransformCallback` delegate |
-| `%Z` (timezone) | Available | Via `ClockTransformCallback` with DST awareness |
+| `%Z` (timezone) | Abbreviation (e.g. `EST`) | Full name (e.g. `Eastern Standard Time`); abbreviation with `-strict` |
+| `%D` (short date) | `%m/%d/%Y` (8.5+); `%m/%d/%y` (8.4) | `%m/%d/%y`; `%m/%d/%Y` with `-strict` |
 | Fake time injection | Not available | `TimeOps.SetFakeNow()` / `SetFakeUtcNow()` |
 | Safe interpreter restrictions | Not applicable | High-res timing sub-commands restricted |
 | Culture-aware formatting | Via `-locale` | Via interpreter `CultureInfo` |
