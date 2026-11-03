@@ -2673,11 +2673,23 @@ convention keeps the script-to-primitive binding predictable.
 The Eagle codebase uses a few recurring visual markers, each with a
 stable meaning.
 
-- **Horizontal separator lines.** A line of seventy-six `#`
+- **Horizontal separator lines.** A line of seventy-nine `#`
   characters in Eagle scripts (and a corresponding `//` form of the
   same width in the C# layer) marks a major section boundary in a
   file. The width is wide enough to be visually unmistakable in any
-  reasonable terminal.
+  reasonable terminal. A separator line is always *untitled*: it
+  divides, it does not name.
+- **`#region` / `#endregion` for named sections.** When a group of
+  procedures needs a name, Eagle scripts use the C# layer's region
+  markers verbatim: `#region Name` opens the group and a bare
+  `#endregion` closes it, with no trailing text. The markers happen to
+  be ordinary Tcl comments, so they cost nothing at runtime, while
+  region-aware editors fold them exactly as they fold C#. A titled
+  banner (a separator line, a `# Name` comment, and another separator
+  line) is non-conforming. Adjacent regions are separated by the
+  file's normal item separator, placed between one region's
+  `#endregion` and the next region's `#region`; inside a `namespace
+  eval` body that is the form-feed line used between procedures.
 - **Block comments at file head.** Every `.eagle` script begins with
   a fixed seven-line block comment: a separator, the file name with
   a `-- short description` annotation, the project name (`Extensible

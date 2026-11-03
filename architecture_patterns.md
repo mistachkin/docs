@@ -593,6 +593,41 @@ preserves both the uniform top-level skeleton and the semantic sub-grouping.
 A nested helper type, by contrast, does warrant its own region (the
 `CompletionRequest` type sits in `Private CompletionRequest Helper Class`).
 
+**Scripts use the same markers.** Eagle, Tcl, and TH8 script files adopt
+the C# region syntax verbatim. Because a line starting with `#` is a
+comment in Tcl, the markers need no special support:
+
+```tcl
+namespace eval ::Example {
+  #region Utility Helpers
+  proc first { list } {
+    return [lindex $list 0]
+  }
+
+  proc last { list } {
+    return [lindex $list end]
+  }
+  #endregion
+
+  #region Public API
+  proc run { list } {
+    return [list [first $list] [last $list]]
+  }
+  #endregion
+}
+```
+
+The `#endregion` line is always bare, and no blank line sits just inside
+either marker. Adjacent regions are separated by the file's normal item
+separator, which goes between `#endregion` and the next `#region` (inside a
+`namespace eval` body, that is the form-feed line used between procedures;
+blank lines stand in for it above). Markers go only where a command could
+begin, so never inside a `switch` pattern list or a list literal, where `#`
+is data. Phases inside a single procedure body keep using in-procedure
+divider comments instead of regions. A titled banner (a `####` line, a
+`# Name` line, and another `####` line) is non-conforming: separator lines
+divide, and regions name.
+
 </details>
 
 ---
