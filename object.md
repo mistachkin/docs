@@ -1023,6 +1023,15 @@ object removereference $longLived
 object dispose $longLived
 ```
 
+**Callback return values:** when a callback script returns a handle, the
+object gains a reference on every invocation: one from the callback's
+default `AddReference` flag, and one more if a procedure `[return]`ed the
+handle. Neither is removed automatically, so such objects are never
+cleaned up. Use `-objectflags +NoReturnReference` on the object and
+`-callbackflags -AddReference` on the callback, or dispose the object
+explicitly. See [Callback Return Values and Object
+References](core_language.md#core-marshaller-and-command-callbacks).
+
 ---
 
 ## 8. Sub-Command Reference — Cleanup and Verification
@@ -1107,6 +1116,15 @@ object removecallback name
 
 **Purpose:** Get/set callback flags or remove a named callback. Callbacks
 are created when Eagle wraps script procedures as .NET delegates.
+
+A callback's name is its full callback text, including any inline
+options, e.g. `{-callbackflags -AddReference -- getShared}`; see
+`[info callbacks]`. Changing flags affects later invocations only:
+
+```tcl
+# Stop the callback from adding a reference to each object it returns.
+object callbackflags getShared -AddReference
+```
 
 ### 9.2 `[object get]` — Remote Object Activation
 

@@ -1448,6 +1448,48 @@ as it is possible they may be used in the future.
 
 ---
 
+<details>
+<summary><strong>54. <code>using This = &lt;own type&gt;</code> -- Self-Alias for Static Members</strong></summary>
+
+A static class may declare a `using` alias for its own fully-qualified type
+name, conventionally `This`, and then qualify its static fields with it
+wherever a parameter or local has the same name:
+
+```csharp
+using This = Eagle._Components.Private.StatusFormOps;
+
+internal static class StatusFormOps
+{
+    private static KeyOps.KeyEventMap keyEventMap;
+
+    public static void SetKeyEventMap(
+        KeyOps.KeyEventMap keyEventMap /* in */
+        )
+    {
+        lock (syncRoot) /* TRANSACTIONAL */
+        {
+            This.keyEventMap = keyEventMap;
+        }
+    }
+}
+```
+
+**Rationale**: a static member has no `this.` to separate it from a
+same-named parameter, the usual escape being to spell out the class name
+(`StatusFormOps.keyEventMap`). The self-alias keeps the parameter named for
+exactly what it is -- the same name as the field it sets, as in the
+instance-member `this.name = name` idiom -- without renaming either side
+(no `newKeyEventMap`, no `_keyEventMap`) and without repeating the class
+name throughout the implementation, so the implementation stays clean and
+survives a rename of the class. It reads as the static counterpart of
+`this.`, and it complements the leading-underscore `using` aliases
+(`_Engine`, `_ClientData`), which likewise exist so that names can stay
+natural.
+
+</details>
+
+---
+
 ## References
 
 - **Source code**: `Eagle/Library/` -- the complete Eagle core library

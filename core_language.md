@@ -10544,6 +10544,55 @@ The `CallbackFlags` enumeration controls how callbacks are executed:
 </details>
 
 <details>
+<summary><strong>Callback Return Values and Object References</strong></summary>
+
+When a callback script returns an opaque object handle and `ReturnValue`
+is set (the default), the delegate returns the underlying object to .NET,
+not the handle string. Two independent mechanisms each add a reference to
+that object **every time the callback runs**:
+
+1. **`AddReference`** (part of the default `CallbackFlags`) adds a
+   reference to the returned object, so that it stays alive after .NET
+   receives it.
+2. **Procedure `[return]`**: when the callback script calls a procedure
+   that returns an opaque object handle, the procedure adds a `Return`
+   reference to it. This keeps an object that was only held in a local
+   variable alive while the procedure's call frame is torn down. See the
+   `NoReturnReference` and `TemporaryReturnReference` object flags.
+
+Neither reference is ever removed automatically. So an object returned by
+a callback is never disposed by `[object cleanup]` or by unsetting its
+variables, and its reference count grows with every invocation. This is
+harmless for one-shot callbacks, but it leaks objects when:
+
+- a callback returns a **new object on each call** (one leaked object per
+  call), or
+- a callback returns a **shared, prebuilt object** (its reference count
+  grows without bound, so it is never disposed).
+
+**Avoiding the extra references** for a shared object:
+
+```tcl
+# Opt out of the procedure return reference for this object.
+set shared [object create -objectflags +NoReturnReference -alias \
+    System.Text.StringBuilder]
+
+proc getShared { args } {
+  return $::shared
+}
+
+# Opt out of AddReference for this callback, using the inline callback
+# options (or, after the callback exists, [object callbackflags]).
+set callback {-callbackflags -AddReference -- getShared}
+```
+
+Without these opt-outs, release the object explicitly with
+`[object dispose]` once nothing on the .NET side can still use it. The
+Eagle test suite reports the extra references as leaked objects.
+
+</details>
+
+<details>
 <summary><strong>MarshalFlags for Callbacks</strong></summary>
 
 The `MarshalFlags` enumeration controls type marshalling behavior:

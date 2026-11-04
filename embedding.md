@@ -993,6 +993,121 @@ integration, safe close/clear, and the complete thread-marshaling helpers — is
 `Eagle/Sample/Forms/HostForm.cs`, `Eagle/Sample/Hosts/Class10.cs`, and
 `Eagle/Sample/Forms/TclForm.cs`.
 
+### Keyboard event mappings (WinForms)
+
+Builds with WinForms support can map keystrokes to callbacks and dispatch
+a control's keyboard events through them. The `Interpreter` implements
+`IKeyEventManager`:
+
+| Method | Purpose |
+|--------|---------|
+| `FireKeyEventHandlers(eventType, sender, e, ref count, ref error)` | Offers an event to the interpreter's map, then to the process-wide status form map |
+| `OverrideKeyEventMappings(enable, ref error)` | Enables the interpreter's own map, creating it if needed, or disables it, discarding its mappings |
+| `HasKeyEventMapping(eventType, modifiers, keys, useOverrides, ref error)` | Checks for a mapping |
+| `GetKeyEventMapping(..., useOverrides, ref callback, ref error)` | Gets a mapping's callback |
+| `AddKeyEventMapping(..., callback, useOverrides, ref error)` | Adds a mapping; fails if one exists |
+| `RemoveKeyEventMapping(..., useOverrides, ref error)` | Removes a mapping |
+
+**Matching.** A mapping is keyed by `EventType`, then modifier keys, then
+key code, and modifiers must match exactly: a `Control` + `K` mapping
+does not fire for `Control` + `Shift` + `K`. A map starts with the
+modifier sets `Shift`, `Control`, `Alt`, `Shift|Control`, `Shift|Alt`,
+and `Shift|Control|Alt`. `AddKeyEventMapping` can't add a mapping with
+no modifiers or with `Control|Alt`.
+
+**Event types.** The keys are read from the event arguments, so the
+event type and its arguments must agree:
+
+| Event type | Event arguments | Result values applied |
+|------------|-----------------|-----------------------|
+| `KeyDown`, `KeyUp` | `KeyEventArgs` | `SuppressKeyPress`, `Handled` |
+| `PreviewKeyDown` | `PreviewKeyDownEventArgs` | `IsInputKey` |
+| `KeyPress` | `KeyPressEventArgs` | Never matches; the arguments carry a character, not a key code |
+
+**Callbacks.** A mapping's callback is a `FormEventCallback`:
+
+```csharp
+FormEventResult Callback(EventType eventType, object sender, EventArgs e);
+```
+
+Each property of the returned `FormEventResult` may be null, which leaves
+the corresponding property of the event arguments alone. Values that
+don't apply to the event type are ignored (and traced). `PreviewKeyDown`
+can't be handled or suppressed; its only output is `IsInputKey`.
+
+| Property | Applied to |
+|----------|------------|
+| `SuppressKeyPress` | `KeyEventArgs.SuppressKeyPress` |
+| `Handled` | `KeyEventArgs.Handled` |
+| `IsInputKey` | `PreviewKeyDownEventArgs.IsInputKey` |
+| `ReturnCode` | The chain, below; null means `Ok` |
+
+**Chaining.** `FireKeyEventHandlers` offers the event to each map in
+turn, and the callback's return code decides what happens next:
+
+| Return code | Effect |
+|-------------|--------|
+| `Ok` | Counted as handled; the next map still runs |
+| `Continue` | Not counted; the next map runs (also used when a map has no mapping for the key) |
+| `Break` | Stops without counting |
+| `Return` | Counted, then stops |
+| `Error` | Stops with an error |
+
+**Which map.** `useOverrides` selects the map: `true` for the
+interpreter's own map, `false` for the process-wide status form map, and
+null for the interpreter's map if it exists, otherwise the status form
+map. An interpreter has no map of its own until
+`OverrideKeyEventMappings(true, ...)` creates one. Until then, `true`
+fails with `key event data unavailable` and null means the status form
+map. After that, null means the interpreter's map.
+`OverrideKeyEventMappings(false, ...)` clears and discards the map, which
+restores the original behavior.
+
+The status form map is shared by every interpreter in the process and
+already holds the status form's own bindings (for example `Control` +
+`A` and `Control` + `E` on `KeyUp`). To keep an application's mappings
+separate from it, call `OverrideKeyEventMappings` first and pass `true`.
+
+```csharp
+// Give the interpreter its own map, map Control+K on KeyDown to a
+// callback, then route a TextBox's events.
+Result error = null;
+
+if (interpreter.OverrideKeyEventMappings(true, ref error) != ReturnCode.Ok)
+{
+    MessageBox.Show(error);
+    return;
+}
+
+if (interpreter.AddKeyEventMapping(
+        EventType.KeyDown, Keys.Control, Keys.K,
+        delegate(EventType eventType, object sender, EventArgs e)
+        {
+            // ... do the work for Control+K ...
+            return new FormEventResult(true, true, ReturnCode.Return);
+        },
+        true, ref error) != ReturnCode.Ok)
+{
+    MessageBox.Show(error);
+}
+
+textBox.KeyDown += delegate(object sender, KeyEventArgs e)
+{
+    int count = 0;
+    Result localError = null;
+
+    interpreter.FireKeyEventHandlers(
+        EventType.KeyDown, sender, e, ref count, ref localError);
+};
+```
+
+A script can supply the callback too. The marshaller converts the script
+into a `FormEventCallback`, and when the script returns the handle of a
+`FormEventResult` object, the delegate returns that object. A shared
+result object returned that way gains references on every call; see
+[Callback Return Values and Object
+References](core_language.md#core-marshaller-and-command-callbacks).
+
 ---
 
 ## 12. Sandboxing untrusted scripts
